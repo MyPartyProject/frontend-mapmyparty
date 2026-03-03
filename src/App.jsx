@@ -48,6 +48,7 @@ import Contact from "./pages/Contact";
 import Policies from "./pages/Policies";
 import Footer from "./components/Footer";
 import { AuthProvider } from "./contexts/AuthContext";
+import OrganizerOnboarding from "./pages/OrganizerOnboarding";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -190,6 +191,11 @@ const App = () => {
               </ProtectedRoute>
             } />
             <Route path="/organizer/dashboard-v2" element={<Navigate to="/organizer/dashboard" replace />} />
+            <Route path="/organizer/onboarding" element={
+              <ProtectedRoute requiredRole="organizer" skipOrganizerOnboarding>
+                <OrganizerOnboarding />
+              </ProtectedRoute>
+            } />
             <Route path="/organizer/select-event-type" element={
               <ProtectedRoute requiredRole="organizer">
                 <EventTypeSelection />

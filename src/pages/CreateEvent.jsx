@@ -107,6 +107,7 @@ const CreateEvent = () => {
   const [publishState, setPublishState] = useState("DRAFT");
   const [isPublished, setIsPublished] = useState(false);
   const eventCacheRef = useRef(null);
+  const editHydratedRef = useRef(null);
   const sponsorsLoadedRef = useRef(false);
   const artistsLoadedRef = useRef(false);
   const originalAdditionalRef = useRef(null);
@@ -221,6 +222,21 @@ const CreateEvent = () => {
   const editId = searchParams.get('edit');
   const eventTypeParam = searchParams.get('type');
   const isEditMode = !!editId;
+
+  const buildEventFetchUrl = ({ eventId, organizerSlug, eventSlug, bustCache = false }) => {
+    const suffix = bustCache ? `?t=${Date.now()}` : "";
+
+    // This page is organizer-authenticated; fetch by protected endpoint so drafts are accessible.
+    if (eventId) {
+      return `api/event/manage/${encodeURIComponent(eventId)}${suffix}`;
+    }
+
+    if (organizerSlug && eventSlug) {
+      return `api/event/${encodeURIComponent(organizerSlug)}/${encodeURIComponent(eventSlug)}${suffix}`;
+    }
+
+    return null;
+  };
 
   // Form data
   const [eventTitle, setEventTitle] = useState("");
@@ -440,9 +456,11 @@ const CreateEvent = () => {
 
   useEffect(() => {
     if (!editId) return;
+    if (editHydratedRef.current === editId) return;
     const stateEvent = location.state?.event;
     const eventToEdit = stateEvent || events.find((e) => e.id === editId);
     if (!eventToEdit) return;
+    editHydratedRef.current = editId;
     eventCacheRef.current = eventToEdit;
 
     const pickVenueName = (venueObj) => {
@@ -702,11 +720,11 @@ const CreateEvent = () => {
         try {
           const organizerSlug = eventToEdit.organizer?.slug;
           const eventSlug = eventToEdit.slug;
-          const fetchUrl = organizerSlug && eventSlug
-            ? `api/event/${encodeURIComponent(organizerSlug)}/${encodeURIComponent(eventSlug)}`
-            : eventToEdit.id || eventToEdit._id
-              ? `api/event/${eventToEdit.id || eventToEdit._id}`
-              : null;
+          const fetchUrl = buildEventFetchUrl({
+            eventId: eventToEdit.id || eventToEdit._id,
+            organizerSlug,
+            eventSlug,
+          });
           if (!fetchUrl) return;
           const response = await apiFetch(fetchUrl, { method: "GET" });
           const eventData = response.data?.event || response.data || response.event || response;
@@ -751,7 +769,7 @@ const CreateEvent = () => {
         }
       })();
     }
-  }, [editId, events, location.state, backendEventId, ticketPrice]);
+  }, [editId, events, location.state]);
 
   // Fetch sponsors from backend in edit mode when entering Step 5 (or when ID changes)
   useEffect(() => {
@@ -784,9 +802,11 @@ const CreateEvent = () => {
 
         const organizerSlug = eventCacheRef.current?.organizer?.slug;
         const eventSlug = eventCacheRef.current?.slug;
-        const fetchUrl = organizerSlug && eventSlug
-          ? `api/event/${encodeURIComponent(organizerSlug)}/${encodeURIComponent(eventSlug)}`
-          : `api/event/${backendEventId}`;
+        const fetchUrl = buildEventFetchUrl({
+          eventId: backendEventId,
+          organizerSlug,
+          eventSlug,
+        });
         const response = await apiFetch(fetchUrl, { method: "GET" });
         const eventData = response.data?.event || response.data || response.event || response;
         eventCacheRef.current = eventData;
@@ -842,9 +862,11 @@ const CreateEvent = () => {
 
         const organizerSlug = eventCacheRef.current?.organizer?.slug;
         const eventSlug = eventCacheRef.current?.slug;
-        const fetchUrl = organizerSlug && eventSlug
-          ? `api/event/${encodeURIComponent(organizerSlug)}/${encodeURIComponent(eventSlug)}`
-          : `api/event/${backendEventId}`;
+        const fetchUrl = buildEventFetchUrl({
+          eventId: backendEventId,
+          organizerSlug,
+          eventSlug,
+        });
         const response = await apiFetch(fetchUrl, { method: "GET" });
         const eventData = response.data?.event || response.data || response.event || response;
         eventCacheRef.current = eventData;
@@ -899,13 +921,34 @@ const CreateEvent = () => {
           console.log("📥 Fetching FRESH images from backend");
           console.log("📥 Event ID:", backendEventId);
           console.log("📥 Current Step:", currentStep);
+
+          // If gallery already exists in UI state, avoid a redundant fetch.
+          if (Array.isArray(galleryImages) && galleryImages.length > 0) {
+            return;
+          }
           
-          // Clear existing state first to prevent showing stale data
-          console.log("🧹 Clearing existing image state...");
-          setGalleryImages([]);
-          setGalleryImageIds({});
-          setExistingGalleryUrls([]);
-          
+          const cachedEvent = eventCacheRef.current;
+          const cachedEventId = cachedEvent?.id || cachedEvent?._id;
+          const isSameEvent = String(cachedEventId || '') === String(backendEventId);
+
+          // Avoid redundant network calls when edit payload is already cached in memory.
+          if (isSameEvent && Array.isArray(cachedEvent?.images)) {
+            if (cachedEvent?.flyerImage) {
+              setCoverImage(cachedEvent.flyerImage);
+            }
+
+            const galleryImagesData = cachedEvent.images.filter(img => img.type === 'EVENT_GALLERY');
+            const validGalleryImages = galleryImagesData.filter(img => !deletedImageIds.has(img.id));
+            const imageUrls = validGalleryImages.map(img => img.url);
+            const imageIdMap = {};
+            validGalleryImages.forEach(img => { imageIdMap[img.url] = img.id; });
+
+            setExistingGalleryUrls(imageUrls);
+            setGalleryImages(imageUrls);
+            setGalleryImageIds(imageIdMap);
+            return;
+          }
+
           // Fetch event details to get images (with timestamp to prevent caching)
           // Check if fetch is already in progress
           if (eventFetchInProgressRef.current) return;
@@ -913,14 +956,18 @@ const CreateEvent = () => {
 
           const organizerSlug = eventCacheRef.current?.organizer?.slug;
           const eventSlug = eventCacheRef.current?.slug;
-          const fetchUrl = organizerSlug && eventSlug
-            ? `api/event/${encodeURIComponent(organizerSlug)}/${encodeURIComponent(eventSlug)}?t=${Date.now()}`
-            : `api/event/${backendEventId}?t=${Date.now()}`;
+          const fetchUrl = buildEventFetchUrl({
+            eventId: backendEventId,
+            organizerSlug,
+            eventSlug,
+            bustCache: true,
+          });
           const response = await apiFetch(fetchUrl, {
             method: "GET",
           });
           
           const eventData = response.data || response;
+          eventCacheRef.current = eventData;
           console.log("📋 Full event data received:", eventData);
           
           // Load cover image (or clear if none exists)
@@ -984,10 +1031,6 @@ const CreateEvent = () => {
           
         } catch (error) {
           console.error("❌ Failed to load existing images:", error);
-          // Clear state on error to prevent showing stale data
-          setGalleryImages([]);
-          setGalleryImageIds({});
-          setExistingGalleryUrls([]);
         } finally {
           eventFetchInProgressRef.current = false;
         }

@@ -24,6 +24,17 @@ import BillingDetailsModal from "@/components/BillingDetailsModal";
 const FALLBACK_IMAGE = "https://via.placeholder.com/1200x600?text=Event";
 const SPONSOR_PLACEHOLDER = "https://via.placeholder.com/200x200?text=Sponsor";
 const TAB_PAUSE_DURATION_MS = 2 * 60 * 1000; // 2 minutes
+const hasHtmlTag = (value) =>
+  typeof value === "string" && /<\/?[a-z][\s\S]*>/i.test(value);
+const hasEscapedHtmlTag = (value) =>
+  typeof value === "string" && /&lt;\/?[a-z][\s\S]*&gt;/i.test(value);
+const decodeHtmlEntities = (value) => {
+  if (typeof value !== "string" || !value.includes("&")) return value;
+  if (typeof document === "undefined") return value;
+  const textarea = document.createElement("textarea");
+  textarea.innerHTML = value;
+  return textarea.value;
+};
 
 const EventDetailNew = () => {
   const { organizerSlug, eventSlug } = useParams();
@@ -63,11 +74,22 @@ const EventDetailNew = () => {
     if (Array.isArray(event?.termsAndConditions) && event.termsAndConditions.length > 0) {
       return event.termsAndConditions;
     }
-    if (event?.TC?.content) {
+    if (event?.TC?.content || event?.TC?.terms) {
       return [event.TC];
     }
     return [];
   }, [event?.termsAndConditions, event?.TC]);
+
+  const getTermHtml = (term) => {
+    if (!term) return "";
+    const decodedContent = decodeHtmlEntities(term.content || "");
+    if (decodedContent && (hasHtmlTag(decodedContent) || hasEscapedHtmlTag(term.content))) {
+      return decodedContent;
+    }
+    const decodedTerms = decodeHtmlEntities(term.terms || "");
+    if (hasHtmlTag(decodedTerms) || hasEscapedHtmlTag(term.terms)) return decodedTerms;
+    return "";
+  };
 
   const showFaqTc = useMemo(() => {
     const hasFaq = normalizedFaqs.length > 0;
@@ -143,11 +165,22 @@ const EventDetailNew = () => {
   }, [event?.about, aboutExpanded, activeTab]);
 
   const renderTermsContent = () => {
-    if (event?.termsHtml) {
+    const decodedTermsHtml = decodeHtmlEntities(event?.termsHtml || "");
+    if (decodedTermsHtml && (hasHtmlTag(decodedTermsHtml) || hasEscapedHtmlTag(event?.termsHtml))) {
       return (
         <div
           className="prose prose-invert max-w-none text-gray-400 prose-p:my-1 prose-li:my-0.5 prose-ol:list-decimal prose-ul:list-disc prose-headings:text-white text-[11px] leading-4"
-          dangerouslySetInnerHTML={{ __html: event.termsHtml }}
+          dangerouslySetInnerHTML={{ __html: decodedTermsHtml }}
+        />
+      );
+    }
+
+    const decodedTerms = decodeHtmlEntities(event?.terms || "");
+    if (hasHtmlTag(decodedTerms) || hasEscapedHtmlTag(event?.terms)) {
+      return (
+        <div
+          className="prose prose-invert max-w-none text-gray-400 prose-p:my-1 prose-li:my-0.5 prose-ol:list-decimal prose-ul:list-disc prose-headings:text-white text-[11px] leading-4"
+          dangerouslySetInnerHTML={{ __html: decodedTerms }}
         />
       );
     }
@@ -221,11 +254,11 @@ const EventDetailNew = () => {
             {normalizedTerms.length > 0 ? (
               normalizedTerms.map((t, idx) => (
                 <div key={`term-${idx}`} className="mb-3 last:mb-0">
-                  {t.content ? (
+                  {getTermHtml(t) ? (
                     <div
                       className="text-gray-300 text-sm leading-6 space-y-2"
                       style={{ lineHeight: 1.6 }}
-                      dangerouslySetInnerHTML={{ __html: t.content }}
+                      dangerouslySetInnerHTML={{ __html: getTermHtml(t) }}
                     />
                   ) : (
                     renderTermsContent()
@@ -1291,10 +1324,10 @@ const EventDetailNew = () => {
                     {normalizedTerms.length > 0 ? (
                       normalizedTerms.map((t, idx) => (
                         <div key={`term-${idx}`} className="mb-2 last:mb-0">
-                          {t.content ? (
+                          {getTermHtml(t) ? (
                             <div
                               className="text-gray-400 text-[11px] leading-4 space-y-1"
-                              dangerouslySetInnerHTML={{ __html: t.content }}
+                              dangerouslySetInnerHTML={{ __html: getTermHtml(t) }}
                             />
                           ) : (
                             renderTermsContent()
