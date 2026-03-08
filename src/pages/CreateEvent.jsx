@@ -316,16 +316,17 @@ const CreateEvent = () => {
   const pageTheme = {
     background: "bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510]",
     card: "bg-[#0a0a0a]/80",
-    border: "border-gray-800",
+    border: "#1f1f1f",
     accent: "#D60024",
     text: "text-white",
     muted: "text-gray-400",
+    glow: "0 14px 32px rgba(0, 0, 0, 0.28)",
   };
 
   const fieldClass =
-    "bg-[#0a0a0a] border-gray-700 text-white placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-[#D60024]/50 focus-visible:border-[#D60024] transition-all duration-200";
-  const cardBase = "border border-gray-800 bg-[#0a0a0a]/80 rounded-2xl";
-  const selectMenuClass = "bg-[#0a0a0a] text-white border border-gray-700 rounded-lg";
+    "h-12 bg-[#0f0f0f] border border-[#262626] rounded-[10px] px-[14px] text-sm text-white placeholder:text-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[#ef4444] focus-visible:shadow-[0_0_0_1px_#ef4444] transition-[border,box-shadow,background] duration-200";
+  const cardBase = "create-event-card border border-[#1f1f1f] bg-[#0c0c0c] rounded-2xl transition-all duration-200 hover:border-[#2a2a2a]";
+  const selectMenuClass = "bg-[#0f0f0f] text-white border border-[#262626] rounded-[10px]";
 
   const ensureBackendEventId = async () => {
     if (backendEventId) return backendEventId;
@@ -2712,18 +2713,18 @@ const CreateEvent = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] text-white">
+    <div className="create-event-shell min-h-screen flex flex-col bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] text-white">
       <LoadingOverlay show={showLoading} message={loadingMessage} />
       <Header isAuthenticated userRole="organizer" />
 
-      <main className="flex-1 py-4 md:py-5">
-        <div className="px-4 md:px-6 w-full max-w-5xl mx-auto space-y-3">
+      <main className="flex-1 py-10">
+        <div className="w-full max-w-[1100px] mx-auto px-4 md:px-8 space-y-8 pb-8">
           {/* Back Button and Clear Draft */}
-          <div className="flex items-center justify-between mb-0">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
-                className="text-white hover:bg-[#0a0a0a] px-3"
+                className="h-10 rounded-lg px-3 text-white hover:bg-[#111111]"
                 onClick={() => navigate(-1)}
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -2736,7 +2737,7 @@ const CreateEvent = () => {
               <Button
                 variant="outline"
                 size="sm"
-                className="border-[#D60024]/30 bg-[#D60024]/10 text-white hover:bg-[#D60024]/20"
+                className="h-10 rounded-lg border-[#2a2a2a] bg-[#0f0f0f] text-white hover:bg-[#151515] hover:border-[#D60024]/40"
                 onClick={() => {
                   if (confirm("Are you sure you want to start a new event? This will discard the current draft.")) {
                     sessionStorage.removeItem('draftEventId');
@@ -2760,38 +2761,38 @@ const CreateEvent = () => {
 
           {/* Progress Header */}
           <Card
-            className={`mb-6 border ${cardBase}`}
+            className={`border ${cardBase}`}
             style={{ borderColor: pageTheme.border, boxShadow: pageTheme.glow }}
           >
-            <CardContent className="p-4 space-y-4 rounded-2xl">
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div className="space-y-2">
-                  <p className="text-xs uppercase tracking-wider text-gray-500">
+            <CardContent className="p-8 space-y-8 rounded-2xl">
+              <div className="flex items-start justify-between gap-6 flex-wrap">
+                <div className="space-y-3">
+                  <p className="text-[12px] uppercase tracking-[0.12em] text-white/60">
                     Event Builder
                   </p>
                   <div className="flex items-center gap-3 flex-wrap">
-                    <h1 className="text-2xl font-bold text-white drop-shadow-sm">
+                    <h1 className="text-3xl md:text-[32px] font-semibold tracking-[-0.02em] text-white">
                       {isEditMode ? "Update Event" : "Create New Event"}
                     </h1>
                     {selectedEventTypeCategory && (
-                      <Badge className="bg-[#0a0a0a] text-gray-300 border-gray-700">
+                      <Badge className="h-7 rounded-full border-[#2a2a2a] bg-[#111111] px-3 text-[11px] uppercase tracking-[0.12em] text-white/80">
                         {selectedEventTypeCategory}
                       </Badge>
                     )}
                     
                     {backendEventId && !isEditMode && (
-                      <Badge className="bg-[#D60024]/15 text-white border-[#D60024]/30">
+                      <Badge className="h-7 rounded-full bg-[#ef4444]/20 text-white border-[#ef4444]/40 px-3 text-[11px] uppercase tracking-[0.12em]">
                         Draft
                       </Badge>
                     )}
                   </div>
                 </div>
-                <div className="flex items-end sm:items-center gap-3 flex-col sm:flex-row sm:flex-wrap justify-end">
+                <div className="flex items-end sm:items-center gap-4 flex-col sm:flex-row sm:flex-wrap justify-end">
                   
                     
                   <div className="flex items-center gap-3">
                    
-                    <div className="relative flex rounded-full overflow-hidden border border-gray-700 bg-[#0a0a0a] p-1">
+                    <div className="relative flex h-10 rounded-full overflow-hidden border border-[#2a2a2a] bg-[#0f0f0f] p-1">
                       <div
                         className="absolute top-1 left-1 h-[calc(100%-8px)] w-[calc(50%-4px)] bg-[#D60024] rounded-full transition-all duration-300 ease-out"
                         style={{
@@ -2819,9 +2820,9 @@ const CreateEvent = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-[#0a0a0a] border border-gray-700">
+                  <div className="flex items-center gap-2 px-3 h-10 rounded-full bg-[#0f0f0f] border border-[#2a2a2a]">
                     <div className="w-2 h-2 rounded-full bg-[#D60024] animate-pulse" />
-                    <span className="text-xs text-gray-400 whitespace-nowrap">
+                    <span className="text-xs text-gray-300 whitespace-nowrap tracking-[0.08em] uppercase">
                       Step {currentStep} of {steps.length} • {steps[currentStep - 1].title}
                     </span>
                   </div>
@@ -2829,38 +2830,38 @@ const CreateEvent = () => {
               </div>
 
               {/* Circle+bar tracker */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
+              <div className="space-y-2">
+                <div className="flex items-center gap-8 overflow-x-auto pb-1">
                   {steps.map((step, idx) => {
                     const isCurrent = step.number === currentStep;
                     const isDone = step.number < currentStep;
                     const barActive =
                       idx < currentStep - 1
-                        ? "bg-[#D60024]"
+                        ? "bg-[#ef4444]"
                         : idx === currentStep - 1
-                        ? "bg-gray-700"
-                        : "bg-gray-800";
+                        ? "bg-[#2a2a2a]"
+                        : "bg-[#1a1a1a]";
 
                     return (
-                      <div key={step.number} className="flex-1 min-w-[90px] flex items-center gap-1">
-                        <div className="flex flex-col items-center gap-1 w-full">
+                      <div key={step.number} className="min-w-max flex items-center gap-4">
+                        <div className="flex flex-col items-center gap-2">
                           <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center border-2 text-sm transition-all ${
+                            className={`w-9 h-9 rounded-full flex items-center justify-center border text-sm font-medium transition-all ${
                               isDone
-                                ? "bg-[#D60024] border-[#D60024] text-white"
+                                ? "bg-[#ef4444] border-[#ef4444] text-white"
                                 : isCurrent
-                                ? "border-[#D60024] bg-[#0a0a0a] text-white"
-                                : "border-gray-800 bg-[#0a0a0a] text-gray-500"
+                                ? "border-[#ef4444] bg-[#111111] text-white"
+                                : "border-[#2a2a2a] bg-[#111111] text-[#777777]"
                             }`}
                           >
                             {isDone ? <Check className="w-4 h-4" /> : step.number}
                           </div>
-                          <p className="text-xs font-medium text-gray-400 text-center leading-tight">
+                          <p className="text-xs font-medium text-gray-400 text-center leading-tight whitespace-nowrap">
                             {step.title}
                           </p>
                         </div>
                         {idx !== steps.length - 1 && (
-                          <div className={`flex-1 h-1 rounded-full ${barActive}`} />
+                          <div className={`h-px w-14 rounded-full ${barActive}`} />
                         )}
                       </div>
                     );
@@ -2871,22 +2872,22 @@ const CreateEvent = () => {
           </Card>
 
           {/* Step Content */}
-          <Card className={cardBase}>
-            <CardHeader className="border-b border-gray-800 bg-transparent pb-5">
-              <CardTitle className="text-xl text-white flex items-center gap-2">
-                <span className="inline-flex w-8 h-8 items-center justify-center rounded-full bg-gray-800 text-sm font-semibold">
+          <Card className={`${cardBase} overflow-hidden`}>
+            <CardHeader className="border-b border-[#1f1f1f] bg-[#0f0f0f] px-8 py-6">
+              <CardTitle className="text-2xl text-white flex items-center gap-3">
+                <span className="inline-flex w-9 h-9 items-center justify-center rounded-full border border-[#2a2a2a] bg-[#111111] text-sm font-semibold">
                   {currentStep}
                 </span>
                 {steps[currentStep - 1].title}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 text-gray-200 pt-5">
+            <CardContent className="space-y-6 text-gray-200 px-8 py-8">
               {/* Step 1: Event Details + Images */}
               {currentStep === 1 && (
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="eventTitle">Event Title *</Label>
+                <div className="space-y-8">
+                  <div className="space-y-5">
+                    <div className="space-y-2.5">
+                      <Label htmlFor="eventTitle" className="text-[13px] font-medium text-[#d4d4d4]">Event Title *</Label>
                       <Input
                         id="eventTitle"
                         placeholder="Enter event title"
@@ -2899,14 +2900,14 @@ const CreateEvent = () => {
                       />
                     </div>
 
-                    <div>
-                      <Label>Main Category *</Label>
+                    <div className="space-y-2.5">
+                      <Label className="text-[13px] font-medium text-[#d4d4d4]">Main Category *</Label>
                       <Select value={mainCategory} onValueChange={(value) => {
                         setMainCategory(value);
                         setSelectedCategories([]);
                         if (backendEventId) setTextFieldsChanged(true);
                       }}>
-                        <SelectTrigger className={`${fieldClass} h-10`}>
+                        <SelectTrigger className={fieldClass}>
                           <SelectValue placeholder="Select main category" />
                         </SelectTrigger>
                         <SelectContent className={selectMenuClass}>
@@ -2917,13 +2918,13 @@ const CreateEvent = () => {
                     </div>
 
                     {mainCategory && (
-                      <div>
-                        <Label>Subcategory *</Label>
+                      <div className="space-y-2.5">
+                        <Label className="text-[13px] font-medium text-[#d4d4d4]">Subcategory *</Label>
                         <Select value={selectedCategories[0] || ""} onValueChange={(value) => {
                           setSelectedCategories([value]);
                           if (backendEventId) setTextFieldsChanged(true);
                         }}>
-                          <SelectTrigger className={`${fieldClass} h-10`}>
+                          <SelectTrigger className={fieldClass}>
                             <SelectValue placeholder="Select subcategory" />
                           </SelectTrigger>
                           <SelectContent className={selectMenuClass}>
@@ -2936,14 +2937,14 @@ const CreateEvent = () => {
                         </Select>
                       </div>
                     )}
-                    <div>
-                      <Label htmlFor="description">Event Description</Label>
+                    <div className="space-y-2.5">
+                      <Label htmlFor="description" className="text-[13px] font-medium text-[#d4d4d4]">Event Description</Label>
                       <Textarea
                         id="description"
                         placeholder="Describe your event..."
                         rows={4}
                         value={eventDescription}
-                        className={`${fieldClass} min-h-[130px]`}
+                        className={`${fieldClass} min-h-[120px] py-3`}
                         onChange={(e) => {
                           setEventDescription(e.target.value);
                           if (backendEventId) setTextFieldsChanged(true);
@@ -2952,26 +2953,31 @@ const CreateEvent = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="text-sm text-muted-foreground mb-2">
+                  <div className="space-y-6">
+                    <div className="text-sm text-muted-foreground">
                       Add a striking cover and gallery to make your event pop.
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="cover-image">Cover Image *</Label>
-                      <div className="space-y-3">
+                    <div className="space-y-3">
+                      <Label htmlFor="cover-image" className="text-[13px] font-medium text-[#d4d4d4]">Cover Image *</Label>
+                      <div className="space-y-4">
+                        <div className={`relative rounded-xl border border-dashed border-[#333333] bg-[#0e0e0e] p-6 text-center transition-all duration-200 ${!basicDetailsFilled ? "opacity-70" : "hover:border-[#ef4444]/60"}`}>
                         <input
                           id="cover-image" 
                           type="file" 
                           accept="image/*" 
                           onChange={handleCoverImageChange}
-                          className={`${fieldClass} cursor-pointer`}
+                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
                           disabled={uploadingCover || !basicDetailsFilled}
                           ref={coverImageInputRef}
                         />
-                        <p className="text-xs text-muted-foreground">
-                          Recommended size: 1920x1080px.
-                        </p>
+                          <div className="pointer-events-none flex flex-col items-center gap-2">
+                            <Upload className="h-5 w-5 text-gray-400" />
+                            <p className="text-sm text-gray-200">Drag and drop your cover image</p>
+                            <p className="text-sm text-gray-400">or click to upload</p>
+                            <p className="text-xs text-gray-500">Recommended size: 1920x1080</p>
+                          </div>
+                        </div>
                         {!basicDetailsFilled && (
                           <p className="text-xs text-amber-400">
                             Fill title, category, and subcategory to enable image uploads.
@@ -2987,7 +2993,7 @@ const CreateEvent = () => {
                         )}
                         
                         {coverImage && !uploadingCover && (
-                          <div className="relative w-full h-40 rounded-lg overflow-hidden border border-border">
+                          <div className="relative w-full h-44 rounded-xl overflow-hidden border border-[#262626]">
                             <img 
                               src={coverImage} 
                               alt="Cover preview" 
@@ -2997,7 +3003,7 @@ const CreateEvent = () => {
                               type="button"
                               variant="destructive"
                               size="icon"
-                              className="absolute top-2 right-2"
+                              className="absolute top-2 right-2 h-8 w-8"
                               onClick={handleRemoveCoverImage}
                               title="Delete from cloud"
                             >
@@ -3008,18 +3014,26 @@ const CreateEvent = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="gallery">Gallery Images (optional)</Label>
-                      <div className="space-y-3">
-                        <Input 
+                    <div className="space-y-3">
+                      <Label htmlFor="gallery" className="text-[13px] font-medium text-[#d4d4d4]">Gallery Images (optional)</Label>
+                      <div className="space-y-4">
+                        <div className={`relative rounded-xl border border-dashed border-[#333333] bg-[#0e0e0e] p-6 text-center transition-all duration-200 ${!basicDetailsFilled ? "opacity-70" : "hover:border-[#ef4444]/60"}`}>
+                        <input 
                           id="gallery" 
                           type="file" 
                           accept="image/*" 
                           multiple 
                           onChange={handleGalleryImagesChange}
-                          className={`${fieldClass} cursor-pointer`}
+                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
                           disabled={uploadingGallery || !basicDetailsFilled}
                         />
+                          <div className="pointer-events-none flex flex-col items-center gap-2">
+                            <Upload className="h-5 w-5 text-gray-400" />
+                            <p className="text-sm text-gray-200">Drag and drop gallery images</p>
+                            <p className="text-sm text-gray-400">or click to upload</p>
+                            <p className="text-xs text-gray-500">Supported formats: JPG, PNG, WebP. Up to 10 images.</p>
+                          </div>
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           Add up to 10 images. Max file size: 10MB each. Images upload immediately after selection.
                         </p>
@@ -3033,9 +3047,12 @@ const CreateEvent = () => {
                         )}
                         
                         {galleryImages.length > 0 && (
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          <div
+                            className="grid gap-3"
+                            style={{ gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))" }}
+                          >
                             {galleryImages.map((img, index) => (
-                              <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-border group">
+                              <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-[#262626] group bg-[#0f0f0f]">
                                 <img 
                                   src={img} 
                                   alt={`Gallery preview ${index + 1}`} 
@@ -3045,7 +3062,7 @@ const CreateEvent = () => {
                                   type="button"
                                   variant="destructive"
                                   size="icon"
-                                  className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
                                   onClick={() => removeGalleryImage(index)}
                                   title="Delete from cloud"
                                   disabled={uploadingGallery}
@@ -3069,8 +3086,8 @@ const CreateEvent = () => {
 
               {/* Step 5: Sponsor */}
               {currentStep === 5 && (
-                <div className="space-y-5">
-                  <div className="flex flex-col gap-3 rounded-lg border border-gray-800 bg-[#0a0a0a]/80 p-3">
+                <div className="space-y-6">
+                  <div className="flex flex-col gap-4 rounded-xl border border-[#1f1f1f] bg-[#0f0f0f] p-5">
                     <div className="flex items-center justify-between gap-3">
                       <div className="space-y-1">
                         <p className="text-sm font-semibold text-white">Is this event sponsored?</p>
@@ -3106,7 +3123,7 @@ const CreateEvent = () => {
                         variant="outline"
                         size="sm"
                         onClick={addSponsorRow}
-                        className="border-gray-700 bg-[#0a0a0a] text-white hover:border-[#D60024]/50"
+                        className="h-10 rounded-lg border-[#2a2a2a] bg-[#0f0f0f] px-4 text-white hover:border-[#ef4444]/60 hover:bg-[#151515]"
                       >
                         <Plus className="w-4 h-4 mr-2" />
                         Add Sponsor
@@ -3115,10 +3132,10 @@ const CreateEvent = () => {
                   )}
 
                   {isSponsored && (
-                    <div className="space-y-4">
+                    <div className="space-y-5">
                       {sponsors.map((sponsor, index) => (
                         <Card key={index} className={`border ${cardBase}`} style={{ borderColor: pageTheme.border }}>
-                          <CardContent className="p-4 space-y-3">
+                          <CardContent className="p-5 space-y-5">
                             <div className="flex items-start justify-between">
                               <div>
                                 <p className="text-sm text-muted-foreground">Sponsor {index + 1}</p>
@@ -3137,36 +3154,45 @@ const CreateEvent = () => {
                               )}
                             </div>
 
-                            <div className="grid gap-4 md:grid-cols-2">
-                              <div className="space-y-2">
-                                <Label>Sponsor Name *</Label>
+                            <div className="grid gap-5 md:grid-cols-2">
+                              <div className="space-y-2.5">
+                                <Label className="text-[13px] font-medium text-[#d4d4d4]">Sponsor Name *</Label>
                                 <Input
                                   placeholder="BrandCo"
                                   value={sponsor.name}
+                                  className={fieldClass}
                                   onChange={(e) => handleSponsorChange(index, "name", e.target.value)}
                                 />
                               </div>
-                              <div className="space-y-2">
-                                <Label>Website URL</Label>
+                              <div className="space-y-2.5">
+                                <Label className="text-[13px] font-medium text-[#d4d4d4]">Website URL</Label>
                                 <Input
                                   type="url"
                                   placeholder="https://brandco.example.com"
                                   value={sponsor.websiteUrl}
+                                  className={fieldClass}
                                   onChange={(e) => handleSponsorChange(index, "websiteUrl", e.target.value)}
                                 />
                               </div>
                             </div>
 
-                            <div className="grid gap-4 md:grid-cols-2">
-                              <div className="space-y-2">
-                                <Label>Logo</Label>
-                                <div className="space-y-2">
-                                  <Input
+                            <div className="grid gap-5 md:grid-cols-2">
+                              <div className="space-y-2.5">
+                                <Label className="text-[13px] font-medium text-[#d4d4d4]">Logo</Label>
+                                <div className="space-y-3">
+                                  <div className="relative rounded-xl border border-dashed border-[#333333] bg-[#0e0e0e] px-4 py-5 text-center transition-all duration-200 hover:border-[#ef4444]/60">
+                                  <input
                                     type="file"
                                     accept="image/*"
                                     onChange={(e) => handleSponsorLogoChange(index, e.target.files?.[0])}
-                                    className="cursor-pointer"
+                                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                                   />
+                                    <div className="pointer-events-none flex flex-col items-center gap-2">
+                                      <Upload className="h-4 w-4 text-gray-400" />
+                                      <p className="text-sm text-gray-300">Upload sponsor logo</p>
+                                      <p className="text-xs text-gray-500">PNG / SVG preferred</p>
+                                    </div>
+                                  </div>
                                   <p className="text-xs text-muted-foreground">PNG / SVG with transparent background preferred</p>
                                   {sponsorUploadIndex === index && (
                                     <div className="flex items-center gap-2 text-sm text-primary">
@@ -3230,15 +3256,15 @@ const CreateEvent = () => {
 
               {/* Step 2: Date & Time */}
               {currentStep === 2 && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-5">
                     <div className="flex flex-col gap-2">
-                      <Label>Starting Date *</Label>
+                      <Label className="text-[13px] font-medium text-[#d4d4d4]">Starting Date *</Label>
                       <Popover open={startCalendarOpen} onOpenChange={setStartCalendarOpen}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
-                            className={`w-full justify-between ${fieldClass} h-10 hover:border-[#D60024]/50`}
+                            className={`w-full justify-between ${fieldClass}`}
                           >
                             <span className="flex items-center gap-2 text-white">
                               <CalendarIcon className="w-4 h-4 text-gray-400" />
@@ -3266,12 +3292,12 @@ const CreateEvent = () => {
                       </Popover>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Label>Ending Time *</Label>
+                      <Label className="text-[13px] font-medium text-[#d4d4d4]">Starting Time *</Label>
                       <Popover open={endTimeOpen} onOpenChange={setEndTimeOpen}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
-                            className={`w-full justify-between ${fieldClass} h-10 hover:border-[#D60024]/50`}
+                            className={`w-full justify-between ${fieldClass}`}
                           >
                             <span className="flex items-center gap-2 text-white">
                               <Clock className="w-4 h-4 text-gray-400" />
@@ -3296,14 +3322,14 @@ const CreateEvent = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid md:grid-cols-2 gap-5">
                     <div className="flex flex-col gap-2">
-                      <Label>Ending Date *</Label>
+                      <Label className="text-[13px] font-medium text-[#d4d4d4]">Ending Date *</Label>
                       <Popover open={endCalendarOpen} onOpenChange={setEndCalendarOpen}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
-                            className={`w-full justify-between ${fieldClass} h-10 hover:border-[#D60024]/50`}
+                            className={`w-full justify-between ${fieldClass}`}
                           >
                             <span className="flex items-center gap-2 text-white">
                               <CalendarIcon className="w-4 h-4 text-gray-400" />
@@ -3330,12 +3356,12 @@ const CreateEvent = () => {
                       </Popover>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Label>Ending Time *</Label>
+                      <Label className="text-[13px] font-medium text-[#d4d4d4]">Ending Time *</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
-                            className={`w-full justify-between ${fieldClass} h-10 hover:border-[#D60024]/50`}
+                            className={`w-full justify-between ${fieldClass}`}
                           >
                             <span className="flex items-center gap-2 text-white">
                               <Clock className="w-4 h-4 text-gray-400" />
@@ -3364,19 +3390,19 @@ const CreateEvent = () => {
 
               {/* Step 3: Tickets */}
               {currentStep === 3 && (
-                <div className="space-y-6">
+                <div className="space-y-8">
                   <div className="text-sm text-gray-400">
                     Select ticket types to add for your event
                   </div>
 
-                  <div className="p-3 rounded-xl border border-dashed border-gray-700 bg-[#0a0a0a]/80 text-xs md:text-sm text-gray-400">
+                  <div className="p-4 rounded-xl border border-dashed border-[#333333] bg-[#0f0f0f] text-xs md:text-sm text-gray-400">
                     Need a custom ticket? Pick <span className="font-medium text-white">Add Standard Ticket</span>, name it (e.g., <span className="font-medium text-white">Silver</span>) and set any price. You can add multiple categories.
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-4">
                     {/* VIP Guest List Card */}
                     <Card 
-                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#D60024]/50`}
+                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#ef4444]/60`}
                       onClick={() => openTicketModal("vip-guest")}
                     >
                       <CardContent className="p-4 space-y-3">
@@ -3394,7 +3420,7 @@ const CreateEvent = () => {
 
                     {/* Standard Ticket Card */}
                     <Card 
-                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#D60024]/50`}
+                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#ef4444]/60`}
                       onClick={() => openTicketModal("standard")}
                     >
                       <CardContent className="p-4 space-y-3">
@@ -3412,7 +3438,7 @@ const CreateEvent = () => {
 
                     {/* Table Ticket Card */}
                     <Card 
-                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#D60024]/50`}
+                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#ef4444]/60`}
                       onClick={() => openTicketModal("table")}
                     >
                       <CardContent className="p-4 space-y-3">
@@ -3430,7 +3456,7 @@ const CreateEvent = () => {
 
                     {/* Group Pass Card */}
                     <Card 
-                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#D60024]/50`}
+                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#ef4444]/60`}
                       onClick={() => openTicketModal("group-pass")}
                     >
                       <CardContent className="p-4 space-y-3">
@@ -3453,7 +3479,7 @@ const CreateEvent = () => {
                       <h5 className="font-semibold">Added Tickets ({savedTickets.length})</h5>
                       <div className="grid gap-3">
                         {savedTickets.map((ticket, index) => (
-                          <Card key={index} className="border border-gray-800 bg-[#0a0a0a]/80">
+                          <Card key={index} className={`${cardBase}`}>
                             <CardContent className="p-4">
                               <div className="flex justify-between items-start">
                                 <div>
@@ -3500,7 +3526,7 @@ const CreateEvent = () => {
               {/* Step 4: Venue & Location */}
               {currentStep === 4 && (
                 <div className="space-y-6">
-                  <div className="rounded-xl border border-gray-800 bg-[#0a0a0a]/80 p-4">
+                  <div className="rounded-2xl border border-[#1f1f1f] bg-[#0f0f0f] p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
                         <p className="text-xs uppercase tracking-[0.12em] text-white/60">Venue</p>
@@ -3520,7 +3546,7 @@ const CreateEvent = () => {
                           placeholder="e.g., Red Fort Delhi"
                           value={venueName}
                           onChange={(e) => setVenueName(e.target.value)}
-                          className={`${fieldClass} h-11`}
+                          className={fieldClass}
                         />
                       </div>
                       <div className="space-y-2">
@@ -3530,7 +3556,7 @@ const CreateEvent = () => {
                           placeholder="Enter city"
                           value={city}
                           onChange={(e) => setCity(e.target.value)}
-                          className={`${fieldClass} h-11`}
+                          className={fieldClass}
                         />
                       </div>
                     </div>
@@ -3543,7 +3569,7 @@ const CreateEvent = () => {
                           placeholder="Enter state"
                           value={state}
                           onChange={(e) => setState(e.target.value)}
-                          className={`${fieldClass} h-11`}
+                          className={fieldClass}
                         />
                       </div>
                       <div className="space-y-2">
@@ -3553,7 +3579,7 @@ const CreateEvent = () => {
                           placeholder="Enter country"
                           value={country}
                           onChange={(e) => setCountry(e.target.value)}
-                          className={`${fieldClass} h-11`}
+                          className={fieldClass}
                         />
                       </div>
                     </div>
@@ -3566,7 +3592,7 @@ const CreateEvent = () => {
                           placeholder="e.g., 110025"
                           value={postalCode}
                           onChange={(e) => setPostalCode(e.target.value)}
-                          className={`${fieldClass} h-11`}
+                          className={fieldClass}
                         />
                       </div>
                       <div className="space-y-2">
@@ -3577,7 +3603,7 @@ const CreateEvent = () => {
                           placeholder="Enter contact number"
                           value={venueContact}
                           onChange={(e) => setVenueContact(e.target.value)}
-                          className={`${fieldClass} h-11`}
+                          className={fieldClass}
                         />
                       </div>
                     </div>
@@ -3591,7 +3617,7 @@ const CreateEvent = () => {
                           placeholder="Enter email"
                           value={venueEmail}
                           onChange={(e) => setVenueEmail(e.target.value)}
-                          className={`${fieldClass} h-11`}
+                          className={fieldClass}
                         />
                       </div>
                       <div className="space-y-2">
@@ -3602,7 +3628,7 @@ const CreateEvent = () => {
                           value={fullAddress}
                           onChange={(e) => setFullAddress(e.target.value)}
                           rows={3}
-                          className={`${fieldClass} min-h-[44px]`}
+                          className={`${fieldClass} min-h-[120px] py-3`}
                         />
                         <p className="text-xs text-white/60">Provide extra directions if needed. This won’t block submission.</p>
                       </div>
@@ -3620,6 +3646,7 @@ const CreateEvent = () => {
                       type="button"
                       variant="outline"
                       size="sm"
+                      className="h-10 rounded-lg border-[#2a2a2a] bg-[#0f0f0f] px-4 text-white hover:border-[#ef4444]/60 hover:bg-[#151515]"
                       onClick={() => setArtists([...artists, { name: "", photo: "", image: "", instagram: "", spotify: "", gender: "PREFER_NOT_TO_SAY" }])}
                     >
                       <Plus className="w-4 h-4 mr-2" />
@@ -3628,7 +3655,7 @@ const CreateEvent = () => {
                   </div>
 
                   {artists.map((artist, index) => (
-                    <Card key={index} className="p-3 border border-gray-800">
+                    <Card key={index} className={`${cardBase} p-5`}>
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <p className="text-sm text-muted-foreground">Artist {index + 1}</p>
@@ -3646,13 +3673,14 @@ const CreateEvent = () => {
                         )}
                       </div>
 
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label htmlFor={`artist-name-${index}`}>Artist Name *</Label>
+                      <div className="grid gap-5 md:grid-cols-2">
+                        <div className="space-y-2.5">
+                          <Label htmlFor={`artist-name-${index}`} className="text-[13px] font-medium text-[#d4d4d4]">Artist Name *</Label>
                           <Input
                             id={`artist-name-${index}`}
                             placeholder="e.g., John Doe"
                             value={artist.name}
+                            className={fieldClass}
                             onChange={(e) => {
                               const newArtists = [...artists];
                               newArtists[index].name = e.target.value;
@@ -3661,8 +3689,8 @@ const CreateEvent = () => {
                           />
                         </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor={`artist-gender-${index}`}>Gender</Label>
+                        <div className="space-y-2.5">
+                          <Label htmlFor={`artist-gender-${index}`} className="text-[13px] font-medium text-[#d4d4d4]">Gender</Label>
                           <Select 
                             value={artist.gender || "PREFER_NOT_TO_SAY"} 
                             onValueChange={(value) => {
@@ -3671,10 +3699,10 @@ const CreateEvent = () => {
                               setArtists(newArtists);
                             }}
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className={fieldClass}>
                               <SelectValue placeholder="Select gender" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className={selectMenuClass}>
                               <SelectItem value="MALE">Male</SelectItem>
                               <SelectItem value="FEMALE">Female</SelectItem>
                               <SelectItem value="OTHER">Other</SelectItem>
@@ -3683,19 +3711,26 @@ const CreateEvent = () => {
                         </div>
                       </div>
 
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label htmlFor={`artist-photo-${index}`}>Artist Photo *</Label>
-                          <div className="space-y-2">
-                            <Input
+                      <div className="grid gap-5 md:grid-cols-2">
+                        <div className="space-y-2.5">
+                          <Label htmlFor={`artist-photo-${index}`} className="text-[13px] font-medium text-[#d4d4d4]">Artist Photo *</Label>
+                          <div className="space-y-3">
+                            <div className="relative rounded-xl border border-dashed border-[#333333] bg-[#0e0e0e] px-4 py-5 text-center transition-all duration-200 hover:border-[#ef4444]/60">
+                            <input
                               id={`artist-photo-${index}`}
                               type="file"
                               accept="image/*"
                               onChange={(e) => handleArtistPhotoChange(index, e)}
-                              className="cursor-pointer"
+                              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                             />
+                              <div className="pointer-events-none flex flex-col items-center gap-2">
+                                <Upload className="h-4 w-4 text-gray-400" />
+                                <p className="text-sm text-gray-300">Upload artist photo</p>
+                                <p className="text-xs text-gray-500">JPG/PNG/WebP</p>
+                              </div>
+                            </div>
                             {artist.photo && (
-                              <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-border">
+                              <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-[#262626]">
                                 <img 
                                   src={artist.photo} 
                                   alt={`${artist.name} preview`} 
@@ -3717,12 +3752,13 @@ const CreateEvent = () => {
                           </div>
                         </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor={`artist-instagram-${index}`}>Instagram *</Label>
+                        <div className="space-y-2.5">
+                          <Label htmlFor={`artist-instagram-${index}`} className="text-[13px] font-medium text-[#d4d4d4]">Instagram *</Label>
                           <Input
                             id={`artist-instagram-${index}`}
                             placeholder="@artist_handle"
                             value={artist.instagram}
+                            className={fieldClass}
                             onChange={(e) => {
                               const newArtists = [...artists];
                               newArtists[index].instagram = e.target.value;
@@ -3733,12 +3769,13 @@ const CreateEvent = () => {
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor={`artist-spotify-${index}`}>Spotify (Optional)</Label>
+                      <div className="space-y-2.5">
+                        <Label htmlFor={`artist-spotify-${index}`} className="text-[13px] font-medium text-[#d4d4d4]">Spotify (Optional)</Label>
                         <Input
                           id={`artist-spotify-${index}`}
                           placeholder="https://open.spotify.com/artist/..."
                           value={artist.spotify}
+                          className={fieldClass}
                           onChange={(e) => {
                             const newArtists = [...artists];
                             newArtists[index].spotify = e.target.value;
@@ -3779,7 +3816,7 @@ const CreateEvent = () => {
 
                 return (
                   <div className="space-y-5">
-                    <Card className="border border-gray-800 bg-[#0a0a0a]/80">
+                    <Card className={`${cardBase}`}>
                       <CardHeader className="pb-2">
                         <p className="text-xs uppercase tracking-[0.2em] text-white/50">Step 7</p>
                         <CardTitle className="text-xl text-white">Additional Info</CardTitle>
@@ -3829,7 +3866,7 @@ const CreateEvent = () => {
                               <Button
                                 type="button"
                                 variant="outline"
-                                className="border-gray-700 bg-[#0a0a0a] text-white hover:border-[#D60024]/50"
+                                className="h-10 rounded-lg border-[#2a2a2a] bg-[#0f0f0f] text-white hover:border-[#ef4444]/60 hover:bg-[#151515]"
                                 onClick={() => setAdvisoryDialogOpen(true)}
                               >
                                 {hasSelections ? `${selectedBuiltIns.length + customAdvisories.length} selected` : "Open advisory picker"}
@@ -3880,12 +3917,12 @@ const CreateEvent = () => {
                                         placeholder="e.g., No re-entry after 10 PM"
                                         value={newCustomAdvisory}
                                         onChange={(e) => setNewCustomAdvisory(e.target.value)}
-                                        className="bg-[#0a0a0a] border-gray-700 text-white placeholder:text-gray-500"
+                                        className={fieldClass}
                                       />
                                       <Button
                                         type="button"
                                         variant="outline"
-                                        className="border-gray-700 bg-[#0a0a0a] text-white hover:border-[#D60024]/50"
+                                        className="h-12 w-12 rounded-[10px] border-[#2a2a2a] bg-[#0f0f0f] text-white hover:border-[#ef4444]/60 hover:bg-[#151515]"
                                         onClick={() => setShowEmojiPicker((prev) => !prev)}
                                       >
                                         <Smile className="w-4 h-4" />
@@ -4012,7 +4049,7 @@ const CreateEvent = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="border-gray-600 text-white bg-gray-800 hover:bg-gray-700"
+                              className="h-10 rounded-lg border-[#2a2a2a] text-white bg-[#0f0f0f] hover:bg-[#151515] hover:border-[#ef4444]/60"
                               onClick={() => {
                                 if (newQuestion.trim()) {
                                   setCustomQuestions([...customQuestions, { question: newQuestion, answer: newAnswer }]);
@@ -4034,14 +4071,14 @@ const CreateEvent = () => {
                               placeholder="Question (e.g., Dietary requirements?)"
                               value={newQuestion}
                               onChange={(e) => setNewQuestion(e.target.value)}
-                              className="bg-[#0a0a0a] border-gray-700 text-white placeholder:text-gray-500"
+                              className={fieldClass}
                             />
                             <Textarea
                               placeholder="Answer (optional - organizer can provide default answer)"
                               value={newAnswer}
                               onChange={(e) => setNewAnswer(e.target.value)}
                               rows={2}
-                              className="bg-[#0a0a0a] border-gray-700 text-white placeholder:text-gray-500"
+                              className={`${fieldClass} min-h-[120px] py-3`}
                             />
                           </div>
 
@@ -4084,7 +4121,7 @@ const CreateEvent = () => {
                             rows={3}
                             value={organizerNote}
                             onChange={(e) => setOrganizerNote(e.target.value)}
-                            className="bg-[#0a0a0a] border-gray-700 text-white placeholder:text-gray-500"
+                            className={`${fieldClass} min-h-[120px] py-3`}
                           />
                         </div>
                       </CardContent>
@@ -4353,44 +4390,45 @@ const CreateEvent = () => {
                 );
               })()}
             </CardContent>
+
+            <div className="sticky bottom-4 z-20 mt-8 border-t border-[#1f1f1f] bg-[#0c0c0c]/95 backdrop-blur px-8 py-5">
+              <div className="flex items-center justify-between gap-3">
+                <Button
+                  variant="outline"
+                  onClick={prevStep}
+                  disabled={currentStep === 1}
+                  className="h-11 rounded-[10px] border-[#2a2a2a] bg-transparent px-5 text-white hover:bg-[#151515]"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Previous
+                </Button>
+
+                {currentStep < 8 ? (
+                  <Button
+                    onClick={nextStep}
+                    disabled={isSubmitting}
+                    className="h-11 rounded-[10px] bg-[#ef4444] px-5 font-medium text-white hover:bg-[#dc2626]"
+                  >
+                    {isSubmitting ? "Saving..." : "Next"}
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                ) : (
+                  <Button
+                    variant="accent"
+                    onClick={() => handleSubmit(publishState)}
+                    disabled={isSubmitting}
+                    className="h-11 rounded-[10px] bg-[#ef4444] px-5 font-medium text-white hover:bg-[#dc2626]"
+                  >
+                    {isSubmitting
+                      ? "Updating..."
+                      : publishState === "PUBLISHED"
+                        ? (isEditMode ? "Update & Publish" : "Publish Event")
+                        : (isEditMode ? "Update as Draft" : "Save as Draft")}
+                  </Button>
+                )}
+              </div>
+            </div>
           </Card>
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-between mt-6">
-            <Button
-              variant="outline"
-              onClick={prevStep}
-              disabled={currentStep === 1}
-              className="border-gray-700 text-white hover:bg-[#0a0a0a]"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Previous
-            </Button>
-
-            {currentStep < 8 ? (
-              <Button
-                onClick={nextStep}
-                disabled={isSubmitting}
-                className="bg-[#D60024] text-white hover:bg-[#ff1a3c]"
-              >
-                {isSubmitting ? "Saving..." : "Next"}
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            ) : (
-              <Button 
-                variant="accent" 
-                onClick={() => handleSubmit(publishState)}
-                disabled={isSubmitting}
-                className="bg-[#D60024] text-white hover:bg-[#ff1a3c]"
-              >
-                {isSubmitting
-                  ? "Updating..."
-                  : publishState === "PUBLISHED"
-                    ? (isEditMode ? "Update & Publish" : "Publish Event")
-                    : (isEditMode ? "Update as Draft" : "Save as Draft")}
-              </Button>
-            )}
-          </div>
         </div>
       </main>
 

@@ -3,7 +3,7 @@ import { apiFetch } from "@/config/api";
 
 /**
  * Hook for fetching promoter dashboard overview data
- * Fetches comprehensive dashboard metrics from /api/promoter/dashboard
+ * Fetches comprehensive dashboard metrics from /api/admin/dashboard
  */
 export const usePromoterDashboard = () => {
   const [dashboard, setDashboard] = useState(null);
@@ -28,7 +28,7 @@ export const usePromoterDashboard = () => {
     setError(null);
 
     try {
-      const url = "api/promoter/dashboard";
+      const url = "api/admin/dashboard";
 
       console.log("🌐 Fetching promoter dashboard from:", url);
 

@@ -85,9 +85,79 @@
   }
 }
 
+@layer components {
+  .create-event-shell .create-event-card {
+    transition: all 0.2s ease;
+  }
+
+  .create-event-shell label {
+    margin-bottom: 6px;
+    color: #d4d4d4;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .create-event-shell input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+  .create-event-shell textarea,
+  .create-event-shell button[role="combobox"] {
+    border-color: #262626;
+    background: #0f0f0f;
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 14px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  }
+
+  .create-event-shell textarea {
+    min-height: 120px;
+  }
+
+  .create-event-shell input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):focus-visible,
+  .create-event-shell textarea:focus-visible,
+  .create-event-shell button[role="combobox"]:focus-visible {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 1px #ef4444;
+    outline: none;
+  }
+
+  /* Keep dark theme on browser autofill/suggested values */
+  .create-event-shell input:-webkit-autofill,
+  .create-event-shell input:-webkit-autofill:hover,
+  .create-event-shell input:-webkit-autofill:focus,
+  .create-event-shell textarea:-webkit-autofill,
+  .create-event-shell textarea:-webkit-autofill:hover,
+  .create-event-shell textarea:-webkit-autofill:focus {
+    -webkit-text-fill-color: #ffffff;
+    caret-color: #ffffff;
+    -webkit-box-shadow: 0 0 0 1000px #0f0f0f inset;
+    box-shadow: 0 0 0 1000px #0f0f0f inset;
+    transition: background-color 9999s ease-in-out 0s;
+    border-color: #262626;
+  }
+
+  .create-event-shell .ql-toolbar,
+  .create-event-shell .ql-container {
+    border-color: #262626 !important;
+    background: #0f0f0f;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
+  }
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus {
+    -webkit-text-fill-color: hsl(var(--foreground));
+    caret-color: hsl(var(--foreground));
+    -webkit-box-shadow: 0 0 0 1000px hsl(var(--background)) inset;
+    box-shadow: 0 0 0 1000px hsl(var(--background)) inset;
+    transition: background-color 9999s ease-in-out 0s;
   }
 
   html {

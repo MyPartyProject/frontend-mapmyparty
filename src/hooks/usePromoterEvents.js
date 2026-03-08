@@ -58,7 +58,7 @@ export const usePromoterEvents = (initialFilters = {}) => {
         params.set('organizerId', currentFilters.organizerId);
       }
 
-      const response = await apiFetch(`/promoter/events?${params}`, {
+      const response = await apiFetch(`/admin/events?${params}`, {
         method: 'GET',
         signal: controller.signal,
       });
