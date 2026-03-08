@@ -5,18 +5,26 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   ArrowLeft,
   Calendar,
   Clock,
-  MapPin,
-  ShieldCheck,
   CreditCard,
-  Smartphone,
   Gift,
-  ScanLine,
-  Wallet2,
   Globe,
   Loader2,
+  MapPin,
+  ScanLine,
+  ShieldCheck,
+  Smartphone,
+  Wallet2,
 } from "lucide-react";
 import { apiFetch } from "@/config/api";
 import { toast } from "sonner";
@@ -33,20 +41,111 @@ const paymentMethods = [
 const PaymentCheckout = () => {
   const { organizerSlug, eventSlug } = useParams();
   const navigate = useNavigate();
-  const { state } = useLocation();
-  const summary = state?.eventSummary;
-  const tickets = state?.tickets || [];
-  const bookingData = state?.bookingData;
+  const location = useLocation();
+  const [storedCheckout, setStoredCheckout] = useState(null);
+  const [checkoutReady, setCheckoutReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [mockGatewayOpen, setMockGatewayOpen] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState(null);
 
   useEffect(() => {
-    if (!summary || !tickets.length || !bookingData) {
+    const routeState = location.state;
+    if (routeState?.eventSummary && routeState?.tickets?.length && routeState?.bookingData) {
+      setStoredCheckout(routeState);
+      sessionStorage.setItem("pendingCheckout", JSON.stringify(routeState));
+      setCheckoutReady(true);
+      return;
+    }
+
+    const pendingCheckoutRaw = sessionStorage.getItem("pendingCheckout");
+    if (!pendingCheckoutRaw) {
+      setCheckoutReady(true);
+      return;
+    }
+
+    try {
+      const pendingCheckout = JSON.parse(pendingCheckoutRaw);
+      if (pendingCheckout?.eventSummary && pendingCheckout?.tickets?.length && pendingCheckout?.bookingData) {
+        setStoredCheckout(pendingCheckout);
+      }
+    } catch (error) {
+      console.warn("Failed to restore pending checkout state", error);
+    } finally {
+      setCheckoutReady(true);
+    }
+  }, [location.state]);
+
+  const summary = storedCheckout?.eventSummary;
+  const tickets = storedCheckout?.tickets || [];
+  const bookingData = storedCheckout?.bookingData;
+
+  useEffect(() => {
+    if (checkoutReady && (!summary || !tickets.length || !bookingData)) {
       navigate(`/events/${organizerSlug}/${eventSlug}`);
     }
-  }, [summary, tickets.length, bookingData, organizerSlug, eventSlug, navigate]);
+  }, [checkoutReady, summary, tickets.length, bookingData, organizerSlug, eventSlug, navigate]);
 
-  const handlePayment = async () => {
+  const totalsSafe = useMemo(() => {
+    const totals = bookingData?.totals || {};
+    return {
+      subtotal: totals.ticketSubtotal ?? 0,
+      platformFee: totals.platformFeeTotal ?? 0,
+      gst: totals.gst?.gstTotal ?? 0,
+      gstType: totals.gst?.gstType || "IGST",
+      cgst: totals.gst?.cgst ?? 0,
+      sgst: totals.gst?.sgst ?? 0,
+      igst: totals.gst?.igst ?? 0,
+      total: totals.grandTotal ?? 0,
+    };
+  }, [bookingData]);
+
+  const totalQty = useMemo(() => tickets.reduce((sum, ticket) => sum + (ticket.quantity || 0), 0), [tickets]);
+
+  const formatCurrency = (value = 0) =>
+    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(value);
+
+  const itemsForDisplay = useMemo(() => {
+    const nameMap = new Map();
+    tickets.forEach((ticket) => nameMap.set(ticket.id, ticket.name));
+    return (bookingData?.items || []).map((item) => ({
+      ...item,
+      displayName: item.name || nameMap.get(item.ticketId) || item.ticketId || "Ticket",
+      quantity: item.quantity || 0,
+      subtotal: item.subtotal ?? 0,
+    }));
+  }, [bookingData?.items, tickets]);
+
+  const gatewayPreview = useMemo(() => {
+    if (!bookingData?.bookingId) return null;
+
+    return {
+      merchant: "MapMyParty Sandbox",
+      bookingId: bookingData.bookingId,
+      orderId: `ORD-${String(bookingData.bookingId).slice(0, 8).toUpperCase()}`,
+      gatewayReference: `PG-${String(Date.now()).slice(-8)}`,
+      method: selectedMethod || "TEST",
+      amount: bookingData?.totals?.grandTotal ?? 0,
+      customerName: bookingData?.userDetails?.name || "Guest User",
+      customerEmail: bookingData?.userDetails?.email || "guest@mapmyparty.test",
+      customerPhone: bookingData?.userDetails?.phone || "N/A",
+    };
+  }, [bookingData, selectedMethod]);
+
+  const handlePayment = () => {
+    if (!bookingData?.bookingId) {
+      toast.error("Booking ID not found");
+      return;
+    }
+
+    if (!selectedMethod) {
+      toast.error("Select a payment method");
+      return;
+    }
+
+    setMockGatewayOpen(true);
+  };
+
+  const handleMockGatewayConfirm = async () => {
     if (!bookingData?.bookingId) {
       toast.error("Booking ID not found");
       return;
@@ -55,7 +154,8 @@ const PaymentCheckout = () => {
     setIsProcessing(true);
 
     try {
-      // Process test payment (creates payment + confirms booking)
+      await new Promise((resolve) => setTimeout(resolve, 900));
+
       const response = await apiFetch("/api/payment/test/process", {
         method: "POST",
         body: JSON.stringify({
@@ -66,47 +166,20 @@ const PaymentCheckout = () => {
 
       if (response?.success) {
         toast.success("Payment successful!");
+        sessionStorage.removeItem("pendingCheckout");
+        setMockGatewayOpen(false);
         navigate(`/booking-success?bookingId=${bookingData.bookingId}`);
-      } else {
-        toast.error(response?.errorMessage || "Payment failed");
-        setIsProcessing(false);
+        return;
       }
+
+      toast.error(response?.errorMessage || "Payment failed");
     } catch (error) {
       console.error("Payment error:", error);
       toast.error(error?.message || "Payment failed. Please try again.");
+    } finally {
       setIsProcessing(false);
     }
   };
-
-  const totalsSafe = useMemo(() => {
-    const t = bookingData?.totals || {};
-    return {
-      subtotal: t.ticketSubtotal ?? 0,
-      platformFee: t.platformFeeTotal ?? 0,
-      gst: t.gst?.gstTotal ?? 0,
-      gstType: t.gst?.gstType || "IGST",
-      cgst: t.gst?.cgst ?? 0,
-      sgst: t.gst?.sgst ?? 0,
-      igst: t.gst?.igst ?? 0,
-      total: t.grandTotal ?? 0,
-    };
-  }, [bookingData]);
-
-  const totalQty = useMemo(() => tickets.reduce((s, t) => s + (t.quantity || 0), 0), [tickets]);
-
-  const formatCurrency = (value = 0) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(value);
-
-  const itemsForDisplay = useMemo(() => {
-    const nameMap = new Map();
-    tickets.forEach((t) => nameMap.set(t.id, t.name));
-    return (bookingData?.items || []).map((t) => ({
-      ...t,
-      displayName: t.name || nameMap.get(t.ticketId) || t.ticketId || "Ticket",
-      quantity: t.quantity || 0,
-      subtotal: t.subtotal ?? 0,
-    }));
-  }, [bookingData?.items, tickets]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0b1220] via-[#0c1120] to-[#05070f] text-white">
@@ -124,18 +197,20 @@ const PaymentCheckout = () => {
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="h-14 w-20 rounded-xl overflow-hidden border border-white/10 bg-black/30">
-                    <img
-                      src={summary.banner}
-                      alt={summary.title}
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={summary.banner} alt={summary.title} className="w-full h-full object-cover" />
                   </div>
                   <div className="space-y-1">
                     <h2 className="text-xl font-bold leading-snug">{summary.title}</h2>
                     <div className="flex flex-wrap gap-3 text-xs text-white/70">
-                      <span className="inline-flex items-center gap-1"><Calendar className="h-4 w-4" /> {summary.date || "Date TBA"}</span>
-                      <span className="inline-flex items-center gap-1"><Clock className="h-4 w-4" /> {summary.time || "Time TBA"}</span>
-                      <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" /> {summary.venue || "Venue TBA"}</span>
+                      <span className="inline-flex items-center gap-1">
+                        <Calendar className="h-4 w-4" /> {summary.date || "Date TBA"}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="h-4 w-4" /> {summary.time || "Time TBA"}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <MapPin className="h-4 w-4" /> {summary.venue || "Venue TBA"}
+                      </span>
                     </div>
                     <p className="text-xs text-white/60">{summary.address}</p>
                   </div>
@@ -164,17 +239,13 @@ const PaymentCheckout = () => {
                       : "border-white/10 bg-white/5 hover:border-white/30 hover:bg-white/10"
                   }`}
                 >
-                  <div
-                    className={`h-11 w-11 rounded-xl bg-gradient-to-br ${accent} flex items-center justify-center text-white`}
-                  >
+                  <div className={`h-11 w-11 rounded-xl bg-gradient-to-br ${accent} flex items-center justify-center text-white`}>
                     <Icon className="h-5 w-5" />
                   </div>
                   <div>
                     <p className="font-semibold text-white">{label}</p>
                     <p className="text-xs text-white/60">
-                      {selectedMethod === label.toUpperCase()
-                        ? "Selected"
-                        : `Continue to pay with ${label}`}
+                      {selectedMethod === label.toUpperCase() ? "Selected" : `Continue to pay with ${label}`}
                     </p>
                   </div>
                 </div>
@@ -194,20 +265,16 @@ const PaymentCheckout = () => {
               <Separator className="bg-white/10" />
 
               <div className="space-y-2 text-sm">
-                {itemsForDisplay.map((t) => (
-                  <div key={t.ticketId || t.id} className="flex justify-between items-start gap-3">
+                {itemsForDisplay.map((item) => (
+                  <div key={item.ticketId || item.id} className="flex justify-between items-start gap-3">
                     <div className="text-white/80">
-                      <div className="font-semibold text-white">{t.displayName}</div>
-                      <div className="text-xs text-white/60">Qty: {t.quantity}</div>
-                      {bookingData?.items && (
-                        <div className="text-[11px] text-white/50">
-                          Platform fee: {formatCurrency(t.platformFee || 0)} • GST: {formatCurrency(t.gstAmount || 0)}
-                        </div>
-                      )}
+                      <div className="font-semibold text-white">{item.displayName}</div>
+                      <div className="text-xs text-white/60">Qty: {item.quantity}</div>
+                      <div className="text-[11px] text-white/50">
+                        Platform fee: {formatCurrency(item.platformFee || 0)} | GST: {formatCurrency(item.gstAmount || 0)}
+                      </div>
                     </div>
-                    <div className="text-white font-semibold">
-                      {formatCurrency(t.subtotal || 0)}
-                    </div>
+                    <div className="text-white font-semibold">{formatCurrency(item.subtotal || 0)}</div>
                   </div>
                 ))}
               </div>
@@ -215,8 +282,14 @@ const PaymentCheckout = () => {
               <Separator className="bg-white/10" />
 
               <div className="space-y-2 text-sm text-white/80">
-                <div className="flex justify-between"><span>Ticket subtotal</span><span className="text-white">{formatCurrency(totalsSafe.subtotal || 0)}</span></div>
-                <div className="flex justify-between"><span>Platform fee</span><span className="text-white">{formatCurrency(totalsSafe.platformFee || 0)}</span></div>
+                <div className="flex justify-between">
+                  <span>Ticket subtotal</span>
+                  <span className="text-white">{formatCurrency(totalsSafe.subtotal || 0)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Platform fee</span>
+                  <span className="text-white">{formatCurrency(totalsSafe.platformFee || 0)}</span>
+                </div>
                 <div className="flex justify-between">
                   <span>
                     GST {totalsSafe.gstType ? `(${totalsSafe.gstType.replace(/_/g, " + ")})` : ""}
@@ -256,22 +329,114 @@ const PaymentCheckout = () => {
                 ) : !selectedMethod ? (
                   "Select a payment method"
                 ) : (
-                  "Pay & Confirm"
+                  "Open Mock Gateway"
                 )}
               </Button>
               <p className="text-xs text-center text-white/60">
                 {isProcessing
                   ? "Please wait while we process your payment..."
-                  : "You'll receive instant confirmation after payment."}
+                  : "You'll be taken through a mocked payment gateway before confirmation."}
               </p>
               <p className="text-xs text-center text-amber-300/80 bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 mt-2">
-                ⚠️ Test Mode: This is a simulated payment for testing purposes.
-                No actual charges will be made.
+                Test Mode: This is a simulated payment flow for booking validation only. No actual charges will be made.
               </p>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      <Dialog open={mockGatewayOpen} onOpenChange={setMockGatewayOpen}>
+        <DialogContent className="border-white/10 bg-[#090d18] text-white sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-emerald-400" />
+              Mock Payment Gateway
+            </DialogTitle>
+            <DialogDescription className="text-white/60">
+              Sandbox gateway preview for the current booking. No real transaction will be processed.
+            </DialogDescription>
+          </DialogHeader>
+
+          {gatewayPreview && (
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.16em] text-white/50">Merchant</p>
+                    <p className="font-semibold">{gatewayPreview.merchant}</p>
+                  </div>
+                  <Badge className="bg-emerald-500/15 text-emerald-300 border-emerald-500/30">Sandbox</Badge>
+                </div>
+                <Separator className="bg-white/10" />
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-white/50">Order ID</p>
+                    <p className="font-medium">{gatewayPreview.orderId}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/50">Gateway Ref</p>
+                    <p className="font-medium">{gatewayPreview.gatewayReference}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/50">Booking ID</p>
+                    <p className="font-medium">{gatewayPreview.bookingId}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/50">Method</p>
+                    <p className="font-medium">{gatewayPreview.method}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 space-y-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.16em] text-white/50">Payer</p>
+                    <p className="font-semibold">{gatewayPreview.customerName}</p>
+                    <p className="text-sm text-white/60">{gatewayPreview.customerEmail}</p>
+                    <p className="text-sm text-white/60">{gatewayPreview.customerPhone}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs uppercase tracking-[0.16em] text-white/50">Amount</p>
+                    <p className="text-2xl font-semibold text-[#ff637d]">{formatCurrency(gatewayPreview.amount)}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+                This simulates the final gateway step only. On confirm, the app will call the test payment endpoint and complete the booking.
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+              onClick={() => setMockGatewayOpen(false)}
+              disabled={isProcessing}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleMockGatewayConfirm}
+              disabled={isProcessing}
+              className="bg-gradient-to-r from-[#D60024] to-[#ff4d67] text-white"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Authorizing...
+                </>
+              ) : (
+                "Authorize Test Payment"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

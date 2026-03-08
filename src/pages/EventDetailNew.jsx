@@ -484,29 +484,31 @@ const EventDetailNew = () => {
         method: "POST",
         body: JSON.stringify(payload),
       });
-      const booking = res?.data || res;
-      if (!booking?.success) {
-        throw new Error(booking?.message || "Booking failed");
+      if (!res?.success) {
+        throw new Error(res?.message || "Booking failed");
       }
+
+      const checkoutState = {
+        eventSummary: {
+          id: event?.id,
+          title: event.title || event.eventTitle || event.name || "Event",
+          date: event.startDate,
+          time: event.time,
+          venue: event.venue,
+          address: event.address,
+          banner: event.flyerImage || event.coverImage || FALLBACK_IMAGE,
+        },
+        tickets: selectedTickets,
+        bookingData: res.data,
+      };
 
       // Close billing modal
       setBillingModalOpen(false);
+      sessionStorage.setItem("pendingCheckout", JSON.stringify(checkoutState));
 
       // Navigate to payment checkout
       navigate(`/events/${organizerSlug}/${eventSlug}/checkout`, {
-        state: {
-          eventSummary: {
-            id: event?.id,
-            title: event.title || event.eventTitle || event.name || "Event",
-            date: event.startDate,
-            time: event.time,
-            venue: event.venue,
-            address: event.address,
-            banner: event.flyerImage || event.coverImage || FALLBACK_IMAGE,
-          },
-          tickets: selectedTickets,
-          bookingData: booking.data,
-        },
+        state: checkoutState,
       });
     } catch (err) {
       toast.error(err?.message || "Unable to create booking. Please try again.");
