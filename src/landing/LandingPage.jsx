@@ -2,19 +2,15 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
-  BarChart3,
   CalendarRange,
-  CheckCircle2,
   MapPin,
   Music2,
   Sparkles,
-  QrCode,
   ShieldCheck,
   Clock3,
   PartyPopper,
   Star,
   Search,
-  Ticket,
 } from "lucide-react";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -34,7 +30,7 @@ const featuredEvents = [
     image: eventMusic,
     category: "Music",
     attendees: 5000,
-    price: "From $49",
+    price: `From ₹5000`,
   },
   {
     id: "2",
@@ -46,7 +42,7 @@ const featuredEvents = [
     image: eventConference,
     category: "Conference",
     attendees: 2000,
-    price: "From $199",
+    price: "From ₹15000",
   },
   {
     id: "3",
@@ -101,13 +97,6 @@ function TicketIcon(props) {
   );
 }
 
-const slideMotionClass = (isActive) =>
-  `transform-gpu transition-all duration-500 ease-out ${isActive ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`;
-
-const slideMotionStyle = (isActive, delay) => ({
-  transitionDelay: `${isActive ? delay : 0}ms`,
-});
-
 const heroShowcaseStyles = `
   @keyframes heroShowcaseFloat {
     0%, 100% {
@@ -119,172 +108,105 @@ const heroShowcaseStyles = `
   }
 `;
 
-const getHeroFeatureSlideState = (index, activeIndex, total) => {
-  if (index === activeIndex) return "active";
-  if (index === (activeIndex + 1) % total) return "queued";
-  return "hidden";
-};
+const heroMobileScreenClass = (isActive) =>
+  `absolute inset-0 flex h-full flex-col transition-all duration-500 ease-out ${
+    isActive ? "translate-y-0 scale-100 opacity-100" : "pointer-events-none translate-y-4 scale-[0.985] opacity-0"
+  }`;
 
-const heroFeatureSlideStateClass = (state) => {
-  if (state === "active") {
-    return "z-20 translate-y-0 scale-100 opacity-100";
-  }
-
-  if (state === "queued") {
-    return "z-10 translate-y-4 scale-[0.985] opacity-25";
-  }
-
-  return "z-0 translate-y-8 scale-[0.97] opacity-0";
-};
-
-const DemoMetric = ({ label, value, accent = "text-white" }) => (
-  <div className="rounded-2xl border border-white/10 bg-white/[0.08] p-3 backdrop-blur-sm">
-    <p className="text-[11px] uppercase tracking-[0.18em] text-slate-300/65">{label}</p>
-    <p className={`mt-2 text-lg font-semibold ${accent}`}>{value}</p>
-  </div>
-);
-
-const AttendeeDemoVisual = () => (
-  <div className="mx-auto flex w-full justify-center">
-    <div className="w-[210px] sm:w-[226px]">
-      <div className="rounded-[30px] border border-white/20 bg-[#120a24]/90 p-3 shadow-[0_30px_90px_-30px_rgba(0,0,0,0.8)]">
-        <div className="rounded-[24px] bg-[#0e0820] p-3">
-          <div className="flex items-center justify-between text-[11px] text-slate-300">
-            <span>MapMyParty</span>
-            <span>9:24</span>
-          </div>
-          <div className="mt-3 grid gap-3">
-            {featuredEvents.slice(0, 3).map((event) => (
-              <div key={event.id} className="rounded-2xl bg-white/10 p-3">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="h-12 w-12 rounded-xl bg-cover bg-center"
-                    style={{ backgroundImage: `url(${event.image})` }}
-                  />
-                  <div>
-                    <p className="text-xs text-pink-200">{event.category}</p>
-                    <p className="text-sm font-semibold text-white line-clamp-1">{event.title}</p>
-                    <p className="text-xs text-slate-300 line-clamp-1">{event.location}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 rounded-2xl bg-gradient-to-r from-fuchsia-500/40 to-purple-500/40 p-3">
-            <div className="flex items-center justify-between text-xs text-white">
-              <span>Discover Now</span>
-              <ArrowRight className="h-4 w-4" />
+const HeroMobileDiscoverScreen = () => (
+  <div className="flex h-full flex-col">
+    <div className="flex items-center justify-between text-[11px] text-slate-300">
+      <span>Discover</span>
+      <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] text-pink-100">Live now</span>
+    </div>
+    <div className="mt-3 rounded-2xl bg-white/[0.07] px-3 py-2 text-xs text-slate-300">Tonight near you</div>
+    <div className="mt-3 grid gap-3">
+      {featuredEvents.slice(0, 3).map((event) => (
+        <div key={event.id} className="rounded-2xl bg-white/10 p-3">
+          <div className="flex items-center gap-3">
+            <div
+              className="h-12 w-12 rounded-xl bg-cover bg-center"
+              style={{ backgroundImage: `url(${event.image})` }}
+            />
+            <div className="min-w-0">
+              <p className="text-xs text-pink-200">{event.category}</p>
+              <p className="text-sm font-semibold text-white line-clamp-1">{event.title}</p>
+              <p className="text-xs text-slate-300 line-clamp-1">{event.location}</p>
             </div>
           </div>
         </div>
+      ))}
+    </div>
+    <div className="mt-auto rounded-2xl bg-gradient-to-r from-fuchsia-500/40 to-purple-500/40 p-3">
+      <div className="flex items-center justify-between text-xs text-white">
+        <span>Discover Now</span>
+        <ArrowRight className="h-4 w-4" />
       </div>
     </div>
   </div>
 );
 
-const HostEventsVisual = () => (
-  <div className="mx-auto w-full max-w-[300px] space-y-3 rounded-[22px] border border-white/10 bg-[#0f0920]/78 p-4 shadow-[0_24px_80px_-36px_rgba(0,0,0,0.75)]">
-    <div className="flex items-center justify-between gap-3">
-      <div>
-        <p className="text-[11px] uppercase tracking-[0.18em] text-fuchsia-200/70">Publishing flow</p>
-        <p className="text-lg font-semibold text-white">Summer Rooftop Sessions</p>
-      </div>
-      <span className="rounded-full border border-emerald-300/25 bg-emerald-400/15 px-3 py-1 text-xs text-emerald-100">
-        Published
-      </span>
-    </div>
-    <div className="grid grid-cols-3 gap-3">
-      <DemoMetric label="Attendees" value="1.4K" accent="text-pink-100" />
-      <DemoMetric label="Tickets" value="864" accent="text-amber-100" />
-      <DemoMetric label="Revenue" value="$24K" accent="text-fuchsia-100" />
-    </div>
-    <div className="grid gap-3 sm:grid-cols-[1.05fr_0.95fr]">
-      <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4">
-        <p className="text-sm font-semibold text-white">Event creation</p>
-        <div className="mt-3 space-y-2">
-          {["Details ready", "Tickets live", "Venue confirmed"].map((item) => (
-            <div key={item} className="flex items-center gap-2 text-sm text-slate-200/80">
-              <span className="h-2 w-2 rounded-full bg-emerald-300" />
-              <span>{item}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4">
-        <div className="flex items-center justify-between text-sm text-white">
-          <span>Ticket sales</span>
-          <span className="text-slate-300/75">72%</span>
-        </div>
-        <div className="mt-4 h-2 rounded-full bg-white/10">
-          <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-fuchsia-400 via-pink-400 to-amber-300" />
-        </div>
-        <div className="mt-3 flex items-center justify-between text-xs text-slate-300/75">
-          <span>Sold</span>
-          <span className="text-white">864 / 1200</span>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const AnalyticsVisual = () => {
-  const bars = [42, 58, 50, 74, 68, 88, 96];
+const HeroMobileEventScreen = () => {
+  const event = featuredEvents[0];
 
   return (
-    <div className="mx-auto w-full max-w-[300px] rounded-[22px] border border-white/10 bg-[#0f0920]/78 p-4 shadow-[0_24px_80px_-36px_rgba(0,0,0,0.75)]">
-      <div className="grid grid-cols-3 gap-3">
-        <DemoMetric label="Revenue" value="$28.4K" accent="text-amber-100" />
-        <DemoMetric label="Attendees" value="2.1K" accent="text-pink-100" />
-        <DemoMetric label="Engagement" value="+18%" accent="text-fuchsia-100" />
-      </div>
-      <div className="mt-4 rounded-2xl bg-[#120a24]/82 p-4">
-        <div className="flex items-center justify-between text-xs text-slate-300/70">
-          <span className="inline-flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-fuchsia-200" />
-            Revenue trend
-          </span>
-          <span>Last 7 days</span>
-        </div>
-        <div className="mt-5 flex h-32 items-end gap-2">
-          {bars.map((bar, index) => (
-            <div key={index} className="flex-1 rounded-t-2xl bg-white/6 p-1">
-              <div
-                className="w-full rounded-t-xl bg-gradient-to-t from-fuchsia-500 via-pink-400 to-amber-300"
-                style={{ height: `${bar}%` }}
-              />
-            </div>
-          ))}
+    <div className="flex h-full flex-col">
+      <div
+        className="flex min-h-[152px] items-end rounded-[22px] bg-cover bg-center p-4"
+        style={{
+          backgroundImage: `linear-gradient(180deg,rgba(12,8,24,0.08),rgba(12,8,24,0.88)), url(${event.image})`,
+        }}
+      >
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-pink-100/80">{event.category}</p>
+          <p className="mt-2 text-lg font-semibold leading-tight text-white">{event.title}</p>
         </div>
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-slate-300/65">Top market</p>
-          <p className="mt-2 text-sm text-white">Austin, TX</p>
+      <div className="mt-3 rounded-2xl bg-white/[0.07] p-3">
+        <div className="flex items-center gap-2 text-sm text-slate-200/80">
+          <CalendarRange className="h-4 w-4 text-amber-200" />
+          <span className="line-clamp-1">{event.date}</span>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-slate-300/65">Conversion</p>
-          <p className="mt-2 text-sm text-white">14.8% ticket view to booking</p>
+        <div className="mt-2 flex items-center gap-2 text-sm text-slate-200/80">
+          <MapPin className="h-4 w-4 text-pink-200" />
+          <span className="line-clamp-1">{event.location}</span>
+        </div>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="rounded-2xl bg-white/[0.07] p-3">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-300/65">Attendees</p>
+          <p className="mt-2 text-sm font-semibold text-white">{event.attendees.toLocaleString()} going</p>
+        </div>
+        <div className="rounded-2xl bg-white/[0.07] p-3">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-300/65">Tickets</p>
+          <p className="mt-2 text-sm font-semibold text-white">{event.price}</p>
+        </div>
+      </div>
+      <div className="mt-auto rounded-2xl border border-white/10 bg-white/[0.08] p-3">
+        <div className="flex items-center justify-between text-sm text-white">
+          <span>Book in two taps</span>
+          <ArrowRight className="h-4 w-4" />
         </div>
       </div>
     </div>
   );
 };
 
-const TicketingVisual = () => (
-  <div className="relative mx-auto flex min-h-[220px] w-full max-w-[300px] items-center justify-center pb-8">
-    <div className="w-full max-w-[300px] rounded-[24px] border border-white/12 bg-gradient-to-br from-fuchsia-500/18 via-purple-500/12 to-amber-300/8 p-5 shadow-[0_30px_90px_-30px_rgba(0,0,0,0.8)]">
+const HeroMobileTicketScreen = () => (
+  <div className="flex h-full flex-col">
+    <div className="rounded-[22px] border border-white/12 bg-gradient-to-br from-fuchsia-500/18 via-purple-500/12 to-amber-300/8 p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-fuchsia-200/70">Instant ticket</p>
-          <p className="text-xl font-semibold text-white">Night Skyline Pass</p>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-fuchsia-200/70">My ticket</p>
+          <p className="mt-2 text-lg font-semibold text-white">Night Skyline Pass</p>
         </div>
-        <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs text-white">Paid</span>
+        <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs text-white">VIP</span>
       </div>
-      <div className="mt-6 grid grid-cols-[1fr_auto] gap-4">
+      <div className="mt-5 grid grid-cols-[1fr_auto] gap-4">
         <div className="space-y-2 text-sm text-slate-200/80">
           <div className="flex items-center gap-2">
-            <Ticket className="h-4 w-4 text-amber-200" />
-            VIP Access
+            <TicketIcon className="h-4 w-4 text-amber-200" />
+            Entry pass
           </div>
           <div className="flex items-center gap-2">
             <Clock3 className="h-4 w-4 text-pink-200" />
@@ -304,156 +226,73 @@ const TicketingVisual = () => (
           ))}
         </div>
       </div>
-      <div className="mt-5 flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-slate-300/65">Checkout speed</p>
-          <p className="mt-1 text-lg font-semibold text-white">2 tap purchase</p>
-        </div>
-        <ShieldCheck className="h-8 w-8 text-emerald-200" />
+    </div>
+    <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="rounded-2xl bg-white/[0.07] p-3">
+        <p className="text-[10px] uppercase tracking-[0.18em] text-slate-300/65">Status</p>
+        <p className="mt-2 text-sm font-semibold text-white">Ready to scan</p>
+      </div>
+      <div className="rounded-2xl bg-white/[0.07] p-3">
+        <p className="text-[10px] uppercase tracking-[0.18em] text-slate-300/65">Seat</p>
+        <p className="mt-2 text-sm font-semibold text-white">VIP Lounge</p>
       </div>
     </div>
-    <div className="absolute bottom-0 right-1 rounded-2xl border border-emerald-300/25 bg-[#0b1322]/96 p-4 shadow-[0_25px_70px_-30px_rgba(0,0,0,0.75)]">
-      <div className="flex items-center gap-2 text-sm font-semibold text-emerald-100">
-        <CheckCircle2 className="h-4 w-4" />
-        Payment confirmed
-      </div>
-      <p className="mt-2 text-xs text-slate-300/75">Instant confirmation sent to email and app wallet.</p>
+    <div className="mt-auto rounded-2xl border border-emerald-300/25 bg-emerald-400/15 px-4 py-3">
+      <p className="text-sm font-semibold text-emerald-100">Payment confirmed</p>
+      <p className="mt-1 text-xs text-slate-300/75">Saved in your wallet and ready for entry.</p>
     </div>
   </div>
 );
 
-const CheckInVisual = () => (
-  <div className="mx-auto w-full max-w-[300px] space-y-3 rounded-[22px] border border-white/10 bg-[#0f0920]/78 p-4 shadow-[0_24px_80px_-36px_rgba(0,0,0,0.75)]">
-    <div className="flex items-center justify-between gap-3">
-      <div>
-        <p className="text-[11px] uppercase tracking-[0.18em] text-fuchsia-200/70">Entry control</p>
-        <p className="text-lg font-semibold text-white">Gate 02 scanner</p>
-      </div>
-      <span className="rounded-full border border-emerald-300/25 bg-emerald-400/15 px-3 py-1 text-xs text-emerald-100">
-        Scanning live
-      </span>
-    </div>
-    <div className="grid gap-3 sm:grid-cols-[1fr_0.95fr]">
-      <div className="rounded-2xl bg-[#120a24]/82 p-4">
-        <div className="mx-auto flex h-40 w-full max-w-[180px] items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/5">
-          <div className="relative h-24 w-24 rounded-2xl bg-white/6">
-            <div className="absolute left-0 top-0 h-7 w-7 rounded-tl-2xl border-l-2 border-t-2 border-fuchsia-200" />
-            <div className="absolute right-0 top-0 h-7 w-7 rounded-tr-2xl border-r-2 border-t-2 border-fuchsia-200" />
-            <div className="absolute bottom-0 left-0 h-7 w-7 rounded-bl-2xl border-b-2 border-l-2 border-fuchsia-200" />
-            <div className="absolute bottom-0 right-0 h-7 w-7 rounded-br-2xl border-b-2 border-r-2 border-fuchsia-200" />
-            <div className="absolute inset-5 grid grid-cols-3 gap-1">
-              {Array.from({ length: 9 }).map((_, index) => (
-                <div
-                  key={index}
-                  className={`rounded-[3px] ${index % 2 === 0 || index === 7 ? "bg-white" : "bg-white/20"}`}
-                />
-              ))}
+const heroMobileScreens = [
+  { id: "discover", title: "Discover events", component: HeroMobileDiscoverScreen },
+  { id: "details", title: "Event details", component: HeroMobileEventScreen },
+  { id: "ticket", title: "Ticket wallet", component: HeroMobileTicketScreen },
+];
+
+const HeroMobileDemo = ({ activeScreen }) => (
+  <div className="flex h-full w-full items-center justify-center">
+    <div className="relative flex h-full min-h-[31rem] w-full items-center justify-center sm:min-h-[33rem]">
+      <div className="absolute h-80 w-80 rounded-full bg-fuchsia-500/14 blur-3xl" />
+      <div className="relative w-[260px] sm:w-[286px] lg:w-[300px]">
+        <div className="rounded-[34px] border border-white/20 bg-[#120a24]/90 p-4 shadow-[0_30px_90px_-30px_rgba(0,0,0,0.8)]">
+          <div className="rounded-[28px] bg-[#0e0820] p-4">
+            <div className="flex items-center justify-between text-[11px] text-slate-300">
+              <span>MapMyParty</span>
+              <span>9:24</span>
+            </div>
+            <div className="relative mt-4 min-h-[420px] sm:min-h-[448px]">
+              {heroMobileScreens.map((screen, index) => {
+                const ScreenComponent = screen.component;
+                const isActive = index === activeScreen;
+
+                return (
+                  <div key={screen.id} className={heroMobileScreenClass(isActive)} aria-hidden={!isActive}>
+                    <ScreenComponent />
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
       </div>
-      <div className="space-y-3">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-emerald-100">
-            <QrCode className="h-4 w-4" />
-            Attendee verified
-          </div>
-          <p className="mt-3 text-base text-white">Nina Carter</p>
-          <p className="text-sm text-slate-300/75">VIP + Lounge access</p>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <DemoMetric label="Checked in" value="842" accent="text-emerald-100" />
-          <DemoMetric label="Remaining" value="358" accent="text-amber-100" />
-        </div>
-      </div>
     </div>
   </div>
 );
 
-const HeroFeatureSlide = ({ slide, state }) => {
-  const isActive = state === "active";
-
-  return (
-    <div
-      className={`feature-slide col-start-1 row-start-1 flex w-full transition-all duration-500 ease-out ${heroFeatureSlideStateClass(state)} ${isActive ? "" : "pointer-events-none"}`}
-      aria-hidden={!isActive}
-    >
-      <div className="flex h-full w-[38rem] max-w-full flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(19,10,36,0.94),rgba(10,7,23,0.97))] px-6 py-6 shadow-[0_32px_90px_-38px_rgba(0,0,0,0.9)]">
-        <div className="feature-slide-content flex w-full flex-col items-start gap-3">
-          <div className={slideMotionClass(isActive)} style={slideMotionStyle(isActive, 0)}>
-            <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-slate-200/80">
-              {slide.label}
-            </span>
-          </div>
-          <div className={slideMotionClass(isActive)} style={slideMotionStyle(isActive, 0)}>
-            <h3 className="w-full max-w-[28rem] text-[1.85rem] font-semibold leading-tight text-white">{slide.title}</h3>
-          </div>
-          <div className={slideMotionClass(isActive)} style={slideMotionStyle(isActive, 120)}>
-            <p className="w-full max-w-[32rem] text-sm leading-relaxed text-slate-200/78">{slide.description}</p>
-          </div>
-        </div>
-        <div
-          className={`feature-visual mt-5 flex min-h-0 w-full flex-1 items-center justify-center overflow-visible rounded-[22px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.09),transparent_45%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-4 ${slideMotionClass(isActive)}`}
-          style={slideMotionStyle(isActive, 240)}
-        >
-          {slide.visual}
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const LandingPage = () => {
-  const [activeFeatureSlide, setActiveFeatureSlide] = useState(0);
-  const [isFeatureCarouselPaused, setIsFeatureCarouselPaused] = useState(false);
-
-  const heroFeatureSlides = [
-    {
-      id: "attendees",
-      label: "FOR ATTENDEES",
-      title: "Discover events instantly",
-      description: "Explore concerts, nightlife, food festivals and conferences happening around you.",
-      visual: <AttendeeDemoVisual />,
-    },
-    {
-      id: "host-events",
-      label: "FOR ORGANIZERS",
-      title: "Host unforgettable events",
-      description: "Create, publish and manage events with powerful tools designed for organizers.",
-      visual: <HostEventsVisual />,
-    },
-    {
-      id: "ticketing",
-      label: "TICKETING",
-      title: "Sell tickets instantly",
-      description: "Launch ticket sales with secure checkout and instant confirmations.",
-      visual: <TicketingVisual />,
-    },
-    {
-      id: "analytics",
-      label: "ANALYTICS",
-      title: "Track event performance",
-      description: "Monitor ticket sales, attendance and engagement in real time.",
-      visual: <AnalyticsVisual />,
-    },
-    {
-      id: "check-in",
-      label: "EVENT ENTRY",
-      title: "Fast attendee check-ins",
-      description: "Scan tickets and manage entry with real-time attendee verification.",
-      visual: <CheckInVisual />,
-    },
-  ];
+  const [activeMobileScreen, setActiveMobileScreen] = useState(0);
+  const [isHeroShowcasePaused, setIsHeroShowcasePaused] = useState(false);
 
   useEffect(() => {
-    if (isFeatureCarouselPaused) return undefined;
+    if (isHeroShowcasePaused) return undefined;
 
     const intervalId = window.setInterval(() => {
-      setActiveFeatureSlide((prev) => (prev + 1) % heroFeatureSlides.length);
+      setActiveMobileScreen((prev) => (prev + 1) % heroMobileScreens.length);
     }, 4000);
 
     return () => window.clearInterval(intervalId);
-  }, [isFeatureCarouselPaused, heroFeatureSlides.length]);
+  }, [isHeroShowcasePaused]);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-50">
@@ -516,37 +355,29 @@ const LandingPage = () => {
               <div className="absolute -right-6 top-8 h-64 w-64 rounded-full bg-purple-500/25 blur-3xl" />
               <div className="absolute -left-6 bottom-8 h-52 w-52 rounded-full bg-pink-400/25 blur-3xl" />
               <div
-                className="feature-showcase relative w-fit max-w-full overflow-visible"
+                className="feature-showcase relative flex w-full max-w-[32rem] flex-col items-center justify-center overflow-visible"
                 style={{ animation: "heroShowcaseFloat 6s ease-in-out infinite" }}
-                onMouseEnter={() => setIsFeatureCarouselPaused(true)}
-                onMouseLeave={() => setIsFeatureCarouselPaused(false)}
+                onMouseEnter={() => setIsHeroShowcasePaused(true)}
+                onMouseLeave={() => setIsHeroShowcasePaused(false)}
               >
-                <div className="relative flex max-w-full flex-col">
-                  <div className="feature-carousel-track relative grid min-w-0">
-                    {heroFeatureSlides.map((slide, index) => (
-                      <HeroFeatureSlide
-                        key={slide.id}
-                        slide={slide}
-                        state={getHeroFeatureSlideState(index, activeFeatureSlide, heroFeatureSlides.length)}
+                <div className="feature-carousel-track relative flex min-h-[34rem] w-full items-center justify-center overflow-visible bg-transparent p-0">
+                  <HeroMobileDemo activeScreen={activeMobileScreen} />
+                </div>
+
+                <div className="mt-4 flex items-center justify-center gap-2">
+                  {heroMobileScreens.map((screen, index) => {
+                    const isActive = index === activeMobileScreen;
+
+                    return (
+                      <button
+                        key={screen.id}
+                        type="button"
+                        aria-label={`Show ${screen.title}`}
+                        onClick={() => setActiveMobileScreen(index)}
+                        className={`transition-all duration-300 ease-out ${isActive ? "h-1.5 w-[20px] rounded-[10px] bg-white" : "h-1.5 w-1.5 rounded-full bg-white/40 hover:bg-white/60"}`}
                       />
-                    ))}
-                  </div>
-
-                  <div className="mt-4 flex items-center justify-center gap-2">
-                    {heroFeatureSlides.map((slide, index) => {
-                      const isActive = index === activeFeatureSlide;
-
-                      return (
-                        <button
-                          key={slide.id}
-                          type="button"
-                          aria-label={`Go to ${slide.title}`}
-                          onClick={() => setActiveFeatureSlide(index)}
-                          className={`transition-all duration-300 ease-out ${isActive ? "h-1.5 w-[20px] rounded-[10px] bg-white" : "h-1.5 w-1.5 rounded-full bg-white/40 hover:bg-white/60"}`}
-                        />
-                      );
-                    })}
-                  </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
