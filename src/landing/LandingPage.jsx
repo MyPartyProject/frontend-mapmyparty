@@ -375,25 +375,25 @@ const HeroFeatureSlide = ({ slide, state }) => {
 
   return (
     <div
-      className={`feature-slide absolute inset-0 transition-all duration-500 ease-out ${heroFeatureSlideStateClass(state)} ${isActive ? "" : "pointer-events-none"}`}
+      className={`feature-slide col-start-1 row-start-1 flex w-full transition-all duration-500 ease-out ${heroFeatureSlideStateClass(state)} ${isActive ? "" : "pointer-events-none"}`}
       aria-hidden={!isActive}
     >
-      <div className="flex h-full flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(19,10,36,0.94),rgba(10,7,23,0.97))] px-6 py-6 shadow-[0_32px_90px_-38px_rgba(0,0,0,0.9)]">
-        <div className="feature-slide-content flex flex-col items-start gap-3">
+      <div className="flex h-full w-[38rem] max-w-full flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(19,10,36,0.94),rgba(10,7,23,0.97))] px-6 py-6 shadow-[0_32px_90px_-38px_rgba(0,0,0,0.9)]">
+        <div className="feature-slide-content flex w-full flex-col items-start gap-3">
           <div className={slideMotionClass(isActive)} style={slideMotionStyle(isActive, 0)}>
             <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-slate-200/80">
               {slide.label}
             </span>
           </div>
           <div className={slideMotionClass(isActive)} style={slideMotionStyle(isActive, 0)}>
-            <h3 className="max-w-[17rem] text-[1.85rem] font-semibold leading-tight text-white">{slide.title}</h3>
+            <h3 className="w-full max-w-[28rem] text-[1.85rem] font-semibold leading-tight text-white">{slide.title}</h3>
           </div>
           <div className={slideMotionClass(isActive)} style={slideMotionStyle(isActive, 120)}>
-            <p className="max-w-sm text-sm leading-relaxed text-slate-200/78">{slide.description}</p>
+            <p className="w-full max-w-[32rem] text-sm leading-relaxed text-slate-200/78">{slide.description}</p>
           </div>
         </div>
         <div
-          className={`feature-visual mt-5 flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-[22px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.09),transparent_45%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-4 ${slideMotionClass(isActive)}`}
+          className={`feature-visual mt-5 flex min-h-0 w-full flex-1 items-center justify-center overflow-visible rounded-[22px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.09),transparent_45%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-4 ${slideMotionClass(isActive)}`}
           style={slideMotionStyle(isActive, 240)}
         >
           {slide.visual}
@@ -516,27 +516,13 @@ const LandingPage = () => {
               <div className="absolute -right-6 top-8 h-64 w-64 rounded-full bg-purple-500/25 blur-3xl" />
               <div className="absolute -left-6 bottom-8 h-52 w-52 rounded-full bg-pink-400/25 blur-3xl" />
               <div
-                className="feature-showcase relative h-[440px] w-full max-w-[420px] overflow-hidden rounded-[28px] border border-white/12 bg-white/[0.04] p-8 backdrop-blur-[10px] shadow-[0_44px_140px_-40px_rgba(0,0,0,0.85)]"
+                className="feature-showcase relative w-fit max-w-full overflow-visible"
                 style={{ animation: "heroShowcaseFloat 6s ease-in-out infinite" }}
                 onMouseEnter={() => setIsFeatureCarouselPaused(true)}
                 onMouseLeave={() => setIsFeatureCarouselPaused(false)}
               >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(255,255,255,0.08),transparent_34%),radial-gradient(circle_at_78%_14%,rgba(255,105,180,0.16),transparent_28%),radial-gradient(circle_at_82%_80%,rgba(255,183,104,0.12),transparent_30%)] opacity-80" />
-                <div className="relative z-10 flex h-full flex-col">
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.06] px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-slate-200/70">
-                      <Sparkles className="h-3.5 w-3.5 text-pink-200" />
-                      Product Showcase
-                    </div>
-                    <span className="text-[11px] uppercase tracking-[0.2em] text-slate-300/55">
-                      {String(activeFeatureSlide + 1).padStart(2, "0")} / {String(heroFeatureSlides.length).padStart(2, "0")}
-                    </span>
-                  </div>
-
-                  <div className="relative min-h-0 flex-1">
-                    <div className="pointer-events-none absolute inset-x-4 top-4 bottom-2 rounded-[24px] border border-white/6 bg-white/[0.03] opacity-40" />
-                    <div className="pointer-events-none absolute inset-x-6 top-8 bottom-0 rounded-[24px] border border-white/5 bg-black/15 opacity-50" />
-
+                <div className="relative flex max-w-full flex-col">
+                  <div className="feature-carousel-track relative grid min-w-0">
                     {heroFeatureSlides.map((slide, index) => (
                       <HeroFeatureSlide
                         key={slide.id}
@@ -546,7 +532,7 @@ const LandingPage = () => {
                     ))}
                   </div>
 
-                  <div className="mt-5 flex items-center justify-center gap-2">
+                  <div className="mt-4 flex items-center justify-center gap-2">
                     {heroFeatureSlides.map((slide, index) => {
                       const isActive = index === activeFeatureSlide;
 
