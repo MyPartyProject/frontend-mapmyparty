@@ -91,6 +91,12 @@ const Header = ({
               Browse Events
             </Link>
             <Link
+              to="/host-events"
+              className="hover:text-white transition-colors duration-200"
+            >
+              Host Events
+            </Link>
+            <Link
               to="/about"
               className="hover:text-white transition-colors duration-200"
             >
@@ -225,14 +231,21 @@ const Header = ({
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-border bg-background">
           <nav className="container py-4 flex flex-col gap-4">
-            {isAttendee && (
+            {(!resolvedIsAuthenticated || forceMainHeader || isAttendee) && (
               <>
                  <Link
-                  to="/browse-events"
+                 to="/browse-events"
                   className="text-sm font-medium hover:text-primary transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Browse Events
+                </Link>
+                <Link
+                  to="/host-events"
+                  className="text-sm font-medium hover:text-primary transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Host Events
                 </Link>
                 <Link
                   to="/about"

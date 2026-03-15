@@ -69,7 +69,7 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        'league-gothic': ['"League Gothic"', '"League Spartan"', 'sans-serif'],
+        'league-gothic': ['"Josefin Sans"', 'sans-serif'],
       },
       keyframes: {
         "accordion-down": {

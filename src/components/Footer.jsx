@@ -1,4 +1,4 @@
- import { Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
+import { Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
 import { Link } from "react-router-dom";
 import logo from "../assets/MMP logo.svg";
 
@@ -85,7 +85,7 @@ const Footer = () => {
         </div>
 
         <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-0 md:justify-between text-xs text-white/60">
-          <p>© {new Date().getFullYear()} Map MyParty. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Map MyParty. All rights reserved.</p>
           <p className="text-white/50">
             Built for seamless event discovery and management.
           </p>

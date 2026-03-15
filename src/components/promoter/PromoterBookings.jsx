@@ -47,6 +47,14 @@ const statusLabel = (status) =>
     .toLowerCase()
     .replace(/\b\w/g, (char) => char.toUpperCase());
 
+const eventTypeLabel = (type) =>
+  String(type || "EXCLUSIVE")
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
+const percent = (value) => `${Number(value || 0) * 100}%`;
+
 const PromoterBookings = () => {
   const { currency } = useOutletContext();
   const {
@@ -316,6 +324,9 @@ const PromoterBookings = () => {
                         {selectedBooking.eventOrganizer}
                         {selectedBooking.eventCity ? ` | ${selectedBooking.eventCity}` : ""}
                       </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {eventTypeLabel(selectedBooking.eventType)} event | platform fee {percent(selectedBooking.pricing?.platformFeeRate)}
+                      </p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Customer</p>
@@ -337,6 +348,54 @@ const PromoterBookings = () => {
                         <p className="font-semibold">{currency(selectedBooking.gstAmount)}</p>
                       </div>
                     </div>
+                    <div className="rounded-lg border border-border/60 bg-card/80 p-3 space-y-2">
+                      <p className="text-xs text-muted-foreground">Purchase breakdown</p>
+                      <div className="space-y-1 text-xs">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-muted-foreground">Ticket subtotal</span>
+                          <span className="font-semibold text-foreground">
+                            {currency(selectedBooking.pricing?.ticketSubtotal || 0)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-muted-foreground">
+                            Platform fee ({percent(selectedBooking.pricing?.platformFeeRate)})
+                          </span>
+                          <span className="font-semibold text-foreground">
+                            {currency(selectedBooking.pricing?.platformFeeTotal || 0)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-muted-foreground">
+                            GST ({statusLabel(selectedBooking.pricing?.gstType || "NONE")})
+                          </span>
+                          <span className="font-semibold text-foreground">
+                            {currency(selectedBooking.pricing?.gstTotal || 0)}
+                          </span>
+                        </div>
+                        {selectedBooking.pricing?.gstType === "CGST_SGST" && (
+                          <div className="flex items-center justify-between gap-3 text-muted-foreground">
+                            <span>CGST {currency(selectedBooking.pricing?.cgst || 0)} | SGST {currency(selectedBooking.pricing?.sgst || 0)}</span>
+                            <span />
+                          </div>
+                        )}
+                        {selectedBooking.pricing?.gstType === "IGST" && (
+                          <div className="flex items-center justify-between gap-3 text-muted-foreground">
+                            <span>IGST {currency(selectedBooking.pricing?.igst || 0)}</span>
+                            <span />
+                          </div>
+                        )}
+                        <Separator className="my-2" />
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-muted-foreground">
+                            {String(selectedBooking.paymentStatus || "").toUpperCase() === "SUCCESS" ? "Total paid" : "Total amount"}
+                          </span>
+                          <span className="font-semibold text-accent">
+                            {currency(selectedBooking.paymentAmount || selectedBooking.pricing?.grandTotal || 0)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                     <div className="rounded-lg border border-border/60 bg-card/80 p-3">
                       <p className="text-xs text-muted-foreground">Payment status</p>
                       <p className="font-semibold flex items-center gap-2">
@@ -351,9 +410,19 @@ const PromoterBookings = () => {
                       <p className="text-xs text-muted-foreground">Tickets breakdown</p>
                       <div className="space-y-2 mt-2">
                         {selectedBooking.bookingItems.map((item) => (
-                          <div key={item.id} className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>{item.quantity} x {item.name}</span>
-                            <span>{currency(item.subtotal)}</span>
+                          <div key={item.id} className="rounded-lg border border-border/50 bg-background/30 p-3 space-y-1">
+                            <div className="flex items-center justify-between gap-3 text-xs">
+                              <span className="text-foreground">{item.quantity} x {item.name}</span>
+                              <span className="font-semibold text-foreground">{currency(item.totalAmount || item.subtotal || 0)}</span>
+                            </div>
+                            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                              <span>Unit price {currency(item.ticketPrice || 0)}</span>
+                              <span>Subtotal {currency(item.subtotal || 0)}</span>
+                            </div>
+                            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                              <span>Platform fee {currency(item.platformFee || 0)}</span>
+                              <span>GST {currency(item.gstAmount || 0)}</span>
+                            </div>
                           </div>
                         ))}
                       </div>

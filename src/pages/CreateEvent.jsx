@@ -1119,8 +1119,15 @@ const CreateEvent = () => {
 
   const progress = (currentStep / steps.length) * 100;
   const basicDetailsFilled = Boolean(eventTitle.trim() && mainCategory && selectedCategories.length > 0);
+  const canJumpBetweenSections = isEditMode && !isSubmitting;
 
-  const nextStep = async () => {
+  const nextStep = async ({ advance = true } = {}) => {
+    const moveToNextStep = () => {
+      if (advance) {
+        setCurrentStep((prev) => Math.min(prev + 1, steps.length));
+      }
+    };
+
     // Validate required fields for each step
     if (currentStep === 1) {
       if (!eventTitle.trim()) {
@@ -1164,7 +1171,7 @@ const CreateEvent = () => {
             if (!hasAnyChanges) {
               console.log("ℹ️ No field or image changes detected in Step 1");
               toast.info("No changes to update");
-              setCurrentStep(currentStep + 1);
+              moveToNextStep();
               return;
             }
 
@@ -1243,7 +1250,7 @@ const CreateEvent = () => {
             // If only images changed, advance without JSON update
             if (!textFieldsChanged) {
               console.log("ℹ️ Only image changes detected; skipping update-event payload");
-              setCurrentStep(currentStep + 1);
+              moveToNextStep();
               return;
             }
 
@@ -1417,7 +1424,7 @@ const CreateEvent = () => {
         console.log("API Response:", response);
         
         // Move to next step after successful API call
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
       } catch (error) {
         console.error("Error saving event:", error);
         const errorMessage = error.message || "Failed to save event details. Please try again.";
@@ -1467,7 +1474,7 @@ const CreateEvent = () => {
 
       if (isEditMode && backendEventId && !hasInputChanges) {
         toast.info("No changes to update");
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
         return;
       }
 
@@ -1502,7 +1509,7 @@ const CreateEvent = () => {
         setOriginalDateInputs({ startDate, startTime, endDate, endTime });
         
         // Move to next step after successful API call
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
       } catch (error) {
         console.error("Error updating event:", error);
         const errorMessage = error.message || "Failed to update date & time. Please try again.";
@@ -1534,9 +1541,14 @@ const CreateEvent = () => {
         toast.error("Event ID not found. Please go back to Step 1.");
         return;
       }
-      
+
+      if (!advance) {
+        toast.success("Tickets are already saved.");
+        return;
+      }
+
       // Move to next step - tickets are already created when added
-      setCurrentStep(currentStep + 1);
+      moveToNextStep();
       return; // Exit early to prevent default next step behavior
     }
 
@@ -1602,7 +1614,7 @@ const CreateEvent = () => {
       if (!hasVenueChanged) {
         console.log("ℹ️ No changes detected in venue details");
         toast.info("No changes to update");
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
         return;
       }
 
@@ -1720,7 +1732,7 @@ const CreateEvent = () => {
         }
         
         // Move to next step after successful API call
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
       } catch (error) {
         console.error("Error creating venue:", error);
         const errorMessage = error.message || "Failed to save venue details. Please try again.";
@@ -1747,14 +1759,17 @@ const CreateEvent = () => {
       // In edit mode, if sponsors are loaded and nothing changed (including toggle), skip API
       if (isEditMode && sponsorsLoadedRef.current && isSponsored === originalIsSponsored && !hasChanges) {
         toast.info("No changes to update");
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
         return;
       }
 
       // If toggle is off, clear sponsors only if previously set, otherwise skip
       if (!isSponsored) {
         if (!hasChanges) {
-          setCurrentStep(currentStep + 1);
+          if (!advance) {
+            toast.success("Sponsor section is already up to date.");
+          }
+          moveToNextStep();
           return;
         }
         try {
@@ -1774,7 +1789,7 @@ const CreateEvent = () => {
           setOriginalIsSponsored(false);
           setSponsors([emptySponsor]);
           toast.success("Sponsor details saved");
-          setCurrentStep(currentStep + 1);
+          moveToNextStep();
         } catch (error) {
           console.error("Error saving sponsors:", error);
           toast.error(error.message || "Failed to save sponsor details. Please try again.");
@@ -1801,7 +1816,7 @@ const CreateEvent = () => {
 
       if (!hasChanges) {
         toast.info("No changes to update");
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
         return;
       }
 
@@ -1827,7 +1842,7 @@ const CreateEvent = () => {
         setOriginalSponsors(cleanedSponsors);
         setOriginalIsSponsored(true);
         toast.success("Sponsor details saved");
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
       } catch (error) {
         console.error("Error saving sponsors:", error);
         toast.error(error.message || "Failed to save sponsor details. Please try again.");
@@ -1880,7 +1895,10 @@ const CreateEvent = () => {
           // No artists to create, just move to next step
           setIsSubmitting(false);
           setShowLoading(false);
-          setCurrentStep(currentStep + 1);
+          if (!advance) {
+            toast.success("Artist section is already up to date.");
+          }
+          moveToNextStep();
           return;
         }
         
@@ -1932,9 +1950,12 @@ const CreateEvent = () => {
         }
 
         console.log("Step 6 API Response:", artistResponses);
+        if (!advance) {
+          toast.success("Artist details processed.");
+        }
         
         // Move to next step after successful API call
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
       } catch (error) {
         console.error("Error creating artists:", error);
         const errorMessage = error.message || "Failed to add artists. Please try again.";
@@ -1962,7 +1983,7 @@ const CreateEvent = () => {
         JSON.stringify(currentNormalized) === JSON.stringify(originalAdditionalRef.current)
       ) {
         toast.info("No changes to update");
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
         return;
       }
       try {
@@ -2010,7 +2031,7 @@ const CreateEvent = () => {
         originalAdditionalRef.current = normalizeAdditionalFromState();
         currentAdditionalRef.current = originalAdditionalRef.current;
         toast.success("Additional info saved");
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
       } catch (error) {
         console.error("Error saving additional info:", error);
         toast.error(error.message || "Failed to save additional info. Please try again.");
@@ -2022,9 +2043,21 @@ const CreateEvent = () => {
       return;
     }
 
-    if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
+  if (currentStep < steps.length) {
+      moveToNextStep();
     }
+  };
+
+  const saveCurrentSection = async () => {
+    await nextStep({ advance: false });
+  };
+
+  const goToStep = (stepNumber) => {
+    if (!isEditMode || isSubmitting || stepNumber === currentStep) {
+      return;
+    }
+
+    setCurrentStep(stepNumber);
   };
 
   const prevStep = () => {
@@ -2844,22 +2877,35 @@ const CreateEvent = () => {
 
                     return (
                       <div key={step.number} className="min-w-max flex items-center gap-4">
-                        <div className="flex flex-col items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => goToStep(step.number)}
+                          disabled={!canJumpBetweenSections}
+                          className={`flex flex-col items-center gap-2 rounded-xl transition ${
+                            canJumpBetweenSections ? "cursor-pointer" : "cursor-default"
+                          }`}
+                        >
                           <div
                             className={`w-9 h-9 rounded-full flex items-center justify-center border text-sm font-medium transition-all ${
                               isDone
                                 ? "bg-[#ef4444] border-[#ef4444] text-white"
                                 : isCurrent
                                 ? "border-[#ef4444] bg-[#111111] text-white"
+                                : canJumpBetweenSections
+                                ? "border-[#2a2a2a] bg-[#111111] text-[#777777] hover:border-[#ef4444]/60 hover:text-white"
                                 : "border-[#2a2a2a] bg-[#111111] text-[#777777]"
                             }`}
                           >
                             {isDone ? <Check className="w-4 h-4" /> : step.number}
                           </div>
-                          <p className="text-xs font-medium text-gray-400 text-center leading-tight whitespace-nowrap">
+                          <p
+                            className={`text-xs font-medium text-center leading-tight whitespace-nowrap ${
+                              isCurrent ? "text-white" : canJumpBetweenSections ? "text-gray-300" : "text-gray-400"
+                            }`}
+                          >
                             {step.title}
                           </p>
-                        </div>
+                        </button>
                         {idx !== steps.length - 1 && (
                           <div className={`h-px w-14 rounded-full ${barActive}`} />
                         )}
@@ -2867,6 +2913,9 @@ const CreateEvent = () => {
                     );
                   })}
                 </div>
+                {isEditMode && (
+                  <p className="text-xs text-white/50">Click any section to jump directly while editing.</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -4403,29 +4452,42 @@ const CreateEvent = () => {
                   Previous
                 </Button>
 
-                {currentStep < 8 ? (
-                  <Button
-                    onClick={nextStep}
-                    disabled={isSubmitting}
-                    className="h-11 rounded-[10px] bg-[#ef4444] px-5 font-medium text-white hover:bg-[#dc2626]"
-                  >
-                    {isSubmitting ? "Saving..." : "Next"}
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                ) : (
-                  <Button
-                    variant="accent"
-                    onClick={() => handleSubmit(publishState)}
-                    disabled={isSubmitting}
-                    className="h-11 rounded-[10px] bg-[#ef4444] px-5 font-medium text-white hover:bg-[#dc2626]"
-                  >
-                    {isSubmitting
-                      ? "Updating..."
-                      : publishState === "PUBLISHED"
-                        ? (isEditMode ? "Update & Publish" : "Publish Event")
-                        : (isEditMode ? "Update as Draft" : "Save as Draft")}
-                  </Button>
-                )}
+                <div className="flex items-center gap-3">
+                  {isEditMode && currentStep < 8 && (
+                    <Button
+                      variant="outline"
+                      onClick={saveCurrentSection}
+                      disabled={isSubmitting}
+                      className="h-11 rounded-[10px] border-[#2a2a2a] bg-transparent px-5 text-white hover:bg-[#151515]"
+                    >
+                      {isSubmitting ? "Saving..." : "Save Section"}
+                    </Button>
+                  )}
+
+                  {currentStep < 8 ? (
+                    <Button
+                      onClick={() => nextStep()}
+                      disabled={isSubmitting}
+                      className="h-11 rounded-[10px] bg-[#ef4444] px-5 font-medium text-white hover:bg-[#dc2626]"
+                    >
+                      {isSubmitting ? "Saving..." : "Next"}
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="accent"
+                      onClick={() => handleSubmit(publishState)}
+                      disabled={isSubmitting}
+                      className="h-11 rounded-[10px] bg-[#ef4444] px-5 font-medium text-white hover:bg-[#dc2626]"
+                    >
+                      {isSubmitting
+                        ? "Updating..."
+                        : publishState === "PUBLISHED"
+                          ? (isEditMode ? "Update & Publish" : "Publish Event")
+                          : (isEditMode ? "Update as Draft" : "Save as Draft")}
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </Card>

@@ -1636,6 +1636,14 @@ const EventDetailNew = () => {
                     onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                   />
                 </div>
+                <div className="flex justify-end">
+                  <Link
+                    to={`/auth?type=user&forgot=true${loginForm.email.trim() ? `&email=${encodeURIComponent(loginForm.email.trim())}` : ""}`}
+                    className="text-xs text-red-400 hover:text-red-300"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <Button type="submit" className="w-full py-5 bg-red-600 hover:bg-red-700" disabled={authLoading}>
                   {authLoading ? (
                     <span className="flex items-center justify-center gap-2">

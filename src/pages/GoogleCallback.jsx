@@ -53,6 +53,14 @@ const GoogleCallback = () => {
           sessionStorage.removeItem('pendingBooking');
         }
 
+        const postAuthRedirect = sessionStorage.getItem("postAuthRedirect");
+        if (postAuthRedirect) {
+          sessionStorage.removeItem("postAuthRedirect");
+          toast.success("Google authentication successful!");
+          navigate(postAuthRedirect, { replace: true });
+          return;
+        }
+
         const role = (session.user?.role || "USER").toUpperCase();
         const redirectPath =
           role === "ORGANIZER"

@@ -161,18 +161,19 @@
   }
 
   html {
+    font-family: "Josefin Sans", sans-serif;
     font-size: clamp(16px, 0.45vw + 14px, 19px);
   }
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: "League Spartan", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-family: "Josefin Sans", sans-serif;
     font-size: 1.1rem;
     line-height: 1.65;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: "Josefin Sans", "League Spartan", sans-serif;
+    font-family: "Josefin Sans", sans-serif;
     letter-spacing: 0.015em;
     word-spacing: 0.02em;
     line-height: 1.06;
@@ -211,8 +212,15 @@
     line-height: 1.7;
   }
 
+  button,
+  input,
+  textarea,
+  select {
+    font-family: "Josefin Sans", sans-serif;
+  }
+
   .highlight-text {
-    font-family: "League Gothic", "League Spartan", sans-serif;
+    font-family: "Josefin Sans", sans-serif;
     letter-spacing: 0.02em;
     line-height: 1.06;
     font-kerning: normal;

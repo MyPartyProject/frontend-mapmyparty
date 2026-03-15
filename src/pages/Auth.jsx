@@ -1,150 +1,224 @@
- import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft, Building2, Eye, EyeOff, Loader2, Mail, User } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, User, Building2, Loader2, Eye, EyeOff, ArrowLeft, Sparkles, Star, Music, MapPin, Ticket } from "lucide-react";
-import { toast } from "sonner";
 import { apiFetch, buildUrl } from "@/config/api";
-import { resetSessionCache, fetchSession } from "@/utils/auth";
-import { useAuth } from "@/contexts/AuthContext";
 import OTPVerificationModal from "@/components/OTPVerificationModal";
+import { useAuth } from "@/contexts/AuthContext";
+import { requestPasswordReset } from "@/services/authService";
+import { fetchSession, resetSessionCache } from "@/utils/auth";
+import { PASSWORD_REQUIREMENTS_TEXT, isStrongPassword } from "@/utils/passwordRules";
 import Logo from "../assets/android-chrome-192x192.png";
+
+const EMPTY_LOGIN_FORM = {
+  email: "",
+  password: "",
+};
+
+const EMPTY_SIGNUP_FORM = {
+  name: "",
+  email: "",
+  phone: "",
+  password: "",
+};
+
+const normalizeUserType = (value) => {
+  if (value === "user" || value === "organizer") {
+    return value;
+  }
+
+  return null;
+};
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login: contextLogin } = useAuth();
-  const [userType, setUserType] = useState(null);
-  const [isLogin, setIsLogin] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const redirectTarget = searchParams.get("redirect") || "";
 
-  // OTP verification state
+  const [userType, setUserType] = useState(() => normalizeUserType(searchParams.get("type")));
+  const [isLogin, setIsLogin] = useState(() => searchParams.get("mode") !== "signup");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(() => searchParams.get("forgot") === "true");
+  const [forgotPasswordSent, setForgotPasswordSent] = useState(false);
+
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otpEmail, setOtpEmail] = useState("");
   const [pendingSignupType, setPendingSignupType] = useState(null);
 
-  // Password visibility states
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
 
-  const handleSubmit = async (e, type) => {
-    e.preventDefault();
+  const initialEmail = searchParams.get("email") || "";
+  const [loginForm, setLoginForm] = useState({ ...EMPTY_LOGIN_FORM, email: initialEmail });
+  const [signupForm, setSignupForm] = useState({ ...EMPTY_SIGNUP_FORM, email: initialEmail });
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState(initialEmail);
+
+  useEffect(() => {
+    if (searchParams.get("reset") !== "success") {
+      return;
+    }
+
+    toast.success("Password updated. Sign in with your new password.");
+    const selectedType = normalizeUserType(searchParams.get("type"));
+    navigate(
+      selectedType ? `/auth?mode=login&type=${selectedType}` : "/auth?mode=login",
+      { replace: true }
+    );
+  }, [navigate, searchParams]);
+
+  const getDashboardPath = (type) =>
+    type === "organizer" ? "/organizer/dashboard-v2" : "/dashboard";
+
+  const getPostAuthDestination = (type) => redirectTarget || getDashboardPath(type);
+
+  const handleUserTypeSelect = (type) => {
+    setUserType(type);
+    setShowForgotPassword(false);
+    setForgotPasswordSent(false);
+  };
+
+  const handleTabChange = (value) => {
+    const nextIsLogin = value === "login";
+    setIsLogin(nextIsLogin);
+
+    if (!nextIsLogin) {
+      setShowForgotPassword(false);
+      setForgotPasswordSent(false);
+    }
+  };
+
+  const handleLoginSubmit = async (event, type) => {
+    event.preventDefault();
+
+    const email = loginForm.email.trim();
+    const password = loginForm.password;
+    const role = type === "organizer" ? "ORGANIZER" : "USER";
+
+    if (!email || !password) {
+      toast.error("Please enter email and password");
+      return;
+    }
 
     try {
-      const form = e.currentTarget;
-      const mode = isLogin ? "login" : "signup";
-      const roleMap = { user: "USER", organizer: "ORGANIZER" };
-      const role = roleMap[type] || "USER";
+      setIsLoading(true);
 
-      if (mode === "login") {
-        const email = form.querySelector("#email")?.value?.trim();
-        const password = form.querySelector("#password")?.value;
-        if (!email || !password) {
-          toast.error("Please enter email and password");
-          return;
-        }
-        setIsLoading(true);
+      await apiFetch("auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password, role }),
+      });
 
-        await apiFetch("auth/login", {
-          method: "POST",
-          body: JSON.stringify({ email, password, role }),
-        });
+      resetSessionCache();
+      const session = await fetchSession(true);
 
-        // Reset cache and fetch fresh session from backend
-        resetSessionCache();
-
-        // Validate session - backend cookies are now set
-        const session = await fetchSession(true);
-
-        if (!session?.isAuthenticated) {
-          throw new Error("Login succeeded but session validation failed");
-        }
-
-        // Populate auth context before navigating
-        contextLogin(session);
-
-        toast.success("Logged in successfully!");
-
-        // Navigate after session is established
-        const dashboardPath =
-          type === "organizer"
-            ? "/organizer/dashboard-v2"
-            : "/dashboard";
-
-        navigate(dashboardPath, { replace: true });
-        return;
-      } else {
-        // SIGNUP FLOW - Send OTP first for email verification
-        const name = form.querySelector("#name")?.value?.trim();
-        const email = form.querySelector("#signup-email")?.value?.trim();
-        const phone = form.querySelector("#signup-phone")?.value?.trim();
-        const password = form.querySelector("#signup-password")?.value;
-        if (!name || !email || !phone || !password) {
-          toast.error("Please fill all fields");
-          return;
-        }
-        const phoneDigits = (phone || "").replace(/\D/g, "");
-        if (phoneDigits.length < 10 || phoneDigits.length > 15) {
-          toast.error("Please enter a valid phone number");
-          return;
-        }
-
-        // Validate password requirements
-        const passwordRegex =
-          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-        if (!passwordRegex.test(password)) {
-          toast.error(
-            "Password must be at least 8 characters with uppercase, lowercase, number, and special character (@$!%*?&)"
-          );
-          return;
-        }
-
-        setIsLoading(true);
-
-        // Send OTP for email verification
-        await apiFetch("auth/send-signup-otp", {
-          method: "POST",
-          body: JSON.stringify({ name, email, phone: phoneDigits, password, role }),
-        });
-
-        // Store pending signup info and show OTP modal
-        setOtpEmail(email);
-        setPendingSignupType(type);
-        setShowOtpModal(true);
-        setIsLoading(false);
-
-        toast.success("Verification code sent to your email!");
-        return; // Don't proceed further - wait for OTP verification
+      if (!session?.isAuthenticated) {
+        throw new Error("Login succeeded but session validation failed");
       }
-    } catch (err) {
-      toast.error(err?.message || "Authentication failed");
+
+      contextLogin(session);
+      toast.success("Logged in successfully!");
+
+      navigate(getPostAuthDestination(type), { replace: true });
+    } catch (error) {
+      toast.error(error?.message || "Authentication failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignupSubmit = async (event, type) => {
+    event.preventDefault();
+
+    const role = type === "organizer" ? "ORGANIZER" : "USER";
+    const name = signupForm.name.trim();
+    const email = signupForm.email.trim();
+    const phoneDigits = signupForm.phone.replace(/\D/g, "");
+    const password = signupForm.password;
+
+    if (!name || !email || !phoneDigits || !password) {
+      toast.error("Please fill all fields");
+      return;
+    }
+
+    if (phoneDigits.length < 10 || phoneDigits.length > 15) {
+      toast.error("Please enter a valid phone number");
+      return;
+    }
+
+    if (!isStrongPassword(password)) {
+      toast.error(PASSWORD_REQUIREMENTS_TEXT);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      await apiFetch("auth/send-signup-otp", {
+        method: "POST",
+        body: JSON.stringify({ name, email, phone: phoneDigits, password, role }),
+      });
+
+      setOtpEmail(email);
+      setPendingSignupType(type);
+      setShowOtpModal(true);
+      toast.success("Verification code sent to your email!");
+    } catch (error) {
+      toast.error(error?.message || "Authentication failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPasswordSubmit = async (event) => {
+    event.preventDefault();
+
+    const email = forgotPasswordEmail.trim();
+    if (!email) {
+      toast.error("Please enter your email address");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      const response = await requestPasswordReset(
+        email,
+        userType === "organizer" ? "ORGANIZER" : "USER"
+      );
+
+      setForgotPasswordSent(true);
+      setLoginForm((current) => ({ ...current, email }));
+      toast.success(response?.message || "Password reset email sent successfully");
+    } catch (error) {
+      toast.error(error?.message || "Unable to send password reset email");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleLogin = () => {
-    // Redirect to backend Google OAuth endpoint
-    // Backend will handle OAuth and redirect to /dashboard?auth=success
-    const googleAuthUrl = buildUrl("auth/google");
-    window.location.href = googleAuthUrl;
+    if (redirectTarget) {
+      sessionStorage.setItem("postAuthRedirect", redirectTarget);
+    } else {
+      sessionStorage.removeItem("postAuthRedirect");
+    }
+
+    window.location.href = buildUrl("auth/google");
   };
 
-  // Handle OTP verification success
   const handleOtpVerificationSuccess = async () => {
     const signupType = pendingSignupType;
 
-    // Close OTP modal
     setShowOtpModal(false);
     setOtpEmail("");
     setPendingSignupType(null);
 
-    // Reset cache and fetch fresh session from backend
     resetSessionCache();
-
-    // Validate session - backend cookies are now set after OTP verification
     const session = await fetchSession(true);
 
     if (!session?.isAuthenticated) {
@@ -152,41 +226,33 @@ const Auth = () => {
       return;
     }
 
-    // Populate auth context before navigating
     contextLogin(session);
-
     toast.success("Account created successfully!");
-
-    // Navigate to dashboard
-    const dashboardPath =
-      signupType === "organizer"
-        ? "/organizer/dashboard-v2"
-        : "/dashboard";
-
-    navigate(dashboardPath, { replace: true });
+    navigate(getPostAuthDestination(signupType), { replace: true });
   };
 
-  // Handle OTP modal close
   const handleOtpModalClose = () => {
     setShowOtpModal(false);
-    // Don't clear email so user can retry if they close accidentally
   };
+
+  const forgotPasswordDescription =
+    userType === "organizer"
+      ? "Send a secure reset link to the organizer account linked to this email."
+      : "Send a secure reset link to the attendee account linked to this email.";
 
   if (!userType) {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-        {/* Back Button */}
         <Button
           variant="ghost"
           className="absolute top-6 left-6 text-gray-400 hover:text-white hover:bg-gray-900 rounded-lg"
           onClick={() => navigate("/")}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back 
+          Back
         </Button>
 
         <div className="w-full max-w-3xl">
-          {/* Logo and Welcome */}
           <div className="text-center mb-10">
             <div className="flex items-center justify-center gap-3 mb-6">
               <div className="w-16 h-16 bg-gray-900 rounded-xl flex items-center justify-center border border-gray-800">
@@ -201,17 +267,16 @@ const Auth = () => {
             </p>
           </div>
 
-          {/* User Type Cards */}
           <div className="grid md:grid-cols-2 gap-5 max-w-3xl mx-auto">
             <Card
               className="group cursor-pointer border border-gray-800 bg-gray-900 hover:border-gray-700 hover:bg-gray-800 transition-all duration-300"
-              onClick={() => setUserType("user")}
+              onClick={() => handleUserTypeSelect("user")}
             >
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-4 group-hover:bg-gray-700 transition-colors">
                   <User className="w-8 h-8 text-gray-300" />
                 </div>
-                <h2 className="text-xl font-bold text-white mb-2">I'm an Attendee</h2>
+                <h2 className="text-xl font-bold text-white mb-2">I&apos;m an Attendee</h2>
                 <p className="text-gray-400 text-sm mb-4">
                   Discover and book tickets to amazing events near you
                 </p>
@@ -224,13 +289,13 @@ const Auth = () => {
 
             <Card
               className="group cursor-pointer border border-gray-800 bg-gray-900 hover:border-gray-700 hover:bg-gray-800 transition-all duration-300"
-              onClick={() => setUserType("organizer")}
+              onClick={() => handleUserTypeSelect("organizer")}
             >
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-4 group-hover:bg-gray-700 transition-colors">
                   <Building2 className="w-8 h-8 text-gray-300" />
                 </div>
-                <h2 className="text-xl font-bold text-white mb-2">I'm an Organizer</h2>
+                <h2 className="text-xl font-bold text-white mb-2">I&apos;m an Organizer</h2>
                 <p className="text-gray-400 text-sm mb-4">
                   Create and manage your own events with ease
                 </p>
@@ -248,7 +313,6 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-      {/* Back Button */}
       <Button
         variant="ghost"
         className="absolute top-6 left-6 text-gray-400 hover:text-white hover:bg-gray-900 rounded-lg"
@@ -267,193 +331,373 @@ const Auth = () => {
               </div>
             </div>
             <CardTitle className="text-3xl font-bold text-white">
-              {userType === "organizer" ? "Organizer" : "Attendee"}{" "}
-              Account
+              {userType === "organizer" ? "Organizer" : "Attendee"} Account
             </CardTitle>
             <CardDescription className="text-gray-400 text-sm mt-1">
-              {isLogin
-                ? "Welcome back! Sign in to continue"
-                : "Create your account to get started"}
+              {isLogin ? "Welcome back! Sign in to continue" : "Create your account to get started"}
             </CardDescription>
           </CardHeader>
           <CardContent className="px-6 pb-6">
-            <Tabs value={isLogin ? "login" : "signup"} onValueChange={(v) => setIsLogin(v === "login")} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-5 bg-gray-800 p-1 rounded-lg h-10">
-                  <TabsTrigger value="login" className="data-[state=active]:bg-gray-700 data-[state=active]:text-white text-gray-400 text-sm font-medium rounded-md">
-                    Login
-                  </TabsTrigger>
-                  <TabsTrigger value="signup" className="data-[state=active]:bg-gray-700 data-[state=active]:text-white text-gray-400 text-sm font-medium rounded-md">
-                    Sign Up
-                  </TabsTrigger>
-                </TabsList>
+            <Tabs
+              value={isLogin ? "login" : "signup"}
+              onValueChange={handleTabChange}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-2 mb-5 bg-gray-800 p-1 rounded-lg h-10">
+                <TabsTrigger
+                  value="login"
+                  className="data-[state=active]:bg-gray-700 data-[state=active]:text-white text-gray-400 text-sm font-medium rounded-md"
+                >
+                  Login
+                </TabsTrigger>
+                <TabsTrigger
+                  value="signup"
+                  className="data-[state=active]:bg-gray-700 data-[state=active]:text-white text-gray-400 text-sm font-medium rounded-md"
+                >
+                  Sign Up
+                </TabsTrigger>
+              </TabsList>
 
-                <TabsContent value="login" className="space-y-4 mt-0">
-                  <form onSubmit={(e) => handleSubmit(e, userType)} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email" className="text-gray-300 text-sm font-medium">Email</Label>
-                      <Input 
-                        id="email" 
-                        type="email" 
-                        placeholder="Enter your email" 
-                        required 
-                        className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 h-10 text-sm"
-                      />
+              <TabsContent value="login" className="space-y-4 mt-0">
+                {showForgotPassword ? (
+                  <div className="space-y-4">
+                    <div className="rounded-xl border border-gray-800 bg-gray-950/70 p-4">
+                      <div className="flex items-center gap-2 text-white font-medium">
+                        <Mail className="h-4 w-4 text-red-400" />
+                        Password recovery
+                      </div>
+                      <p className="mt-2 text-sm text-gray-400">{forgotPasswordDescription}</p>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password" className="text-gray-300 text-sm font-medium">Password</Label>
-                      <div className="relative">
-                        <Input 
-                          id="password" 
-                          type={showLoginPassword ? "text" : "password"} 
-                          placeholder="Enter your password" 
-                          required 
-                          className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 pr-10 h-10 text-sm"
-                        />
+
+                    {forgotPasswordSent ? (
+                      <div className="space-y-4">
+                        <div className="rounded-xl border border-green-500/20 bg-green-500/10 p-4 text-sm text-green-100">
+                          If this email is registered, a reset link is on its way. Use the newest link within 10 minutes.
+                        </div>
+                        <Button
+                          type="button"
+                          className="w-full bg-red-600 hover:bg-red-700 text-white h-10 text-sm font-medium"
+                          onClick={() => setForgotPasswordSent(false)}
+                        >
+                          Send Another Link
+                        </Button>
                         <Button
                           type="button"
                           variant="ghost"
-                          size="sm"
-                          className="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-300"
-                          onClick={() => setShowLoginPassword(!showLoginPassword)}
+                          className="w-full text-gray-300 hover:text-white hover:bg-gray-800"
+                          onClick={() => {
+                            setShowForgotPassword(false);
+                            setForgotPasswordSent(false);
+                          }}
                         >
-                          {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          Back to Login
                         </Button>
                       </div>
-                    </div>
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-red-600 hover:bg-red-700 text-white h-10 text-sm font-medium mt-1" 
-                      disabled={isLoading}
-                    >
-                      {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing In...</> : "Sign In"}
-                    </Button>
-                  </form>
-                  
-                  {/* Google Login Button - Only for Attendee */}
-                  {userType === "user" && (
-                    <div className="mt-4">
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t border-gray-700" />
+                    ) : (
+                      <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="forgot-email" className="text-gray-300 text-sm font-medium">
+                            Email
+                          </Label>
+                          <Input
+                            id="forgot-email"
+                            type="email"
+                            placeholder="Enter your account email"
+                            value={forgotPasswordEmail}
+                            onChange={(event) => setForgotPasswordEmail(event.target.value)}
+                            className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 h-10 text-sm"
+                          />
                         </div>
-                        <div className="relative flex justify-center text-xs">
-                          <span className="bg-gray-900 px-2 text-gray-500 text-xs uppercase">Or continue with</span>
+                        <Button
+                          type="submit"
+                          className="w-full bg-red-600 hover:bg-red-700 text-white h-10 text-sm font-medium"
+                          disabled={isLoading}
+                        >
+                          {isLoading ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Sending Link...
+                            </>
+                          ) : (
+                            "Send Reset Link"
+                          )}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="w-full text-gray-300 hover:text-white hover:bg-gray-800"
+                          onClick={() => {
+                            setShowForgotPassword(false);
+                            setForgotPasswordSent(false);
+                          }}
+                        >
+                          Back to Login
+                        </Button>
+                      </form>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <form onSubmit={(event) => handleLoginSubmit(event, userType)} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email" className="text-gray-300 text-sm font-medium">
+                          Email
+                        </Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="Enter your email"
+                          required
+                          value={loginForm.email}
+                          onChange={(event) =>
+                            setLoginForm((current) => ({ ...current, email: event.target.value }))
+                          }
+                          className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 h-10 text-sm"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="password" className="text-gray-300 text-sm font-medium">
+                          Password
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id="password"
+                            type={showLoginPassword ? "text" : "password"}
+                            placeholder="Enter your password"
+                            required
+                            value={loginForm.password}
+                            onChange={(event) =>
+                              setLoginForm((current) => ({ ...current, password: event.target.value }))
+                            }
+                            className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 pr-10 h-10 text-sm"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-300"
+                            onClick={() => setShowLoginPassword((current) => !current)}
+                          >
+                            {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </Button>
                         </div>
                       </div>
+
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="link"
+                          className="h-auto p-0 text-sm text-red-400 hover:text-red-300"
+                          onClick={() => {
+                            setForgotPasswordEmail(loginForm.email.trim());
+                            setShowForgotPassword(true);
+                            setForgotPasswordSent(false);
+                          }}
+                        >
+                          Forgot password?
+                        </Button>
+                      </div>
+
                       <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full mt-3 border-gray-700 hover:border-gray-600 hover:bg-gray-800 text-gray-300 h-10 text-sm font-medium"
-                        onClick={handleGoogleLogin}
+                        type="submit"
+                        className="w-full bg-red-600 hover:bg-red-700 text-white h-10 text-sm font-medium"
                         disabled={isLoading}
                       >
-                        <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                        </svg>
-                        Sign in with Google
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Signing In...
+                          </>
+                        ) : (
+                          "Sign In"
+                        )}
                       </Button>
-                    </div>
-                  )}
-                </TabsContent>
+                    </form>
 
-                <TabsContent value="signup" className="space-y-4 mt-0">
-                  <form onSubmit={(e) => handleSubmit(e, userType)} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name" className="text-gray-300 text-sm font-medium">Full Name</Label>
-                      <Input 
-                        id="name" 
-                        placeholder="Enter your full name" 
-                        required 
-                        className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 h-10 text-sm"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-email" className="text-gray-300 text-sm font-medium">Email</Label>
-                      <Input 
-                        id="signup-email" 
-                        type="email" 
-                        placeholder="Enter your email" 
-                        required 
-                        className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 h-10 text-sm"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-phone" className="text-gray-300 text-sm font-medium">Phone Number</Label>
-                      <Input 
-                        id="signup-phone" 
-                        type="tel" 
-                        placeholder="Enter your phone number" 
-                        required 
-                        className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 h-10 text-sm"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-password" className="text-gray-300 text-sm font-medium">Password</Label>
-                      <div className="relative">
-                        <Input 
-                          id="signup-password" 
-                          type={showSignupPassword ? "text" : "password"} 
-                          placeholder="Create a password" 
-                          required 
-                          className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 pr-10 h-10 text-sm"
-                        />
+                    {userType === "user" ? (
+                      <div className="mt-4">
+                        <div className="relative">
+                          <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t border-gray-700" />
+                          </div>
+                          <div className="relative flex justify-center text-xs">
+                            <span className="bg-gray-900 px-2 text-gray-500 text-xs uppercase">
+                              Or continue with
+                            </span>
+                          </div>
+                        </div>
                         <Button
                           type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-300"
-                          onClick={() => setShowSignupPassword(!showSignupPassword)}
+                          variant="outline"
+                          className="w-full mt-3 border-gray-700 hover:border-gray-600 hover:bg-gray-800 text-gray-300 h-10 text-sm font-medium"
+                          onClick={handleGoogleLogin}
+                          disabled={isLoading}
                         >
-                          {showSignupPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                            <path
+                              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                              fill="#4285F4"
+                            />
+                            <path
+                              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                              fill="#34A853"
+                            />
+                            <path
+                              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                              fill="#FBBC05"
+                            />
+                            <path
+                              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                              fill="#EA4335"
+                            />
+                          </svg>
+                          Sign in with Google
                         </Button>
+                      </div>
+                    ) : null}
+                  </>
+                )}
+              </TabsContent>
+
+              <TabsContent value="signup" className="space-y-4 mt-0">
+                <form onSubmit={(event) => handleSignupSubmit(event, userType)} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-gray-300 text-sm font-medium">
+                      Full Name
+                    </Label>
+                    <Input
+                      id="name"
+                      placeholder="Enter your full name"
+                      required
+                      value={signupForm.name}
+                      onChange={(event) =>
+                        setSignupForm((current) => ({ ...current, name: event.target.value }))
+                      }
+                      className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 h-10 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email" className="text-gray-300 text-sm font-medium">
+                      Email
+                    </Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="Enter your email"
+                      required
+                      value={signupForm.email}
+                      onChange={(event) =>
+                        setSignupForm((current) => ({ ...current, email: event.target.value }))
+                      }
+                      className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 h-10 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-phone" className="text-gray-300 text-sm font-medium">
+                      Phone Number
+                    </Label>
+                    <Input
+                      id="signup-phone"
+                      type="tel"
+                      placeholder="Enter your phone number"
+                      required
+                      value={signupForm.phone}
+                      onChange={(event) =>
+                        setSignupForm((current) => ({ ...current, phone: event.target.value }))
+                      }
+                      className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 h-10 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password" className="text-gray-300 text-sm font-medium">
+                      Password
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="signup-password"
+                        type={showSignupPassword ? "text" : "password"}
+                        placeholder="Create a password"
+                        required
+                        value={signupForm.password}
+                        onChange={(event) =>
+                          setSignupForm((current) => ({ ...current, password: event.target.value }))
+                        }
+                        className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 pr-10 h-10 text-sm"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-300"
+                        onClick={() => setShowSignupPassword((current) => !current)}
+                      >
+                        {showSignupPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-500">{PASSWORD_REQUIREMENTS_TEXT}</p>
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full bg-red-600 hover:bg-red-700 text-white h-10 text-sm font-medium mt-1"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating Account...
+                      </>
+                    ) : (
+                      "Create Account"
+                    )}
+                  </Button>
+                </form>
+
+                {userType === "user" ? (
+                  <div className="mt-4">
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-gray-700" />
+                      </div>
+                      <div className="relative flex justify-center text-xs">
+                        <span className="bg-gray-900 px-2 text-gray-500 text-xs uppercase">
+                          Or continue with
+                        </span>
                       </div>
                     </div>
                     <Button
-                      type="submit"
-                      className="w-full bg-red-600 hover:bg-red-700 text-white h-10 text-sm font-medium mt-1"
+                      type="button"
+                      variant="outline"
+                      className="w-full mt-3 border-gray-700 hover:border-gray-600 hover:bg-gray-800 text-gray-300 h-10 text-sm font-medium"
+                      onClick={handleGoogleLogin}
                       disabled={isLoading}
                     >
-                      {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating Account...</> : "Create Account"}
+                      <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                        <path
+                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                          fill="#4285F4"
+                        />
+                        <path
+                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                          fill="#34A853"
+                        />
+                        <path
+                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                          fill="#FBBC05"
+                        />
+                        <path
+                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                          fill="#EA4335"
+                        />
+                      </svg>
+                      Sign up with Google
                     </Button>
-                  </form>
-
-                  {/* Google Signup Button - Only for Attendee */}
-                  {userType === "user" && (
-                    <div className="mt-4">
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t border-gray-700" />
-                        </div>
-                        <div className="relative flex justify-center text-xs">
-                          <span className="bg-gray-900 px-2 text-gray-500 text-xs uppercase">Or continue with</span>
-                        </div>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full mt-3 border-gray-700 hover:border-gray-600 hover:bg-gray-800 text-gray-300 h-10 text-sm font-medium"
-                        onClick={handleGoogleLogin}
-                        disabled={isLoading}
-                      >
-                        <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                        </svg>
-                        Sign up with Google
-                      </Button>
-                    </div>
-                  )}
-                </TabsContent>
-              </Tabs>
+                  </div>
+                ) : null}
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
 
-        {/* OTP Verification Modal */}
         <OTPVerificationModal
           isOpen={showOtpModal}
           onClose={handleOtpModalClose}

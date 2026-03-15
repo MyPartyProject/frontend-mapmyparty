@@ -10,6 +10,7 @@ import PaymentCheckout from "./pages/PaymentCheckout";
 import BookingSuccess from "./pages/BookingSuccess";
 import Auth from "./pages/Auth";
 import GoogleCallback from "./pages/GoogleCallback";
+import ResetPassword from "./pages/ResetPassword";
 import UserDashboard from "./pages/NewUserDashboard";
 import Dashboard from "./components/dashboard/Dashboard";
 import BrowseEvents from "./components/dashboard/BrowseEvents";
@@ -44,6 +45,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import EventOverviewPage from "./pages/EventOverviewPage";
 import ReceptionDetail from "./pages/ReceptionDetail";
 import About from "./pages/About";
+import HostEvents from "./pages/HostEvents";
 import Contact from "./pages/Contact";
 import Policies from "./pages/Policies";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -95,12 +97,14 @@ const App = () => {
                 </ProtectedRoute>
               } />
               <Route path="/about" element={<About />} />
+              <Route path="/host-events" element={<HostEvents />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/policies" element={<Policies />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-conditions" element={<TermsConditions />} />
               <Route path="/cookie-policy" element={<CookiePolicy />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/auth/google/callback" element={<GoogleCallback />} />
               <Route path="/promoter/login" element={<PromoterLogin />} />
             </Route>

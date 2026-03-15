@@ -119,11 +119,11 @@ const LandingPage = () => {
               <div className="space-y-2">
                 <h1 className="text-4xl md:text-6xl font-semibold leading-tight text-white">Discover. Book. Party.</h1>
                 <h2 className="text-2xl md:text-3xl font-medium text-slate-100">
-                  Your City’s Events, <span className="text-pink-300">One Map Away.</span>
+                  Your City's Events, <span className="text-pink-300">One Map Away.</span>
                 </h2>
               </div>
               <p className="text-base md:text-lg text-slate-200/80 max-w-xl">
-                Find concerts, club nights, weddings, comedy shows and private parties — instantly book tickets with
+                Find concerts, club nights, weddings, comedy shows and private parties - instantly book tickets with
                 zero hassle.
               </p>
               <div className="space-y-4">
@@ -329,8 +329,8 @@ const LandingPage = () => {
                 </div>
               </div>
               <p className="mt-4 text-slate-800 leading-relaxed">
-                “Ticketing used to be a headache. With Map MyParty, we sold out in days, scanned tickets on-site, and
-                paid artists instantly. The live attendee updates kept our crew fully aligned.”
+                "Ticketing used to be a headache. With Map MyParty, we sold out in days, scanned tickets on-site, and
+                paid artists instantly. The live attendee updates kept our crew fully aligned."
               </p>
               <div className="mt-4 flex items-center gap-6 text-sm text-slate-600">
                 <span className="flex items-center gap-2">
@@ -351,7 +351,7 @@ const LandingPage = () => {
           <div className="container px-4 text-center space-y-6">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm backdrop-blur">
               <PartyPopper className="h-4 w-4 text-amber-300" />
-              <span className="text-slate-200">Host or attend—your choice.</span>
+              <span className="text-slate-200">Host or attend-your choice.</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold">
               Ready for your next{" "}
@@ -360,7 +360,7 @@ const LandingPage = () => {
               </span>
             </h2>
             <p className="text-slate-300/80 max-w-2xl mx-auto">
-              Create events, sell tickets, and thrill your guests. Or jump in as an attendee and enjoy the city’s best
+              Create events, sell tickets, and thrill your guests. Or jump in as an attendee and enjoy the city's best
               experiences.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
