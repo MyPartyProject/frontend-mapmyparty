@@ -8,19 +8,19 @@ import { Mail, Phone, MapPin, MessageSquare, Send, Clock } from "lucide-react";
 const contactChannels = [
   {
     title: "Email",
-    value: "hello@mapmyparty.com",
+    value: "mapmypartybro@gmail.com",
     icon: Mail,
     desc: "We respond within 1 business day.",
   },
   {
     title: "Phone / WhatsApp",
-    value: "+91 98765 43210",
+    value: "+91 12345 67890",
     icon: Phone,
     desc: "Support hours: 9 AM - 9 PM IST",
   },
   {
     title: "HQ",
-    value: "Koramangala, Bengaluru, India",
+    value: "Delhi, India",
     icon: MapPin,
     desc: "Come say hi at our studio.",
   },

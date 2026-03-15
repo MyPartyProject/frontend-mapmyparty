@@ -1,15 +1,20 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
+  BarChart3,
   CalendarRange,
+  CheckCircle2,
   MapPin,
   Music2,
   Sparkles,
+  QrCode,
   ShieldCheck,
   Clock3,
   PartyPopper,
   Star,
   Search,
+  Ticket,
 } from "lucide-react";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -96,9 +101,363 @@ function TicketIcon(props) {
   );
 }
 
+const slideMotionClass = (isActive) =>
+  `transform-gpu transition-all duration-500 ease-out ${isActive ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"}`;
+
+const slideMotionStyle = (isActive, delay) => ({
+  transitionDelay: `${isActive ? delay : 0}ms`,
+});
+
+const heroShowcaseStyles = `
+  @keyframes heroShowcaseFloat {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+`;
+
+const getHeroFeatureSlideState = (index, activeIndex, total) => {
+  if (index === activeIndex) return "active";
+  if (index === (activeIndex + 1) % total) return "queued";
+  return "hidden";
+};
+
+const heroFeatureSlideStateClass = (state) => {
+  if (state === "active") {
+    return "z-20 translate-y-0 scale-100 opacity-100";
+  }
+
+  if (state === "queued") {
+    return "z-10 translate-y-4 scale-[0.985] opacity-25";
+  }
+
+  return "z-0 translate-y-8 scale-[0.97] opacity-0";
+};
+
+const DemoMetric = ({ label, value, accent = "text-white" }) => (
+  <div className="rounded-2xl border border-white/10 bg-white/[0.08] p-3 backdrop-blur-sm">
+    <p className="text-[11px] uppercase tracking-[0.18em] text-slate-300/65">{label}</p>
+    <p className={`mt-2 text-lg font-semibold ${accent}`}>{value}</p>
+  </div>
+);
+
+const AttendeeDemoVisual = () => (
+  <div className="mx-auto flex w-full justify-center">
+    <div className="w-[210px] sm:w-[226px]">
+      <div className="rounded-[30px] border border-white/20 bg-[#120a24]/90 p-3 shadow-[0_30px_90px_-30px_rgba(0,0,0,0.8)]">
+        <div className="rounded-[24px] bg-[#0e0820] p-3">
+          <div className="flex items-center justify-between text-[11px] text-slate-300">
+            <span>MapMyParty</span>
+            <span>9:24</span>
+          </div>
+          <div className="mt-3 grid gap-3">
+            {featuredEvents.slice(0, 3).map((event) => (
+              <div key={event.id} className="rounded-2xl bg-white/10 p-3">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="h-12 w-12 rounded-xl bg-cover bg-center"
+                    style={{ backgroundImage: `url(${event.image})` }}
+                  />
+                  <div>
+                    <p className="text-xs text-pink-200">{event.category}</p>
+                    <p className="text-sm font-semibold text-white line-clamp-1">{event.title}</p>
+                    <p className="text-xs text-slate-300 line-clamp-1">{event.location}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 rounded-2xl bg-gradient-to-r from-fuchsia-500/40 to-purple-500/40 p-3">
+            <div className="flex items-center justify-between text-xs text-white">
+              <span>Discover Now</span>
+              <ArrowRight className="h-4 w-4" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const HostEventsVisual = () => (
+  <div className="mx-auto w-full max-w-[300px] space-y-3 rounded-[22px] border border-white/10 bg-[#0f0920]/78 p-4 shadow-[0_24px_80px_-36px_rgba(0,0,0,0.75)]">
+    <div className="flex items-center justify-between gap-3">
+      <div>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-fuchsia-200/70">Publishing flow</p>
+        <p className="text-lg font-semibold text-white">Summer Rooftop Sessions</p>
+      </div>
+      <span className="rounded-full border border-emerald-300/25 bg-emerald-400/15 px-3 py-1 text-xs text-emerald-100">
+        Published
+      </span>
+    </div>
+    <div className="grid grid-cols-3 gap-3">
+      <DemoMetric label="Attendees" value="1.4K" accent="text-pink-100" />
+      <DemoMetric label="Tickets" value="864" accent="text-amber-100" />
+      <DemoMetric label="Revenue" value="$24K" accent="text-fuchsia-100" />
+    </div>
+    <div className="grid gap-3 sm:grid-cols-[1.05fr_0.95fr]">
+      <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4">
+        <p className="text-sm font-semibold text-white">Event creation</p>
+        <div className="mt-3 space-y-2">
+          {["Details ready", "Tickets live", "Venue confirmed"].map((item) => (
+            <div key={item} className="flex items-center gap-2 text-sm text-slate-200/80">
+              <span className="h-2 w-2 rounded-full bg-emerald-300" />
+              <span>{item}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4">
+        <div className="flex items-center justify-between text-sm text-white">
+          <span>Ticket sales</span>
+          <span className="text-slate-300/75">72%</span>
+        </div>
+        <div className="mt-4 h-2 rounded-full bg-white/10">
+          <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-fuchsia-400 via-pink-400 to-amber-300" />
+        </div>
+        <div className="mt-3 flex items-center justify-between text-xs text-slate-300/75">
+          <span>Sold</span>
+          <span className="text-white">864 / 1200</span>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const AnalyticsVisual = () => {
+  const bars = [42, 58, 50, 74, 68, 88, 96];
+
+  return (
+    <div className="mx-auto w-full max-w-[300px] rounded-[22px] border border-white/10 bg-[#0f0920]/78 p-4 shadow-[0_24px_80px_-36px_rgba(0,0,0,0.75)]">
+      <div className="grid grid-cols-3 gap-3">
+        <DemoMetric label="Revenue" value="$28.4K" accent="text-amber-100" />
+        <DemoMetric label="Attendees" value="2.1K" accent="text-pink-100" />
+        <DemoMetric label="Engagement" value="+18%" accent="text-fuchsia-100" />
+      </div>
+      <div className="mt-4 rounded-2xl bg-[#120a24]/82 p-4">
+        <div className="flex items-center justify-between text-xs text-slate-300/70">
+          <span className="inline-flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 text-fuchsia-200" />
+            Revenue trend
+          </span>
+          <span>Last 7 days</span>
+        </div>
+        <div className="mt-5 flex h-32 items-end gap-2">
+          {bars.map((bar, index) => (
+            <div key={index} className="flex-1 rounded-t-2xl bg-white/6 p-1">
+              <div
+                className="w-full rounded-t-xl bg-gradient-to-t from-fuchsia-500 via-pink-400 to-amber-300"
+                style={{ height: `${bar}%` }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-slate-300/65">Top market</p>
+          <p className="mt-2 text-sm text-white">Austin, TX</p>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-slate-300/65">Conversion</p>
+          <p className="mt-2 text-sm text-white">14.8% ticket view to booking</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const TicketingVisual = () => (
+  <div className="relative mx-auto flex min-h-[220px] w-full max-w-[300px] items-center justify-center pb-8">
+    <div className="w-full max-w-[300px] rounded-[24px] border border-white/12 bg-gradient-to-br from-fuchsia-500/18 via-purple-500/12 to-amber-300/8 p-5 shadow-[0_30px_90px_-30px_rgba(0,0,0,0.8)]">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-fuchsia-200/70">Instant ticket</p>
+          <p className="text-xl font-semibold text-white">Night Skyline Pass</p>
+        </div>
+        <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs text-white">Paid</span>
+      </div>
+      <div className="mt-6 grid grid-cols-[1fr_auto] gap-4">
+        <div className="space-y-2 text-sm text-slate-200/80">
+          <div className="flex items-center gap-2">
+            <Ticket className="h-4 w-4 text-amber-200" />
+            VIP Access
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock3 className="h-4 w-4 text-pink-200" />
+            Doors open at 8:00 PM
+          </div>
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-fuchsia-200" />
+            Downtown Social Club
+          </div>
+        </div>
+        <div className="grid grid-cols-4 gap-1 rounded-2xl bg-white/10 p-3">
+          {Array.from({ length: 16 }).map((_, index) => (
+            <div
+              key={index}
+              className={`h-3 w-3 rounded-[4px] ${index % 3 === 0 || index % 5 === 0 ? "bg-white" : "bg-white/20"}`}
+            />
+          ))}
+        </div>
+      </div>
+      <div className="mt-5 flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-slate-300/65">Checkout speed</p>
+          <p className="mt-1 text-lg font-semibold text-white">2 tap purchase</p>
+        </div>
+        <ShieldCheck className="h-8 w-8 text-emerald-200" />
+      </div>
+    </div>
+    <div className="absolute bottom-0 right-1 rounded-2xl border border-emerald-300/25 bg-[#0b1322]/96 p-4 shadow-[0_25px_70px_-30px_rgba(0,0,0,0.75)]">
+      <div className="flex items-center gap-2 text-sm font-semibold text-emerald-100">
+        <CheckCircle2 className="h-4 w-4" />
+        Payment confirmed
+      </div>
+      <p className="mt-2 text-xs text-slate-300/75">Instant confirmation sent to email and app wallet.</p>
+    </div>
+  </div>
+);
+
+const CheckInVisual = () => (
+  <div className="mx-auto w-full max-w-[300px] space-y-3 rounded-[22px] border border-white/10 bg-[#0f0920]/78 p-4 shadow-[0_24px_80px_-36px_rgba(0,0,0,0.75)]">
+    <div className="flex items-center justify-between gap-3">
+      <div>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-fuchsia-200/70">Entry control</p>
+        <p className="text-lg font-semibold text-white">Gate 02 scanner</p>
+      </div>
+      <span className="rounded-full border border-emerald-300/25 bg-emerald-400/15 px-3 py-1 text-xs text-emerald-100">
+        Scanning live
+      </span>
+    </div>
+    <div className="grid gap-3 sm:grid-cols-[1fr_0.95fr]">
+      <div className="rounded-2xl bg-[#120a24]/82 p-4">
+        <div className="mx-auto flex h-40 w-full max-w-[180px] items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/5">
+          <div className="relative h-24 w-24 rounded-2xl bg-white/6">
+            <div className="absolute left-0 top-0 h-7 w-7 rounded-tl-2xl border-l-2 border-t-2 border-fuchsia-200" />
+            <div className="absolute right-0 top-0 h-7 w-7 rounded-tr-2xl border-r-2 border-t-2 border-fuchsia-200" />
+            <div className="absolute bottom-0 left-0 h-7 w-7 rounded-bl-2xl border-b-2 border-l-2 border-fuchsia-200" />
+            <div className="absolute bottom-0 right-0 h-7 w-7 rounded-br-2xl border-b-2 border-r-2 border-fuchsia-200" />
+            <div className="absolute inset-5 grid grid-cols-3 gap-1">
+              {Array.from({ length: 9 }).map((_, index) => (
+                <div
+                  key={index}
+                  className={`rounded-[3px] ${index % 2 === 0 || index === 7 ? "bg-white" : "bg-white/20"}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="space-y-3">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-emerald-100">
+            <QrCode className="h-4 w-4" />
+            Attendee verified
+          </div>
+          <p className="mt-3 text-base text-white">Nina Carter</p>
+          <p className="text-sm text-slate-300/75">VIP + Lounge access</p>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <DemoMetric label="Checked in" value="842" accent="text-emerald-100" />
+          <DemoMetric label="Remaining" value="358" accent="text-amber-100" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const HeroFeatureSlide = ({ slide, state }) => {
+  const isActive = state === "active";
+
+  return (
+    <div
+      className={`feature-slide absolute inset-0 transition-all duration-500 ease-out ${heroFeatureSlideStateClass(state)} ${isActive ? "" : "pointer-events-none"}`}
+      aria-hidden={!isActive}
+    >
+      <div className="flex h-full flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(19,10,36,0.94),rgba(10,7,23,0.97))] px-6 py-6 shadow-[0_32px_90px_-38px_rgba(0,0,0,0.9)]">
+        <div className="feature-slide-content flex flex-col items-start gap-3">
+          <div className={slideMotionClass(isActive)} style={slideMotionStyle(isActive, 0)}>
+            <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-slate-200/80">
+              {slide.label}
+            </span>
+          </div>
+          <div className={slideMotionClass(isActive)} style={slideMotionStyle(isActive, 0)}>
+            <h3 className="max-w-[17rem] text-[1.85rem] font-semibold leading-tight text-white">{slide.title}</h3>
+          </div>
+          <div className={slideMotionClass(isActive)} style={slideMotionStyle(isActive, 120)}>
+            <p className="max-w-sm text-sm leading-relaxed text-slate-200/78">{slide.description}</p>
+          </div>
+        </div>
+        <div
+          className={`feature-visual mt-5 flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-[22px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.09),transparent_45%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-4 ${slideMotionClass(isActive)}`}
+          style={slideMotionStyle(isActive, 240)}
+        >
+          {slide.visual}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const LandingPage = () => {
+  const [activeFeatureSlide, setActiveFeatureSlide] = useState(0);
+  const [isFeatureCarouselPaused, setIsFeatureCarouselPaused] = useState(false);
+
+  const heroFeatureSlides = [
+    {
+      id: "attendees",
+      label: "FOR ATTENDEES",
+      title: "Discover events instantly",
+      description: "Explore concerts, nightlife, food festivals and conferences happening around you.",
+      visual: <AttendeeDemoVisual />,
+    },
+    {
+      id: "host-events",
+      label: "FOR ORGANIZERS",
+      title: "Host unforgettable events",
+      description: "Create, publish and manage events with powerful tools designed for organizers.",
+      visual: <HostEventsVisual />,
+    },
+    {
+      id: "ticketing",
+      label: "TICKETING",
+      title: "Sell tickets instantly",
+      description: "Launch ticket sales with secure checkout and instant confirmations.",
+      visual: <TicketingVisual />,
+    },
+    {
+      id: "analytics",
+      label: "ANALYTICS",
+      title: "Track event performance",
+      description: "Monitor ticket sales, attendance and engagement in real time.",
+      visual: <AnalyticsVisual />,
+    },
+    {
+      id: "check-in",
+      label: "EVENT ENTRY",
+      title: "Fast attendee check-ins",
+      description: "Scan tickets and manage entry with real-time attendee verification.",
+      visual: <CheckInVisual />,
+    },
+  ];
+
+  useEffect(() => {
+    if (isFeatureCarouselPaused) return undefined;
+
+    const intervalId = window.setInterval(() => {
+      setActiveFeatureSlide((prev) => (prev + 1) % heroFeatureSlides.length);
+    }, 4000);
+
+    return () => window.clearInterval(intervalId);
+  }, [isFeatureCarouselPaused, heroFeatureSlides.length]);
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-50">
+      <style>{heroShowcaseStyles}</style>
       <Header forceMainHeader />
 
       <main className="flex-1">
@@ -156,37 +515,51 @@ const LandingPage = () => {
             <div className="relative flex items-center justify-center">
               <div className="absolute -right-6 top-8 h-64 w-64 rounded-full bg-purple-500/25 blur-3xl" />
               <div className="absolute -left-6 bottom-8 h-52 w-52 rounded-full bg-pink-400/25 blur-3xl" />
-              <div className="relative w-[260px] sm:w-[300px] lg:w-[340px]">
-                <div className="absolute -right-10 top-20 h-60 w-36 -rotate-12 rounded-[32px] border border-white/20 bg-white/10 backdrop-blur-xl" />
-                <div className="relative rounded-[38px] border border-white/20 bg-[#120a24]/90 p-4 shadow-[0_40px_120px_-35px_rgba(0,0,0,0.8)]">
-                  <div className="rounded-[28px] bg-[#0e0820] p-3">
-                    <div className="flex items-center justify-between text-xs text-slate-300">
-                      <span>MapMyParty</span>
-                      <span>9:24</span>
+              <div
+                className="feature-showcase relative h-[440px] w-full max-w-[420px] overflow-hidden rounded-[28px] border border-white/12 bg-white/[0.04] p-8 backdrop-blur-[10px] shadow-[0_44px_140px_-40px_rgba(0,0,0,0.85)]"
+                style={{ animation: "heroShowcaseFloat 6s ease-in-out infinite" }}
+                onMouseEnter={() => setIsFeatureCarouselPaused(true)}
+                onMouseLeave={() => setIsFeatureCarouselPaused(false)}
+              >
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(255,255,255,0.08),transparent_34%),radial-gradient(circle_at_78%_14%,rgba(255,105,180,0.16),transparent_28%),radial-gradient(circle_at_82%_80%,rgba(255,183,104,0.12),transparent_30%)] opacity-80" />
+                <div className="relative z-10 flex h-full flex-col">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.06] px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-slate-200/70">
+                      <Sparkles className="h-3.5 w-3.5 text-pink-200" />
+                      Product Showcase
                     </div>
-                    <div className="mt-3 grid gap-3">
-                      {featuredEvents.slice(0, 3).map((event) => (
-                        <div key={event.id} className="rounded-2xl bg-white/10 p-3">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className="h-12 w-12 rounded-xl bg-cover bg-center"
-                              style={{ backgroundImage: `url(${event.image})` }}
-                            />
-                            <div>
-                              <p className="text-xs text-pink-200">{event.category}</p>
-                              <p className="text-sm font-semibold text-white">{event.title}</p>
-                              <p className="text-xs text-slate-300">{event.location}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-4 rounded-2xl bg-gradient-to-r from-fuchsia-500/40 to-purple-500/40 p-3">
-                      <div className="flex items-center justify-between text-xs text-white">
-                        <span>Discover Now</span>
-                        <ArrowRight className="h-4 w-4" />
-                      </div>
-                    </div>
+                    <span className="text-[11px] uppercase tracking-[0.2em] text-slate-300/55">
+                      {String(activeFeatureSlide + 1).padStart(2, "0")} / {String(heroFeatureSlides.length).padStart(2, "0")}
+                    </span>
+                  </div>
+
+                  <div className="relative min-h-0 flex-1">
+                    <div className="pointer-events-none absolute inset-x-4 top-4 bottom-2 rounded-[24px] border border-white/6 bg-white/[0.03] opacity-40" />
+                    <div className="pointer-events-none absolute inset-x-6 top-8 bottom-0 rounded-[24px] border border-white/5 bg-black/15 opacity-50" />
+
+                    {heroFeatureSlides.map((slide, index) => (
+                      <HeroFeatureSlide
+                        key={slide.id}
+                        slide={slide}
+                        state={getHeroFeatureSlideState(index, activeFeatureSlide, heroFeatureSlides.length)}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="mt-5 flex items-center justify-center gap-2">
+                    {heroFeatureSlides.map((slide, index) => {
+                      const isActive = index === activeFeatureSlide;
+
+                      return (
+                        <button
+                          key={slide.id}
+                          type="button"
+                          aria-label={`Go to ${slide.title}`}
+                          onClick={() => setActiveFeatureSlide(index)}
+                          className={`transition-all duration-300 ease-out ${isActive ? "h-1.5 w-[20px] rounded-[10px] bg-white" : "h-1.5 w-1.5 rounded-full bg-white/40 hover:bg-white/60"}`}
+                        />
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -292,53 +665,55 @@ const LandingPage = () => {
         </section>
 
         {/* Social proof */}
-        <section className="py-16 bg-gradient-to-br from-amber-400/10 via-rose-400/10 to-blue-400/10">
-          <div className="container px-4 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
+        <section className="relative overflow-hidden py-16 bg-[#140a2b]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(255,105,180,0.22),transparent_45%),radial-gradient(circle_at_70%_20%,rgba(122,78,255,0.32),transparent_40%),radial-gradient(circle_at_82%_72%,rgba(255,183,104,0.2),transparent_38%)]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0a0619] via-[#1b0c2f] to-[#31154a] opacity-90" />
+          <div className="container relative px-4 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
             <div className="space-y-4">
-              <p className="text-sm uppercase tracking-[0.18em] text-amber-500">Trusted</p>
-              <h2 className="text-3xl font-bold text-slate-900">
+              <p className="text-sm uppercase tracking-[0.18em] text-amber-200/80">Trusted</p>
+              <h2 className="text-3xl font-bold text-white">
                 Loved by organizers & attendees
               </h2>
-              <p className="text-slate-800/80 max-w-2xl">
+              <p className="text-slate-200/80 max-w-2xl">
                 Instant payouts, secure tickets, and live support keep events smooth. Join thousands who make every
                 celebration unforgettable with Map MyParty.
               </p>
-              <div className="flex flex-wrap gap-3 text-slate-900">
-                <div className="flex items-center gap-2 rounded-full bg-white/80 px-3 py-2 shadow-sm">
-                  <Star className="h-4 w-4 text-amber-500" />
+              <div className="flex flex-wrap gap-3 text-white">
+                <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-2 backdrop-blur shadow-[0_16px_40px_-24px_rgba(0,0,0,0.7)]">
+                  <Star className="h-4 w-4 text-amber-300" />
                   4.8/5 average satisfaction
                 </div>
-                <div className="flex items-center gap-2 rounded-full bg-white/80 px-3 py-2 shadow-sm">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-2 backdrop-blur shadow-[0_16px_40px_-24px_rgba(0,0,0,0.7)]">
+                  <ShieldCheck className="h-4 w-4 text-pink-200" />
                   Verified organizers
                 </div>
-                <div className="flex items-center gap-2 rounded-full bg-white/80 px-3 py-2 shadow-sm">
-                  <Clock3 className="h-4 w-4 text-blue-600" />
+                <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-2 backdrop-blur shadow-[0_16px_40px_-24px_rgba(0,0,0,0.7)]">
+                  <Clock3 className="h-4 w-4 text-fuchsia-200" />
                   Real-time support
                 </div>
               </div>
             </div>
-            <div className="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-2xl">
+            <div className="rounded-3xl border border-white/15 bg-white/10 p-6 backdrop-blur-xl shadow-[0_40px_120px_-35px_rgba(0,0,0,0.8)]">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600 font-semibold">
+                <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-amber-300/25 to-pink-300/25 flex items-center justify-center text-amber-100 font-semibold border border-white/10">
                   M
                 </div>
                 <div>
-                  <p className="text-sm uppercase tracking-[0.18em] text-slate-500">Organizer Story</p>
-                  <p className="font-semibold text-lg text-slate-900">Neha, Indie Fest</p>
+                  <p className="text-sm uppercase tracking-[0.18em] text-slate-300/70">Organizer Story</p>
+                  <p className="font-semibold text-lg text-white">Neha, Indie Fest</p>
                 </div>
               </div>
-              <p className="mt-4 text-slate-800 leading-relaxed">
+              <p className="mt-4 text-slate-200/80 leading-relaxed">
                 "Ticketing used to be a headache. With Map MyParty, we sold out in days, scanned tickets on-site, and
                 paid artists instantly. The live attendee updates kept our crew fully aligned."
               </p>
-              <div className="mt-4 flex items-center gap-6 text-sm text-slate-600">
+              <div className="mt-4 flex items-center gap-6 text-sm text-slate-200/75">
                 <span className="flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                  <ShieldCheck className="h-4 w-4 text-pink-200" />
                   Verified payout
                 </span>
                 <span className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-amber-500" />
+                  <Sparkles className="h-4 w-4 text-amber-300" />
                   8K attendees
                 </span>
               </div>
