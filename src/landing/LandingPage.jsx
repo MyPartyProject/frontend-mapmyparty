@@ -1,7 +1,10 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
   CalendarRange,
+  ChevronLeft,
+  ChevronRight,
   MapPin,
   Music2,
   Search,
@@ -96,16 +99,141 @@ function TicketIcon(props) {
   );
 }
 
+const heroSlides = [
+  { id: "party-video", type: "video", src: "/videos/party2.mp4" },
+  { id: "party-image-1", type: "image", src: "/images/ph1.jpg" },
+  { id: "party-image-2", type: "image", src: "/images/ph2.jpg" },
+  { id: "party-image-3", type: "image", src: "/images/ph3.jpg" },
+];
+
+const heroCarouselStyles = `
+  @keyframes heroImageDrift {
+    0% {
+      transform: scale(1.04) translate3d(0, 0, 0);
+    }
+    50% {
+      transform: scale(1.09) translate3d(0, -1.5%, 0);
+    }
+    100% {
+      transform: scale(1.12) translate3d(0, -3%, 0);
+    }
+  }
+`;
+
 const LandingPage = () => {
+  const [activeHeroSlide, setActiveHeroSlide] = useState(0);
+  const heroVideoRef = useRef(null);
+
+  useEffect(() => {
+    heroSlides
+      .filter((slide) => slide.type === "image")
+      .forEach((slide) => {
+        const image = new Image();
+        image.src = slide.src;
+      });
+  }, []);
+
+  useEffect(() => {
+    const activeSlide = heroSlides[activeHeroSlide];
+
+    if (activeSlide.type === "video") {
+      const video = heroVideoRef.current;
+
+      if (!video) return undefined;
+
+      video.currentTime = 0;
+      const playAttempt = video.play();
+      if (playAttempt && typeof playAttempt.catch === "function") {
+        playAttempt.catch(() => {});
+      }
+
+      return undefined;
+    }
+
+    if (heroVideoRef.current) {
+      heroVideoRef.current.pause();
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setActiveHeroSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 4000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [activeHeroSlide]);
+
+  const handleHeroVideoEnded = () => {
+    setActiveHeroSlide(1);
+  };
+
+  const goToPreviousHeroSlide = () => {
+    setActiveHeroSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
+  };
+
+  const goToNextHeroSlide = () => {
+    setActiveHeroSlide((prev) => (prev + 1) % heroSlides.length);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-50">
+      <style>{heroCarouselStyles}</style>
       <Header forceMainHeader />
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="relative overflow-hidden bg-[#140a2b]">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(255,105,180,0.28),transparent_45%),radial-gradient(circle_at_65%_25%,rgba(122,78,255,0.35),transparent_40%),radial-gradient(circle_at_80%_70%,rgba(255,183,104,0.25),transparent_40%)]" />
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0a0619] via-[#1b0c2f] to-[#31154a] opacity-90" />
+        <section className="relative overflow-hidden bg-[#140a2b] min-h-[20rem] sm:min-h-[23rem] lg:min-h-[28rem]">
+          <div className="absolute inset-0">
+            {heroSlides.map((slide, index) => {
+              const isActive = index === activeHeroSlide;
+
+              return (
+                <div
+                  key={slide.id}
+                  className={`absolute inset-0 transition-opacity duration-[1400ms] ease-out ${isActive ? "opacity-100" : "pointer-events-none opacity-0"}`}
+                >
+                  {slide.type === "video" ? (
+                    <video
+                      ref={index === 0 ? heroVideoRef : null}
+                      className="h-full w-full object-cover"
+                      src={slide.src}
+                      muted
+                      playsInline
+                      preload="auto"
+                      onEnded={handleHeroVideoEnded}
+                    />
+                  ) : (
+                    <div
+                      className="h-full w-full bg-cover bg-center will-change-transform"
+                      style={{
+                        backgroundImage: `url(${slide.src})`,
+                        animation: isActive ? "heroImageDrift 4000ms ease-out forwards" : "none",
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div className="absolute inset-y-0 left-0 right-0 z-20 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+            <button
+              type="button"
+              aria-label="Previous hero slide"
+              onClick={goToPreviousHeroSlide}
+              className="inline-flex h-11 w-11 items-center justify-center text-white/65 transition-all duration-300 hover:text-white"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              aria-label="Next hero slide"
+              onClick={goToNextHeroSlide}
+              className="inline-flex h-11 w-11 items-center justify-center text-white/65 transition-all duration-300 hover:text-white"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(255,105,180,0.18),transparent_45%),radial-gradient(circle_at_65%_25%,rgba(122,78,255,0.2),transparent_40%),radial-gradient(circle_at_80%_70%,rgba(255,183,104,0.14),transparent_40%)]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/30 via-[#12081f]/45 to-slate-950/75" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/50 via-transparent to-slate-950/30" />
           <div className="absolute inset-0 opacity-70">
             <div className="absolute left-16 top-16 h-3 w-3 rounded-full bg-pink-300/70 blur-sm" />
             <div className="absolute left-40 top-28 h-2 w-2 rounded-full bg-purple-200/70 blur-sm" />
