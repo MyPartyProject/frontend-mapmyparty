@@ -1,16 +1,15 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
   CalendarRange,
   MapPin,
   Music2,
+  Search,
   Sparkles,
   ShieldCheck,
   Clock3,
   PartyPopper,
   Star,
-  Search,
 } from "lucide-react";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -97,206 +96,9 @@ function TicketIcon(props) {
   );
 }
 
-const heroShowcaseStyles = `
-  @keyframes heroShowcaseFloat {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-6px);
-    }
-  }
-`;
-
-const heroMobileScreenClass = (isActive) =>
-  `absolute inset-0 flex h-full flex-col transition-all duration-500 ease-out ${
-    isActive ? "translate-y-0 scale-100 opacity-100" : "pointer-events-none translate-y-4 scale-[0.985] opacity-0"
-  }`;
-
-const HeroMobileDiscoverScreen = () => (
-  <div className="flex h-full flex-col">
-    <div className="flex items-center justify-between text-[11px] text-slate-300">
-      <span>Discover</span>
-      <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] text-pink-100">Live now</span>
-    </div>
-    <div className="mt-3 rounded-2xl bg-white/[0.07] px-3 py-2 text-xs text-slate-300">Tonight near you</div>
-    <div className="mt-3 grid gap-3">
-      {featuredEvents.slice(0, 3).map((event) => (
-        <div key={event.id} className="rounded-2xl bg-white/10 p-3">
-          <div className="flex items-center gap-3">
-            <div
-              className="h-12 w-12 rounded-xl bg-cover bg-center"
-              style={{ backgroundImage: `url(${event.image})` }}
-            />
-            <div className="min-w-0">
-              <p className="text-xs text-pink-200">{event.category}</p>
-              <p className="text-sm font-semibold text-white line-clamp-1">{event.title}</p>
-              <p className="text-xs text-slate-300 line-clamp-1">{event.location}</p>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-    <div className="mt-auto rounded-2xl bg-gradient-to-r from-fuchsia-500/40 to-purple-500/40 p-3">
-      <div className="flex items-center justify-between text-xs text-white">
-        <span>Discover Now</span>
-        <ArrowRight className="h-4 w-4" />
-      </div>
-    </div>
-  </div>
-);
-
-const HeroMobileEventScreen = () => {
-  const event = featuredEvents[0];
-
-  return (
-    <div className="flex h-full flex-col">
-      <div
-        className="flex min-h-[152px] items-end rounded-[22px] bg-cover bg-center p-4"
-        style={{
-          backgroundImage: `linear-gradient(180deg,rgba(12,8,24,0.08),rgba(12,8,24,0.88)), url(${event.image})`,
-        }}
-      >
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-pink-100/80">{event.category}</p>
-          <p className="mt-2 text-lg font-semibold leading-tight text-white">{event.title}</p>
-        </div>
-      </div>
-      <div className="mt-3 rounded-2xl bg-white/[0.07] p-3">
-        <div className="flex items-center gap-2 text-sm text-slate-200/80">
-          <CalendarRange className="h-4 w-4 text-amber-200" />
-          <span className="line-clamp-1">{event.date}</span>
-        </div>
-        <div className="mt-2 flex items-center gap-2 text-sm text-slate-200/80">
-          <MapPin className="h-4 w-4 text-pink-200" />
-          <span className="line-clamp-1">{event.location}</span>
-        </div>
-      </div>
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl bg-white/[0.07] p-3">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-300/65">Attendees</p>
-          <p className="mt-2 text-sm font-semibold text-white">{event.attendees.toLocaleString()} going</p>
-        </div>
-        <div className="rounded-2xl bg-white/[0.07] p-3">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-slate-300/65">Tickets</p>
-          <p className="mt-2 text-sm font-semibold text-white">{event.price}</p>
-        </div>
-      </div>
-      <div className="mt-auto rounded-2xl border border-white/10 bg-white/[0.08] p-3">
-        <div className="flex items-center justify-between text-sm text-white">
-          <span>Book in two taps</span>
-          <ArrowRight className="h-4 w-4" />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const HeroMobileTicketScreen = () => (
-  <div className="flex h-full flex-col">
-    <div className="rounded-[22px] border border-white/12 bg-gradient-to-br from-fuchsia-500/18 via-purple-500/12 to-amber-300/8 p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-fuchsia-200/70">My ticket</p>
-          <p className="mt-2 text-lg font-semibold text-white">Night Skyline Pass</p>
-        </div>
-        <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs text-white">VIP</span>
-      </div>
-      <div className="mt-5 grid grid-cols-[1fr_auto] gap-4">
-        <div className="space-y-2 text-sm text-slate-200/80">
-          <div className="flex items-center gap-2">
-            <TicketIcon className="h-4 w-4 text-amber-200" />
-            Entry pass
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock3 className="h-4 w-4 text-pink-200" />
-            Doors open at 8:00 PM
-          </div>
-          <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-fuchsia-200" />
-            Downtown Social Club
-          </div>
-        </div>
-        <div className="grid grid-cols-4 gap-1 rounded-2xl bg-white/10 p-3">
-          {Array.from({ length: 16 }).map((_, index) => (
-            <div
-              key={index}
-              className={`h-3 w-3 rounded-[4px] ${index % 3 === 0 || index % 5 === 0 ? "bg-white" : "bg-white/20"}`}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-    <div className="mt-3 grid grid-cols-2 gap-3">
-      <div className="rounded-2xl bg-white/[0.07] p-3">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-slate-300/65">Status</p>
-        <p className="mt-2 text-sm font-semibold text-white">Ready to scan</p>
-      </div>
-      <div className="rounded-2xl bg-white/[0.07] p-3">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-slate-300/65">Seat</p>
-        <p className="mt-2 text-sm font-semibold text-white">VIP Lounge</p>
-      </div>
-    </div>
-    <div className="mt-auto rounded-2xl border border-emerald-300/25 bg-emerald-400/15 px-4 py-3">
-      <p className="text-sm font-semibold text-emerald-100">Payment confirmed</p>
-      <p className="mt-1 text-xs text-slate-300/75">Saved in your wallet and ready for entry.</p>
-    </div>
-  </div>
-);
-
-const heroMobileScreens = [
-  { id: "discover", title: "Discover events", component: HeroMobileDiscoverScreen },
-  { id: "details", title: "Event details", component: HeroMobileEventScreen },
-  { id: "ticket", title: "Ticket wallet", component: HeroMobileTicketScreen },
-];
-
-const HeroMobileDemo = ({ activeScreen }) => (
-  <div className="flex h-full w-full items-center justify-center">
-    <div className="relative flex h-full min-h-[31rem] w-full items-center justify-center sm:min-h-[33rem]">
-      <div className="absolute h-80 w-80 rounded-full bg-fuchsia-500/14 blur-3xl" />
-      <div className="relative w-[260px] sm:w-[286px] lg:w-[300px]">
-        <div className="rounded-[34px] border border-white/20 bg-[#120a24]/90 p-4 shadow-[0_30px_90px_-30px_rgba(0,0,0,0.8)]">
-          <div className="rounded-[28px] bg-[#0e0820] p-4">
-            <div className="flex items-center justify-between text-[11px] text-slate-300">
-              <span>MapMyParty</span>
-              <span>9:24</span>
-            </div>
-            <div className="relative mt-4 min-h-[420px] sm:min-h-[448px]">
-              {heroMobileScreens.map((screen, index) => {
-                const ScreenComponent = screen.component;
-                const isActive = index === activeScreen;
-
-                return (
-                  <div key={screen.id} className={heroMobileScreenClass(isActive)} aria-hidden={!isActive}>
-                    <ScreenComponent />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
 const LandingPage = () => {
-  const [activeMobileScreen, setActiveMobileScreen] = useState(0);
-  const [isHeroShowcasePaused, setIsHeroShowcasePaused] = useState(false);
-
-  useEffect(() => {
-    if (isHeroShowcasePaused) return undefined;
-
-    const intervalId = window.setInterval(() => {
-      setActiveMobileScreen((prev) => (prev + 1) % heroMobileScreens.length);
-    }, 4000);
-
-    return () => window.clearInterval(intervalId);
-  }, [isHeroShowcasePaused]);
-
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-50">
-      <style>{heroShowcaseStyles}</style>
       <Header forceMainHeader />
 
       <main className="flex-1">
@@ -312,73 +114,25 @@ const LandingPage = () => {
             <div className="absolute left-1/2 bottom-14 h-2 w-2 rounded-full bg-amber-200/80 blur-sm" />
           </div>
 
-          <div className="relative container px-6 md:px-8 lg:px-10 pt-10 pb-20 lg:pt-14 lg:pb-24 grid gap-12 lg:grid-cols-[1.05fr_0.95fr] items-center">
-            <div className="space-y-5">
-              <div className="space-y-2">
-                <h1 className="text-4xl md:text-6xl font-semibold leading-tight text-white">Discover. Book. Party.</h1>
-                <h2 className="text-2xl md:text-3xl font-medium text-slate-100">
-                  Your City's Events, <span className="text-pink-300">One Map Away.</span>
-                </h2>
+          <div className="relative container px-6 md:px-8 lg:px-10 pt-10 pb-20 lg:pt-14 lg:pb-24" />
+        </section>
+
+        {/* Search */}
+        <section className="bg-slate-950">
+          <div className="container px-6 md:px-8 lg:px-10 pt-6 pb-10 lg:pt-8 lg:pb-14">
+            <div className="flex flex-col gap-3 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-lg shadow-[0_25px_60px_-30px_rgba(0,0,0,0.65)] sm:flex-row sm:items-center">
+              <div className="flex flex-1 items-center gap-3 rounded-xl bg-white/10 px-4 py-3 text-sm text-slate-200/90">
+                <Search className="h-4 w-4 text-slate-200/80" />
+                Search events, artists or venues...
               </div>
-              <p className="text-base md:text-lg text-slate-200/80 max-w-xl">
-                Find concerts, club nights, weddings, comedy shows and private parties - instantly book tickets with
-                zero hassle.
-              </p>
-              <div className="space-y-4">
-                <div className="flex flex-col gap-3 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-lg shadow-[0_25px_60px_-30px_rgba(0,0,0,0.65)] sm:flex-row sm:items-center">
-                  <div className="flex flex-1 items-center gap-3 rounded-xl bg-white/10 px-4 py-3 text-sm text-slate-200/90">
-                    <Search className="h-4 w-4 text-slate-200/80" />
-                    Search events, artists or venues...
-                  </div>
-                  <div className="flex items-center justify-between gap-3 sm:justify-end">
-                    <div className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs text-slate-100">
-                      <MapPin className="h-3.5 w-3.5 text-pink-200" />
-                      New York City
-                    </div>
-                    <Button size="sm" className="bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white hover:from-fuchsia-400 hover:to-pink-400">
-                      Search
-                    </Button>
-                  </div>
+              <div className="flex items-center justify-between gap-3 sm:justify-end">
+                <div className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs text-slate-100">
+                  <MapPin className="h-3.5 w-3.5 text-pink-200" />
+                  New York City
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button className="bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white hover:from-purple-400 hover:to-fuchsia-400">
-                    Browse Events
-                  </Button>
-                  <Button variant="outline" className="border-white/30 text-white hover:bg-white hover:text-slate-900">
-                    Host Your Event
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <div className="relative flex items-center justify-center">
-              <div className="absolute -right-6 top-8 h-64 w-64 rounded-full bg-purple-500/25 blur-3xl" />
-              <div className="absolute -left-6 bottom-8 h-52 w-52 rounded-full bg-pink-400/25 blur-3xl" />
-              <div
-                className="feature-showcase relative flex w-full max-w-[32rem] flex-col items-center justify-center overflow-visible"
-                style={{ animation: "heroShowcaseFloat 6s ease-in-out infinite" }}
-                onMouseEnter={() => setIsHeroShowcasePaused(true)}
-                onMouseLeave={() => setIsHeroShowcasePaused(false)}
-              >
-                <div className="feature-carousel-track relative flex min-h-[34rem] w-full items-center justify-center overflow-visible bg-transparent p-0">
-                  <HeroMobileDemo activeScreen={activeMobileScreen} />
-                </div>
-
-                <div className="mt-4 flex items-center justify-center gap-2">
-                  {heroMobileScreens.map((screen, index) => {
-                    const isActive = index === activeMobileScreen;
-
-                    return (
-                      <button
-                        key={screen.id}
-                        type="button"
-                        aria-label={`Show ${screen.title}`}
-                        onClick={() => setActiveMobileScreen(index)}
-                        className={`transition-all duration-300 ease-out ${isActive ? "h-1.5 w-[20px] rounded-[10px] bg-white" : "h-1.5 w-1.5 rounded-full bg-white/40 hover:bg-white/60"}`}
-                      />
-                    );
-                  })}
-                </div>
+                <Button size="sm" className="bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white hover:from-fuchsia-400 hover:to-pink-400">
+                  Search
+                </Button>
               </div>
             </div>
           </div>

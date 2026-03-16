@@ -22,6 +22,12 @@ const highlights = [
   { title: "Reporting", value: "Analytics + payouts", icon: BarChart3 },
 ];
 
+const organizerBenefits = [
+  "Set up your organizer profile, business details, and bank information before you launch.",
+  "Build events section by section with control over tickets, media, venue, artists, and sponsors.",
+  "Run live check-ins, manage attendees, and stay on top of analytics, refunds, and payouts.",
+];
+
 const features = [
   {
     title: "Guided event builder",
@@ -76,6 +82,8 @@ const workflow = [
 const capabilityGroups = [
   {
     title: "Setup and publishing",
+    desc: "Launch with a structured workspace for organizer onboarding, draft management, and publishing control.",
+    icon: ShieldCheck,
     points: [
       "Organizer onboarding with profile and bank setup",
       "Draft saving, section-wise editing, review, and publishing",
@@ -84,6 +92,8 @@ const capabilityGroups = [
   },
   {
     title: "Event management",
+    desc: "Keep event content, pricing, and team-facing details organized without leaving the same workflow.",
+    icon: Ticket,
     points: [
       "Multiple ticket types with pricing and event-specific configuration",
       "Sponsors, artists, advisories, attendee questions, and organizer notes",
@@ -92,6 +102,8 @@ const capabilityGroups = [
   },
   {
     title: "Operations and reporting",
+    desc: "Handle live operations and post-event reporting from a single organizer-ready command center.",
+    icon: BarChart3,
     points: [
       "Live event monitoring, reception desk tools, and QR/manual check-in flows",
       "Attendee management with payment visibility, check-in status, and CSV export",
@@ -117,17 +129,32 @@ const HostEvents = () => {
         </div>
 
         <div className="relative mx-auto max-w-6xl px-6 pt-16 pb-20 md:pt-20 md:pb-24">
-          <Badge className="mb-5 border border-white/20 bg-white/10 text-white">Host Events</Badge>
-          <div className="grid items-center gap-10 md:grid-cols-[1.05fr_0.95fr]">
-            <div className="space-y-6">
-              <h1 className="text-3xl font-bold leading-tight md:text-[2.75rem]">
-                Everything organizers need to launch, manage, and run events in one place.
-              </h1>
-              <p className="max-w-2xl text-lg text-slate-200/80">
-                Map MyParty brings together organizer onboarding, event creation, live check-ins, attendee visibility,
-                analytics, refunds, payouts, and operations tooling so your team can work from one system instead of
-                stitching together multiple tools.
-              </p>
+          <div className="grid gap-10 lg:grid-cols-[0.96fr_1.04fr] lg:items-center lg:gap-12">
+            <div className="space-y-7">
+              <div className="space-y-5">
+                <Badge className="border border-white/20 bg-white/10 text-white">Host Events</Badge>
+                <h1 className="text-3xl font-bold leading-tight md:text-[2.75rem]">
+                  Everything organizers need to launch, manage, and run events in one place.
+                </h1>
+                <p className="max-w-2xl text-lg text-slate-200/80">
+                  Map MyParty brings together organizer onboarding, event creation, live check-ins, attendee
+                  visibility, analytics, refunds, payouts, and operations tooling so your team can work from one
+                  system instead of stitching together multiple tools.
+                </p>
+              </div>
+
+              <ul className="space-y-3">
+                {organizerBenefits.map((benefit) => (
+                  <li
+                    key={benefit}
+                    className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200/85"
+                  >
+                    <span className="mt-1.5 h-2.5 w-2.5 rounded-full bg-pink-300 shadow-[0_0_16px_rgba(249,168,212,0.55)]" />
+                    <span>{benefit}</span>
+                  </li>
+                ))}
+              </ul>
+
               <div className="flex flex-wrap gap-3">
                 <Link to="/auth">
                   <Button className="bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white hover:from-purple-400 hover:to-fuchsia-400">
@@ -142,87 +169,172 @@ const HostEvents = () => {
               </div>
             </div>
 
-            <Card className="border-white/15 bg-white/10 backdrop-blur-xl shadow-[0_25px_80px_-35px_rgba(0,0,0,0.75)]">
-              <CardContent className="grid grid-cols-2 gap-4 p-6">
-                {highlights.map(({ title, value, icon: Icon }) => (
-                  <div key={title} className="space-y-2 rounded-xl border border-white/10 bg-white/10 p-4">
-                    <div className="flex items-center gap-2 text-sm text-slate-200/75">
-                      <Icon className="h-4 w-4 text-pink-200" />
-                      <span>{title}</span>
+            <Card className="overflow-hidden border-white/15 bg-white/10 backdrop-blur-xl shadow-[0_25px_80px_-35px_rgba(0,0,0,0.75)]">
+              <CardContent className="space-y-6 p-6 md:p-7">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="space-y-2">
+                    <div className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-200/60">
+                      Organizer command center
                     </div>
-                    <div className="text-2xl font-bold text-white">{value}</div>
+                    <h2 className="text-2xl font-semibold text-white">Operate from setup to payout in one place</h2>
+                    <p className="max-w-xl text-sm leading-relaxed text-slate-300/80">
+                      A single view for organizer setup, event editing, live reception, attendee visibility, and
+                      reporting.
+                    </p>
                   </div>
-                ))}
+                  <Badge className="w-fit border border-white/15 bg-white/10 text-slate-100">Live dashboard</Badge>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {highlights.map(({ title, value, icon: Icon }) => (
+                    <div key={title} className="space-y-3 rounded-2xl border border-white/10 bg-white/10 p-4">
+                      <div className="flex items-center gap-2 text-sm text-slate-200/75">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-pink-200">
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <span>{title}</span>
+                      </div>
+                      <div className="text-2xl font-bold text-white">{value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid gap-4 lg:grid-cols-3">
+                  {workflow.map(({ title, desc, icon: Icon }, index) => (
+                    <div key={title} className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400/15 text-amber-100">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <span className="text-[11px] font-semibold tracking-[0.18em] text-slate-200/55">
+                          0{index + 1}
+                        </span>
+                      </div>
+                      <h3 className="mt-4 text-base font-semibold text-white">{title}</h3>
+                      <p className="mt-2 text-xs leading-relaxed text-slate-300/80">{desc}</p>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </div>
         </div>
       </section>
 
-      <section className="bg-slate-950 py-16">
-        <div className="mx-auto grid max-w-6xl gap-6 px-6 md:grid-cols-3">
-          {features.map(({ title, desc, icon: Icon }) => (
-            <Card
-              key={title}
-              className="border-white/10 bg-white/5 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-amber-300/40 hover:shadow-[0_25px_80px_-24px_rgba(0,0,0,0.65)]"
-            >
-              <CardContent className="space-y-3 p-6">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 text-pink-200">
-                  <Icon className="h-5 w-5" />
-                </div>
-                <h2 className="text-2xl font-semibold text-white">{title}</h2>
-                <p className="text-sm leading-relaxed text-slate-300/80">{desc}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      <section className="bg-slate-900/60 py-16">
+      <section className="bg-slate-950 py-20">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="grid gap-6 rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur md:grid-cols-3">
-            {workflow.map(({ title, desc, icon: Icon }, index) => (
-              <div key={title} className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-400/15 text-amber-100">
-                    <Icon className="h-5 w-5" />
+          <div className="mb-10 max-w-3xl space-y-4">
+            <Badge className="border border-white/15 bg-white/5 text-slate-100">Why host with us</Badge>
+            <h2 className="text-3xl font-bold text-white md:text-4xl">Why Host Your Event with MapMyParty</h2>
+            <p className="text-slate-300/80">
+              Every part of the host experience is organized around real organizer needs, from structured event setup
+              to smoother live operations and clearer post-event visibility.
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {features.map(({ title, desc, icon: Icon }, index) => (
+              <Card
+                key={title}
+                className="h-full border-white/10 bg-white/5 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-amber-300/40 hover:shadow-[0_25px_80px_-24px_rgba(0,0,0,0.65)]"
+              >
+                <CardContent className="flex h-full flex-col gap-5 p-6">
+                  <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 text-pink-200">
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold tracking-[0.18em] text-slate-200/70">
+                        0{index + 1}
+                      </span>
+                    </div>
+                    <div className="mt-4 space-y-2">
+                      <div className="h-2 rounded-full bg-white/10" />
+                      <div className="h-2 w-4/5 rounded-full bg-white/5" />
+                      <div className="flex gap-2 pt-2">
+                        <div className="h-8 w-8 rounded-lg bg-white/10" />
+                        <div className="h-8 flex-1 rounded-lg bg-white/5" />
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-xs font-semibold tracking-[0.18em] text-slate-200/60">0{index + 1}</span>
-                </div>
-                <h3 className="text-xl font-semibold text-white">{title}</h3>
-                <p className="text-sm leading-relaxed text-slate-300/80">{desc}</p>
-              </div>
+
+                  <div className="space-y-3">
+                    <h3 className="text-xl font-semibold text-white">{title}</h3>
+                    <p className="text-sm leading-relaxed text-slate-300/80">{desc}</p>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-gradient-to-br from-amber-400/10 via-rose-400/10 to-blue-400/10 py-16">
+      <section className="bg-slate-900/60 py-20">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="grid gap-8 rounded-3xl border border-white/15 bg-white/10 p-8 backdrop-blur-xl md:grid-cols-[1.1fr_0.9fr] md:items-center">
-            <div className="space-y-4">
-              <Badge className="border border-amber-300/30 bg-amber-400/15 text-amber-100">Organizer-ready</Badge>
-              <h2 className="text-3xl font-bold text-white">Built around real organizer workflows</h2>
-              <p className="text-slate-200/80">
-                The platform already covers the full organizer journey: setup, publishing, attendee operations, live
-                event handling, analytics, refunds, payouts, and inventory-style add-ons for published events.
-              </p>
-            </div>
+          <div className="mb-10 max-w-3xl space-y-4">
+            <Badge className="border border-amber-300/30 bg-amber-400/15 text-amber-100">Organizer-ready</Badge>
+            <h2 className="text-3xl font-bold text-white md:text-4xl">Tools Tailored for Event Hosts</h2>
+            <p className="text-slate-300/80">
+              The platform already covers the full organizer journey: setup, publishing, attendee operations, live
+              event handling, analytics, refunds, payouts, and inventory-style add-ons for published events.
+            </p>
+          </div>
 
-            <div className="space-y-3 text-sm text-slate-200/80">
-              {capabilityGroups.map((group) => (
-                <div key={group.title} className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">
-                  <div className="font-semibold text-white">{group.title}</div>
-                  <ul className="mt-3 space-y-2">
-                    {group.points.map((point) => (
-                      <li key={point} className="flex items-start gap-2">
-                        <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-pink-300" />
+          <div className="grid gap-6 lg:grid-cols-3">
+            {capabilityGroups.map(({ title, desc, points, icon: Icon }) => (
+              <Card key={title} className="h-full border-white/10 bg-white/5 backdrop-blur">
+                <CardContent className="flex h-full flex-col gap-5 p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-400/15 text-amber-100">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-200/75">
+                      {points.length} focus areas
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className="text-xl font-semibold text-white">{title}</h3>
+                    <p className="text-sm leading-relaxed text-slate-300/80">{desc}</p>
+                  </div>
+
+                  <div className="space-y-3 rounded-2xl border border-white/10 bg-slate-950/35 p-4 text-sm text-slate-200/80">
+                    {points.map((point) => (
+                      <div key={point} className="flex items-start gap-3">
+                        <span className="mt-1.5 h-2 w-2 rounded-full bg-pink-300" />
                         <span>{point}</span>
-                      </li>
+                      </div>
                     ))}
-                  </ul>
-                </div>
-              ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-gradient-to-br from-amber-400/10 via-rose-400/10 to-blue-400/10 py-20">
+        <div className="mx-auto max-w-4xl px-6">
+          <div className="rounded-3xl border border-white/15 bg-white/10 px-6 py-10 text-center backdrop-blur-xl md:px-10 md:py-12">
+            <Badge className="border border-amber-300/30 bg-amber-400/15 text-amber-100">Start hosting</Badge>
+            <h2 className="mt-4 text-3xl font-bold text-white md:text-4xl">
+              Host your next event with MapMyParty
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-slate-200/80">
+              Create, manage, and run events from one organizer-ready workspace built for launch day and everything
+              after.
+            </p>
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <Link to="/auth">
+                <Button className="bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white hover:from-fuchsia-400 hover:to-pink-400">
+                  Get Started for Free
+                </Button>
+              </Link>
+              <Link to="/browse-events">
+                <Button variant="outline" className="border-white/30 text-white hover:bg-white hover:text-slate-900">
+                  Explore Live Events
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
