@@ -16,7 +16,6 @@ import Dashboard from "./components/dashboard/Dashboard";
 import BrowseEvents from "./components/dashboard/BrowseEvents";
 import MyBookings from "./pages/MyBookings";
 import AttendeeProfile from "./pages/AttendeeProfile";
-import OrganizerDashboard from "./pages/OrganizerDashboard";
 import PromoterDashboard from "./pages/PromoterDashboard";
 import PromoterEventDetail from "./pages/PromoterEventDetail";
 import PromoterOverview from "./components/promoter/PromoterOverview";
@@ -39,7 +38,7 @@ import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import PromoterProfile from "./pages/PromoterProfile";
 import PromoterLogin from "./pages/PromoterLogin";
-import OrganizerDashboardV2 from "./pages/OrganizerDashboardV2";
+import OrganizerDashboard from "./pages/OrganizerDashboard";
 import EventAnalyticsPage from "./pages/EventAnalyticsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EventOverviewPage from "./pages/EventOverviewPage";
@@ -126,59 +125,59 @@ const App = () => {
               {/* Protected Organizer Routes */}
               <Route path="/organizer/dashboard" element={
                 <ProtectedRoute requiredRole="organizer">
-                  <OrganizerDashboardV2 />
+                  <OrganizerDashboard />
                 </ProtectedRoute>
               } />
 
                <Route path="/organizer/profile" element={
                 <ProtectedRoute requiredRole="organizer">
-                  <OrganizerDashboardV2 />
+                  <OrganizerDashboard />
                 </ProtectedRoute>
               } />
 
               <Route path="/organizer/myevents" element={
                 <ProtectedRoute requiredRole="organizer">
-                  <OrganizerDashboardV2 />
+                  <OrganizerDashboard />
                 </ProtectedRoute>
               } />
               <Route path="/organizer/analytics" element={
                 <ProtectedRoute requiredRole="organizer">
-                  <OrganizerDashboardV2 />
+                  <OrganizerDashboard />
                 </ProtectedRoute>
               } />
               <Route path="/organizer/live" element={
                 <ProtectedRoute requiredRole="organizer">
-                  <OrganizerDashboardV2 />
+                  <OrganizerDashboard />
                 </ProtectedRoute>
               } />
               <Route path="/organizer/reception" element={
                 <ProtectedRoute requiredRole="organizer">
-                  <OrganizerDashboardV2 />
+                  <OrganizerDashboard />
                 </ProtectedRoute>
               } />
               <Route path="/organizer/food-beverages" element={
                 <ProtectedRoute requiredRole="organizer">
-                  <OrganizerDashboardV2 />
+                  <OrganizerDashboard />
                 </ProtectedRoute>
               } />
               <Route path="/organizer/payouts" element={
                 <ProtectedRoute requiredRole="organizer">
-                  <OrganizerDashboardV2 />
+                  <OrganizerDashboard />
                 </ProtectedRoute>
               } />
               <Route path="/organizer/payouts/:id" element={
                 <ProtectedRoute requiredRole="organizer">
-                  <OrganizerDashboardV2 />
+                  <OrganizerDashboard />
                 </ProtectedRoute>
               } />
               <Route path="/organizer/events/:eventId/attendees" element={
                 <ProtectedRoute requiredRole="organizer">
-                  <OrganizerDashboardV2 />
+                  <OrganizerDashboard />
                 </ProtectedRoute>
               } />
               <Route path="/organizer/events/:eventId/refunds" element={
                 <ProtectedRoute requiredRole="organizer">
-                  <OrganizerDashboardV2 />
+                  <OrganizerDashboard />
                 </ProtectedRoute>
               } />
               <Route path="/organizer/:organizerSlug/events/:eventSlug/analytics" element={
@@ -188,7 +187,7 @@ const App = () => {
               } />
               {/* <Route path="/organizer/financial" element={
                 <ProtectedRoute requiredRole="organizer">
-                  <OrganizerDashboardV2 />
+                  <OrganizerDashboard />
                 </ProtectedRoute>
               } /> */}
               <Route path="/organizer/reception/:id" element={
@@ -198,7 +197,7 @@ const App = () => {
               } />
               <Route path="/organizer/live/:id" element={
                 <ProtectedRoute requiredRole="organizer">
-                  <OrganizerDashboardV2 />
+                  <OrganizerDashboard />
                 </ProtectedRoute>
               } />
               <Route path="/organizer/dashboard-v2" element={<Navigate to="/organizer/dashboard" replace />} />

@@ -12,7 +12,7 @@ import { useOrganizerAnalytics } from "@/hooks/useOrganizerAnalytics";
 import { useRecentBookings } from "@/hooks/useRecentBookings";
 import OrganizerAnalyticsSnapshot from "@/components/organizer/OrganizerAnalyticsSnapshot";
 
-const OrganizerDash = ({ user, handleLogout, setActiveTab, activeTab }) => {
+const OrganizerDashboardHome = ({ user, handleLogout, setActiveTab, activeTab }) => {
   const { statistics } = useOrganizerEvents();
   const { analytics, loading: analyticsLoading, error: analyticsError } = useOrganizerAnalytics("month");
   const { bookings: recentBookings, loading: bookingsLoading } = useRecentBookings(5);
@@ -223,4 +223,4 @@ const OrganizerDash = ({ user, handleLogout, setActiveTab, activeTab }) => {
   );
 };
 
-export default OrganizerDash;
+export default OrganizerDashboardHome;

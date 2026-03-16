@@ -1,727 +1,1434 @@
- import { useState, useMemo, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { clearSessionData, resetSessionCache } from "@/utils/auth";
+import { useAuth } from "@/contexts/AuthContext";
+import { buildUrl, apiFetch } from "@/config/api";
 import {
-  Plus,
   Calendar,
-  Users,
-  DollarSign,
-  TrendingUp,
-  MoreVertical,
-  BarChart3,
-  UserPlus,
+  X,
+  MapPin,
+  User,
   Mail,
-  Settings,
-  Search,
-  Edit,
-  Trash2,
-  Eye,
-  RefreshCw,
-  Loader2,
+  Phone,
+  Edit2,
+  Save,
+  CreditCard,
+  ChevronLeft,
+  ChevronRight,
+  Menu,
+  Home,
+  Users,
+  Download,
+  ChevronDown,
+  LogOut,
+  Radio,
+  Shield,
+  BadgeCheck,
+  Instagram,
+  Linkedin,
+  Facebook,
+  Twitter,
+  ExternalLink,
+  Building2,
+  CheckCircle2,
+  Globe,
+  Camera,
+  Upload,
+  CupSoda,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import eventMusic from "@/assets/event-music.jpg";
-import eventConference from "@/assets/event-conference.jpg";
-import { useOrganizerEvents } from "@/hooks/useOrganizerEvents";
-import { toast } from "sonner";
+import FinancialReporting from "./FinancialReporting";
+import OrganizerDashboardHome from "./OrganizerDashboardHome";
+import AudienceAnalytics from "./AudienceAnalytics";
+import MyEvents from "./MyEvents";
+import LiveEvents from "./LiveEvents";
+import LiveEventPage from "./LiveEventPage";
+import Reception from "./Reception";
+import FoodBeverages from "./FoodBeverages";
+import OrganizerPayouts from "./OrganizerPayouts";
+import EventAttendees from "./EventAttendees";
+import EventRefunds from "./EventRefunds";
+import Logo from "@/assets/MMP logo.svg";
 
-const OrganizerDashboard = () => {
-  const navigate = useNavigate();
-
-  // Note: Authentication is handled by ProtectedRoute wrapper
-  // No need for redundant auth check here
-  
-  // Use the new hook to fetch events from API
-  const {
-    events,
-    loading,
-    error,
-    pagination,
-    filters,
-    updateFilters,
-    clearFilters,
-    refresh,
-    statistics,
-  } = useOrganizerEvents();
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [analyticsFilter, setAnalyticsFilter] = useState("all");
-  const [newMemberEmail, setNewMemberEmail] = useState("");
-  const [newMemberRole, setNewMemberRole] = useState("manager");
-
-  // Format numbers for display
-  const formatNumber = (num) => {
-    return new Intl.NumberFormat('en-IN').format(num || 0);
-  };
-
-  const formatCurrency = (amount) => {
-    return `₹${new Intl.NumberFormat('en-IN').format(amount || 0)}`;
-  };
-
-  const stats = [
-    {
-      title: "Total Events",
-      value: formatNumber(statistics.totalEvents),
-      change: `${statistics.publishedEvents} published, ${statistics.draftEvents} drafts`,
-      icon: Calendar,
-      color: "text-primary",
+// Profile Content Component
+const OrganizerProfileContent = ({ user }) => {
+  const buildInitialData = (payload = {}, owner = {}) => ({
+    id: payload.id || "",
+    name: payload.name || "",
+    description: payload.description || "",
+    gstNumber: payload.gstNumber || "",
+    logo: payload.logo || "",
+    state: payload.state || "",
+    address: payload.address || "",
+    isVerified: payload.isVerified ?? false,
+    ownerId: payload.ownerId || "",
+    createdAt: payload.createdAt || "",
+    updatedAt: payload.updatedAt || "",
+    contact: payload.contact || "",
+    email: payload.email || "",
+    instagram: payload.instagram || "",
+    linkedin: payload.linkedin || "",
+    facebook: payload.facebook || "",
+    reddit: payload.reddit || "",
+    x: payload.x || "",
+    snapchat: payload.snapchat || "",
+    ownerName: owner.name || payload.ownerName || "",
+    ownerEmail: owner.email || payload.ownerEmail || "",
+    ownerPhone: owner.phone || payload.contact || payload.ownerPhone || "",
+    ownerAvatar: owner.avatar || "",
+    counts: {
+      events: payload?._count?.events ?? 0,
+      images: payload?._count?.images ?? 0,
+      payouts: payload?._count?.payouts ?? 0,
+      tours: payload?._count?.tours ?? 0,
+      reviews: payload?._count?.reviews ?? 0,
     },
-    {
-      title: "Total Attendees",
-      value: formatNumber(statistics.totalAttendees),
-      change: "Across all events",
-      icon: Users,
-      color: "text-accent",
+    bankDetails: {
+      accountHolder: payload?.bankDetails?.accountHolder || "",
+      accountNumber: payload?.bankDetails?.accountNumber || "",
+      ifscCode: payload?.bankDetails?.ifscCode || "",
+      bankName: payload?.bankDetails?.bankName || "",
+      providerName: payload?.bankDetails?.providerName || "",
+      verificationStatus: payload?.bankDetails?.verificationStatus || "",
+      verificationTxnId: payload?.bankDetails?.verificationTxnId || "",
+      createdAt: payload?.bankDetails?.createdAt || "",
+      updatedAt: payload?.bankDetails?.updatedAt || "",
     },
-    {
-      title: "Revenue",
-      value: formatCurrency(statistics.totalRevenue),
-      change: "Total earnings",
-      icon: DollarSign,
-      color: "text-green-600",
-    },
-    {
-      title: "Ticket Sales",
-      value: formatNumber(statistics.totalTicketsSold),
-      change: "Tickets sold",
-      icon: TrendingUp,
-      color: "text-blue-600",
-    },
-  ];
+  });
 
-  const teamMembers = [
-    {
-      id: "1",
-      name: "John Doe",
-      email: "john@example.com",
-      role: "Manager",
-      status: "active",
-      eventsManaged: 5,
-    },
-    {
-      id: "2",
-      name: "Jane Smith",
-      email: "jane@example.com",
-      role: "Coordinator",
-      status: "active",
-      eventsManaged: 3,
-    },
-    {
-      id: "3",
-      name: "Mike Johnson",
-      email: "mike@example.com",
-      role: "Manager",
-      status: "pending",
-      eventsManaged: 0,
-    },
-  ];
+  const [profileData, setProfileData] = useState(() => buildInitialData(user?.organizer || {}, user));
+  const [editData, setEditData] = useState(() => buildInitialData(user?.organizer || {}, user));
+  const [bankDraft, setBankDraft] = useState(() => buildInitialData(user?.organizer || {}, user).bankDetails);
+  const [owner, setOwner] = useState(() => user || {});
+  const [ownerDraft, setOwnerDraft] = useState(() => user || {});
+  const [isOwnerModalOpen, setIsOwnerModalOpen] = useState(false);
+  const [isOwnerAvatarPickerOpen, setIsOwnerAvatarPickerOpen] = useState(false);
+  const [isOwnerCameraOpen, setIsOwnerCameraOpen] = useState(false);
+  const [ownerPendingAvatar, setOwnerPendingAvatar] = useState(null);
+  const [ownerCapturedPhoto, setOwnerCapturedPhoto] = useState(null);
+  const [isOwnerSaving, setIsOwnerSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isBankPanelOpen, setIsBankPanelOpen] = useState(false);
+  const [isBankEditing, setIsBankEditing] = useState(false);
+  const [bankExists, setBankExists] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isBankSaving, setIsBankSaving] = useState(false);
+  const [isBankLoading, setIsBankLoading] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
-  // Handle search with debounce
-  const handleSearchChange = (value) => {
-    setSearchQuery(value);
-    if (value.length >= 2 || value.length === 0) {
-      updateFilters({ search: value || null });
-    }
-  };
+  const ownerVideoRef = useRef(null);
+  const ownerCanvasRef = useRef(null);
+  const ownerFileInputRef = useRef(null);
 
-  // Handle filter changes
-  const handleStatusFilter = (value) => {
-    const status = value === "all" ? null : value.toUpperCase();
-    updateFilters({ status2: status });
-  };
+  useEffect(() => {
+    const fresh = buildInitialData(user?.organizer || {}, user);
+    setProfileData(fresh);
+    setEditData(fresh);
+    setBankDraft(fresh.bankDetails);
+    setOwner(user || {});
+    setOwnerDraft(user || {});
+  }, [user]);
 
-  const handleCategoryFilter = (value) => {
-    const category = value === "all" ? null : value.toUpperCase();
-    updateFilters({ category });
-  };
-
-  // Handle analytics filter for event cards display
-  const analyticsFilteredEvents = useMemo(() => {
-    if (analyticsFilter === "all") return events;
-    const filterStatus = analyticsFilter.toUpperCase();
-    return events.filter((e) => {
-      const eventStatus = ((e.status2 || e.status) || "").toUpperCase();
-      return eventStatus === filterStatus;
-    });
-  }, [events, analyticsFilter]);
-
-  // Get status badge variant
-  const getStatusBadge = (event) => {
-    const status = event.status2 || event.status || "";
-    const normalizedStatus = status.toUpperCase();
-    switch (normalizedStatus) {
-      case "PUBLISHED":
-        return <Badge className="bg-green-500">Published</Badge>;
-      case "DRAFT":
-        return <Badge variant="secondary">Draft</Badge>;
-      case "CANCELLED":
-        return <Badge variant="destructive">Cancelled</Badge>;
-      default:
-        return <Badge variant="outline">{status || "Unknown"}</Badge>;
-    }
-  };
-
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return "Date TBA";
+  const fetchProfileData = useCallback(async () => {
+    setLoadingProfile(true);
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("en-US", {
-        month: "short",
+      // Use user prop from context as owner data
+      const ownerData = user || {};
+      setOwner(ownerData);
+      setOwnerDraft(ownerData);
+
+      // Fetch organizer-specific profile data (lazy-loaded)
+      const orgRes = await apiFetch("organizer/me/profile", { method: "GET" });
+      const organizerPayload = orgRes?.data || orgRes || {};
+
+      const normalized = buildInitialData(organizerPayload, ownerData);
+      setProfileData(normalized);
+      setEditData(normalized);
+      setBankDraft(normalized.bankDetails);
+    } catch (error) {
+      console.error("Failed to load organizer profile:", error);
+    } finally {
+      setLoadingProfile(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchProfileData();
+  }, [fetchProfileData]);
+
+  const formatDate = (value) => {
+    try {
+      return new Date(value).toLocaleDateString(undefined, {
         day: "numeric",
+        month: "short",
         year: "numeric",
       });
     } catch {
-      return dateString;
+      return value || "—";
     }
   };
 
-  // Get fallback image
-  const getEventImage = (event) => {
-    if (event.flyerImage) return event.flyerImage;
-    if (event.image) return event.image;
-    if (event.flyerImageUrl) return event.flyerImageUrl;
-    // Default fallback based on category
-    const category = (event.mainCategory || event.category || "").toLowerCase();
-    if (category.includes("music")) return eventMusic;
-    if (category.includes("conference") || category.includes("workshop")) return eventConference;
-    return eventMusic;
+  const handleInputChange = (field, value) => {
+    setEditData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Get event title (handle both API formats)
-  const getEventTitle = (event) => {
-    return event.title || event.eventTitle || "Untitled Event";
-  };
-
-  // Get event location
-  const getEventLocation = (event) => {
-    if (event.venues && event.venues.length > 0) {
-      const venue = event.venues[0];
-      return `${venue.city || ""}${venue.city && venue.state ? ", " : ""}${venue.state || ""}`.trim() || "Location TBA";
+  const handleSave = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      const allowed = {
+        name: editData.name,
+        description: editData.description,
+        gstNumber: editData.gstNumber,
+        instagram: editData.instagram,
+        linkedin: editData.linkedin,
+        facebook: editData.facebook,
+        reddit: editData.reddit,
+        x: editData.x,
+        snapchat: editData.snapchat,
+        contact: editData.contact,
+        email: editData.email,
+      };
+      const payload = Object.fromEntries(
+        Object.entries(allowed).filter(
+          ([, v]) => v !== undefined && v !== null && String(v).trim() !== ""
+        )
+      );
+      const res = await apiFetch("organizer/me/profile", {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      });
+      const data = res?.data || res || {};
+      const normalized = buildInitialData(data, owner);
+      setProfileData(normalized);
+      setEditData(normalized);
+      setBankDraft(normalized.bankDetails);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Failed to save organizer profile:", error);
+    } finally {
+      setIsSaving(false);
     }
-    return event.location || event.venue || "Location TBA";
   };
 
-  const handleInviteMember = () => {
-    if (!newMemberEmail) {
-      toast.error("Please enter an email address");
-      return;
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditData(profileData);
+  };
+
+  const handleOpenBankPanel = async () => {
+    setIsBankLoading(true);
+    try {
+      const res = await apiFetch("organizer/me/bank-details", { method: "GET" });
+      const data = res?.data || res || {};
+      const exists = !!(data?.accountHolder || data?.accountNumber);
+      setBankExists(exists);
+      setBankDraft((prev) => ({ ...prev, ...data }));
+      setProfileData((prev) => ({ ...prev, bankDetails: { ...prev.bankDetails, ...data } }));
+      setEditData((prev) => ({ ...prev, bankDetails: { ...prev.bankDetails, ...data } }));
+      setIsBankEditing(!exists); // auto-open form when no bank details yet
+    } catch (error) {
+      console.error("Failed to load bank details:", error);
+      setBankDraft(editData.bankDetails);
+      setBankExists(false);
+      setIsBankEditing(true); // assume no details on error, open form
+    } finally {
+      setIsBankPanelOpen(true);
+      setIsBankLoading(false);
     }
-    toast.success(`Invitation sent to ${newMemberEmail}`);
-    setNewMemberEmail("");
+  };
+
+  const handleBankFieldChange = (field, value) => {
+    setBankDraft((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveBank = async () => {
+    if (isBankSaving) return;
+    setIsBankSaving(true);
+    try {
+      const payload = {
+        accountHolder: bankDraft.accountHolder,
+        accountNumber: bankDraft.accountNumber,
+        ifscCode: bankDraft.ifscCode,
+        bankName: bankDraft.bankName,
+      };
+      const res = await apiFetch("organizer/me/bank-details", {
+        method: bankExists ? "PATCH" : "POST",
+        body: JSON.stringify(payload),
+      });
+      const data = res?.data || res || {};
+      setBankExists(true);
+      setBankDraft((prev) => ({ ...prev, ...data }));
+      setProfileData((prev) => ({ ...prev, bankDetails: { ...prev.bankDetails, ...data } }));
+      setEditData((prev) => ({ ...prev, bankDetails: { ...prev.bankDetails, ...data } }));
+      setIsBankEditing(false);
+      setIsBankPanelOpen(false);
+    } catch (error) {
+      console.error("Failed to save bank details:", error);
+    } finally {
+      setIsBankSaving(false);
+    }
+  };
+
+  const handleCancelBank = () => {
+    setBankDraft(profileData.bankDetails);
+    setIsBankEditing(false);
+    setIsBankPanelOpen(false);
+  };
+
+  useEffect(() => {
+    if (!isOwnerCameraOpen) {
+      stopOwnerCameraStream();
+      setOwnerCapturedPhoto(null);
+    }
+  }, [isOwnerCameraOpen]);
+
+  const ownerAvatarOptions = [
+    {
+      id: "owner-avatar-1",
+      label: "Acoustic Dreamer",
+      url: "https://api.dicebear.com/7.x/adventurer/svg?seed=Acoustic+Dreamer",
+    },
+    {
+      id: "owner-avatar-2",
+      label: "Festival Vibes",
+      url: "https://api.dicebear.com/7.x/bottts/svg?seed=Festival+Vibes",
+    },
+    {
+      id: "owner-avatar-3",
+      label: "City Explorer",
+      url: "https://api.dicebear.com/7.x/micah/svg?seed=City+Explorer",
+    },
+    {
+      id: "owner-avatar-4",
+      label: "Night Groove",
+      url: "https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Night+Groove",
+    },
+  ];
+
+  const openOwnerModal = useCallback(() => {
+    setOwnerDraft(owner || {});
+    setIsOwnerModalOpen(true);
+  }, [owner]);
+
+  const handleOwnerFieldChange = (field, value) => {
+    setOwnerDraft(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveOwner = async () => {
+    setIsOwnerSaving(true);
+    try {
+      const payload = {
+        name: ownerDraft.name,
+        email: ownerDraft.email,
+        phone: ownerDraft.phone,
+        avatar: ownerDraft.avatar,
+        whatsAppNotification: ownerDraft.whatsAppNotification
+      };
+      await apiFetch("/user/profile", {
+        method: "PUT",
+        body: JSON.stringify(payload)
+      });
+      setOwner(ownerDraft);
+      setIsOwnerModalOpen(false);
+    } catch (error) {
+      console.error("Failed to update owner:", error);
+    } finally {
+      setIsOwnerSaving(false);
+    }
+  };
+
+  const handleCancelOwner = () => {
+    setIsOwnerModalOpen(false);
+    setIsOwnerAvatarPickerOpen(false);
+    setIsOwnerCameraOpen(false);
+    stopOwnerCameraStream();
+    setOwnerPendingAvatar(null);
+    setOwnerCapturedPhoto(null);
+    setOwnerDraft(owner || {});
+  };
+
+  const openOwnerAvatarPicker = () => {
+    setOwnerPendingAvatar(ownerDraft.avatar || owner.avatar || "");
+    setIsOwnerAvatarPickerOpen(true);
+  };
+
+  const handleOwnerFileChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result;
+      if (typeof result === "string") {
+        setOwnerPendingAvatar(result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const startOwnerCamera = async () => {
+    try {
+      setOwnerCapturedPhoto(null);
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (ownerVideoRef.current) {
+        ownerVideoRef.current.srcObject = stream;
+        await ownerVideoRef.current.play();
+      }
+    } catch (err) {
+      console.error("Camera access denied", err);
+    }
+  };
+
+  const clearOwnerCameraStream = () => {
+    const video = ownerVideoRef.current;
+    if (video && video.srcObject) {
+      video.srcObject.getTracks().forEach((t) => t.stop());
+      video.srcObject = null;
+    }
+  };
+
+  const stopOwnerCameraStream = () => {
+    clearOwnerCameraStream();
+    setOwnerCapturedPhoto(null);
+  };
+
+  const captureOwnerPhoto = () => {
+    if (!ownerVideoRef.current || !ownerCanvasRef.current) return;
+    const video = ownerVideoRef.current;
+    const canvas = ownerCanvasRef.current;
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL("image/png");
+    setOwnerCapturedPhoto(dataUrl);
+    clearOwnerCameraStream();
+  };
+
+  const handleOwnerAvatarUseCamera = async () => {
+    setIsOwnerCameraOpen(true);
+    await startOwnerCamera();
+  };
+
+  const handleOwnerAvatarApply = (value) => {
+    setOwnerDraft((prev) => ({ ...prev, avatar: value }));
+    setOwnerPendingAvatar(value);
+    setIsOwnerAvatarPickerOpen(false);
+    setIsOwnerCameraOpen(false);
+    stopOwnerCameraStream();
+  };
+
+  const closeOwnerAvatarPicker = () => {
+    setIsOwnerAvatarPickerOpen(false);
+    setOwnerPendingAvatar(null);
+  };
+
+  const closeOwnerCamera = () => {
+    setIsOwnerCameraOpen(false);
+    stopOwnerCameraStream();
+    setOwnerCapturedPhoto(null);
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header isAuthenticated userRole="organizer" />
+    <div className="space-y-6 text-white">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="space-y-1">
+          <p className="text-[11px] uppercase tracking-[0.25em] text-white/50">Organizer Profile</p>
+          <h2 className="text-3xl font-extrabold">Profile &amp; Payouts</h2>
+          <p className="text-sm text-white/60">Keep organizer contact, socials, and payouts current.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleOpenBankPanel}
+            disabled={isBankLoading}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <CreditCard className="w-4 h-4" />
+            {isBankLoading ? "Loading..." : "Bank Details"}
+          </button>
+          {!isEditing && (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/15 text-white hover:bg-white/15 transition"
+            >
+              <Edit2 className="w-4 h-4" />
+              Edit Organization
+            </button>
+          )}
+        </div>
+      </div>
 
-      <main className="flex-1 py-12">
-        <div className="container">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">Organizer Dashboard</h1>
-              <p className="text-muted-foreground text-lg">
-                Manage your events and track performance
-              </p>
+      {/* Owner edit modal */}
+      {isOwnerModalOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-2xl max-h-[88vh] rounded-2xl border border-border/60 bg-card shadow-[var(--shadow-elegant)] ring-1 ring-border/30 flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border/60 bg-card/80 backdrop-blur-sm rounded-t-2xl">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-white/50">Owner</p>
+                <h3 className="text-xl font-semibold text-white">Edit Owner Details</h3>
+              </div>
+              <button onClick={handleCancelOwner} className="text-white/60 hover:text-white rounded-full p-2 hover:bg-white/10 transition">
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <Link to="/organizer/select-event-type">
-              <Button variant="accent" size="lg">
-                <Plus className="w-5 h-5 mr-2" />
-                Create Event
-              </Button>
-            </Link>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {stats.map((stat) => (
-              <Card key={stat.title}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        {stat.title}
-                      </p>
-                      <p className="text-3xl font-bold mb-2">{stat.value}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {stat.change}
-                      </p>
+            <div className="px-6 py-5 space-y-5 flex-1 overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-1 gap-5">
+                <div className="space-y-2">
+                  <label className="text-sm text-white/70">Name</label>
+                  <input
+                    type="text"
+                    value={ownerDraft.name || ""}
+                    onChange={(e) => handleOwnerFieldChange("name", e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:border-ring/50 focus:outline-none transition"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-white/70">Email</label>
+                  <input
+                    type="email"
+                    value={ownerDraft.email || ""}
+                    onChange={(e) => handleOwnerFieldChange("email", e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:border-ring/50 focus:outline-none transition"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-white/70">Phone</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={ownerDraft.phone || ""}
+                      onChange={(e) => handleOwnerFieldChange("phone", e.target.value)}
+                      className="flex-1 px-4 py-3 rounded-xl bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:border-ring/50 focus:outline-none transition"
+                      placeholder="+1234567890"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-white/70">Avatar</label>
+                  <div className="flex items-center gap-3 flex-wrap rounded-xl border border-white/10 bg-white/5/70 px-3 py-3">
+                    <div className="h-12 w-12 rounded-full overflow-hidden border border-white/10 bg-white/10 flex items-center justify-center text-sm font-semibold shadow-inner shrink-0">
+                      {ownerDraft.avatar ? (
+                        <img src={ownerDraft.avatar} alt="Owner avatar" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-white/70">{(ownerDraft.name || ownerDraft.email || "O").slice(0, 2).toUpperCase()}</span>
+                      )}
                     </div>
-                    <div className={`p-3 rounded-lg bg-muted ${stat.color}`}>
-                      <stat.icon className="w-5 h-5" />
+                    <div className="flex flex-1 flex-wrap items-center gap-2 min-w-[260px]">
+                      <button
+                        type="button"
+                        onClick={openOwnerAvatarPicker}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/15 border border-primary/30 text-foreground hover:bg-primary/25 transition font-semibold"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                        Choose avatar
+                      </button>
+                      <input
+                        type="url"
+                        value={ownerDraft.avatar || ""}
+                        onChange={(e) => handleOwnerFieldChange("avatar", e.target.value)}
+                        className="flex-1 min-w-[240px] px-4 py-2.5 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:border-ring/50 focus:outline-none transition"
+                        placeholder="https://..."
+                      />
+                      <p className="text-xs text-white/50 w-full leading-relaxed">Upload, capture, or paste a URL for the owner avatar.</p>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="whatsapp-toggle"
+                    type="checkbox"
+                    checked={!!ownerDraft.whatsAppNotification}
+                    onChange={(e) => handleOwnerFieldChange("whatsAppNotification", e.target.checked)}
+                    className="h-4 w-4 rounded border-border/60 bg-background/60 text-accent focus:ring-ring/50"
+                  />
+                  <label htmlFor="whatsapp-toggle" className="text-sm text-white/80">
+                    Enable WhatsApp notifications
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-white/10 flex items-center gap-3 bg-white/5/40 backdrop-blur-sm rounded-b-2xl">
+              <button
+                onClick={handleSaveOwner}
+                disabled={isOwnerSaving}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-semibold shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isOwnerSaving ? (
+                  <span className="h-4 w-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                {isOwnerSaving ? "Saving..." : "Save Owner"}
+              </button>
+              <button
+                onClick={handleCancelOwner}
+                className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
+        </div>
+      )}
 
-          {/* Tabs */}
-          <Tabs defaultValue="events" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="events" className="gap-2">
-                <Calendar className="w-4 h-4" />
-                Events
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="gap-2">
-                <BarChart3 className="w-4 h-4" />
-                Analytics
-              </TabsTrigger>
-              <TabsTrigger value="team" className="gap-2">
-                <UserPlus className="w-4 h-4" />
-                Invite Team
-              </TabsTrigger>
-            </TabsList>
+      {/* Owner avatar picker modal */}
+      {isOwnerAvatarPickerOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-card border border-border/60 rounded-2xl w-full max-w-2xl shadow-[var(--shadow-elegant)]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-white/50">Owner</p>
+                <h3 className="text-xl font-semibold text-white">Choose Your Avatar</h3>
+              </div>
+              <button onClick={closeOwnerAvatarPicker} className="text-white/60 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {ownerAvatarOptions.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => setOwnerPendingAvatar(option.url)}
+                    className={`group flex flex-col items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-4 transition-all hover:bg-white/10 ${
+                      ownerPendingAvatar === option.url ? "border-accent/60 ring-2 ring-accent/30" : ""
+                    }`}
+                  >
+                    <div className="h-20 w-20 rounded-full overflow-hidden border border-white/15 bg-white/10">
+                      <img src={option.url} alt={option.label} className="h-full w-full object-cover" />
+                    </div>
+                    <span className="text-sm font-semibold text-white group-hover:text-accent">{option.label}</span>
+                  </button>
+                ))}
+              </div>
 
-            {/* Events Tab */}
-            <TabsContent value="events" className="space-y-6">
-              {/* Filters */}
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex flex-col md:flex-row gap-4">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search events by title..."
-                        value={searchQuery}
-                        onChange={(e) => handleSearchChange(e.target.value)}
-                        className="pl-10"
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => ownerFileInputRef.current?.click()}
+                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary/15 border border-primary/30 text-foreground hover:bg-primary/25 transition"
+                >
+                  <Upload className="w-4 h-4" />
+                  Upload from device
+                </button>
+                <button
+                  type="button"
+                  onClick={handleOwnerAvatarUseCamera}
+                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/5 border border-dashed border-white/15 text-white hover:bg-white/10 transition"
+                >
+                  <Camera className="w-4 h-4" />
+                  Use camera
+                </button>
+                <input
+                  ref={ownerFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleOwnerFileChange}
+                />
+              </div>
+
+              {(ownerPendingAvatar || ownerCapturedPhoto) && (
+                <div className="space-y-2 border border-white/10 rounded-lg p-4 bg-white/5">
+                  <p className="text-sm text-white/70">Preview &amp; confirm</p>
+                  <div className="flex items-center gap-3">
+                    <div className="h-16 w-16 rounded-full overflow-hidden border border-white/10 bg-white/10">
+                      <img
+                        src={ownerCapturedPhoto || ownerPendingAvatar || ownerDraft.avatar || owner.avatar || ""}
+                        alt="Selected avatar preview"
+                        className="h-full w-full object-cover"
                       />
                     </div>
-
-                    <Select
-                      value={filters.status2 || "all"}
-                      onValueChange={handleStatusFilter}
-                    >
-                      <SelectTrigger className="w-full md:w-[180px]">
-                        <SelectValue placeholder="Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Status</SelectItem>
-                        <SelectItem value="published">Published</SelectItem>
-                        <SelectItem value="draft">Draft</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    <Select
-                      value={filters.category || "all"}
-                      onValueChange={handleCategoryFilter}
-                    >
-                      <SelectTrigger className="w-full md:w-[180px]">
-                        <SelectValue placeholder="Category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        <SelectItem value="music">Music</SelectItem>
-                        <SelectItem value="workshop">Workshop</SelectItem>
-                        <SelectItem value="conference">Conference</SelectItem>
-                        <SelectItem value="arts">Arts</SelectItem>
-                        <SelectItem value="sports">Sports</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        clearFilters();
-                        setSearchQuery("");
-                      }}
-                    >
-                      Clear Filters
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={refresh}
-                      disabled={loading}
-                    >
-                      <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-                    </Button>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOwnerPendingAvatar(null);
+                          setOwnerCapturedPhoto(null);
+                        }}
+                        className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+                      >
+                        Clear
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleOwnerAvatarApply(ownerCapturedPhoto || ownerPendingAvatar)}
+                        className="px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
+                      >
+                        Use this avatar
+                      </button>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Events List */}
-              {error && (
-                <Card className={error.includes("pending backend") ? "border-yellow-500 bg-yellow-50" : "border-destructive"}>
-                  <CardContent className="p-6">
-                    <p className={error.includes("pending backend") ? "text-yellow-800" : "text-destructive"}>
-                      {error.includes("pending backend") ? (
-                        <>
-                          <span className="font-semibold">⚠️ Development Mode:</span> {error}
-                        </>
-                      ) : (
-                        <>Error loading events: {error}</>
-                      )}
-                    </p>
-                  </CardContent>
-                </Card>
+                </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
 
-              {loading && !events.length ? (
-                <Card>
-                  <CardContent className="p-12 text-center">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
-                    <p className="text-muted-foreground">Loading your events...</p>
-                  </CardContent>
-                </Card>
-              ) : events.length === 0 ? (
-                <Card>
-                  <CardContent className="p-12 text-center">
-                    <Calendar className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="text-xl font-semibold mb-2">No events found</h3>
-                    <p className="text-muted-foreground mb-6">
-                      {filters.search || filters.status2 || filters.category
-                        ? "Try adjusting your filters"
-                        : "Get started by creating your first event"}
-                    </p>
-                    <Link to="/organizer/select-event-type">
-                      <Button variant="accent">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create Event
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
+      {/* Owner camera modal */}
+      {isOwnerCameraOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+          <div className="bg-[#0b1220] border border-white/10 rounded-2xl w-full max-w-xl shadow-2xl shadow-black/60">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-white/50">Owner</p>
+                <h3 className="text-xl font-semibold text-white">Capture with Camera</h3>
+              </div>
+              <button onClick={closeOwnerCamera} className="text-white/60 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-3">
+              {!ownerCapturedPhoto ? (
+                <>
+                  <div className="relative w-full">
+                    <video ref={ownerVideoRef} className="w-full rounded-xl border border-white/10" autoPlay muted />
+                  </div>
+                  <canvas ref={ownerCanvasRef} className="hidden" />
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      type="button"
+                      onClick={closeOwnerCamera}
+                      className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={captureOwnerPhoto}
+                      className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition"
+                    >
+                      Capture
+                    </button>
+                  </div>
+                </>
               ) : (
                 <>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">
-                      Showing {events.length} of {pagination.totalEvents} events
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Page {pagination.page} of {pagination.totalPages}
-                    </p>
+                  <img src={ownerCapturedPhoto} alt="Captured" className="w-full rounded-xl border border-white/10 object-contain max-h-96" />
+                  <div className="flex flex-wrap gap-2 justify-end">
+                    <button
+                      type="button"
+                      onClick={startOwnerCamera}
+                      className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+                    >
+                      Retake
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleOwnerAvatarApply(ownerCapturedPhoto);
+                        closeOwnerCamera();
+                      }}
+                      className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition"
+                    >
+                      Save photo
+                    </button>
                   </div>
-
-                  <div className="grid gap-6">
-                    {events.map((event) => (
-                      <Card key={event.id || event.eventId}>
-                        <CardContent className="p-6">
-                          <div className="flex gap-6">
-                            <img
-                              src={getEventImage(event)}
-                              alt={getEventTitle(event)}
-                              className="w-48 h-32 object-cover rounded-lg"
-                              onError={(e) => {
-                                e.target.src = eventMusic;
-                              }}
-                            />
-                            <div className="flex-1">
-                              <div className="flex items-start justify-between mb-2">
-                                <div className="flex-1">
-                                  <h3 className="text-xl font-semibold mb-2">
-                                    {getEventTitle(event)}
-                                  </h3>
-                                  <div className="flex flex-wrap gap-2 mb-3">
-                                    {getStatusBadge(event)}
-                                    {(event.category || event.mainCategory) && (
-                                      <Badge variant="outline">
-                                        {event.category || event.mainCategory}
-                                      </Badge>
-                                    )}
-                                    {(event.subCategory || event.subcategory) && (
-                                      <Badge variant="outline">
-                                        {event.subCategory || event.subcategory}
-                                      </Badge>
-                                    )}
-                                  </div>
-                                </div>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon">
-                                      <MoreVertical className="w-4 h-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem asChild>
-                                      {event.organizer?.slug && event.slug ? (
-                                        <Link to={`/events/${event.organizer.slug}/${event.slug}`} target="_blank" rel="noopener noreferrer" className="w-full flex items-center">
-                                        <Eye className="w-4 h-4 mr-2" />
-                                        View Details
-                                      </Link>
-                                      ) : (
-                                        <span className="w-full flex items-center text-gray-400">
-                                          <Eye className="w-4 h-4 mr-2" />
-                                          View Details
-                                        </span>
-                                      )}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() =>
-                                        navigate(`/organizer/edit-event/${event.id || event.eventId}`)
-                                      }
-                                    >
-                                      <Edit className="w-4 h-4 mr-2" />
-                                      Edit Event
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-destructive">
-                                      <Trash2 className="w-4 h-4 mr-2" />
-                                      Delete Event
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
-
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                <div>
-                                  <p className="text-muted-foreground">Date</p>
-                                  <p className="font-medium">
-                                    {formatDate(event.startDate || event.date)}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-muted-foreground">Tickets Sold</p>
-                                  <p className="font-medium">
-                                    {formatNumber(event.stats?.totalTicketsSold || event.ticketsSold || 0)}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-muted-foreground">Revenue</p>
-                                  <p className="font-medium">
-                                    {formatCurrency(event.stats?.totalRevenue || event.revenue || 0)}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-muted-foreground">Bookings</p>
-                                  <p className="font-medium">
-                                    {formatNumber(event.stats?.confirmedBookings || event._count?.bookings || 0)}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-
-                  {/* Pagination */}
-                  {pagination.totalPages > 1 && (
-                    <div className="flex justify-center gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => updateFilters({ page: pagination.page - 1 })}
-                        disabled={pagination.page <= 1 || loading}
-                      >
-                        Previous
-                      </Button>
-                      <Button variant="outline" disabled>
-                        Page {pagination.page} of {pagination.totalPages}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => updateFilters({ page: pagination.page + 1 })}
-                        disabled={pagination.page >= pagination.totalPages || loading}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  )}
                 </>
               )}
-            </TabsContent>
-
-            {/* Analytics Tab */}
-            <TabsContent value="analytics" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>Event Analytics</span>
-                    <Select
-                      value={analyticsFilter}
-                      onValueChange={setAnalyticsFilter}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Filter" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Events</SelectItem>
-                        <SelectItem value="published">Published</SelectItem>
-                        <SelectItem value="draft">Drafts</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {analyticsFilteredEvents.length === 0 ? (
-                    <div className="text-center py-12">
-                      <BarChart3 className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                      <p className="text-muted-foreground">
-                        No events to analyze
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {analyticsFilteredEvents.map((event) => (
-                        <div
-                          key={event.id || event.eventId}
-                          className="flex items-center justify-between p-4 border rounded-lg"
-                        >
-                          <div className="flex-1">
-                            <h4 className="font-semibold mb-1">
-                              {getEventTitle(event)}
-                            </h4>
-                            <p className="text-sm text-muted-foreground">
-                              {formatDate(event.startDate || event.date)}
-                            </p>
-                          </div>
-                          <div className="flex gap-6 text-right">
-                            <div>
-                              <p className="text-2xl font-bold">
-                                {formatNumber(event.stats?.totalTicketsSold || event.ticketsSold || 0)}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                Tickets
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-2xl font-bold">
-                                {formatCurrency(event.stats?.totalRevenue || event.revenue || 0)}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                Revenue
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Team Tab */}
-            <TabsContent value="team" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Invite Team Members</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex gap-4">
-                    <Input
-                      type="email"
-                      placeholder="Enter email address"
-                      value={newMemberEmail}
-                      onChange={(e) => setNewMemberEmail(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Select
-                      value={newMemberRole}
-                      onValueChange={setNewMemberRole}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="coordinator">Coordinator</SelectItem>
-                        <SelectItem value="staff">Staff</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button onClick={handleInviteMember}>
-                      <Mail className="w-4 h-4 mr-2" />
-                      Send Invite
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Team Members</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {teamMembers.map((member) => (
-                      <div
-                        key={member.id}
-                        className="flex items-center justify-between p-4 border rounded-lg"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                            <Users className="w-6 h-6 text-primary" />
-                          </div>
-                          <div>
-                            <h4 className="font-semibold">{member.name}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {member.email}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <Badge
-                              variant={
-                                member.status === "active"
-                                  ? "default"
-                                  : "secondary"
-                              }
-                            >
-                              {member.role}
-                            </Badge>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {member.eventsManaged} events managed
-                            </p>
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Settings className="w-4 h-4 mr-2" />
-                                Manage Permissions
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive">
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Remove Member
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+            </div>
+          </div>
         </div>
-      </main>
+      )}
 
-      <Footer />
+      {/* Profile Card */}
+      <div className="bg-[#0f1628] rounded-2xl border border-white/10 shadow-lg shadow-black/30 overflow-hidden backdrop-blur">
+        {/* Profile Header Section */}
+        <div className="relative px-8 py-8 border-b border-white/10 bg-gradient-to-r from-[#0b1220] via-[#0f172a] to-[#111827]">
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_15%_30%,#ffffff,transparent_35%)]" />
+          <div className="relative flex flex-col gap-6">
+            <div className="flex items-center gap-5 flex-wrap">
+              <div className="w-20 h-20 rounded-2xl bg-white/5 flex items-center justify-center text-white font-bold text-3xl shadow-inner border border-white/10 overflow-hidden">
+                {editData.logo ? (
+                  <img src={editData.logo} alt={editData.name} className="w-full h-full object-cover" />
+                ) : (
+                  (editData.name || "U").charAt(0).toUpperCase()
+                )}
+              </div>
+              <div className="text-white space-y-2">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h2 className="text-2xl font-semibold">{editData.name}</h2>
+                  {editData.isVerified && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-100 text-xs font-semibold border border-emerald-500/30">
+                      <BadgeCheck className="w-4 h-4" />
+                      Verified
+                    </span>
+                  )}
+                </div>
+                <p className="text-white/70 text-sm leading-relaxed max-w-2xl">{editData.description}</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-4 text-white/70 text-sm">
+              <span className="inline-flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                {editData.email}
+              </span>
+              <span className="h-1 w-1 rounded-full bg-white/20" />
+              <span className="inline-flex items-center gap-2">
+                <Phone className="w-4 h-4" />
+                {editData.contact}
+              </span>
+              <span className="h-1 w-1 rounded-full bg-white/20" />
+              <span className="inline-flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                {editData.state}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Profile Details */}
+        <div className="p-8 space-y-6 bg-[#0b1220]">
+          {loadingProfile ? (
+            <div className="text-white/70 text-sm">Loading organizer profile…</div>
+          ) : !isEditing ? (
+            // View Mode
+            <div className="space-y-6">
+              {/* Snapshot */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                {[
+                  { label: "Events", value: editData.counts.events, accent: "text-sky-200", border: "border-sky-500/30" },
+                  { label: "Images", value: editData.counts.images, accent: "text-purple-200", border: "border-purple-500/30" },
+                  { label: "Payouts", value: editData.counts.payouts, accent: "text-emerald-200", border: "border-emerald-500/30" },
+                  { label: "Tours", value: editData.counts.tours, accent: "text-amber-200", border: "border-amber-500/30" },
+                  { label: "Reviews", value: editData.counts.reviews, accent: "text-indigo-200", border: "border-indigo-500/30" },
+                ].map((stat) => (
+                  <div
+                    key={stat.label}
+                    className={`rounded-xl border ${stat.border} bg-white/5 p-3 shadow-lg shadow-black/20`}
+                  >
+                    <p className="text-xs uppercase tracking-wide text-white/70">{stat.label}</p>
+                    <p className={`text-2xl font-bold mt-1 ${stat.accent}`}>{stat.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Contact & Location */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Contact &amp; Reach</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4">
+                    <div className="w-10 h-10 rounded-lg bg-rose-500/20 flex items-center justify-center flex-shrink-0 border border-rose-500/30">
+                      <Mail className="w-5 h-5 text-rose-100" />
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-white/50">Email Address</p>
+                      <p className="text-base font-semibold text-white mt-1">{editData.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0 border border-emerald-500/30">
+                      <Phone className="w-5 h-5 text-emerald-100" />
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-white/50">Contact</p>
+                      <p className="text-base font-semibold text-white mt-1">{editData.contact}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4">
+                    <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0 border border-blue-500/30">
+                      <MapPin className="w-5 h-5 text-blue-100" />
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-white/50">State</p>
+                      <p className="text-base font-semibold text-white mt-1">{editData.state}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4">
+                    <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0 border border-indigo-500/30">
+                      <Globe className="w-5 h-5 text-indigo-100" />
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-white/50">Address</p>
+                      <p className="text-base font-semibold text-white mt-1">{editData.address}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* GST */}
+              {editData.gstNumber && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Tax Information</h3>
+                  </div>
+                  <div className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0 border border-emerald-500/30">
+                      <BadgeCheck className="w-5 h-5 text-emerald-100" />
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-white/50">GST Number</p>
+                      <p className="text-base font-semibold text-white mt-1">{editData.gstNumber}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* About */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold">About Organizer</h3>
+                <p className="text-white/80 leading-relaxed bg-white/5 border border-white/10 p-4 rounded-xl">
+                  {editData.description}
+                </p>
+              </div>
+
+              {/* Owner Snapshot */}
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white font-semibold overflow-hidden">
+                    {owner?.avatar ? (
+                      <img src={owner.avatar} alt={owner.name} className="w-full h-full object-cover" />
+                    ) : (
+                      (owner?.name || "O").charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-white/50">Owner</p>
+                    <p className="text-base font-semibold text-white">{owner?.name || "—"}</p>
+                    <p className="text-xs text-white/60">{owner?.email}</p>
+                  </div>
+                </div>
+                <div className="text-sm text-white/70 flex flex-wrap gap-3">
+                  {owner?.phone && (
+                    <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
+                      <Phone className="w-4 h-4" />
+                      {owner.phone}
+                    </span>
+                  )}
+                  <button
+                    onClick={openOwnerModal}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    Edit Owner
+                  </button>
+                </div>
+              </div>
+
+              {/* Socials */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold">Social Handles</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {[
+                    { label: "Instagram", value: editData.instagram, icon: <Instagram className="w-4 h-4" /> },
+                    { label: "LinkedIn", value: editData.linkedin, icon: <Linkedin className="w-4 h-4" /> },
+                    { label: "Facebook", value: editData.facebook, icon: <Facebook className="w-4 h-4" /> },
+                    { label: "X (Twitter)", value: editData.x, icon: <Twitter className="w-4 h-4" /> },
+                    { label: "Reddit", value: editData.reddit, icon: <Users className="w-4 h-4" /> },
+                    { label: "Snapchat", value: editData.snapchat, icon: <User className="w-4 h-4" /> },
+                  ].map((social) => (
+                    <a
+                      key={social.label}
+                      href={social.value || "#"}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-between gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/80 hover:bg-white/10 transition"
+                    >
+                      <span className="flex items-center gap-2">
+                        {social.icon}
+                        {social.label}
+                      </span>
+                      <ExternalLink className="w-4 h-4 text-white/50" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bank Summary */}
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${bankExists ? "bg-emerald-500/20 border-emerald-400/40" : "bg-amber-500/10 border-amber-400/30"}`}>
+                    <CreditCard className={`w-5 h-5 ${bankExists ? "text-emerald-100" : "text-amber-300"}`} />
+                  </div>
+                  <div>
+                    {bankExists ? (
+                      <>
+                        <p className="text-xs uppercase tracking-wide text-white/50">Payout Provider</p>
+                        <p className="text-base font-semibold text-white">
+                          {editData.bankDetails.providerName} • {editData.bankDetails.verificationStatus}
+                        </p>
+                        <p className="text-xs text-white/60">Txn ID: {editData.bankDetails.verificationTxnId}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-xs uppercase tracking-wide text-white/50">Bank Account</p>
+                        <p className="text-base font-semibold text-amber-300">Not added yet</p>
+                        <p className="text-xs text-white/50">Add bank details to receive payouts</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-white/60 hidden md:inline">Manage payouts</span>
+                  <button
+                    onClick={handleOpenBankPanel}
+                    className="px-3 py-2 text-sm rounded-lg bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition"
+                  >
+                    {bankExists ? "View Bank" : "Add Bank"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Edit Mode
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white/80">Organizer Name</label>
+                  <input
+                    type="text"
+                    value={editData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white/80">Email Address</label>
+                  <input
+                    type="email"
+                    value={editData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white/80">Contact</label>
+                  <input
+                    type="text"
+                    value={editData.contact}
+                    onChange={(e) => handleInputChange("contact", e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:outline-none"
+                    placeholder="+1234567890"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white/80">GST Number</label>
+                  <input
+                    type="text"
+                    value={editData.gstNumber}
+                    onChange={(e) => handleInputChange("gstNumber", e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:outline-none"
+                    placeholder="22AAAAA0000A1Z5"
+                  />
+                </div>
+                <div className="md:col-span-2 space-y-2">
+                  <label className="block text-sm font-medium text-white/80">Description</label>
+                  <textarea
+                    value={editData.description}
+                    onChange={(e) => handleInputChange("description", e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:outline-none min-h-[120px]"
+                    maxLength={2000}
+                  />
+                </div>
+              </div>
+
+              {/* Socials edit */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Social Handles</h3>
+                  <span className="text-xs text-white/50">Share reachable links</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    { key: "instagram", label: "Instagram URL" },
+                    { key: "linkedin", label: "LinkedIn URL" },
+                    { key: "facebook", label: "Facebook URL" },
+                    { key: "x", label: "X (Twitter) URL" },
+                    { key: "reddit", label: "Reddit handle or URL" },
+                    { key: "snapchat", label: "Snapchat handle" },
+                  ].map((social) => (
+                    <div className="space-y-2" key={social.key}>
+                      <label className="block text-sm font-medium text-white/80">{social.label}</label>
+                      <input
+                        type="text"
+                        value={editData[social.key]}
+                        onChange={(e) => handleInputChange(social.key, e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:outline-none"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <Save className="w-4 h-4" />
+                  {isSaving ? "Saving..." : "Save Changes"}
+                </button>
+                <button
+                  onClick={handleCancel}
+                  className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Bank detail slide-over */}
+      {isBankPanelOpen && (
+        <div className="fixed inset-0 z-40">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={handleCancelBank} />
+          <div className="relative ml-auto h-full w-full max-w-lg bg-card border-l border-border/60 shadow-[var(--shadow-elegant)] flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-border/60 bg-card/80">
+              <div className="space-y-1">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">Payouts</p>
+                <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-accent" />
+                  {bankExists ? "Bank Details" : "Add Bank Details"}
+                </h2>
+              </div>
+              <button onClick={handleCancelBank} className="text-white/60 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 overflow-y-auto">
+              {/* Provider / Status — only shown when bank details exist */}
+              {bankExists && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-xs uppercase tracking-wide text-white/50">Provider</p>
+                    <p className="text-lg font-semibold text-white flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-accent" />
+                      {bankDraft.providerName}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-xs uppercase tracking-wide text-white/50">Status</p>
+                    <p className="text-lg font-semibold text-white flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-accent" />
+                      {bankDraft.verificationStatus}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Prompt when no bank details */}
+              {!bankExists && (
+                <div className="rounded-xl border border-accent/20 bg-accent/10 px-4 py-3 flex items-start gap-3">
+                  <CreditCard className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-accent">No bank details added</p>
+                    <p className="text-xs text-white/50 mt-0.5">Fill in the form below to set up your payout account.</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+                {bankExists && (
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-semibold text-white">Account</h4>
+                    <span className="text-xs text-white/60">Txn: {bankDraft.verificationTxnId}</span>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 gap-3">
+                  {[
+                    { key: "accountHolder", label: "Account Holder" },
+                    { key: "bankName", label: "Bank Name" },
+                    { key: "accountNumber", label: "Account Number" },
+                    { key: "ifscCode", label: "IFSC Code" },
+                  ].map((field) => (
+                    <div key={field.key}>
+                      <p className="text-xs uppercase tracking-wide text-white/50">{field.label}</p>
+                      {isBankEditing ? (
+                        <input
+                          type="text"
+                          value={bankDraft[field.key]}
+                          onChange={(e) => handleBankFieldChange(field.key, e.target.value)}
+                          className="mt-1 w-full px-4 py-2 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/50 focus:outline-none"
+                        />
+                      ) : (
+                        <p className="text-base font-semibold text-white mt-1">{bankDraft[field.key]}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Created / Updated — only shown when bank details exist */}
+              {bankExists && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-xs uppercase tracking-wide text-white/50">Created</p>
+                    <p className="text-base font-semibold text-white">{formatDate(bankDraft.createdAt)}</p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-xs uppercase tracking-wide text-white/50">Updated</p>
+                    <p className="text-base font-semibold text-white">{formatDate(bankDraft.updatedAt)}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-white/10 bg-white/5 flex items-center gap-3">
+              {isBankEditing ? (
+                <>
+                  <button
+                    onClick={handleSaveBank}
+                    disabled={isBankSaving}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <Save className="w-4 h-4" />
+                    {isBankSaving ? "Saving…" : bankExists ? "Save Bank Details" : "Add Bank Details"}
+                  </button>
+                  <button
+                    onClick={handleCancelBank}
+                    className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setIsBankEditing(true)}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-primary/15 border border-primary/30 text-foreground hover:bg-primary/25 transition"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    Edit Bank Details
+                  </button>
+                  <button
+                    onClick={handleCancelBank}
+                    className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+                  >
+                    Close
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default OrganizerDashboard;
+const OrganizerDashboard = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [footerMenuOpen, setFooterMenuOpen] = useState(false);
+  const footerMenuRef = useRef(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { id: liveEventId } = useParams();
 
+  // Close footer menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (footerMenuRef.current && !footerMenuRef.current.contains(e.target)) {
+        setFooterMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Note: Authentication is handled by ProtectedRoute wrapper
+  // No need for redundant auth check here
+
+  // User data from auth context (populated by AuthProvider on app load)
+  const { user: authUser, logout: contextLogout } = useAuth();
+  const user = {
+    name: authUser?.name || "Organizer",
+    email: authUser?.email || "",
+  };
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    await contextLogout();
+    navigate("/");
+    setIsLoggingOut(false);
+  };
+
+
+  // Navigation items with their corresponding tab values
+  const navItems = [
+    { id: "dashboard", name: "Dashboard", icon: <Home className="w-6 h-6 mr-3" /> },
+    { id: "myevents", name: "My Events", icon: <Calendar className="w-6 h-6 mr-3" /> },
+    { id: "analytics", name: "Audience Analytics", icon: <Users className="w-6 h-6 mr-3" /> },
+    { id: "live", name: "Live Events", icon: <Radio className="w-6 h-6 mr-3" /> },
+    { id: "reception", name: "Reception", icon: <Shield className="w-6 h-6 mr-3" /> },
+    { id: "food-beverages", name: "Food & Beverages", icon: <CupSoda className="w-6 h-6 mr-3" /> },
+    { id: "payouts", name: "Payouts", icon: <CreditCard className="w-6 h-6 mr-3" /> },
+    // { id: "financial", name: "Financial Reporting", icon: <Download className="w-6 h-6 mr-3" /> },
+  ];
+
+  // Sync active tab from URL
+  useEffect(() => {
+    const path = location.pathname || "";
+    if (path.startsWith("/organizer/myevents")) setActiveTab("myevents");
+    else if (path.startsWith("/organizer/analytics")) setActiveTab("analytics");
+    else if (path.startsWith("/organizer/live")) setActiveTab("live");
+    else if (path.startsWith("/organizer/reception")) setActiveTab("reception");
+    else if (path.startsWith("/organizer/food-beverages")) setActiveTab("food-beverages");
+    else if (path.startsWith("/organizer/payouts")) setActiveTab("payouts");
+    else if (path.startsWith("/organizer/events") && path.includes("/attendees")) setActiveTab("attendees");
+    else if (path.startsWith("/organizer/events") && path.includes("/refunds")) setActiveTab("refunds");
+    else if (path.startsWith("/organizer/financial")) setActiveTab("financial");
+    else if (path.startsWith("/organizer/profile")) setActiveTab("profile");
+    else setActiveTab("dashboard");
+  }, [location.pathname]);
+
+  const handleNav = (id) => {
+    setActiveTab(id);
+    const base =
+      id === "dashboard"
+        ? "/organizer/dashboard"
+        : id === "profile"
+        ? "/organizer/profile"
+        : `/organizer/${id}`;
+    navigate(base);
+  };
+
+  return (
+    <div className="organizer-dashboard-theme dashboard-theme flex h-screen bg-background text-foreground">
+      {/* Sidebar */}
+      <aside
+        className={`${sidebarOpen ? "w-64" : "w-24"} bg-sidebar border-r border-sidebar-border/60 flex flex-col transition-all duration-300`}
+      >
+        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+          <button
+            onClick={() => handleNav("dashboard")}
+            className={`${sidebarOpen ? "block" : "hidden"} hover:opacity-80 transition flex items-center gap-3`}
+          >
+            <img src={Logo} alt="MapMyParty" className="h-10 w-auto" />
+            <span className="font-league-gothic text-2xl font-bold text-white tracking-[0.02em] leading-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">MAPMYPARTY</span>
+          </button>
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-2 rounded-lg hover:bg-white/5 text-white/80"
+          >
+            {sidebarOpen ? <ChevronLeft className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto py-4">
+          <div className="px-3 space-y-1">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleNav(item.id)}
+                className={`flex items-center w-full px-3 py-3 text-sm font-medium rounded-xl transition ${
+                  activeTab === item.id
+                    ? "text-white bg-white/10 border border-white/10 shadow-lg shadow-black/20"
+                    : "text-white/70 hover:bg-white/5"
+                }`}
+              >
+                <span className="mr-3 text-white/80">{item.icon}</span>
+                {sidebarOpen && item.name}
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        {/* Sidebar Footer with profile + logout */}
+        <div className="mt-auto p-4 border-t border-white/10">
+          <div
+            ref={footerMenuRef}
+            className="relative bg-gradient-to-br from-white/5 via-white/0 to-blue-500/5 border border-white/10 rounded-xl p-3 shadow-lg shadow-black/20"
+          >
+            <button
+              onClick={() => setFooterMenuOpen((v) => !v)}
+              className="flex items-center gap-3 w-full text-left hover:bg-white/5 transition rounded-lg px-2 py-1"
+            >
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500/30 via-blue-500/30 to-red-500/30 flex items-center justify-center text-red-100 font-semibold border border-white/10">
+                {(user.name || "U").charAt(0).toUpperCase()}
+              </div>
+              {sidebarOpen && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white truncate">{user.name || "Organizer"}</p>
+                </div>
+              )}
+              {sidebarOpen && (
+                <ChevronDown
+                  className={`w-4 h-4 text-white/70 transition-transform ${
+                    footerMenuOpen ? "rotate-180" : ""
+                  }`}
+                />
+              )}
+            </button>
+
+            {footerMenuOpen && (
+              <div className="absolute bottom-[calc(100%+10px)] left-0 right-0 z-20">
+                <div className="rounded-xl border border-sidebar-border/60 bg-sidebar/95 backdrop-blur-md shadow-[var(--shadow-card)] p-2 space-y-2">
+                  <button
+                    onClick={() => {
+                      setFooterMenuOpen(false);
+                      handleNav("profile");
+                    }}
+                    className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+                  >
+                    <User className="w-4 h-4" />
+                    {sidebarOpen && <span>My Profile</span>}
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-red-500/15 border border-red-500/30 text-red-200 hover:bg-red-500/20 transition disabled:opacity-60"
+                  >
+                    {isLoggingOut ? (
+                      <span className="h-4 w-4 border-2 border-red-300 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <LogOut className="w-4 h-4" />
+                    )}
+                    {sidebarOpen && <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </aside>
+
+      {/* Main */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Main content */}
+        <main className="flex-1 overflow-y-auto">
+          {/* Tab Content */}
+          <div className="p-4 lg:p-5 space-y-5">
+            {activeTab === "dashboard" && (
+              <OrganizerDashboardHome
+                user={user}
+                handleLogout={handleLogout}
+                setActiveTab={setActiveTab}
+                activeTab={activeTab}
+              />
+            )}
+
+            {activeTab === "myevents" && <MyEvents />}
+            {activeTab === "analytics" && <AudienceAnalytics />}
+            {activeTab === "live" && !liveEventId && <LiveEvents />}
+            {activeTab === "live" && liveEventId && <LiveEventPage embedded />}
+            {activeTab === "reception" && <Reception />}
+            {activeTab === "food-beverages" && <FoodBeverages />}
+            {activeTab === "payouts" && <OrganizerPayouts />}
+            {activeTab === "attendees" && <EventAttendees />}
+            {activeTab === "refunds" && <EventRefunds />}
+            {activeTab === "financial" && <FinancialReporting />}
+            {activeTab === "profile" && <OrganizerProfileContent user={user} />}
+          </div>
+        </main>
+      </div>
+
+    </div>
+    
+  );
+}
+
+export default OrganizerDashboard;

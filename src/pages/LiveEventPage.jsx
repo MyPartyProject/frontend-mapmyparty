@@ -308,7 +308,7 @@ const LiveEventPage = ({ embedded = false }) => {
     email: venue.contactEmail || venue.email || "",
   };
 
-  // When embedded in OrganizerDashboardV2, only render the main content
+  // When embedded in OrganizerDashboard, only render the main content
   if (embedded) {
     return (
       <div className="flex-1 flex flex-col overflow-hidden text-white">
