@@ -65,6 +65,7 @@ const Header = ({
   const isDashboard = location.pathname.startsWith('/dashboard') || 
                      location.pathname.startsWith('/organizer') ||
                      location.pathname.startsWith('/promoter');
+  const isLandingPage = forceMainHeader && location.pathname === "/";
 
   // Don't show header on dashboard/organizer/promoter pages unless forced
   if (resolvedIsAuthenticated && isDashboard && !forceMainHeader) {
@@ -72,7 +73,13 @@ const Header = ({
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.08)] backdrop-blur-xl shadow-[0_18px_60px_-24px_rgba(0,0,0,0.65)]">
+    <header
+      className={`sticky top-0 z-50 w-full ${
+        isLandingPage
+          ? "-mb-16 bg-gradient-to-b from-slate-950/60 via-slate-950/18 to-transparent backdrop-blur-md shadow-none"
+          : "bg-[rgba(255,255,255,0.08)] backdrop-blur-xl shadow-[0_18px_60px_-24px_rgba(0,0,0,0.65)]"
+      } ${forceMainHeader ? "" : "border-b border-[rgba(255,255,255,0.18)]"}`}
+    >
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
         {/* Brand */}
         {/* Always show Map MyParty logo that links to home */}
