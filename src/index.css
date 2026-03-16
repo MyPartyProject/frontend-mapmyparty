@@ -231,32 +231,77 @@
 
 /* Scrollbar styling */
 @layer utilities {
+  .app-theme .bg-white\/5,
   .dashboard-theme .bg-white\/5 {
     background-color: hsl(var(--card) / 0.55) !important;
   }
 
+  .app-theme .bg-white\/10,
   .dashboard-theme .bg-white\/10 {
     background-color: hsl(var(--card) / 0.7) !important;
   }
 
+  .app-theme .bg-white\/15,
   .dashboard-theme .bg-white\/15 {
     background-color: hsl(var(--card) / 0.85) !important;
   }
 
+  .app-theme .bg-white\/\[0\.02\] {
+    background-color: hsl(var(--card) / 0.38) !important;
+  }
+
+  .app-theme .bg-white\/\[0\.03\] {
+    background-color: hsl(var(--card) / 0.44) !important;
+  }
+
+  .app-theme .bg-white\/\[0\.04\] {
+    background-color: hsl(var(--card) / 0.5) !important;
+  }
+
+  .app-theme .bg-white\/\[0\.05\] {
+    background-color: hsl(var(--card) / 0.56) !important;
+  }
+
+  .app-theme .bg-white\/\[0\.06\] {
+    background-color: hsl(var(--card) / 0.62) !important;
+  }
+
+  .app-theme .bg-white\/\[0\.08\] {
+    background-color: hsl(var(--card) / 0.74) !important;
+  }
+
+  .app-theme .bg-black\/40,
   .dashboard-theme .bg-black\/40 {
     background-color: hsl(var(--background) / 0.7) !important;
   }
 
+  .app-theme .border-white\/5,
+  .app-theme .border-white\/10,
+  .app-theme .border-white\/15,
   .dashboard-theme .border-white\/5,
   .dashboard-theme .border-white\/10,
   .dashboard-theme .border-white\/15 {
     border-color: hsl(var(--border) / 0.45) !important;
   }
 
+  .app-theme .border-white\/\[0\.04\],
+  .app-theme .border-white\/\[0\.06\],
+  .app-theme .border-white\/\[0\.08\],
+  .app-theme .border-white\/\[0\.12\] {
+    border-color: hsl(var(--border) / 0.35) !important;
+  }
+
+  .app-theme .text-white,
   .dashboard-theme .text-white {
     color: hsl(var(--foreground)) !important;
   }
 
+  .app-theme .text-white\/80,
+  .app-theme .text-white\/70,
+  .app-theme .text-white\/60,
+  .app-theme .text-white\/50,
+  .app-theme .text-white\/40,
+  .app-theme .text-white\/30,
   .dashboard-theme .text-white\/80,
   .dashboard-theme .text-white\/70,
   .dashboard-theme .text-white\/60,
@@ -266,8 +311,135 @@
     color: hsl(var(--muted-foreground)) !important;
   }
 
+  .app-theme .text-white\/\[0\.15\],
+  .app-theme .text-white\/\[0\.20\],
+  .app-theme .text-white\/\[0\.25\],
+  .app-theme .text-white\/\[0\.30\],
+  .app-theme .text-white\/\[0\.40\],
+  .app-theme .text-white\/\[0\.50\],
+  .app-theme .text-white\/\[0\.60\],
+  .app-theme .text-white\/\[0\.70\] {
+    color: hsl(var(--muted-foreground)) !important;
+  }
+
+  .app-theme .bg-\[\#040712\],
+  .app-theme .bg-\[\#090d1a\],
+  .app-theme .bg-\[\#0a0f1a\],
+  .app-theme .bg-\[\#0b1220\],
+  .app-theme .bg-\[\#0d1526\],
+  .app-theme .bg-\[\#0e0e18\],
+  .app-theme .bg-slate-950 {
+    background-color: hsl(var(--background)) !important;
+  }
+
+  .app-theme .bg-\[\#140a2b\],
+  .app-theme .bg-\[\#0a0619\],
+  .app-theme .bg-\[\#1b0c2f\],
+  .app-theme .bg-\[\#31154a\] {
+    background-color: hsl(var(--card)) !important;
+  }
+
+  .app-theme .bg-\[\#D60024\],
+  .app-theme .hover\:bg-\[\#D60024\]:hover {
+    background-color: hsl(var(--secondary)) !important;
+  }
+
+  .app-theme .hover\:bg-\[\#b8001f\]:hover,
+  .app-theme .hover\:bg-\[\#b5001e\]:hover {
+    background-color: hsl(var(--secondary) / 0.82) !important;
+  }
+
+  .app-theme .text-\[\#D60024\] {
+    color: hsl(var(--accent)) !important;
+  }
+
+  .app-theme .border-\[\#D60024\]\/20,
+  .app-theme .border-\[\#D60024\]\/50 {
+    border-color: hsl(var(--secondary) / 0.4) !important;
+  }
+
+  .app-theme .focus\:ring-\[\#D60024\]\/50:focus,
+  .app-theme .focus\:border-\[\#D60024\]\/50:focus,
+  .app-theme .focus\:ring-\[\#D60024\]:focus,
+  .app-theme .focus\:border-\[\#D60024\]:focus {
+    border-color: hsl(var(--ring)) !important;
+    --tw-ring-color: hsl(var(--ring) / 0.5) !important;
+  }
+
+  .app-theme .divide-white\/5,
   .dashboard-theme .divide-white\/5 {
     border-color: hsl(var(--border) / 0.35) !important;
+  }
+
+  .event-detail-theme .bg-gray-950,
+  .event-detail-theme .bg-gray-900,
+  .event-detail-theme .bg-gray-800,
+  .event-detail-theme .bg-\[\#050510\],
+  .event-detail-theme .bg-\[\#0a0a0a\],
+  .event-detail-theme .bg-\[\#000000\] {
+    background-color: hsl(var(--background)) !important;
+  }
+
+  .event-detail-theme .bg-gray-900\/90,
+  .event-detail-theme .bg-gray-900\/50,
+  .event-detail-theme .bg-gray-900\/30,
+  .event-detail-theme .bg-gray-800\/80,
+  .event-detail-theme .bg-black\/70 {
+    background-color: hsl(var(--card) / 0.78) !important;
+  }
+
+  .event-detail-theme .border-gray-800,
+  .event-detail-theme .border-gray-800\/50,
+  .event-detail-theme .border-gray-700,
+  .event-detail-theme .border-gray-700\/50,
+  .event-detail-theme .border-gray-600 {
+    border-color: hsl(var(--border) / 0.5) !important;
+  }
+
+  .event-detail-theme .text-gray-300 {
+    color: hsl(var(--foreground) / 0.82) !important;
+  }
+
+  .event-detail-theme .text-gray-400,
+  .event-detail-theme .text-gray-500 {
+    color: hsl(var(--muted-foreground)) !important;
+  }
+
+  .event-detail-theme .bg-red-600,
+  .event-detail-theme .hover\:bg-red-700:hover {
+    background-color: hsl(var(--secondary)) !important;
+  }
+
+  .event-detail-theme .text-red-600,
+  .event-detail-theme .text-green-600 {
+    color: hsl(var(--accent)) !important;
+  }
+
+  .event-detail-theme .bg-gradient-to-br.from-\[\#000000\].via-\[\#0a0a0a\].to-\[\#050510\],
+  .event-detail-theme .bg-gradient-to-r.from-gray-950.via-gray-900.to-gray-950 {
+    background-image: linear-gradient(
+      135deg,
+      hsl(var(--background)),
+      hsl(var(--card)),
+      hsl(var(--background))
+    ) !important;
+  }
+
+  .event-detail-theme .from-gray-950,
+  .event-detail-theme .via-gray-900,
+  .event-detail-theme .to-gray-950,
+  .event-detail-theme .from-\[\#000000\],
+  .event-detail-theme .via-\[\#0a0a0a\],
+  .event-detail-theme .to-\[\#050510\] {
+    --tw-gradient-from: hsl(var(--background)) var(--tw-gradient-from-position) !important;
+    --tw-gradient-to: hsl(var(--background) / 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), hsl(var(--card)) var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+  }
+
+  .event-detail-theme .from-red-600\/20 {
+    --tw-gradient-from: hsl(var(--secondary) / 0.2) var(--tw-gradient-from-position) !important;
+    --tw-gradient-to: hsl(var(--secondary) / 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
   }
 
   .dashboard-theme .bg-gradient-to-b,

@@ -441,7 +441,7 @@ const OrganizerProfileContent = ({ user }) => {
           <button
             onClick={handleOpenBankPanel}
             disabled={isBankLoading}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-sky-500 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/40 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <CreditCard className="w-4 h-4" />
             {isBankLoading ? "Loading..." : "Bank Details"}
@@ -461,8 +461,8 @@ const OrganizerProfileContent = ({ user }) => {
       {/* Owner edit modal */}
       {isOwnerModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-2xl max-h-[88vh] rounded-2xl border border-white/10 bg-gradient-to-br from-[#0d1222] via-[#0b101d] to-[#0a0d18] shadow-[0_25px_80px_-30px_rgba(0,0,0,0.8)] ring-1 ring-white/5 flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5/40 backdrop-blur-sm rounded-t-2xl">
+          <div className="w-full max-w-2xl max-h-[88vh] rounded-2xl border border-border/60 bg-card shadow-[var(--shadow-elegant)] ring-1 ring-border/30 flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border/60 bg-card/80 backdrop-blur-sm rounded-t-2xl">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-white/50">Owner</p>
                 <h3 className="text-xl font-semibold text-white">Edit Owner Details</h3>
@@ -479,7 +479,7 @@ const OrganizerProfileContent = ({ user }) => {
                     type="text"
                     value={ownerDraft.name || ""}
                     onChange={(e) => handleOwnerFieldChange("name", e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400/50 focus:outline-none transition"
+                    className="w-full px-4 py-3 rounded-xl bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:border-ring/50 focus:outline-none transition"
                   />
                 </div>
                 <div className="space-y-2">
@@ -488,7 +488,7 @@ const OrganizerProfileContent = ({ user }) => {
                     type="email"
                     value={ownerDraft.email || ""}
                     onChange={(e) => handleOwnerFieldChange("email", e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400/50 focus:outline-none transition"
+                    className="w-full px-4 py-3 rounded-xl bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:border-ring/50 focus:outline-none transition"
                   />
                 </div>
                 <div className="space-y-2">
@@ -498,7 +498,7 @@ const OrganizerProfileContent = ({ user }) => {
                       type="text"
                       value={ownerDraft.phone || ""}
                       onChange={(e) => handleOwnerFieldChange("phone", e.target.value)}
-                      className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400/50 focus:outline-none transition"
+                      className="flex-1 px-4 py-3 rounded-xl bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:border-ring/50 focus:outline-none transition"
                       placeholder="+1234567890"
                     />
                   </div>
@@ -517,7 +517,7 @@ const OrganizerProfileContent = ({ user }) => {
                       <button
                         type="button"
                         onClick={openOwnerAvatarPicker}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/15 text-white hover:bg-white/15 transition font-semibold"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/15 border border-primary/30 text-foreground hover:bg-primary/25 transition font-semibold"
                       >
                         <Edit2 className="w-4 h-4" />
                         Choose avatar
@@ -526,7 +526,7 @@ const OrganizerProfileContent = ({ user }) => {
                         type="url"
                         value={ownerDraft.avatar || ""}
                         onChange={(e) => handleOwnerFieldChange("avatar", e.target.value)}
-                        className="flex-1 min-w-[240px] px-4 py-2.5 rounded-lg bg-white/10 border border-white/10 text-white placeholder:text-white/40 focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400/50 focus:outline-none transition"
+                        className="flex-1 min-w-[240px] px-4 py-2.5 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:border-ring/50 focus:outline-none transition"
                         placeholder="https://..."
                       />
                       <p className="text-xs text-white/50 w-full leading-relaxed">Upload, capture, or paste a URL for the owner avatar.</p>
@@ -539,7 +539,7 @@ const OrganizerProfileContent = ({ user }) => {
                     type="checkbox"
                     checked={!!ownerDraft.whatsAppNotification}
                     onChange={(e) => handleOwnerFieldChange("whatsAppNotification", e.target.checked)}
-                    className="h-4 w-4 rounded border-white/20 bg-white/5 text-emerald-500 focus:ring-emerald-500/50"
+                    className="h-4 w-4 rounded border-border/60 bg-background/60 text-accent focus:ring-ring/50"
                   />
                   <label htmlFor="whatsapp-toggle" className="text-sm text-white/80">
                     Enable WhatsApp notifications
@@ -551,7 +551,7 @@ const OrganizerProfileContent = ({ user }) => {
               <button
                 onClick={handleSaveOwner}
                 disabled={isOwnerSaving}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 text-white font-semibold shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/40 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-semibold shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isOwnerSaving ? (
                   <span className="h-4 w-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin" />
@@ -574,7 +574,7 @@ const OrganizerProfileContent = ({ user }) => {
       {/* Owner avatar picker modal */}
       {isOwnerAvatarPickerOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-          <div className="bg-[#0b1220] border border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl shadow-black/50">
+          <div className="bg-card border border-border/60 rounded-2xl w-full max-w-2xl shadow-[var(--shadow-elegant)]">
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-white/50">Owner</p>
@@ -592,13 +592,13 @@ const OrganizerProfileContent = ({ user }) => {
                     type="button"
                     onClick={() => setOwnerPendingAvatar(option.url)}
                     className={`group flex flex-col items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-4 transition-all hover:bg-white/10 ${
-                      ownerPendingAvatar === option.url ? "border-emerald-400/60 ring-2 ring-emerald-400/40" : ""
+                      ownerPendingAvatar === option.url ? "border-accent/60 ring-2 ring-accent/30" : ""
                     }`}
                   >
                     <div className="h-20 w-20 rounded-full overflow-hidden border border-white/15 bg-white/10">
                       <img src={option.url} alt={option.label} className="h-full w-full object-cover" />
                     </div>
-                    <span className="text-sm font-semibold text-white group-hover:text-emerald-200">{option.label}</span>
+                    <span className="text-sm font-semibold text-white group-hover:text-accent">{option.label}</span>
                   </button>
                 ))}
               </div>
@@ -607,7 +607,7 @@ const OrganizerProfileContent = ({ user }) => {
                 <button
                   type="button"
                   onClick={() => ownerFileInputRef.current?.click()}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/10 border border-white/15 text-white hover:bg-white/15 transition"
+                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary/15 border border-primary/30 text-foreground hover:bg-primary/25 transition"
                 >
                   <Upload className="w-4 h-4" />
                   Upload from device
@@ -654,7 +654,7 @@ const OrganizerProfileContent = ({ user }) => {
                       <button
                         type="button"
                         onClick={() => handleOwnerAvatarApply(ownerCapturedPhoto || ownerPendingAvatar)}
-                        className="px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition"
+                        className="px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
                       >
                         Use this avatar
                       </button>
@@ -966,7 +966,7 @@ const OrganizerProfileContent = ({ user }) => {
                   <span className="text-xs text-white/60 hidden md:inline">Manage payouts</span>
                   <button
                     onClick={handleOpenBankPanel}
-                    className="px-3 py-2 text-sm rounded-lg bg-gradient-to-r from-emerald-500 to-sky-500 text-white shadow-md"
+                    className="px-3 py-2 text-sm rounded-lg bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition"
                   >
                     {bankExists ? "View Bank" : "Add Bank"}
                   </button>
@@ -983,7 +983,7 @@ const OrganizerProfileContent = ({ user }) => {
                     type="text"
                     value={editData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:ring-2 focus:ring-rose-500/60 focus:outline-none"
+                    className="w-full px-4 py-2 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:outline-none"
                   />
                 </div>
                 <div className="space-y-2">
@@ -992,7 +992,7 @@ const OrganizerProfileContent = ({ user }) => {
                     type="email"
                     value={editData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:ring-2 focus:ring-rose-500/60 focus:outline-none"
+                    className="w-full px-4 py-2 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:outline-none"
                   />
                 </div>
                 <div className="space-y-2">
@@ -1001,7 +1001,7 @@ const OrganizerProfileContent = ({ user }) => {
                     type="text"
                     value={editData.contact}
                     onChange={(e) => handleInputChange("contact", e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:ring-2 focus:ring-rose-500/60 focus:outline-none"
+                    className="w-full px-4 py-2 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:outline-none"
                     placeholder="+1234567890"
                   />
                 </div>
@@ -1011,7 +1011,7 @@ const OrganizerProfileContent = ({ user }) => {
                     type="text"
                     value={editData.gstNumber}
                     onChange={(e) => handleInputChange("gstNumber", e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:ring-2 focus:ring-rose-500/60 focus:outline-none"
+                    className="w-full px-4 py-2 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:outline-none"
                     placeholder="22AAAAA0000A1Z5"
                   />
                 </div>
@@ -1020,7 +1020,7 @@ const OrganizerProfileContent = ({ user }) => {
                   <textarea
                     value={editData.description}
                     onChange={(e) => handleInputChange("description", e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:ring-2 focus:ring-rose-500/60 focus:outline-none min-h-[120px]"
+                    className="w-full px-4 py-3 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:outline-none min-h-[120px]"
                     maxLength={2000}
                   />
                 </div>
@@ -1047,7 +1047,7 @@ const OrganizerProfileContent = ({ user }) => {
                         type="text"
                         value={editData[social.key]}
                         onChange={(e) => handleInputChange(social.key, e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:ring-2 focus:ring-rose-500/60 focus:outline-none"
+                        className="w-full px-4 py-2 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:outline-none"
                       />
                     </div>
                   ))}
@@ -1059,7 +1059,7 @@ const OrganizerProfileContent = ({ user }) => {
                 <button
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-indigo-500 text-white shadow-lg shadow-rose-500/20 hover:shadow-rose-500/30 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <Save className="w-4 h-4" />
                   {isSaving ? "Saving..." : "Save Changes"}
@@ -1080,12 +1080,12 @@ const OrganizerProfileContent = ({ user }) => {
       {isBankPanelOpen && (
         <div className="fixed inset-0 z-40">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={handleCancelBank} />
-          <div className="relative ml-auto h-full w-full max-w-lg bg-[#0d1324] border-l border-white/10 shadow-2xl shadow-black/40 flex flex-col">
-            <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/5">
+          <div className="relative ml-auto h-full w-full max-w-lg bg-card border-l border-border/60 shadow-[var(--shadow-elegant)] flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-border/60 bg-card/80">
               <div className="space-y-1">
                 <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">Payouts</p>
                 <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-emerald-200" />
+                  <CreditCard className="w-5 h-5 text-accent" />
                   {bankExists ? "Bank Details" : "Add Bank Details"}
                 </h2>
               </div>
@@ -1101,14 +1101,14 @@ const OrganizerProfileContent = ({ user }) => {
                   <div className="rounded-xl border border-white/10 bg-white/5 p-3">
                     <p className="text-xs uppercase tracking-wide text-white/50">Provider</p>
                     <p className="text-lg font-semibold text-white flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-emerald-200" />
+                      <Building2 className="w-4 h-4 text-accent" />
                       {bankDraft.providerName}
                     </p>
                   </div>
                   <div className="rounded-xl border border-white/10 bg-white/5 p-3">
                     <p className="text-xs uppercase tracking-wide text-white/50">Status</p>
                     <p className="text-lg font-semibold text-white flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-200" />
+                      <CheckCircle2 className="w-4 h-4 text-accent" />
                       {bankDraft.verificationStatus}
                     </p>
                   </div>
@@ -1117,10 +1117,10 @@ const OrganizerProfileContent = ({ user }) => {
 
               {/* Prompt when no bank details */}
               {!bankExists && (
-                <div className="rounded-xl border border-amber-400/20 bg-amber-500/5 px-4 py-3 flex items-start gap-3">
-                  <CreditCard className="w-5 h-5 text-amber-300 mt-0.5 flex-shrink-0" />
+                <div className="rounded-xl border border-accent/20 bg-accent/10 px-4 py-3 flex items-start gap-3">
+                  <CreditCard className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-amber-200">No bank details added</p>
+                    <p className="text-sm font-medium text-accent">No bank details added</p>
                     <p className="text-xs text-white/50 mt-0.5">Fill in the form below to set up your payout account.</p>
                   </div>
                 </div>
@@ -1147,7 +1147,7 @@ const OrganizerProfileContent = ({ user }) => {
                           type="text"
                           value={bankDraft[field.key]}
                           onChange={(e) => handleBankFieldChange(field.key, e.target.value)}
-                          className="mt-1 w-full px-4 py-2 rounded-lg bg-[#0b1220] border border-white/10 text-white placeholder:text-white/30 focus:ring-2 focus:ring-emerald-500/50 focus:outline-none"
+                          className="mt-1 w-full px-4 py-2 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/50 focus:outline-none"
                         />
                       ) : (
                         <p className="text-base font-semibold text-white mt-1">{bankDraft[field.key]}</p>
@@ -1178,7 +1178,7 @@ const OrganizerProfileContent = ({ user }) => {
                   <button
                     onClick={handleSaveBank}
                     disabled={isBankSaving}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-sky-500 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <Save className="w-4 h-4" />
                     {isBankSaving ? "Saving…" : bankExists ? "Save Bank Details" : "Add Bank Details"}
@@ -1194,7 +1194,7 @@ const OrganizerProfileContent = ({ user }) => {
                 <>
                   <button
                     onClick={() => setIsBankEditing(true)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/15 text-white hover:bg-white/15 transition"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-primary/15 border border-primary/30 text-foreground hover:bg-primary/25 transition"
                   >
                     <Edit2 className="w-4 h-4" />
                     Edit Bank Details
@@ -1297,10 +1297,10 @@ const OrganizerDashboardV2 = () => {
   };
 
   return (
-    <div className="dashboard-theme flex h-screen bg-background text-foreground">
+    <div className="organizer-dashboard-theme dashboard-theme flex h-screen bg-background text-foreground">
       {/* Sidebar */}
       <aside
-        className={`${sidebarOpen ? "w-64" : "w-24"} bg-[#0f1628] border-r border-white/10 flex flex-col transition-all duration-300`}
+        className={`${sidebarOpen ? "w-64" : "w-24"} bg-sidebar border-r border-sidebar-border/60 flex flex-col transition-all duration-300`}
       >
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <button
@@ -1366,7 +1366,7 @@ const OrganizerDashboardV2 = () => {
 
             {footerMenuOpen && (
               <div className="absolute bottom-[calc(100%+10px)] left-0 right-0 z-20">
-                <div className="rounded-xl border border-white/10 bg-[#0f1628]/95 backdrop-blur-md shadow-xl shadow-black/30 p-2 space-y-2">
+                <div className="rounded-xl border border-sidebar-border/60 bg-sidebar/95 backdrop-blur-md shadow-[var(--shadow-card)] p-2 space-y-2">
                   <button
                     onClick={() => {
                       setFooterMenuOpen(false);

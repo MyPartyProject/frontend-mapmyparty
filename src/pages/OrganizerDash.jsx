@@ -99,24 +99,24 @@ const OrganizerDash = ({ user, handleLogout, setActiveTab, activeTab }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Organizer Portal</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Organizer Portal</p>
             <h2 className="text-3xl font-bold mt-1">Dashboard</h2>
-            <p className="text-sm text-gray-400 mt-1">Essential control center for events, revenue, and ops.</p>
+            <p className="text-sm text-muted-foreground mt-1">Essential control center for events, revenue, and ops.</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <Link
               to="/organizer/select-event-type"
-              className="px-4 py-2 rounded-lg bg-white text-gray-950 text-sm font-semibold hover:bg-gray-100 transition"
+              className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition"
             >
               + Create Event
             </Link>
             <button
               onClick={() => setActiveTab?.("myevents")}
-              className="px-3 py-2 rounded-lg bg-gray-900 border border-gray-700 text-sm hover:bg-gray-800 transition text-white"
+              className="px-3 py-2 rounded-lg bg-card border border-border text-sm hover:bg-muted transition text-foreground"
             >
               Manage Events
             </button>
@@ -125,15 +125,15 @@ const OrganizerDash = ({ user, handleLogout, setActiveTab, activeTab }) => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {kpis.map((item) => (
-            <div key={item.label} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+            <div key={item.label} className="bg-card border border-border rounded-xl p-4 shadow-[var(--shadow-card)]">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-gray-400">{item.label}</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{item.label}</p>
                   <p className="text-2xl font-semibold mt-2">{item.value}</p>
-                  <p className="text-[11px] text-gray-500 mt-1">{item.hint}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">{item.hint}</p>
                 </div>
-                <div className="p-2 rounded-lg bg-gray-800">
-                  <item.icon className="w-5 h-5 text-gray-300" />
+                <div className="p-2 rounded-lg bg-primary/15 border border-primary/20">
+                  <item.icon className="w-5 h-5 text-accent" />
                 </div>
               </div>
             </div>
@@ -146,26 +146,26 @@ const OrganizerDash = ({ user, handleLogout, setActiveTab, activeTab }) => {
           error={analyticsError}
         />
 
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        <div className="bg-card border border-border rounded-xl overflow-hidden shadow-[var(--shadow-card)]">
           <div className="px-5 py-4 flex items-center justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-gray-400">Recent bookings</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Recent bookings</p>
               <h3 className="text-lg font-semibold">Latest ticket actions</h3>
             </div>
             <button
               onClick={() => setActiveTab?.("myevents")}
-              className="text-xs font-semibold text-gray-300 hover:text-white"
+              className="text-xs font-semibold text-muted-foreground hover:text-foreground"
             >
               View all
             </button>
           </div>
           {bookingsLoading ? (
-            <div className="px-5 py-12 text-center text-gray-400">
+            <div className="px-5 py-12 text-center text-muted-foreground">
               <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
               <p className="text-sm">Loading bookings...</p>
             </div>
           ) : recentBookings.length === 0 ? (
-            <div className="px-5 py-12 text-center text-gray-400">
+            <div className="px-5 py-12 text-center text-muted-foreground">
               <Ticket className="w-10 h-10 mx-auto mb-3 opacity-50" />
               <p className="text-sm">No recent bookings</p>
               <p className="text-xs mt-1">Bookings will appear here when customers purchase tickets</p>
@@ -173,43 +173,43 @@ const OrganizerDash = ({ user, handleLogout, setActiveTab, activeTab }) => {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-950 border-b border-gray-800">
+                <thead className="bg-background border-b border-border">
                   <tr>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">Customer</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">Event</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">Booking #</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">Amount</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">Date</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Customer</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Event</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Booking #</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Amount</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Date</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800">
+                <tbody className="divide-y divide-border">
                   {recentBookings.map((booking) => (
-                    <tr key={booking.id} className="hover:bg-gray-950 transition">
+                    <tr key={booking.id} className="hover:bg-background transition">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-xs font-semibold">
+                          <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-xs font-semibold text-accent">
                             {(booking.user?.name || "U").charAt(0).toUpperCase()}
                           </div>
                           <div>
                             <p className="text-sm font-medium">{booking.user?.name || "Guest"}</p>
-                            <p className="text-xs text-gray-500">{booking.user?.email}</p>
+                            <p className="text-xs text-muted-foreground">{booking.user?.email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-5 py-4">
                         <p className="text-sm font-medium">{booking.event?.title}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                           {booking.event?.startDate ? formatDate(booking.event.startDate) : "TBA"}
                         </p>
                       </td>
                       <td className="px-5 py-4">
-                        <p className="text-sm font-mono text-gray-300">#{booking.id.slice(0, 8)}</p>
+                        <p className="text-sm font-mono text-muted-foreground">#{booking.id.slice(0, 8)}</p>
                       </td>
                       <td className="px-5 py-4">
                         <p className="text-sm font-semibold">{formatCurrency(booking.totalAmount || booking.payment?.amount || 0)}</p>
                       </td>
                       <td className="px-5 py-4">
-                        <p className="text-sm text-gray-400">{formatDate(booking.createdAt)}</p>
+                        <p className="text-sm text-muted-foreground">{formatDate(booking.createdAt)}</p>
                       </td>
                     </tr>
                   ))}

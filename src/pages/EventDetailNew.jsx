@@ -64,6 +64,14 @@ const EventDetailNew = () => {
   const aboutRef = useRef(null);
   const [organizerNoteExpanded, setOrganizerNoteExpanded] = useState(false);
   const [organizerNoteCanExpand, setOrganizerNoteCanExpand] = useState(true);
+  const galleryImages = useMemo(
+    () => (Array.isArray(event?.gallery) ? event.gallery.filter(Boolean) : []),
+    [event?.gallery]
+  );
+  const selectedImageIndex = useMemo(
+    () => galleryImages.findIndex((image) => image === selectedImage),
+    [galleryImages, selectedImage]
+  );
   const normalizedFaqs = useMemo(() => {
     if (Array.isArray(event?.faqs) && event.faqs.length > 0) return event.faqs;
     if (Array.isArray(event?.questions) && event.questions.length > 0) return event.questions;
@@ -311,6 +319,18 @@ const EventDetailNew = () => {
 
   const getArtistImage = (artist) =>
     artist.image || artist.photo || artist.avatar || artist.profileImage || FALLBACK_IMAGE;
+
+  const showPreviousImage = () => {
+    if (galleryImages.length <= 1 || selectedImageIndex === -1) return;
+    const previousIndex = (selectedImageIndex - 1 + galleryImages.length) % galleryImages.length;
+    setSelectedImage(galleryImages[previousIndex]);
+  };
+
+  const showNextImage = () => {
+    if (galleryImages.length <= 1 || selectedImageIndex === -1) return;
+    const nextIndex = (selectedImageIndex + 1) % galleryImages.length;
+    setSelectedImage(galleryImages[nextIndex]);
+  };
 
   // Resume booking after Google OAuth redirect
   useEffect(() => {
@@ -612,7 +632,7 @@ const EventDetailNew = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] flex items-center justify-center">
+      <div className="event-detail-theme min-h-screen bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-[#D60024] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white">Loading event details...</p>
@@ -623,7 +643,7 @@ const EventDetailNew = () => {
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] flex items-center justify-center">
+      <div className="event-detail-theme min-h-screen bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-white mb-4">Event Not Found</h2>
           <Button onClick={() => navigate("/dashboard/browse-events")} className="bg-gradient-to-r from-[#D60024] to-[#ff4d67]">
@@ -635,7 +655,7 @@ const EventDetailNew = () => {
   }
 
   return (
-    <div className="min-h-screen text-white bg-gray-950">
+    <div className="event-detail-theme min-h-screen text-white bg-gray-950">
       <style>{pageCss}</style>
 
       {/* Header */}
@@ -1586,12 +1606,46 @@ const EventDetailNew = () => {
           >
             <X className="h-6 w-6" />
           </Button>
+          {galleryImages.length > 1 && (
+            <>
+              <Button
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  showPreviousImage();
+                }}
+                className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 text-white hover:bg-white/10 rounded-full h-12 w-12 p-0"
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="h-7 w-7" />
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  showNextImage();
+                }}
+                className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 text-white hover:bg-white/10 rounded-full h-12 w-12 p-0"
+                aria-label="Next image"
+              >
+                <ChevronRight className="h-7 w-7" />
+              </Button>
+            </>
+          )}
           <img
             src={selectedImage}
             alt="Gallery"
             className="max-w-full max-h-full object-contain rounded-xl"
             onClick={(e) => e.stopPropagation()}
           />
+          {galleryImages.length > 1 && selectedImageIndex !== -1 && (
+            <div
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-4 py-2 text-sm text-white/80"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {selectedImageIndex + 1} / {galleryImages.length}
+            </div>
+          )}
         </div>
       )}
 

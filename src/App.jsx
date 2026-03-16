@@ -66,7 +66,7 @@ const queryClient = new QueryClient({
 });
 
 const PublicShell = () => (
-  <div className="min-h-screen flex flex-col bg-[#040712] text-white">
+  <div className="min-h-screen flex flex-col bg-background text-foreground">
     <div className="flex-1">
       <Outlet />
     </div>
@@ -77,198 +77,200 @@ const PublicShell = () => (
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-          <Routes>
-            <Route element={<PublicShell />}>
-              <Route path="/" element={<Index />} />
-              <Route path="/my-bookings" element={<Navigate to="/dashboard/bookings" replace />} />
-              {/* <Route path="/events" element={<Events />} /> */}
-              <Route path="/browse-events" element={<BrowseEvents showPublicHeader />} />
-              <Route path="/events/:organizerSlug/:eventSlug" element={<EventDetail />} />
-              <Route path="/events/:organizerSlug/:eventSlug/checkout" element={<PaymentCheckout />} />
-              <Route path="/events/:organizerSlug/:eventSlug/overview" element={<EventOverviewPage />} />
-              <Route path="/booking-success" element={
-                <ProtectedRoute>
-                  <BookingSuccess />
+      <div className="app-theme promoter-theme min-h-screen bg-background text-foreground">
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthProvider>
+            <Routes>
+              <Route element={<PublicShell />}>
+                <Route path="/" element={<Index />} />
+                <Route path="/my-bookings" element={<Navigate to="/dashboard/bookings" replace />} />
+                {/* <Route path="/events" element={<Events />} /> */}
+                <Route path="/browse-events" element={<BrowseEvents showPublicHeader />} />
+                <Route path="/events/:organizerSlug/:eventSlug" element={<EventDetail />} />
+                <Route path="/events/:organizerSlug/:eventSlug/checkout" element={<PaymentCheckout />} />
+                <Route path="/events/:organizerSlug/:eventSlug/overview" element={<EventOverviewPage />} />
+                <Route path="/booking-success" element={
+                  <ProtectedRoute>
+                    <BookingSuccess />
+                  </ProtectedRoute>
+                } />
+                <Route path="/about" element={<About />} />
+                <Route path="/host-events" element={<HostEvents />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/policies" element={<Policies />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-conditions" element={<TermsConditions />} />
+                <Route path="/cookie-policy" element={<CookiePolicy />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/auth/google/callback" element={<GoogleCallback />} />
+                <Route path="/promoter/login" element={<PromoterLogin />} />
+              </Route>
+              
+              {/* Protected User Dashboard Routes */}
+              <Route path="/dashboard" element={
+                <ProtectedRoute requiredRole="user">
+                  <UserDashboard />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Dashboard />} />
+                <Route path="browse-events" element={<BrowseEvents />} />
+                <Route path="bookings" element={<MyBookings />} />
+                <Route path="profile" element={<AttendeeProfile />} />
+                <Route path="*" element={<Dashboard />} />
+              </Route>
+              
+              {/* Protected Organizer Routes */}
+              <Route path="/organizer/dashboard" element={
+                <ProtectedRoute requiredRole="organizer">
+                  <OrganizerDashboardV2 />
                 </ProtectedRoute>
               } />
-              <Route path="/about" element={<About />} />
-              <Route path="/host-events" element={<HostEvents />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/policies" element={<Policies />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms-conditions" element={<TermsConditions />} />
-              <Route path="/cookie-policy" element={<CookiePolicy />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/auth/google/callback" element={<GoogleCallback />} />
-              <Route path="/promoter/login" element={<PromoterLogin />} />
-            </Route>
-            
-            {/* Protected User Dashboard Routes */}
-            <Route path="/dashboard" element={
-              <ProtectedRoute requiredRole="user">
-                <UserDashboard />
-              </ProtectedRoute>
-            }>
-              <Route index element={<Dashboard />} />
-              <Route path="browse-events" element={<BrowseEvents />} />
-              <Route path="bookings" element={<MyBookings />} />
-              <Route path="profile" element={<AttendeeProfile />} />
-              <Route path="*" element={<Dashboard />} />
-            </Route>
-            
-            {/* Protected Organizer Routes */}
-            <Route path="/organizer/dashboard" element={
-              <ProtectedRoute requiredRole="organizer">
-                <OrganizerDashboardV2 />
-              </ProtectedRoute>
-            } />
 
-             <Route path="/organizer/profile" element={
-              <ProtectedRoute requiredRole="organizer">
-                <OrganizerDashboardV2 />
-              </ProtectedRoute>
-            } />
+               <Route path="/organizer/profile" element={
+                <ProtectedRoute requiredRole="organizer">
+                  <OrganizerDashboardV2 />
+                </ProtectedRoute>
+              } />
 
-            <Route path="/organizer/myevents" element={
-              <ProtectedRoute requiredRole="organizer">
-                <OrganizerDashboardV2 />
-              </ProtectedRoute>
-            } />
-            <Route path="/organizer/analytics" element={
-              <ProtectedRoute requiredRole="organizer">
-                <OrganizerDashboardV2 />
-              </ProtectedRoute>
-            } />
-            <Route path="/organizer/live" element={
-              <ProtectedRoute requiredRole="organizer">
-                <OrganizerDashboardV2 />
-              </ProtectedRoute>
-            } />
-            <Route path="/organizer/reception" element={
-              <ProtectedRoute requiredRole="organizer">
-                <OrganizerDashboardV2 />
-              </ProtectedRoute>
-            } />
-            <Route path="/organizer/food-beverages" element={
-              <ProtectedRoute requiredRole="organizer">
-                <OrganizerDashboardV2 />
-              </ProtectedRoute>
-            } />
-            <Route path="/organizer/payouts" element={
-              <ProtectedRoute requiredRole="organizer">
-                <OrganizerDashboardV2 />
-              </ProtectedRoute>
-            } />
-            <Route path="/organizer/payouts/:id" element={
-              <ProtectedRoute requiredRole="organizer">
-                <OrganizerDashboardV2 />
-              </ProtectedRoute>
-            } />
-            <Route path="/organizer/events/:eventId/attendees" element={
-              <ProtectedRoute requiredRole="organizer">
-                <OrganizerDashboardV2 />
-              </ProtectedRoute>
-            } />
-            <Route path="/organizer/events/:eventId/refunds" element={
-              <ProtectedRoute requiredRole="organizer">
-                <OrganizerDashboardV2 />
-              </ProtectedRoute>
-            } />
-            <Route path="/organizer/:organizerSlug/events/:eventSlug/analytics" element={
-              <ProtectedRoute requiredRole="organizer">
-                <EventAnalyticsPage />
-              </ProtectedRoute>
-            } />
-            {/* <Route path="/organizer/financial" element={
-              <ProtectedRoute requiredRole="organizer">
-                <OrganizerDashboardV2 />
-              </ProtectedRoute>
-            } /> */}
-            <Route path="/organizer/reception/:id" element={
-              <ProtectedRoute requiredRole="organizer">
-                <ReceptionDetail />
-              </ProtectedRoute>
-            } />
-            <Route path="/organizer/live/:id" element={
-              <ProtectedRoute requiredRole="organizer">
-                <OrganizerDashboardV2 />
-              </ProtectedRoute>
-            } />
-            <Route path="/organizer/dashboard-v2" element={<Navigate to="/organizer/dashboard" replace />} />
-            <Route path="/organizer/onboarding" element={
-              <ProtectedRoute requiredRole="organizer" skipOrganizerOnboarding>
-                <OrganizerOnboarding />
-              </ProtectedRoute>
-            } />
-            <Route path="/organizer/select-event-type" element={
-              <ProtectedRoute requiredRole="organizer">
-                <EventTypeSelection />
-              </ProtectedRoute>
-            } />
-            <Route path="/organizer/create-event" element={
-              <ProtectedRoute requiredRole="organizer">
-                <CreateEvent />
-              </ProtectedRoute>
-            } />
-            
-            {/* Protected Promoter Routes */}
-            <Route path="/promoter" element={
-              <ProtectedRoute requiredRole="promoter">
-                <PromoterDashboard />
-              </ProtectedRoute>
-            }>
-              <Route index element={<Navigate to="/promoter/overview" replace />} />
-              <Route path="overview" element={<PromoterOverview />} />
-              <Route path="organizers" element={<PromoterOrganizers />} />
-              <Route path="organizers/:id" element={<PromoterOrganizerDetail />} />
-              <Route path="events" element={<PromoterEvents />} />
-              <Route path="events/:id" element={<PromoterEventDetail />} />
-              <Route path="users" element={<PromoterUsers />} />
-              <Route path="users/:id" element={<PromoterUserDetail />} />
-              <Route path="bookings" element={<PromoterBookings />} />
-              <Route path="payouts" element={<PromoterPayouts />} />
-              <Route path="live" element={<PromoterLiveEvents />} />
-              <Route path="live/:id" element={<PromoterLiveEventDetail />} />
-              <Route path="analytics" element={<PromoterAnalytics />} />
-              <Route path="reports" element={<PromoterReports />} />
-              <Route path="billing" element={<PromoterBilling />} />
-              <Route path="billing/:slug" element={<PromoterBillingDetail />} />
-            </Route>
-            <Route path="/promoter/dashboard" element={
-              <ProtectedRoute requiredRole="promoter">
-                <Navigate to="/promoter/overview" replace />
-              </ProtectedRoute>
-            } />
-            <Route path="/promoter/event/:id" element={
-              <ProtectedRoute requiredRole="promoter">
-                <PromoterEventDetail />
-              </ProtectedRoute>
-            } />
-            <Route path="/promoter/profile" element={
-              <ProtectedRoute requiredRole="promoter">
-                <PromoterProfile />
-              </ProtectedRoute>
-            } />
-            
-            {/* Protected Profile Routes */}
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            } />
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
+              <Route path="/organizer/myevents" element={
+                <ProtectedRoute requiredRole="organizer">
+                  <OrganizerDashboardV2 />
+                </ProtectedRoute>
+              } />
+              <Route path="/organizer/analytics" element={
+                <ProtectedRoute requiredRole="organizer">
+                  <OrganizerDashboardV2 />
+                </ProtectedRoute>
+              } />
+              <Route path="/organizer/live" element={
+                <ProtectedRoute requiredRole="organizer">
+                  <OrganizerDashboardV2 />
+                </ProtectedRoute>
+              } />
+              <Route path="/organizer/reception" element={
+                <ProtectedRoute requiredRole="organizer">
+                  <OrganizerDashboardV2 />
+                </ProtectedRoute>
+              } />
+              <Route path="/organizer/food-beverages" element={
+                <ProtectedRoute requiredRole="organizer">
+                  <OrganizerDashboardV2 />
+                </ProtectedRoute>
+              } />
+              <Route path="/organizer/payouts" element={
+                <ProtectedRoute requiredRole="organizer">
+                  <OrganizerDashboardV2 />
+                </ProtectedRoute>
+              } />
+              <Route path="/organizer/payouts/:id" element={
+                <ProtectedRoute requiredRole="organizer">
+                  <OrganizerDashboardV2 />
+                </ProtectedRoute>
+              } />
+              <Route path="/organizer/events/:eventId/attendees" element={
+                <ProtectedRoute requiredRole="organizer">
+                  <OrganizerDashboardV2 />
+                </ProtectedRoute>
+              } />
+              <Route path="/organizer/events/:eventId/refunds" element={
+                <ProtectedRoute requiredRole="organizer">
+                  <OrganizerDashboardV2 />
+                </ProtectedRoute>
+              } />
+              <Route path="/organizer/:organizerSlug/events/:eventSlug/analytics" element={
+                <ProtectedRoute requiredRole="organizer">
+                  <EventAnalyticsPage />
+                </ProtectedRoute>
+              } />
+              {/* <Route path="/organizer/financial" element={
+                <ProtectedRoute requiredRole="organizer">
+                  <OrganizerDashboardV2 />
+                </ProtectedRoute>
+              } /> */}
+              <Route path="/organizer/reception/:id" element={
+                <ProtectedRoute requiredRole="organizer">
+                  <ReceptionDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="/organizer/live/:id" element={
+                <ProtectedRoute requiredRole="organizer">
+                  <OrganizerDashboardV2 />
+                </ProtectedRoute>
+              } />
+              <Route path="/organizer/dashboard-v2" element={<Navigate to="/organizer/dashboard" replace />} />
+              <Route path="/organizer/onboarding" element={
+                <ProtectedRoute requiredRole="organizer" skipOrganizerOnboarding>
+                  <OrganizerOnboarding />
+                </ProtectedRoute>
+              } />
+              <Route path="/organizer/select-event-type" element={
+                <ProtectedRoute requiredRole="organizer">
+                  <EventTypeSelection />
+                </ProtectedRoute>
+              } />
+              <Route path="/organizer/create-event" element={
+                <ProtectedRoute requiredRole="organizer">
+                  <CreateEvent />
+                </ProtectedRoute>
+              } />
+              
+              {/* Protected Promoter Routes */}
+              <Route path="/promoter" element={
+                <ProtectedRoute requiredRole="promoter">
+                  <PromoterDashboard />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Navigate to="/promoter/overview" replace />} />
+                <Route path="overview" element={<PromoterOverview />} />
+                <Route path="organizers" element={<PromoterOrganizers />} />
+                <Route path="organizers/:id" element={<PromoterOrganizerDetail />} />
+                <Route path="events" element={<PromoterEvents />} />
+                <Route path="events/:id" element={<PromoterEventDetail />} />
+                <Route path="users" element={<PromoterUsers />} />
+                <Route path="users/:id" element={<PromoterUserDetail />} />
+                <Route path="bookings" element={<PromoterBookings />} />
+                <Route path="payouts" element={<PromoterPayouts />} />
+                <Route path="live" element={<PromoterLiveEvents />} />
+                <Route path="live/:id" element={<PromoterLiveEventDetail />} />
+                <Route path="analytics" element={<PromoterAnalytics />} />
+                <Route path="reports" element={<PromoterReports />} />
+                <Route path="billing" element={<PromoterBilling />} />
+                <Route path="billing/:slug" element={<PromoterBillingDetail />} />
+              </Route>
+              <Route path="/promoter/dashboard" element={
+                <ProtectedRoute requiredRole="promoter">
+                  <Navigate to="/promoter/overview" replace />
+                </ProtectedRoute>
+              } />
+              <Route path="/promoter/event/:id" element={
+                <ProtectedRoute requiredRole="promoter">
+                  <PromoterEventDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="/promoter/profile" element={
+                <ProtectedRoute requiredRole="promoter">
+                  <PromoterProfile />
+                </ProtectedRoute>
+              } />
+              
+              {/* Protected Profile Routes */}
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } />
+              
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </div>
     </QueryClientProvider>
   );
 };
