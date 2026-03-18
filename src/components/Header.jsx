@@ -53,7 +53,24 @@ const Header = ({
   };
 
   const handleAuthClick = () => {
-    navigate("/auth");
+    const currentPath = `${location.pathname}${location.search}`;
+    const authParams = new URLSearchParams();
+
+    if (currentPath && currentPath !== "/" && !location.pathname.startsWith("/auth")) {
+      authParams.set("redirect", currentPath);
+    }
+
+    const isUserFacingRoute =
+      location.pathname === "/browse-events" ||
+      location.pathname.startsWith("/events/") ||
+      location.pathname.startsWith("/dashboard");
+
+    if (isUserFacingRoute) {
+      authParams.set("type", "user");
+    }
+
+    const query = authParams.toString();
+    navigate(query ? `/auth?${query}` : "/auth");
   };
 
   const handleLogout = async () => {
