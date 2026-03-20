@@ -17,46 +17,43 @@ import {
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import EventCard from "@/components/EventCard";
-import eventMusic from "@/assets/event-music.jpg";
-import eventConference from "@/assets/event-conference.jpg";
-import eventFood from "@/assets/event-food.jpg";
+import { apiFetch, buildUrl } from "@/config/api";
 
-const featuredEvents = [
+const EVENT_SECTION_CONFIG = [
   {
-    id: "1",
-    organizerSlug: "demo-organizer",
-    eventSlug: "summer-music-festival-2024",
-    title: "Summer Music Festival 2024",
-    date: "July 15, 2024",
-    location: "Central Park, New York",
-    image: eventMusic,
-    category: "Music",
-    attendees: 5000,
-    price: `From ₹5000`,
+    key: "live-concerts",
+    label: "Live Concerts",
+    eyebrow: "Music",
+    description: "Big-stage nights, headline acts, and live crowd energy.",
+    filters: { category: "Music", subCategory: "Live Concerts" },
   },
   {
-    id: "2",
-    organizerSlug: "demo-organizer",
-    eventSlug: "tech-innovation-conference",
-    title: "Tech Innovation Conference",
-    date: "August 22, 2024",
-    location: "Convention Center, San Francisco",
-    image: eventConference,
-    category: "Conference",
-    attendees: 2000,
-    price: "From ₹15000",
+    key: "club-nights",
+    label: "Club Nights",
+    eyebrow: "Music",
+    description: "After-dark lineups built for high-energy dance floors.",
+    filters: { category: "Music", subCategory: "Club Nights" },
   },
   {
-    id: "3",
-    organizerSlug: "demo-organizer",
-    eventSlug: "food-wine-tasting-festival",
-    title: "Food & Wine Tasting Festival",
-    date: "September 10, 2024",
-    location: "Riverside Park, Chicago",
-    image: eventFood,
-    category: "Food & Drink",
-    attendees: 3500,
-    price: "From $75",
+    key: "music-festivals",
+    label: "Music Festivals",
+    eyebrow: "Music",
+    description: "Multi-artist festival weekends worth planning around.",
+    filters: { category: "Music", subCategory: "Music Festivals" },
+  },
+  {
+    key: "comedy-shows",
+    label: "Comedy Shows",
+    eyebrow: "Workshop",
+    description: "Stand-up sets, roast nights, and packed comedy rooms.",
+    filters: { category: "Workshop", subCategory: "Comedy Shows" },
+  },
+  {
+    key: "theater-shows",
+    label: "Theater Shows",
+    eyebrow: "Workshop",
+    description: "Stage productions, dramatic nights, and live performance craft.",
+    filters: { category: "Workshop", subCategory: "Theater Shows" },
   },
 ];
 
@@ -120,9 +117,97 @@ const heroCarouselStyles = `
   }
 `;
 
+const normalizeImageUrl = (src) => {
+  if (!src || typeof src !== "string") return null;
+
+  const trimmed = src.trim().replace(/[\\,]+$/, "");
+  if (!trimmed) return null;
+
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("data:")) {
+    return trimmed;
+  }
+
+  return buildUrl(trimmed);
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return "Date TBA";
+
+  try {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  } catch {
+    return dateString;
+  }
+};
+
+const getEventLocation = (event) => {
+  if (Array.isArray(event.venues) && event.venues.length > 0) {
+    const venue = event.venues[0];
+    return `${venue.city || ""}${venue.city && venue.state ? ", " : ""}${venue.state || ""}`.trim() || "Location TBA";
+  }
+
+  return event.location || event.venue || "Location TBA";
+};
+
+const getEventPriceDisplay = (event) => {
+  if (Array.isArray(event.tickets) && event.tickets.length > 0) {
+    const prices = event.tickets
+      .map((ticket) => Number(ticket.price))
+      .filter((price) => Number.isFinite(price));
+
+    if (prices.length > 0) {
+      const minPrice = Math.min(...prices);
+      return minPrice > 0 ? `From Rs.${minPrice}` : "Free";
+    }
+  }
+
+  if (typeof event.price === "number") {
+    return event.price > 0 ? `From Rs.${event.price}` : "Free";
+  }
+
+  if (typeof event.price === "string" && event.price.trim()) {
+    return event.price;
+  }
+
+  return "Free";
+};
+
+const mapEventToCard = (event) => {
+  const galleryImage = Array.isArray(event.images)
+    ? event.images.find((image) => image.type === "EVENT_GALLERY") || event.images[0]
+    : null;
+
+  return {
+    id: event.id,
+    organizerSlug: event.organizer?.slug || "events",
+    eventSlug: event.slug || event.eventSlug || event.id,
+    title: event.title || "Untitled Event",
+    date: formatDate(event.startDate || event.date),
+    location: getEventLocation(event),
+    image:
+      normalizeImageUrl(galleryImage?.url || galleryImage?.imageUrl) ||
+      normalizeImageUrl(event.flyerImage || event.image || event.coverImage),
+    category: event.subCategory || event.category || "Event",
+    price: getEventPriceDisplay(event),
+  };
+};
+
 const LandingPage = () => {
   const [activeHeroSlide, setActiveHeroSlide] = useState(0);
   const heroVideoRef = useRef(null);
+  const [eventSections, setEventSections] = useState({});
+  const [sectionsLoading, setSectionsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [locationQuery, setLocationQuery] = useState("");
+  const [searchResults, setSearchResults] = useState({ events: [], artists: [], venues: [], totalEvents: 0, totalArtists: 0, totalVenues: 0 });
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState("");
+  const [hasSearchResults, setHasSearchResults] = useState(false);
+  const searchRequestRef = useRef(0);
 
   useEffect(() => {
     heroSlides
@@ -132,6 +217,68 @@ const LandingPage = () => {
         image.src = slide.src;
       });
   }, []);
+
+  const runSearch = async ({ query, location }) => {
+    const normalizedQuery = query.trim();
+    const normalizedLocation = location.trim();
+
+    if (!normalizedQuery && !normalizedLocation) {
+      setSearchResults({ events: [], artists: [], venues: [], totalEvents: 0, totalArtists: 0, totalVenues: 0 });
+      setSearchError("");
+      setHasSearchResults(false);
+      setSearchLoading(false);
+      return;
+    }
+
+    if ((normalizedQuery && normalizedQuery.length < 2) || (normalizedLocation && normalizedLocation.length < 2)) {
+      return;
+    }
+
+    const requestId = ++searchRequestRef.current;
+    setSearchLoading(true);
+    setSearchError("");
+
+    try {
+      const params = new URLSearchParams();
+      if (normalizedQuery) params.set("q", normalizedQuery);
+      if (normalizedLocation) params.set("location", normalizedLocation);
+      params.set("limit", "6");
+
+      const response = await apiFetch(`/api/event/search?${params.toString()}`, {
+        method: "GET",
+      });
+
+      if (requestId !== searchRequestRef.current) return;
+
+      const data = response?.data || {};
+      setSearchResults({
+        events: Array.isArray(data.events) ? data.events.map((event) => mapEventToCard(event)) : [],
+        artists: Array.isArray(data.artists) ? data.artists : [],
+        venues: Array.isArray(data.venues) ? data.venues : [],
+        totalEvents: data.totalEvents || 0,
+        totalArtists: data.totalArtists || 0,
+        totalVenues: data.totalVenues || 0,
+      });
+      setHasSearchResults(true);
+    } catch (error) {
+      if (requestId !== searchRequestRef.current) return;
+      setSearchResults({ events: [], artists: [], venues: [], totalEvents: 0, totalArtists: 0, totalVenues: 0 });
+      setSearchError(error.message || "Failed to search events");
+      setHasSearchResults(true);
+    } finally {
+      if (requestId === searchRequestRef.current) {
+        setSearchLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      runSearch({ query: searchQuery, location: locationQuery });
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [searchQuery, locationQuery]);
 
   useEffect(() => {
     const activeSlide = heroSlides[activeHeroSlide];
@@ -161,6 +308,53 @@ const LandingPage = () => {
     return () => window.clearTimeout(timeoutId);
   }, [activeHeroSlide]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchSectionEvents = async () => {
+      if (isMounted) {
+        setSectionsLoading(true);
+      }
+
+      try {
+        const results = await Promise.all(
+          EVENT_SECTION_CONFIG.map(async (section) => {
+            const params = new URLSearchParams();
+            if (section.filters.category) params.set("category", section.filters.category);
+            if (section.filters.subCategory) params.set("subCategory", section.filters.subCategory);
+
+            const response = await apiFetch(`/api/event${params.toString() ? `?${params.toString()}` : ""}`, {
+              method: "GET",
+            });
+
+            const rawEvents = Array.isArray(response?.data) ? response.data : [];
+            const mappedEvents = rawEvents
+              .slice(0, 3)
+              .map((event) => mapEventToCard(event));
+
+            return [section.key, mappedEvents];
+          })
+        );
+
+        if (isMounted) {
+          setEventSections(Object.fromEntries(results));
+        }
+      } catch (error) {
+        console.error("Failed to load landing page event sections:", error);
+      } finally {
+        if (isMounted) {
+          setSectionsLoading(false);
+        }
+      }
+    };
+
+    fetchSectionEvents();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const handleHeroVideoEnded = () => {
     setActiveHeroSlide(1);
   };
@@ -171,6 +365,27 @@ const LandingPage = () => {
 
   const goToNextHeroSlide = () => {
     setActiveHeroSlide((prev) => (prev + 1) % heroSlides.length);
+  };
+
+  const handleSearchSubmit = () => {
+    runSearch({ query: searchQuery, location: locationQuery });
+  };
+
+  const handleSearchKeyDown = (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      handleSearchSubmit();
+    }
+  };
+
+  const clearSearch = () => {
+    searchRequestRef.current += 1;
+    setSearchQuery("");
+    setLocationQuery("");
+    setSearchError("");
+    setHasSearchResults(false);
+    setSearchLoading(false);
+    setSearchResults({ events: [], artists: [], venues: [], totalEvents: 0, totalArtists: 0, totalVenues: 0 });
   };
 
   return (
@@ -248,20 +463,165 @@ const LandingPage = () => {
         {/* Search */}
         <section className="bg-slate-950">
           <div className="container px-6 md:px-8 lg:px-10 pt-6 pb-10 lg:pt-8 lg:pb-14">
-            <div className="flex flex-col gap-3 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-lg shadow-[0_25px_60px_-30px_rgba(0,0,0,0.65)] sm:flex-row sm:items-center">
-              <div className="flex flex-1 items-center gap-3 rounded-xl bg-white/10 px-4 py-3 text-sm text-slate-200/90">
-                <Search className="h-4 w-4 text-slate-200/80" />
-                Search events, artists or venues...
-              </div>
-              <div className="flex items-center justify-between gap-3 sm:justify-end">
-                <div className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs text-slate-100">
-                  <MapPin className="h-3.5 w-3.5 text-pink-200" />
-                  New York City
+            <div className="space-y-4 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-lg shadow-[0_25px_60px_-30px_rgba(0,0,0,0.65)]">
+              <div className="grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,0.8fr)_auto]">
+                <div className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 text-sm text-slate-200/90">
+                  <Search className="h-4 w-4 text-slate-200/80" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    onKeyDown={handleSearchKeyDown}
+                    placeholder="Search events, artists, and venues..."
+                    className="w-full bg-transparent text-sm text-slate-50 outline-none placeholder:text-slate-300/60"
+                  />
                 </div>
-                <Button size="sm" className="bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white hover:from-fuchsia-400 hover:to-pink-400">
-                  Search
-                </Button>
+                <div className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 text-sm text-slate-200/90">
+                  <MapPin className="h-4 w-4 text-pink-200" />
+                  <input
+                    type="text"
+                    value={locationQuery}
+                    onChange={(event) => setLocationQuery(event.target.value)}
+                    onKeyDown={handleSearchKeyDown}
+                    placeholder="Location"
+                    className="w-full bg-transparent text-sm text-slate-50 outline-none placeholder:text-slate-300/60"
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button
+                    size="sm"
+                    onClick={handleSearchSubmit}
+                    disabled={searchLoading || (!searchQuery.trim() && !locationQuery.trim())}
+                    className="w-full bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white hover:from-fuchsia-400 hover:to-pink-400 lg:w-auto"
+                  >
+                    {searchLoading ? "Searching..." : "Search"}
+                  </Button>
+                  {(searchQuery || locationQuery || hasSearchResults) && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={clearSearch}
+                      className="border-white/20 text-white hover:bg-white hover:text-slate-900"
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
               </div>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300/80">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5">
+                  Live search
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5">
+                  Search by event, artist, venue, or city
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5">
+                  Press Enter for instant results
+                </div>
+              </div>
+
+              {(searchLoading || searchError || hasSearchResults) && (
+                <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4 sm:p-5">
+                  {searchLoading && (
+                    <div className="text-sm text-slate-300/80">Searching live events, artists, and venues...</div>
+                  )}
+
+                  {!searchLoading && searchError && (
+                    <div className="rounded-xl border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
+                      {searchError}
+                    </div>
+                  )}
+
+                  {!searchLoading && !searchError && hasSearchResults && (
+                    <div className="space-y-5">
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300/80">
+                        <span className="rounded-full bg-white/10 px-3 py-1.5">
+                          {searchResults.totalEvents} event{searchResults.totalEvents === 1 ? "" : "s"}
+                        </span>
+                        <span className="rounded-full bg-white/10 px-3 py-1.5">
+                          {searchResults.totalArtists} artist{searchResults.totalArtists === 1 ? "" : "s"}
+                        </span>
+                        <span className="rounded-full bg-white/10 px-3 py-1.5">
+                          {searchResults.totalVenues} venue{searchResults.totalVenues === 1 ? "" : "s"}
+                        </span>
+                      </div>
+
+                      {searchResults.totalEvents === 0 && searchResults.totalArtists === 0 && searchResults.totalVenues === 0 ? (
+                        <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300/80">
+                          No live matches found. Try a broader artist name, event keyword, or nearby city.
+                        </div>
+                      ) : (
+                        <div className="space-y-6">
+                          {searchResults.events.length > 0 && (
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between gap-3">
+                                <div>
+                                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Events</p>
+                                  <h3 className="text-lg font-semibold text-white">Matching events</h3>
+                                </div>
+                                <Link to="/browse-events" className="text-sm text-amber-200 transition hover:text-amber-100">
+                                  Browse all
+                                </Link>
+                              </div>
+                              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                {searchResults.events.map((event) => (
+                                  <EventCard key={event.id} {...event} />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {searchResults.artists.length > 0 && (
+                            <div className="space-y-3">
+                              <div>
+                                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Artists</p>
+                                <h3 className="text-lg font-semibold text-white">Related artists</h3>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {searchResults.artists.map((artist) => (
+                                  <button
+                                    key={`${artist.id}-${artist.eventId}`}
+                                    type="button"
+                                    onClick={() => setSearchQuery(artist.name)}
+                                    className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-left text-sm text-slate-100 transition hover:border-amber-300/30 hover:bg-white/10"
+                                  >
+                                    {artist.name}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {searchResults.venues.length > 0 && (
+                            <div className="space-y-3">
+                              <div>
+                                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Venues</p>
+                                <h3 className="text-lg font-semibold text-white">Matching venues</h3>
+                              </div>
+                              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                                {searchResults.venues.map((venue) => (
+                                  <button
+                                    key={`${venue.id}-${venue.eventId}`}
+                                    type="button"
+                                    onClick={() => setLocationQuery(venue.city || venue.name || "")}
+                                    className="rounded-xl border border-white/10 bg-white/5 p-4 text-left transition hover:border-amber-300/30 hover:bg-white/10"
+                                  >
+                                    <p className="font-medium text-white">{venue.name}</p>
+                                    <p className="mt-1 text-sm text-slate-300/80">
+                                      {[venue.city, venue.state, venue.country].filter(Boolean).join(", ") || "Location available"}
+                                    </p>
+                                    <p className="mt-2 text-xs text-slate-400">{venue.eventTitle}</p>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -309,28 +669,55 @@ const LandingPage = () => {
           </div>
         </section>
 
-        {/* Featured */}
-        <section className="py-16 bg-slate-900/60">
-          <div className="container px-4 space-y-10">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-              <div>
-                <p className="text-sm uppercase tracking-[0.18em] text-amber-200/80">Curated</p>
-                <h2 className="text-3xl font-bold">Featured events</h2>
-                <p className="text-slate-300/80">Handpicked experiences trending near you.</p>
+        {EVENT_SECTION_CONFIG.map((section) => {
+          const events = eventSections[section.key] || [];
+
+          return (
+            <section key={section.key} className="py-16 bg-slate-900/60">
+              <div className="container px-4 space-y-10">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.18em] text-amber-200/80">{section.eyebrow}</p>
+                    <h2 className="text-3xl font-bold">{section.label}</h2>
+                    <p className="text-slate-300/80">{section.description}</p>
+                  </div>
+                  <Link to="/browse-events">
+                    <Button variant="accent" className="bg-amber-400 text-slate-900 hover:bg-amber-300">
+                      Browse all
+                    </Button>
+                  </Link>
+                </div>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {sectionsLoading ? (
+                    Array.from({ length: 3 }).map((_, index) => (
+                      <div
+                        key={`${section.key}-skeleton-${index}`}
+                        className="overflow-hidden rounded-2xl border border-white/10 bg-white/5"
+                      >
+                        <div className="aspect-[16/9] animate-pulse bg-white/10" />
+                        <div className="space-y-3 p-5">
+                          <div className="h-4 w-24 animate-pulse rounded bg-white/10" />
+                          <div className="h-5 w-3/4 animate-pulse rounded bg-white/10" />
+                          <div className="h-4 w-2/3 animate-pulse rounded bg-white/10" />
+                          <div className="h-4 w-1/2 animate-pulse rounded bg-white/10" />
+                          <div className="h-9 w-32 animate-pulse rounded bg-white/10" />
+                        </div>
+                      </div>
+                    ))
+                  ) : events.length > 0 ? (
+                    events.map((event) => (
+                      <EventCard key={event.id} {...event} />
+                    ))
+                  ) : (
+                    <div className="md:col-span-2 lg:col-span-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-8 text-sm text-slate-300/80">
+                      No live events are available in this section yet.
+                    </div>
+                  )}
+                </div>
               </div>
-              <Link to="/browse-events">
-                <Button variant="accent" className="bg-amber-400 text-slate-900 hover:bg-amber-300">
-                  Browse all
-                </Button>
-              </Link>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredEvents.map((event) => (
-                <EventCard key={event.id} {...event} />
-              ))}
-            </div>
-          </div>
-        </section>
+            </section>
+          );
+        })}
 
         {/* How it works */}
         <section className="py-16 bg-slate-950">
@@ -456,7 +843,6 @@ const LandingPage = () => {
           </div>
         </section>
       </main>
-
     </div>
   );
 };

@@ -118,7 +118,12 @@ export const usePublicEvents = (initialFilters = {}) => {
       let sourceEvents = [];
 
       try {
-        const response = await apiFetch("/api/event", {
+        const params = new URLSearchParams();
+        if (filterParams.category) params.set("category", filterParams.category);
+        if (filterParams.subCategory) params.set("subCategory", filterParams.subCategory);
+        if (filterParams.search) params.set("search", filterParams.search);
+
+        const response = await apiFetch(`/api/event${params.toString() ? `?${params.toString()}` : ""}`, {
           method: "GET",
         });
 

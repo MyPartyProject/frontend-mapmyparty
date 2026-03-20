@@ -1304,7 +1304,7 @@ const OrganizerDashboard = () => {
       >
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <button
-            onClick={() => handleNav("dashboard")}
+            onClick={() => navigate("/")}
             className={`${sidebarOpen ? "block" : "hidden"} hover:opacity-80 transition flex items-center gap-3`}
           >
             <img src={Logo} alt="MapMyParty" className="h-10 w-auto" />

@@ -377,8 +377,46 @@ const CreateEvent = () => {
   };
 
   const categoryHierarchy = {
-    Music: ["Bollywood", "Hip Hop", "Electronic", "Melodic", "Live Music", "Metal", "Rap", "Music House", "Techno", "K-pop", "Hollywood", "POP", "Punjabi", "Disco", "Rock", "Afrobeat", "Dance Hall", "Thumri", "Bolly Tech"],
-    Workshop: ["Sports", "Arts", "Meeting", "Conference", "Seminar", "Yoga", "Cooking", "Dance", "Self Help", "Consultation", "Corporate Event", "Communication"]
+    Music: [
+      "Live Concerts",
+      "Club Nights",
+      "Music Festivals",
+      "Bollywood",
+      "Hip Hop",
+      "Electronic",
+      "Melodic",
+      "Live Music",
+      "Metal",
+      "Rap",
+      "Music House",
+      "Techno",
+      "K-pop",
+      "Hollywood",
+      "POP",
+      "Punjabi",
+      "Disco",
+      "Rock",
+      "Afrobeat",
+      "Dance Hall",
+      "Thumri",
+      "Bolly Tech",
+    ],
+    Workshop: [
+      "Comedy Shows",
+      "Theater Shows",
+      "Sports",
+      "Arts",
+      "Meeting",
+      "Conference",
+      "Seminar",
+      "Yoga",
+      "Cooking",
+      "Dance",
+      "Self Help",
+      "Consultation",
+      "Corporate Event",
+      "Communication"
+    ]
   };
 
   // Load saved tickets and venue data when component mounts or when backendEventId changes
