@@ -125,14 +125,22 @@ const CreateEvent = () => {
 
   const hourOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
   const minuteOptions = ["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"];
+  const isValidDateObject = (date) => date instanceof Date && !Number.isNaN(date.getTime());
+  const parseSafeDate = (value) => {
+    if (!value) return null;
+    const date = new Date(value);
+    return isValidDateObject(date) ? date : null;
+  };
+  const parseSafeDateOnly = (value) => {
+    if (!value) return null;
+    const date = new Date(`${value}T00:00:00`);
+    return isValidDateObject(date) ? date : null;
+  };
 
   const formatDateValue = (value) => {
     if (!value) return "";
-    try {
-      return format(new Date(`${value}T00:00:00`), "dd MMM yyyy");
-    } catch {
-      return value;
-    }
+    const date = parseSafeDateOnly(value);
+    return date ? format(date, "dd MMM yyyy") : value;
   };
 
   const parseTime = (value) => {
@@ -223,6 +231,28 @@ const CreateEvent = () => {
   const eventTypeParam = searchParams.get('type');
   const isEditMode = !!editId;
 
+  const clearTransientUiState = () => {
+    setIsSubmitting(false);
+    setShowLoading(false);
+    setLoadingMessage("");
+    setTicketModalOpen(false);
+    setSelectedTicketType(null);
+    setShowEmojiPicker(false);
+    setAdvisoryDialogOpen(false);
+    setStartCalendarOpen(false);
+    setEndCalendarOpen(false);
+    setStartTimeOpen(false);
+    setEndTimeOpen(false);
+  };
+
+  const releaseGlobalOverlayLocks = () => {
+    if (typeof document === "undefined") return;
+    document.body.style.pointerEvents = "";
+    document.body.style.overflow = "";
+    document.body.removeAttribute("data-scroll-locked");
+    document.body.removeAttribute("aria-hidden");
+  };
+
   const buildEventFetchUrl = ({ eventId, organizerSlug, eventSlug, bustCache = false }) => {
     const suffix = bustCache ? `?t=${Date.now()}` : "";
 
@@ -237,6 +267,58 @@ const CreateEvent = () => {
 
     return null;
   };
+
+  const normalizeTicketForEdit = (ticket) => {
+    if (!ticket) return null;
+
+    const typeMap = {
+      GUESTLIST: "vip-guest",
+      STANDARD_TICKET: "standard",
+      TABLE_TICKET: "table",
+      GROUP_TICKET: "group-pass",
+    };
+
+    const entryTypeLabelMap = {
+      SINGLE_ENTRY: "Single",
+      COUPLE_ENTRY: "Couple",
+    };
+
+    const ticketTypeLabelMap = {
+      GUESTLIST: "Guest List",
+      STANDARD_TICKET: "Standard Ticket",
+      TABLE_TICKET: "Table Ticket",
+      GROUP_TICKET: "Group Pass",
+    };
+
+    return {
+      id: ticket.id,
+      publicId: ticket.publicId || "",
+      ticketName: ticket.name || "",
+      ticketCategory: entryTypeLabelMap[ticket.entryType] || "Single",
+      ticketEntryType: ticketTypeLabelMap[ticket.type] || "Standard Ticket",
+      price: String(ticket.price ?? 0),
+      quantity: String(ticket.totalQty ?? 0),
+      available: Number(ticket.totalQty ?? 0),
+      soldQty: Number(ticket.soldQty ?? 0),
+      description: ticket.info || "",
+      maxPerCustomer: String(ticket.maxPerUser ?? 10),
+      purchaseExpiry: ticket.purchaseExpiry || "",
+      comingSoon: Boolean(ticket.comingSoon),
+      onsiteOnly: Boolean(ticket.onGroundOnly),
+      type: typeMap[ticket.type] || "standard",
+      gstRate: ticket.gstRate ?? 18,
+      gstType: ticket.gstType || "",
+    };
+  };
+
+  useEffect(() => {
+    clearTransientUiState();
+    releaseGlobalOverlayLocks();
+
+    return () => {
+      releaseGlobalOverlayLocks();
+    };
+  }, [location.key, editId]);
 
   // Form data
   const [eventTitle, setEventTitle] = useState("");
@@ -293,6 +375,8 @@ const CreateEvent = () => {
   const [selectedEventTypeCategory, setSelectedEventTypeCategory] = useState("");
   const [fullAddress, setFullAddress] = useState("");
   const [venueThemePulse, setVenueThemePulse] = useState(false);
+  const [editHydrationError, setEditHydrationError] = useState("");
+  const [isEditHydrating, setIsEditHydrating] = useState(false);
 
   // Ensure backendEventId is set when editing (even if session flags are missing)
   useEffect(() => {
@@ -441,6 +525,14 @@ const CreateEvent = () => {
           console.error("Error parsing saved tickets:", error);
           localStorage.removeItem(`event_${backendEventId}_tickets`);
         }
+      } else if (Array.isArray(eventCacheRef.current?.tickets) && eventCacheRef.current.tickets.length > 0) {
+        const normalizedTickets = eventCacheRef.current.tickets
+          .map(normalizeTicketForEdit)
+          .filter(Boolean);
+
+        setSavedTickets(normalizedTickets);
+        setCreatedTicketIds(normalizedTickets.map((ticket) => ticket.id).filter(Boolean));
+        localStorage.setItem(`event_${backendEventId}_tickets`, JSON.stringify(normalizedTickets));
       }
       
       // Load venue data from localStorage if it exists
@@ -496,11 +588,7 @@ const CreateEvent = () => {
   useEffect(() => {
     if (!editId) return;
     if (editHydratedRef.current === editId) return;
-    const stateEvent = location.state?.event;
-    const eventToEdit = stateEvent || events.find((e) => e.id === editId);
-    if (!eventToEdit) return;
-    editHydratedRef.current = editId;
-    eventCacheRef.current = eventToEdit;
+    let isMounted = true;
 
     const pickVenueName = (venueObj) => {
       if (!venueObj) return "";
@@ -600,214 +688,214 @@ const CreateEvent = () => {
       }
     };
 
-    const start = eventToEdit.startDate ? new Date(eventToEdit.startDate) : null;
-    const end = eventToEdit.endDate ? new Date(eventToEdit.endDate) : null;
-    const toDateStr = (d) => (d ? d.toISOString().slice(0, 10) : "");
-    const toTimeStr = (d) => {
-      if (!d) return "";
-      const iso = d.toISOString();
-      return iso.slice(11, 16);
+    const hydrateEvent = async (eventToEdit) => {
+      if (!isMounted || !eventToEdit) return;
+
+      editHydratedRef.current = editId;
+      eventCacheRef.current = eventToEdit;
+      setEditHydrationError("");
+
+      const start = parseSafeDate(eventToEdit.startDate);
+      const end = parseSafeDate(eventToEdit.endDate);
+      const toDateStr = (d) => (isValidDateObject(d) ? d.toISOString().slice(0, 10) : "");
+      const toTimeStr = (d) => {
+        if (!isValidDateObject(d)) return "";
+        const iso = d.toISOString();
+        return iso.slice(11, 16);
+      };
+
+      setBackendEventId(eventToEdit.id || eventToEdit._id || backendEventId);
+      setEventTitle(eventToEdit.title || "");
+      setEventDescription(eventToEdit.description || "");
+      setMainCategory(eventToEdit.category || "");
+      setSelectedCategories([eventToEdit.subCategory || eventToEdit.subcategory || ""]);
+      setCoverImage(eventToEdit.flyerImage || eventToEdit.image || eventToEdit.flyer);
+      hydrateGallery(eventToEdit.images);
+      setAdditionalFromEvent(eventToEdit);
+      const startDateStr = toDateStr(start);
+      const startTimeStr = toTimeStr(start);
+      const endDateStr = toDateStr(end);
+      const endTimeStr = toTimeStr(end);
+      setStartDate(startDateStr);
+      setStartTime(startTimeStr);
+      setEndDate(endDateStr);
+      setEndTime(endTimeStr);
+      const normalizedStatus = (eventToEdit.publishStatus || eventToEdit.status || "").toUpperCase();
+      setPublishState(normalizedStatus === "PUBLISHED" || normalizedStatus === "ACTIVE" ? "PUBLISHED" : "DRAFT");
+      const normalizedTickets = Array.isArray(eventToEdit.tickets)
+        ? eventToEdit.tickets.map(normalizeTicketForEdit).filter(Boolean)
+        : [];
+      setSavedTickets(normalizedTickets);
+      setCreatedTicketIds(normalizedTickets.map((ticket) => ticket.id).filter(Boolean));
+      if (eventToEdit.id || eventToEdit._id) {
+        localStorage.setItem(
+          `event_${eventToEdit.id || eventToEdit._id}_tickets`,
+          JSON.stringify(normalizedTickets)
+        );
+      }
+      setOriginalDateTime({
+        start: isValidDateObject(start) ? start.toISOString() : null,
+        end: isValidDateObject(end) ? end.toISOString() : null,
+      });
+      setOriginalDateInputs({
+        startDate: startDateStr,
+        startTime: startTimeStr,
+        endDate: endDateStr,
+        endTime: endTimeStr,
+      });
+
+      if (Array.isArray(eventToEdit.sponsors) && eventToEdit.sponsors.length > 0) {
+        const normalizedSponsors = eventToEdit.sponsors.map((s, idx) => flattenSponsor(s, idx));
+        const normalizedForCompare = normalizeSponsors(normalizedSponsors);
+        setSponsors(normalizedSponsors);
+        setOriginalSponsors(normalizedForCompare);
+        setIsSponsored(normalizedForCompare.length > 0);
+        setOriginalIsSponsored(normalizedForCompare.length > 0);
+        sponsorsLoadedRef.current = true;
+      } else {
+        setSponsors([emptySponsor]);
+        setOriginalSponsors([]);
+        setIsSponsored(Boolean(eventToEdit.isSponsored));
+        setOriginalIsSponsored(Boolean(eventToEdit.isSponsored));
+      }
+
+      setTicketPrice(
+        eventToEdit.price
+          ? String(eventToEdit.price).replace(/[^0-9.]/g, "")
+          : ticketPrice
+      );
+
+      if (eventToEdit.template) {
+        const templateName = mapTemplateId(eventToEdit.template);
+        setSelectedTemplate(templateName);
+      }
+
+      const firstVenue = Array.isArray(eventToEdit.venues) && eventToEdit.venues.length > 0
+        ? eventToEdit.venues[0]
+        : null;
+      if (firstVenue) {
+        setVenueId(firstVenue.id || firstVenue._id || venueId);
+        setVenueName(pickVenueName(firstVenue));
+        setCity(firstVenue.city || "");
+        setState(firstVenue.state || "");
+        setCountry(firstVenue.country || eventToEdit.country || "India");
+        setPostalCode(firstVenue.postalCode || eventToEdit.postalCode || "");
+        setVenueContact(firstVenue.contact || eventToEdit.venueContact || "");
+        setVenueEmail(firstVenue.email || eventToEdit.venueEmail || "");
+        setFullAddress(firstVenue.fullAddress || firstVenue.address || "");
+        setOriginalVenueData({
+          name: pickVenueName(firstVenue),
+          contact: firstVenue.contact || eventToEdit.venueContact || "",
+          email: firstVenue.email || eventToEdit.venueEmail || "",
+          fullAddress: firstVenue.fullAddress || firstVenue.address || "",
+          city: firstVenue.city || "",
+          state: firstVenue.state || "",
+          country: firstVenue.country || eventToEdit.country || "India",
+          postalCode: firstVenue.postalCode || eventToEdit.postalCode || "",
+          latitude: firstVenue.latitude || 0,
+          longitude: firstVenue.longitude || 0,
+        });
+        setVenueCreated(true);
+      } else if (eventToEdit.location) {
+        const locationParts = eventToEdit.location.split(", ");
+        if (locationParts.length > 0) setVenueName(locationParts[0]);
+        if (locationParts.length > 1) setCity(locationParts[1]);
+        if (locationParts.length > 2) setState(locationParts[2]);
+      }
+
+      const tcData = eventToEdit.TC || eventToEdit.tc;
+      if (tcData) {
+        if (typeof tcData === "string") {
+          setTermsAndConditions(tcData);
+        } else if (tcData?.content) {
+          setTermsAndConditions(tcData.content);
+        }
+      }
+
+      const advisoryData = eventToEdit.advisory || {};
+      const normalizedAdvisory = { ...initialAdvisoryState };
+      Object.keys(normalizedAdvisory).forEach((key) => {
+        if (advisoryData[key]) normalizedAdvisory[key] = true;
+      });
+      setAdvisory(normalizedAdvisory);
+      const customList = Array.isArray(advisoryData.customAdvisories) ? advisoryData.customAdvisories : [];
+      setCustomAdvisories(customList);
+
+      const questionsData = Array.isArray(eventToEdit.questions) ? eventToEdit.questions : [];
+      setCustomQuestions(questionsData);
+      setOrganizerNote(eventToEdit.organizerNote || "");
+
+      if (eventToEdit.type) {
+        setSelectedEventTypeCategory(eventToEdit.type);
+        setCurrentEventType(eventToEdit.type);
+      }
+
+      const normalizedArtists = Array.isArray(eventToEdit.artists)
+        ? eventToEdit.artists.map((a) => ({
+            name: a.name || "",
+            photo: a.photo || a.image || "",
+            instagram: a.instagram || a.instagramLink || "",
+            spotify: a.spotify || a.spotifyLink || "",
+            gender: a.gender || "PREFER_NOT_TO_SAY",
+          }))
+        : [];
+
+      setArtists(
+        normalizedArtists.length
+          ? normalizedArtists
+          : [{ name: "", photo: "", instagram: "", spotify: "", gender: "PREFER_NOT_TO_SAY" }]
+      );
+      if (normalizedArtists.length) {
+        setCreatedArtistIndices(normalizedArtists.map((_, idx) => idx));
+        artistsLoadedRef.current = true;
+        setOriginalArtists(normalizedArtists);
+      } else {
+        setOriginalArtists([]);
+      }
     };
 
-    setBackendEventId(eventToEdit.id || eventToEdit._id || backendEventId);
-    setEventTitle(eventToEdit.title || "");
-    setEventDescription(eventToEdit.description || "");
-    setMainCategory(eventToEdit.category || "");
-    setSelectedCategories([eventToEdit.subCategory || eventToEdit.subcategory || ""]);
-    setCoverImage(eventToEdit.flyerImage || eventToEdit.image || eventToEdit.flyer);
-    hydrateGallery(eventToEdit.images);
-    setAdditionalFromEvent(eventToEdit);
-    const startDateStr = toDateStr(start);
-    const startTimeStr = toTimeStr(start);
-    const endDateStr = toDateStr(end);
-    const endTimeStr = toTimeStr(end);
-    setStartDate(startDateStr);
-    setStartTime(startTimeStr);
-    setEndDate(endDateStr);
-    setEndTime(endTimeStr);
-    const normalizedStatus = (eventToEdit.publishStatus || eventToEdit.status || "").toUpperCase();
-    setPublishState(normalizedStatus === "PUBLISHED" || normalizedStatus === "ACTIVE" ? "PUBLISHED" : "DRAFT");
-    // Track originals for change detection in Step 2
-    setOriginalDateTime({
-      start: start ? start.toISOString() : null,
-      end: end ? end.toISOString() : null,
-    });
-    setOriginalDateInputs({
-      startDate: startDateStr,
-      startTime: startTimeStr,
-      endDate: endDateStr,
-      endTime: endTimeStr,
-    });
-    // Sponsors (Step 5)
-    if (Array.isArray(eventToEdit.sponsors) && eventToEdit.sponsors.length > 0) {
-      const normalizedSponsors = eventToEdit.sponsors.map((s, idx) => flattenSponsor(s, idx));
-      const normalizedForCompare = normalizeSponsors(normalizedSponsors);
-      setSponsors(normalizedSponsors);
-      setOriginalSponsors(normalizedForCompare);
-      setIsSponsored(normalizedForCompare.length > 0);
-      setOriginalIsSponsored(normalizedForCompare.length > 0);
-      sponsorsLoadedRef.current = true;
-    } else {
-      setSponsors([emptySponsor]);
-      setOriginalSponsors([]);
-      setIsSponsored(Boolean(eventToEdit.isSponsored));
-      setOriginalIsSponsored(Boolean(eventToEdit.isSponsored));
-    }
-    setTicketPrice(
-      eventToEdit.price
-        ? String(eventToEdit.price).replace(/[^0-9.]/g, "")
-        : ticketPrice
-    );
-
-    // Load template if available (map old IDs to new names)
-    if (eventToEdit.template) {
-      const templateName = mapTemplateId(eventToEdit.template);
-      setSelectedTemplate(templateName);
-    }
-
-    // Parse location from venues
-    const firstVenue = Array.isArray(eventToEdit.venues) && eventToEdit.venues.length > 0
-      ? eventToEdit.venues[0]
-      : null;
-    if (firstVenue) {
-      setVenueId(firstVenue.id || firstVenue._id || venueId);
-      setVenueName(pickVenueName(firstVenue));
-      setCity(firstVenue.city || "");
-      setState(firstVenue.state || "");
-      setCountry(eventToEdit.country || "India");
-      setPostalCode(eventToEdit.postalCode || "");
-      setVenueContact(eventToEdit.venueContact || "");
-      setVenueEmail(eventToEdit.venueEmail || "");
-      setFullAddress(firstVenue.fullAddress || firstVenue.address || "");
-
-      // Set original venue data for change detection
-      setOriginalVenueData({
-        name: pickVenueName(firstVenue),
-        contact: eventToEdit.venueContact || "",
-        email: eventToEdit.venueEmail || "",
-        fullAddress: firstVenue.fullAddress || firstVenue.address || "",
-        city: firstVenue.city || "",
-        state: firstVenue.state || "",
-        country: eventToEdit.country || "India",
-        postalCode: eventToEdit.postalCode || "",
-        latitude: firstVenue.latitude || 0,
-        longitude: firstVenue.longitude || 0,
-      });
-      setVenueCreated(true);
-    } else if (eventToEdit.location) {
-      const locationParts = eventToEdit.location.split(", ");
-      if (locationParts.length > 0) setVenueName(locationParts[0]);
-      if (locationParts.length > 1) setCity(locationParts[1]);
-      if (locationParts.length > 2) setState(locationParts[2]);
-    }
-
-    const tcData = eventToEdit.TC || eventToEdit.tc;
-    if (tcData) {
-      if (typeof tcData === "string") {
-        setTermsAndConditions(tcData);
-      } else if (tcData?.content) {
-        setTermsAndConditions(tcData.content);
-      }
-    }
-
-    const advisoryData = eventToEdit.advisory || {};
-    const normalizedAdvisory = { ...initialAdvisoryState };
-    Object.keys(normalizedAdvisory).forEach((key) => {
-      if (advisoryData[key]) normalizedAdvisory[key] = true;
-    });
-    setAdvisory(normalizedAdvisory);
-    const customList = Array.isArray(advisoryData.customAdvisories) ? advisoryData.customAdvisories : [];
-    setCustomAdvisories(customList);
-
-    const questionsData = Array.isArray(eventToEdit.questions) ? eventToEdit.questions : [];
-    setCustomQuestions(questionsData);
-    setOrganizerNote(eventToEdit.organizerNote || "");
-
-    if (eventToEdit.type) {
-      setSelectedEventTypeCategory(eventToEdit.type);
-      setCurrentEventType(eventToEdit.type);
-    }
-
-    const normalizedArtists = Array.isArray(eventToEdit.artists)
-      ? eventToEdit.artists.map((a) => ({
-          name: a.name || "",
-          photo: a.photo || a.image || "",
-          instagram: a.instagram || a.instagramLink || "",
-          spotify: a.spotify || a.spotifyLink || "",
-          gender: a.gender || "PREFER_NOT_TO_SAY",
-        }))
-      : [];
-
-    setArtists(
-      normalizedArtists.length
-        ? normalizedArtists
-        : [{ name: "", photo: "", instagram: "", spotify: "", gender: "PREFER_NOT_TO_SAY" }]
-    );
-    if (normalizedArtists.length) {
-      setCreatedArtistIndices(normalizedArtists.map((_, idx) => idx));
-      artistsLoadedRef.current = true;
-      setOriginalArtists(normalizedArtists);
-    } else {
-      setOriginalArtists([]);
-    }
-
-    // If images or description/venue were not present in the cached event, fetch full event details (by slug if available)
-    if (((!eventToEdit.images || eventToEdit.images.length === 0) || !eventToEdit.description || !eventToEdit.venues?.length) && (eventToEdit.slug || eventToEdit.id || eventToEdit._id)) {
-      (async () => {
-        if (eventFetchInProgressRef.current) return;
-        eventFetchInProgressRef.current = true;
-        try {
-          const organizerSlug = eventToEdit.organizer?.slug;
-          const eventSlug = eventToEdit.slug;
-          const fetchUrl = buildEventFetchUrl({
-            eventId: eventToEdit.id || eventToEdit._id,
-            organizerSlug,
-            eventSlug,
-          });
-          if (!fetchUrl) return;
-          const response = await apiFetch(fetchUrl, { method: "GET" });
-          const eventData = response.data?.event || response.data || response.event || response;
-          eventCacheRef.current = eventData;
-
-          if (eventData?.flyerImage) {
-            setCoverImage(eventData.flyerImage);
-          }
-          if (eventData?.description) {
-            setEventDescription(eventData.description);
-          }
-          if (!sponsorsLoadedRef.current && Array.isArray(eventData?.sponsors) && eventData.sponsors.length > 0) {
-            const normalizedSponsors = eventData.sponsors.map((s, idx) => flattenSponsor(s, idx));
-            const normalizedForCompare = normalizeSponsors(normalizedSponsors);
-            setSponsors(normalizedSponsors);
-            setOriginalSponsors(normalizedForCompare);
-            setIsSponsored(normalizedForCompare.length > 0);
-            setOriginalIsSponsored(normalizedForCompare.length > 0);
-            sponsorsLoadedRef.current = true;
-          }
-          if (Array.isArray(eventData?.venues) && eventData.venues.length > 0) {
-            const v = eventData.venues[0];
-            setVenueId(v.id || v._id || venueId);
-            setVenueName(pickVenueName(v));
-            setCity(v.city || city);
-            setState(v.state || state);
-            setCountry(v.country || country);
-            setPostalCode(v.postalCode || postalCode);
-            setVenueContact(v.contact || venueContact);
-            setVenueEmail(v.email || venueEmail);
-            setFullAddress(v.fullAddress || fullAddress);
-          }
-          if (eventData?.id || eventData?._id) {
-            setBackendEventId(eventData.id || eventData._id);
-          }
-          hydrateGallery(eventData?.images);
-          setAdditionalFromEvent(eventData);
-        } catch (err) {
-          console.error("Failed to fetch full event details for gallery hydration:", err);
-        } finally {
-          eventFetchInProgressRef.current = false;
+    const hydrateFromRoute = async () => {
+      try {
+        if (isMounted) {
+          setIsEditHydrating(true);
+          setEditHydrationError("");
         }
-      })();
-    }
+
+        const stateEvent = location.state?.event;
+        const cachedEvent =
+          stateEvent ||
+          events.find((e) => e.id === editId || e.publicId === editId || e.eventId === editId);
+
+        if (cachedEvent) {
+          await hydrateEvent(cachedEvent);
+        }
+
+        const fetchUrl = buildEventFetchUrl({ eventId: editId, bustCache: true });
+        const response = await apiFetch(fetchUrl, { method: "GET" });
+        const fetchedEvent = response.data?.event || response.data || response.event || response;
+
+        if (!fetchedEvent) {
+          throw new Error("Event not found.");
+        }
+
+        await hydrateEvent(fetchedEvent);
+      } catch (err) {
+        console.error("Failed to hydrate edit event:", err);
+        if (isMounted) {
+          setEditHydrationError(err?.message || "Failed to load event for editing.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsEditHydrating(false);
+        }
+      }
+    };
+
+    hydrateFromRoute();
+
+    return () => {
+      isMounted = false;
+    };
   }, [editId, events, location.state]);
 
   // Fetch sponsors from backend in edit mode when entering Step 5 (or when ID changes)
@@ -2790,6 +2878,27 @@ const CreateEvent = () => {
 
       <main className="flex-1 py-10">
         <div className="w-full max-w-[1100px] mx-auto px-4 md:px-8 space-y-8 pb-8">
+          {isEditMode && isEditHydrating && (
+            <Card className={`${cardBase} p-8`}>
+              <div className="flex items-center gap-3 text-white/80">
+                <Loader2 className="h-5 w-5 animate-spin text-[#D60024]" />
+                <div>
+                  <p className="text-sm font-medium">Loading event for editing...</p>
+                  <p className="text-xs text-white/50">Fetching the latest event data from the server.</p>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {isEditMode && editHydrationError && (
+            <Card className={`${cardBase} border-red-500/30 bg-red-950/20 p-6`}>
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-red-300">Could not load this event</p>
+                <p className="text-sm text-red-200/80">{editHydrationError}</p>
+              </div>
+            </Card>
+          )}
+
           {/* Back Button and Clear Draft */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -3362,7 +3471,7 @@ const CreateEvent = () => {
                         <PopoverContent align="start" className="w-auto p-0 border-gray-700 bg-[#0a0a0a]">
                           <Calendar
                             mode="single"
-                            selected={startDate ? new Date(`${startDate}T00:00:00`) : undefined}
+                            selected={parseSafeDateOnly(startDate) || undefined}
                             onSelect={(date) => {
                               if (!date) return;
                               const iso = format(date, "yyyy-MM-dd");
@@ -3373,7 +3482,7 @@ const CreateEvent = () => {
                               setStartCalendarOpen(false);
                             }}
                             disabled={{ before: today }}
-                            defaultMonth={startDate ? new Date(`${startDate}T00:00:00`) : today}
+                            defaultMonth={parseSafeDateOnly(startDate) || today}
                           />
                         </PopoverContent>
                       </Popover>
@@ -3427,7 +3536,7 @@ const CreateEvent = () => {
                         <PopoverContent align="start" className="w-auto p-0 border-gray-700 bg-[#0a0a0a]">
                           <Calendar
                             mode="single"
-                            selected={endDate ? new Date(`${endDate}T00:00:00`) : undefined}
+                            selected={parseSafeDateOnly(endDate) || undefined}
                             onSelect={(date) => {
                               if (!date) return;
                               const iso = format(date, "yyyy-MM-dd");
@@ -3435,9 +3544,9 @@ const CreateEvent = () => {
                               setEndCalendarOpen(false);
                             }}
                             disabled={{
-                              before: startDate ? new Date(`${startDate}T00:00:00`) : today,
+                              before: parseSafeDateOnly(startDate) || today,
                             }}
-                            defaultMonth={endDate ? new Date(`${endDate}T00:00:00`) : startDate ? new Date(`${startDate}T00:00:00`) : today}
+                            defaultMonth={parseSafeDateOnly(endDate) || parseSafeDateOnly(startDate) || today}
                           />
                         </PopoverContent>
                       </Popover>

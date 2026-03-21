@@ -1,426 +1,312 @@
 import { useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import {
+  AlertCircle,
   FileText,
-  Download,
-  TrendingUp,
-  TrendingDown,
-  Users,
-  Calendar,
-  DollarSign,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  BarChart3,
-  PieChart,
-  Filter,
+  Loader,
+  RefreshCw,
   Search,
-  Building2,
+  Shield,
+  Undo2,
 } from "lucide-react";
+import { toast } from "sonner";
+import { useAdminRefunds } from "@/hooks/useAdminRefunds";
+import { useAdminAuditLogs } from "@/hooks/useAdminAuditLogs";
+import { updateAdminRefundStatus } from "@/services/adminService";
+
+const refundStatuses = ["ALL", "REQUESTED", "APPROVED", "DECLINED", "PROCESSED", "FAILED"];
+const auditTypes = ["ALL", "users", "event_organizer", "events", "payouts", "refunds", "bank_details"];
 
 const PromoterReports = () => {
-  const [dateRange, setDateRange] = useState("30d");
-  const [reportType, setReportType] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
+  const {
+    items: refunds,
+    statistics: refundStats,
+    filters: refundFilters,
+    loading: refundsLoading,
+    isFetching: refundsFetching,
+    error: refundsError,
+    updateFilters: updateRefundFilters,
+    refresh: refreshRefunds,
+  } = useAdminRefunds();
+  const {
+    items: auditLogs,
+    filters: auditFilters,
+    loading: auditLoading,
+    isFetching: auditFetching,
+    error: auditError,
+    updateFilters: updateAuditFilters,
+    refresh: refreshAudit,
+  } = useAdminAuditLogs();
+  const [refundDrafts, setRefundDrafts] = useState({});
+  const [updatingRefundId, setUpdatingRefundId] = useState(null);
 
-  // Dummy data inspired by Prisma schema for reports
-  const reportsData = useMemo(() => ({
-    summary: {
-      totalRevenue: 28400000,
-      totalBookings: 15420,
-      totalEvents: 89,
-      activeOrganizers: 24,
-      platformFees: 2272000,
-      refundsProcessed: 384000,
-      pendingDisputes: 3,
-      avgTicketPrice: 1842,
-      topGrowthEvent: "Summer Music Festival 2024",
-      growthRate: 18.4,
-    },
-    revenueBreakdown: [
-      { category: "Music Events", revenue: 12400000, bookings: 6850, percentage: 43.7, growth: 22.1 },
-      { category: "Conferences", revenue: 8200000, bookings: 4120, percentage: 28.9, growth: 15.3 },
-      { category: "Food & Wine", revenue: 4800000, bookings: 2890, percentage: 16.9, growth: 8.7 },
-      { category: "Sports Events", revenue: 1800000, bookings: 980, percentage: 6.3, growth: -5.2 },
-      { category: "Arts & Culture", revenue: 1200000, bookings: 580, percentage: 4.2, growth: 12.4 },
-    ],
-    organizerPerformance: [
-      {
-        id: "org-abc",
-        name: "ABC Events",
-        events: 12,
-        revenue: 8200000,
-        bookings: 4850,
-        avgRating: 4.6,
-        completionRate: 98.2,
-        refundRate: 1.2,
-        status: "VERIFIED",
-        trend: "up",
-      },
-      {
-        id: "org-techcorp",
-        name: "TechCorp",
-        events: 8,
-        revenue: 5400000,
-        bookings: 3120,
-        avgRating: 4.4,
-        completionRate: 96.8,
-        refundRate: 2.1,
-        status: "VERIFIED",
-        trend: "up",
-      },
-      {
-        id: "org-culinary",
-        name: "Culinary Dreams",
-        events: 6,
-        revenue: 3200000,
-        bookings: 1870,
-        avgRating: 4.7,
-        completionRate: 99.1,
-        refundRate: 0.8,
-        status: "ON-HOLD",
-        trend: "down",
-      },
-      {
-        id: "org-elite",
-        name: "Elite Nights",
-        events: 4,
-        revenue: 1600000,
-        bookings: 980,
-        avgRating: 4.3,
-        completionRate: 94.5,
-        refundRate: 3.2,
-        status: "VERIFIED",
-        trend: "stable",
-      },
-    ],
-    eventAnalytics: [
-      {
-        id: "evt-summer-music",
-        title: "Summer Music Festival 2024",
-        organizer: "ABC Events",
-        revenue: 3200000,
-        bookings: 4850,
-        capacity: 5200,
-        occupancy: 93.3,
-        avgTicketPrice: 660,
-        checkInRate: 87.2,
-        rating: 4.6,
-        status: "COMPLETED",
-      },
-      {
-        id: "evt-tech-summit",
-        title: "Tech Innovation Summit",
-        organizer: "TechCorp",
-        revenue: 2400000,
-        bookings: 3120,
-        capacity: 4500,
-        occupancy: 69.3,
-        avgTicketPrice: 769,
-        checkInRate: 91.5,
-        rating: 4.4,
-        status: "COMPLETED",
-      },
-      {
-        id: "evt-food-wine",
-        title: "Food & Wine Festival",
-        organizer: "Culinary Dreams",
-        revenue: 1800000,
-        bookings: 1870,
-        capacity: 3500,
-        occupancy: 53.4,
-        avgTicketPrice: 963,
-        checkInRate: 89.1,
-        rating: 4.7,
-        status: "LIVE",
-      },
-    ],
-    financialHealth: [
-      {
-        metric: "Revenue Growth",
-        current: 28400000,
-        previous: 23980000,
-        change: 18.4,
-        status: "positive",
-        icon: TrendingUp,
-      },
-      {
-        metric: "Platform Fees",
-        current: 2272000,
-        previous: 1918000,
-        change: 18.4,
-        status: "positive",
-        icon: DollarSign,
-      },
-      {
-        metric: "Refund Rate",
-        current: 1.35,
-        previous: 1.82,
-        change: -25.8,
-        status: "positive",
-        icon: TrendingDown,
-      },
-      {
-        metric: "Dispute Ratio",
-        current: 0.019,
-        previous: 0.028,
-        change: -32.1,
-        status: "positive",
-        icon: AlertTriangle,
-      },
-    ],
-  }), []);
+  const refundSummary = useMemo(() => {
+    const base = { count: 0, amount: 0, failedCount: 0 };
+    refundStats.forEach((item) => {
+      base.count += Number(item?._count?.id || 0);
+      base.amount += Number(item?._sum?.amountCents || 0);
+      if (item.status === "FAILED") {
+        base.failedCount = Number(item?._count?.id || 0);
+      }
+    });
+    return base;
+  }, [refundStats]);
 
-  const currency = (v) => `₹${Number(v || 0).toLocaleString("en-IN")}`;
-  const percentage = (v) => `${Number(v || 0).toFixed(1)}%`;
+  const handleRefundUpdate = async (refundId) => {
+    const draft = refundDrafts[refundId];
+    if (!draft?.status) {
+      toast.error("Choose a refund status first.");
+      return;
+    }
 
-  const statusBadge = (status) => {
-    const map = {
-      VERIFIED: "success",
-      "ON-HOLD": "destructive",
-      PENDING: "default",
-      COMPLETED: "success",
-      LIVE: "success",
-      positive: "success",
-      negative: "destructive",
-    };
-    return map[status] || "outline";
+    setUpdatingRefundId(refundId);
+    try {
+      await updateAdminRefundStatus(refundId, {
+        status: draft.status,
+        reason: draft.reason || "",
+      });
+      toast.success("Refund updated.");
+      refreshRefunds();
+    } catch (updateError) {
+      toast.error(updateError.message || "Failed to update refund.");
+    } finally {
+      setUpdatingRefundId(null);
+    }
   };
-
-  const filteredOrganizers = reportsData.organizerPerformance.filter(org =>
-    org.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Reports & Analytics</h2>
-          <p className="text-muted-foreground">Comprehensive insights into platform performance</p>
+          <h2 className="text-2xl font-bold">Reports & Audit</h2>
+          <p className="text-muted-foreground">Refund operations and promoter audit history.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Search className="w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search organizers..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64"
-            />
-          </div>
-          <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
-              <SelectItem value="1y">Last year</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline">
-            <Download className="w-4 h-4 mr-2" />
-            Export
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={refreshRefunds} disabled={refundsFetching}>
+            <RefreshCw className={`h-4 w-4 ${refundsFetching ? "animate-spin" : ""}`} />
+            Refunds
+          </Button>
+          <Button variant="outline" size="sm" onClick={refreshAudit} disabled={auditFetching}>
+            <RefreshCw className={`h-4 w-4 ${auditFetching ? "animate-spin" : ""}`} />
+            Audit
           </Button>
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-border/60 bg-card/70">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{currency(reportsData.summary.totalRevenue)}</div>
-            <p className="text-xs text-muted-foreground">
-              <TrendingUp className="w-3 h-3 inline mr-1" />
-              +{percentage(reportsData.summary.growthRate)} from last period
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/60 bg-card/70">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{reportsData.summary.totalBookings.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              Across {reportsData.summary.totalEvents} events
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/60 bg-card/70">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Platform Fees</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{currency(reportsData.summary.platformFees)}</div>
-            <p className="text-xs text-muted-foreground">
-              {percentage((reportsData.summary.platformFees / reportsData.summary.totalRevenue) * 100)} of GMV
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/60 bg-card/70">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Organizers</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{reportsData.summary.activeOrganizers}</div>
-            <p className="text-xs text-muted-foreground">
-              {reportsData.summary.pendingDisputes} pending disputes
-            </p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="bg-card/70 border-border/60"><CardContent className="p-4"><p className="text-xs text-muted-foreground">Refund queue</p><p className="mt-1 text-2xl font-semibold">{refundSummary.count}</p></CardContent></Card>
+        <Card className="bg-card/70 border-border/60"><CardContent className="p-4"><p className="text-xs text-muted-foreground">Refund volume</p><p className="mt-1 text-2xl font-semibold">{(refundSummary.amount / 100).toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}</p></CardContent></Card>
+        <Card className="bg-card/70 border-border/60"><CardContent className="p-4"><p className="text-xs text-muted-foreground">Failed refunds</p><p className="mt-1 text-2xl font-semibold text-destructive">{refundSummary.failedCount}</p></CardContent></Card>
       </div>
 
-      {/* Revenue Breakdown */}
-      <Card className="border-border/60 bg-card/70">
+      <Card className="bg-card/70 border-border/60">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <PieChart className="w-5 h-5" />
-            Revenue by Category
+            <Undo2 className="h-4 w-4" />
+            Refund operations
           </CardTitle>
-          <CardDescription>Performance breakdown across event categories</CardDescription>
+          <CardDescription className="text-muted-foreground">
+            Review refund requests and resolve failures from one queue.
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {reportsData.revenueBreakdown.map((category, index) => (
-              <div key={index} className="flex items-center justify-between p-3 rounded-lg border border-border/40">
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium">{category.category}</h4>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={category.growth > 0 ? "success" : "destructive"}>
-                        {category.growth > 0 ? "+" : ""}{percentage(category.growth)}
-                      </Badge>
-                      <span className="text-sm text-muted-foreground">{percentage(category.percentage)}</span>
-                    </div>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {currency(category.revenue)} • {category.bookings.toLocaleString()} bookings
-                  </div>
-                </div>
-              </div>
-            ))}
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative min-w-[240px] flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                className="pl-9"
+                placeholder="Search refund, booking, event, user..."
+                value={refundFilters.search}
+                onChange={(event) => updateRefundFilters({ search: event.target.value })}
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {refundStatuses.map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => updateRefundFilters({ status })}
+                  className={`rounded-lg border px-3 py-2 text-sm transition ${
+                    refundFilters.status === status
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border/60 bg-card/70 text-muted-foreground hover:bg-card"
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Organizer Performance */}
-      <Card className="border-border/60 bg-card/70">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="w-5 h-5" />
-            Organizer Performance
-          </CardTitle>
-          <CardDescription>Key metrics for top organizers</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {filteredOrganizers.map((organizer, index) => (
-              <div key={index} className="p-4 rounded-lg border border-border/40">
-                <div className="flex items-start justify-between mb-3">
+          {refundsError && (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+              {refundsError}
+            </div>
+          )}
+
+          {refundsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : refunds.length === 0 ? (
+            <div className="rounded-xl border border-border/60 bg-card/80 p-12 text-center text-muted-foreground">
+              No refunds found.
+            </div>
+          ) : (
+            refunds.map((refund) => (
+              <div key={refund.id} className="rounded-xl border border-border/60 bg-card/80 p-4 space-y-4">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div>
-                    <h4 className="font-semibold">{organizer.name}</h4>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant={statusBadge(organizer.status)}>
-                        {organizer.status}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-lg font-semibold">{refund.publicId || refund.id}</p>
+                      <Badge variant={refund.status === "PROCESSED" ? "success" : refund.status === "FAILED" ? "destructive" : "outline"}>
+                        {refund.status}
                       </Badge>
-                      <span className="text-sm text-muted-foreground">
-                        {organizer.events} events • {organizer.bookings.toLocaleString()} bookings
-                      </span>
                     </div>
+                    <p className="text-sm text-muted-foreground">
+                      {refund.payment?.booking?.event?.title || "Unknown event"} · {refund.payment?.booking?.user?.name || "Unknown user"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Booking {refund.payment?.booking?.publicId || "N/A"} · Payment {refund.payment?.publicId || "N/A"}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <div className="font-semibold">{currency(organizer.revenue)}</div>
-                    <div className="flex items-center justify-end gap-1 text-sm">
-                      {organizer.trend === "up" && <TrendingUp className="w-4 h-4 text-green-600" />}
-                      {organizer.trend === "down" && <TrendingDown className="w-4 h-4 text-red-600" />}
-                      {organizer.trend === "stable" && <div className="w-4 h-4" />}
-                      <span className="text-muted-foreground">{organizer.trend}</span>
-                    </div>
+                    <p className="text-2xl font-semibold text-accent">
+                      {(Number(refund.amountCents || 0) / 100).toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {refund.processedAt ? new Date(refund.processedAt).toLocaleString("en-IN") : "Not processed"}
+                    </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Rating</span>
-                    <div className="font-medium">⭐ {organizer.avgRating}</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Completion</span>
-                    <div className="font-medium">{percentage(organizer.completionRate)}</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Refund Rate</span>
-                    <div className="font-medium">{percentage(organizer.refundRate)}</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Avg Ticket</span>
-                    <div className="font-medium">{currency(organizer.revenue / organizer.bookings)}</div>
-                  </div>
+
+                <div className="grid gap-3 md:grid-cols-[220px_1fr_auto]">
+                  <select
+                    className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                    value={refundDrafts[refund.id]?.status || refund.status}
+                    onChange={(event) =>
+                      setRefundDrafts((current) => ({
+                        ...current,
+                        [refund.id]: { ...current[refund.id], status: event.target.value },
+                      }))
+                    }
+                  >
+                    {["APPROVED", "DECLINED", "PROCESSED", "FAILED"].map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                  <Textarea
+                    placeholder="Refund notes or reason"
+                    value={refundDrafts[refund.id]?.reason ?? refund.reason ?? ""}
+                    onChange={(event) =>
+                      setRefundDrafts((current) => ({
+                        ...current,
+                        [refund.id]: { ...current[refund.id], reason: event.target.value },
+                      }))
+                    }
+                  />
+                  <Button onClick={() => handleRefundUpdate(refund.id)} disabled={updatingRefundId === refund.id}>
+                    {updatingRefundId === refund.id ? "Saving..." : "Update"}
+                  </Button>
                 </div>
               </div>
-            ))}
-          </div>
+            ))
+          )}
         </CardContent>
       </Card>
 
-      {/* Financial Health */}
-      <Card className="border-border/60 bg-card/70">
+      <Card className="bg-card/70 border-border/60">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5" />
-            Financial Health Metrics
+            <Shield className="h-4 w-4" />
+            Audit logs
           </CardTitle>
-          <CardDescription>Key performance indicators and trends</CardDescription>
+          <CardDescription className="text-muted-foreground">
+            Recent promoter/admin actions across users, organizers, events, payouts, refunds, and bank reviews.
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {reportsData.financialHealth.map((metric, index) => (
-              <div key={index} className="p-4 rounded-lg border border-border/40">
-                <div className="flex items-center justify-between mb-2">
-                  <metric.icon className="w-5 h-5 text-muted-foreground" />
-                  <Badge variant={statusBadge(metric.status)}>
-                    {metric.change > 0 ? "+" : ""}{percentage(metric.change)}
-                  </Badge>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative min-w-[240px] flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                className="pl-9"
+                placeholder="Search action, actor, resource..."
+                value={auditFilters.search}
+                onChange={(event) => updateAuditFilters({ search: event.target.value })}
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {auditTypes.map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => updateAuditFilters({ type })}
+                  className={`rounded-lg border px-3 py-2 text-sm transition ${
+                    auditFilters.type === type
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border/60 bg-card/70 text-muted-foreground hover:bg-card"
+                  }`}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {auditError && (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+              {auditError}
+            </div>
+          )}
+
+          {auditLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : auditLogs.length === 0 ? (
+            <div className="rounded-xl border border-border/60 bg-card/80 p-12 text-center text-muted-foreground">
+              No audit logs found.
+            </div>
+          ) : (
+            auditLogs.map((log) => (
+              <div key={log.id} className="rounded-xl border border-border/60 bg-card/80 p-4">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-semibold">{log.action}</p>
+                      <Badge variant="outline">{log.resourceType || "unknown"}</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Actor: {log.actor?.name || "System"} · {log.actor?.email || log.actorType}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Resource: {log.resourceId || "N/A"}
+                    </p>
+                  </div>
+                  <div className="text-right text-xs text-muted-foreground">
+                    {new Date(log.createdAt).toLocaleString("en-IN")}
+                  </div>
                 </div>
-                <h4 className="font-medium text-sm text-muted-foreground mb-1">{metric.metric}</h4>
-                <div className="text-xl font-bold">
-                  {metric.metric.includes("Rate") || metric.metric.includes("Ratio") 
-                    ? percentage(metric.current)
-                    : currency(metric.current)
-                  }
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Prev: {metric.metric.includes("Rate") || metric.metric.includes("Ratio")
-                    ? percentage(metric.previous)
-                    : currency(metric.previous)
-                  }
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <div className="rounded-lg border border-border/60 bg-background/60 p-3">
+                    <p className="mb-2 text-xs font-semibold text-muted-foreground">Before</p>
+                    <pre className="overflow-auto text-xs text-muted-foreground">{JSON.stringify(log.before, null, 2)}</pre>
+                  </div>
+                  <div className="rounded-lg border border-border/60 bg-background/60 p-3">
+                    <p className="mb-2 text-xs font-semibold text-muted-foreground">After</p>
+                    <pre className="overflow-auto text-xs text-muted-foreground">{JSON.stringify(log.after, null, 2)}</pre>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
+            ))
+          )}
         </CardContent>
       </Card>
     </div>

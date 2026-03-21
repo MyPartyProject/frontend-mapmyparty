@@ -158,7 +158,14 @@ const PromoterEvents = () => {
                           )}
                         </CardDescription>
                       </div>
-                      <Badge variant={statusBadge(event.eventStatus)}>{event.eventStatus}</Badge>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant={statusBadge(event.eventStatus)}>{event.eventStatus}</Badge>
+                        {event.publishStatus && (
+                          <Badge variant={event.publishStatus === "PUBLISHED" ? "success" : "secondary"}>
+                            {event.publishStatus}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">

@@ -204,6 +204,12 @@ const MyEvents = () => {
     setCurrentPage(1);
   }, []);
 
+  const handleEditEvent = useCallback((event) => {
+    setConfirmDelete(null);
+    setConfirmCancel(null);
+    navigate(`/organizer/create-event?edit=${event.id}`, { state: { event } });
+  }, [navigate]);
+
   return (
     <div className="w-full max-w-6xl mx-auto text-white">
       <style>{`
@@ -366,7 +372,7 @@ const MyEvents = () => {
                         View
                       </button>
                       <button
-                        onClick={() => navigate(`/organizer/create-event?edit=${event.id}`, { state: { event } })}
+                        onClick={() => handleEditEvent(event)}
                         className="p-1.5 rounded-md text-white/30 hover:text-white/80 hover:bg-white/[0.06] transition-colors"
                         title="Edit event"
                       >

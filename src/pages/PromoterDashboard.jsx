@@ -594,7 +594,7 @@ const PromoterDashboard = () => {
             {(isMobile || sidebarOpen) && (
               <div>
                 <p className="text-xs text-foreground/60">MapMyParty</p>
-                <p className="font-semibold tracking-[0.08em]">MAPMYPARTY</p>
+                <p className="text-sm font-semibold tracking-[0.06em]">MapMyParty</p>
               </div>
             )}
           </button>

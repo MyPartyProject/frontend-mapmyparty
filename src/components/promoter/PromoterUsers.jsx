@@ -4,6 +4,7 @@ import {
   AlertCircle,
   Calendar,
   ChevronRight,
+  Lock,
   Loader,
   Mail,
   Phone,
@@ -141,6 +142,12 @@ const PromoterUsers = () => {
                           <Badge variant={user.status === "active" ? "success" : "secondary"}>
                             {user.status}
                           </Badge>
+                          {user.isSuspended && (
+                            <Badge variant="destructive" className="gap-1">
+                              <Lock className="h-3 w-3" />
+                              Suspended
+                            </Badge>
+                          )}
                           {user.isVerified && (
                             <Badge variant="outline" className="border-emerald-500/30 text-emerald-600">
                               <ShieldCheck className="mr-1 h-3 w-3" />
@@ -162,6 +169,11 @@ const PromoterUsers = () => {
                             Joined {formatDate(user.joinedAt)}
                           </span>
                         </p>
+                        {user.isSuspended && user.suspensionReason && (
+                          <p className="text-xs text-destructive">
+                            Suspension reason: {user.suspensionReason}
+                          </p>
+                        )}
                       </div>
                     </div>
 

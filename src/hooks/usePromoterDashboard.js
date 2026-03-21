@@ -1,86 +1,57 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { apiFetch } from "@/config/api";
 
-/**
- * Hook for fetching promoter dashboard overview data
- * Fetches comprehensive dashboard metrics from /api/admin/dashboard
- */
 export const usePromoterDashboard = () => {
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const mountedRef = useRef(true);
 
-  const isMountedRef = useRef(true);
-
-  useEffect(() => {
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  /**
-   * Fetch dashboard data from API
-   */
   const fetchDashboard = useCallback(async () => {
-    if (!isMountedRef.current) return;
+    if (!mountedRef.current) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      const url = "api/admin/dashboard";
-
-      console.log("🌐 Fetching promoter dashboard from:", url);
-
-      const response = await apiFetch(url, {
+      const response = await apiFetch("admin/dashboard", {
         method: "GET",
         credentials: "include",
       });
-
-      console.log("✅ Promoter Dashboard API Response:", response);
 
       if (!response.success) {
         throw new Error(response.message || "Failed to fetch dashboard data");
       }
 
-      const dashboardData = response.data || {};
-
-      if (isMountedRef.current) {
-        setDashboard(dashboardData);
-        setError(null);
+      if (mountedRef.current) {
+        setDashboard(response.data || {});
       }
     } catch (apiError) {
-      console.error("❌ Error fetching promoter dashboard:", apiError);
-
-      const errorMessage = apiError.message || apiError.data?.message || "Failed to fetch dashboard data";
-
-      if (isMountedRef.current) {
-        setError(errorMessage);
+      console.error("Error fetching promoter dashboard:", apiError);
+      if (mountedRef.current) {
+        setError(apiError.message || "Failed to fetch dashboard data");
         setDashboard(null);
       }
     } finally {
-      if (isMountedRef.current) {
+      if (mountedRef.current) {
         setLoading(false);
       }
     }
   }, []);
 
-  /**
-   * Refresh dashboard (force refetch)
-   */
-  const refresh = useCallback(() => {
-    fetchDashboard();
-  }, [fetchDashboard]);
-
-  // Fetch on mount
   useEffect(() => {
+    mountedRef.current = true;
     fetchDashboard();
+
+    return () => {
+      mountedRef.current = false;
+    };
   }, [fetchDashboard]);
 
   return {
     dashboard,
     loading,
     error,
-    refresh,
+    refresh: fetchDashboard,
   };
 };

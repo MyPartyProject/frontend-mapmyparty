@@ -207,12 +207,12 @@ const App = () => {
                 </ProtectedRoute>
               } />
               <Route path="/organizer/select-event-type" element={
-                <ProtectedRoute requiredRole="organizer">
+                <ProtectedRoute requiredRole="organizer" skipOrganizerOnboarding>
                   <EventTypeSelection />
                 </ProtectedRoute>
               } />
               <Route path="/organizer/create-event" element={
-                <ProtectedRoute requiredRole="organizer">
+                <ProtectedRoute requiredRole="organizer" skipOrganizerOnboarding>
                   <CreateEvent />
                 </ProtectedRoute>
               } />

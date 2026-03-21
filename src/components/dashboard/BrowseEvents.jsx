@@ -65,7 +65,10 @@ export default function BrowseEvents({ showPublicHeader = false }) {
 
   useEffect(() => {
     if (showPublicHeader && checkAuth()) {
-      navigate("/dashboard/browse-events", { replace: true });
+      const role = (sessionStorage.getItem("role") || "USER").toUpperCase();
+      if (role === "USER") {
+        navigate("/dashboard/browse-events", { replace: true });
+      }
     }
   }, [showPublicHeader, navigate]);
 

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link, useOutletContext, useParams } from "react-router-dom";
 import {
   AlertCircle,
@@ -6,6 +6,7 @@ import {
   Calendar,
   CheckCircle,
   Clock,
+  Lock,
   Loader,
   Mail,
   Phone,
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Pagination,
   PaginationContent,
@@ -25,13 +27,31 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { usePromoterUserDetail } from "@/hooks/usePromoterUserDetail";
+import { updateAdminUserSuspension } from "@/services/adminService";
+import { toast } from "sonner";
 
 const PromoterUserDetail = () => {
   const { id } = useParams();
   const { currency } = useOutletContext();
-  const { user, bookings, loading, isFetching, error, notFound, pagination, changePage } =
+  const { user, bookings, loading, isFetching, error, notFound, pagination, changePage, refresh } =
     usePromoterUserDetail(id);
+  const [suspensionReason, setSuspensionReason] = useState("");
+  const [isSubmittingAction, setIsSubmittingAction] = useState(false);
+  const [isSuspendDialogOpen, setIsSuspendDialogOpen] = useState(false);
+  const [isReactivateDialogOpen, setIsReactivateDialogOpen] = useState(false);
 
   const formatDate = useCallback((value, withTime = false) => {
     if (!value) return "N/A";
@@ -77,6 +97,36 @@ const PromoterUserDetail = () => {
   const avgTicketPrice = user?.totalTickets
     ? Math.round(Number(user.totalSpent || 0) / Number(user.totalTickets || 1))
     : 0;
+
+  const handleSuspensionAction = useCallback(
+    async (nextIsSuspended) => {
+      if (!user?.id || isSubmittingAction) return;
+      if (nextIsSuspended && !suspensionReason.trim()) {
+        toast.error("Suspension reason is required.");
+        return;
+      }
+
+      setIsSubmittingAction(true);
+      try {
+        await updateAdminUserSuspension(user.id, {
+          isSuspended: nextIsSuspended,
+          reason: nextIsSuspended ? suspensionReason.trim() : "",
+        });
+        toast.success(nextIsSuspended ? "User suspended." : "User reactivated.");
+        setIsSuspendDialogOpen(false);
+        setIsReactivateDialogOpen(false);
+        if (!nextIsSuspended) {
+          setSuspensionReason("");
+        }
+        refresh();
+      } catch (actionError) {
+        toast.error(actionError.message || "Failed to update user status.");
+      } finally {
+        setIsSubmittingAction(false);
+      }
+    },
+    [isSubmittingAction, refresh, suspensionReason, user?.id]
+  );
 
   if (loading) {
     return (
@@ -156,6 +206,12 @@ const PromoterUserDetail = () => {
                     <Badge variant={user?.status === "active" ? "success" : "secondary"}>
                       {user?.status || "registered"}
                     </Badge>
+                    {user?.isSuspended && (
+                      <Badge variant="destructive" className="gap-1">
+                        <Lock className="h-3 w-3" />
+                        Suspended
+                      </Badge>
+                    )}
                     {user?.isVerified && (
                       <Badge variant="outline" className="border-emerald-500/30 text-emerald-600">
                         <ShieldCheck className="mr-1 h-3 w-3" />
@@ -168,7 +224,7 @@ const PromoterUserDetail = () => {
                 </div>
                 <div className="rounded-xl border border-border/60 bg-card/80 px-4 py-2">
                   <p className="text-xs text-muted-foreground">User ID</p>
-                  <p className="text-sm font-mono">{user?.id?.slice(0, 8)}...</p>
+                  <p className="text-sm font-mono">{user?.id || "N/A"}</p>
                 </div>
               </div>
             </CardHeader>
@@ -187,6 +243,17 @@ const PromoterUserDetail = () => {
                   <Clock className="w-4 h-4" /> Last booking {formatDate(user?.lastBookingAt, true)}
                 </div>
               </div>
+              {user?.isSuspended && (
+                <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4">
+                  <p className="text-sm font-semibold text-destructive">Account suspended</p>
+                  <p className="mt-1 text-sm text-destructive/80">
+                    {user?.suspensionReason || "No suspension reason was recorded."}
+                  </p>
+                  <p className="mt-2 text-xs text-destructive/70">
+                    Suspended at {formatDate(user?.suspendedAt, true)}
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -353,6 +420,97 @@ const PromoterUserDetail = () => {
                     </>
                   )}
                 </p>
+              </div>
+              <div className="rounded-xl border border-border/60 bg-card/80 p-3">
+                <p className="text-xs text-muted-foreground">Access</p>
+                <p className="font-semibold flex items-center gap-2">
+                  {user?.isSuspended ? (
+                    <>
+                      <Lock className="w-4 h-4 text-destructive" />
+                      Suspended
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4 text-emerald-500" />
+                      Active
+                    </>
+                  )}
+                </p>
+                {user?.isSuspended && user?.suspensionReason && (
+                  <p className="mt-2 text-xs text-muted-foreground">{user.suspensionReason}</p>
+                )}
+              </div>
+              <div className="rounded-xl border border-border/60 bg-card/80 p-3 space-y-3">
+                <div>
+                  <p className="text-xs text-muted-foreground">Admin action</p>
+                  <p className="text-sm text-muted-foreground">
+                    Suspend risky users or restore access after review.
+                  </p>
+                </div>
+                {!user?.isSuspended ? (
+                  <AlertDialog open={isSuspendDialogOpen} onOpenChange={setIsSuspendDialogOpen}>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" className="w-full">
+                        Suspend user
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Suspend this user?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This blocks authenticated access immediately. Provide a clear reason for the audit trail.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium" htmlFor="user-suspension-reason">
+                          Suspension reason
+                        </label>
+                        <Textarea
+                          id="user-suspension-reason"
+                          value={suspensionReason}
+                          onChange={(event) => setSuspensionReason(event.target.value)}
+                          placeholder="Explain why this account is being suspended."
+                          maxLength={500}
+                        />
+                      </div>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isSubmittingAction}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleSuspensionAction(true)}
+                          disabled={isSubmittingAction}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          {isSubmittingAction ? "Suspending..." : "Suspend user"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                ) : (
+                  <AlertDialog open={isReactivateDialogOpen} onOpenChange={setIsReactivateDialogOpen}>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" className="w-full">
+                        Reactivate user
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Reactivate this user?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Access will be restored and the current suspension reason will be cleared.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isSubmittingAction}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleSuspensionAction(false)}
+                          disabled={isSubmittingAction}
+                        >
+                          {isSubmittingAction ? "Updating..." : "Reactivate user"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
               </div>
             </CardContent>
           </Card>

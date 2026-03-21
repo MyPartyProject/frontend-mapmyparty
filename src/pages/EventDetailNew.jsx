@@ -19,6 +19,7 @@ import { apiFetch, buildUrl } from "@/config/api";
 import usePublicEventDetail from "@/hooks/usePublicEventDetail";
 import { fetchSession, resetSessionCache, isAuthenticated as isAuthedSync } from "@/utils/auth";
 import BillingDetailsModal from "@/components/BillingDetailsModal";
+import logoSvg from "@/assets/MMP logo.svg";
 // import PromoterDashboardHeader from "@/components/PromoterDashboardHeader";
 
 const FALLBACK_IMAGE = "https://via.placeholder.com/1200x600?text=Event";
@@ -646,7 +647,7 @@ const EventDetailNew = () => {
       <div className="event-detail-theme min-h-screen bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-white mb-4">Event Not Found</h2>
-          <Button onClick={() => navigate("/dashboard/browse-events")} className="bg-gradient-to-r from-[#D60024] to-[#ff4d67]">
+          <Button onClick={() => navigate("/browse-events")} className="bg-gradient-to-r from-[#D60024] to-[#ff4d67]">
             Browse Events
           </Button>
         </div>
@@ -658,11 +659,28 @@ const EventDetailNew = () => {
     <div className="event-detail-theme min-h-screen text-white bg-gray-950">
       <style>{pageCss}</style>
 
-      {/* Header */}
-      {/* <PromoterDashboardHeader /> */}
+      <header className="sticky top-0 z-40 bg-black/35 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-12">
+          <Link to="/" className="flex items-center gap-3">
+            <img src={logoSvg} alt="Map My Party" className="h-9 w-auto" />
+            <span className="text-sm font-semibold tracking-[0.06em] text-white">
+              MapMyParty
+            </span>
+          </Link>
+
+          <nav className="flex items-center gap-6 text-sm font-medium text-white/75">
+            <Link to="/" className="transition hover:text-white">
+              Home
+            </Link>
+            <Link to="/browse-events" className="transition hover:text-white">
+              Events
+            </Link>
+          </nav>
+        </div>
+      </header>
 
       {/* Hero Section - matching reference design */}
-      <div className="pt-14 pb-2">
+      <div className="pt-8 pb-2">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="grid lg:grid-cols-[1.3fr,0.6fr] gap-8 items-start px-8">
             {/* Left: Hero Image with Overlays */}
