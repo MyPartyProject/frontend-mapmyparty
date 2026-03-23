@@ -18,6 +18,7 @@ import {
   BadgePercent,
 } from "lucide-react";
 import { apiFetch } from "@/config/api";
+import AnalyticsProgressBar from "@/components/analytics/AnalyticsProgressBar";
 
 const gradientCard =
   "relative rounded-2xl p-4 bg-white/5 border border-white/10 backdrop-blur overflow-hidden shadow-lg shadow-black/30";
@@ -412,9 +413,12 @@ const AudienceAnalytics = () => {
                   {showValues ? formatNumber(item.value) : formatPercent(item.value)}
                 </span>
               </div>
-              <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
-                <div className={`h-2 rounded-full ${colorClass}`} style={{ width: `${share || 0}%` }} />
-              </div>
+              <AnalyticsProgressBar
+                value={share || 0}
+                trackStyle={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+                fillClassName={colorClass}
+                minVisiblePercent={4}
+              />
             </div>
           );
         })}
@@ -598,18 +602,18 @@ const AudienceAnalytics = () => {
                       </span>
                     </div>
                     <div className="space-y-1">
-                      <div className="h-2 rounded-full bg-white/10 overflow-hidden" title="Revenue">
-                        <div
-                          className="h-2 rounded-full bg-emerald-400"
-                          style={{ width: `${revPct}%` }}
-                        />
-                      </div>
-                      <div className="h-2 rounded-full bg-white/10 overflow-hidden" title="Bookings">
-                        <div
-                          className="h-2 rounded-full bg-sky-400"
-                          style={{ width: `${bookPct}%` }}
-                        />
-                      </div>
+                      <AnalyticsProgressBar
+                        value={revPct}
+                        trackStyle={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+                        fillStyle={{ backgroundColor: "#34d399" }}
+                        minVisiblePercent={4}
+                      />
+                      <AnalyticsProgressBar
+                        value={bookPct}
+                        trackStyle={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+                        fillStyle={{ backgroundColor: "#38bdf8" }}
+                        minVisiblePercent={4}
+                      />
                     </div>
                   </div>
                 );
@@ -843,12 +847,12 @@ const AudienceAnalytics = () => {
                               <span className="text-blue-200">{formatNumber(tickets, "0")} tickets</span>
                             </span>
                           </div>
-                          <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                            <div
-                              className="h-2 rounded-full bg-gradient-to-r from-emerald-400 via-blue-500 to-cyan-400"
-                              style={{ width: `${width}%` }}
-                            />
-                          </div>
+                          <AnalyticsProgressBar
+                            value={width}
+                            trackStyle={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+                            fillStyle={{ background: "linear-gradient(90deg, #34d399 0%, #3b82f6 55%, #22d3ee 100%)" }}
+                            minVisiblePercent={6}
+                          />
                         </div>
                       );
                     })}

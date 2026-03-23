@@ -21,6 +21,7 @@ export const usePromoterEvents = (initialFilters = {}) => {
   // Use refs for filters/page to break the useCallback dependency chains
   const filtersRef = useRef({
     eventStatus: initialFilters.eventStatus || 'ALL',
+    publishStatus: initialFilters.publishStatus || 'ALL',
     search: initialFilters.search || '',
     organizerId: initialFilters.organizerId || null,
   });
@@ -50,6 +51,9 @@ export const usePromoterEvents = (initialFilters = {}) => {
 
       if (currentFilters.eventStatus && currentFilters.eventStatus !== 'ALL') {
         params.set('status', currentFilters.eventStatus);
+      }
+      if (currentFilters.publishStatus && currentFilters.publishStatus !== 'ALL') {
+        params.set('publishStatus', currentFilters.publishStatus);
       }
       if (currentFilters.search && currentFilters.search.length >= MIN_SEARCH_LENGTH) {
         params.set('search', currentFilters.search);
@@ -105,7 +109,7 @@ export const usePromoterEvents = (initialFilters = {}) => {
   }, [fetchEvents]);
 
   const clearFilters = useCallback(() => {
-    const cleared = { eventStatus: 'ALL', search: '', organizerId: null };
+    const cleared = { eventStatus: 'ALL', publishStatus: 'ALL', search: '', organizerId: null };
     filtersRef.current = cleared;
     setFilters(cleared);
     fetchEvents(1);

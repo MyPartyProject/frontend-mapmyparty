@@ -139,3 +139,29 @@ export async function fetchAdminAuditLogs(params = {}) {
   const response = await apiFetch(`admin/audit-logs${query.toString() ? `?${query.toString()}` : ""}`);
   return response.data;
 }
+
+export async function fetchPlatformConfig() {
+  const response = await apiFetch("admin/platform/config");
+  return response.data;
+}
+
+export async function savePlatformConfig(payload) {
+  const response = await apiFetch("admin/platform/config", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+  return response.data;
+}
+
+export async function fetchAdminProfile() {
+  const response = await apiFetch("admin/me/profile");
+  return response.data?.user || response.user || response.data;
+}
+
+export async function updateAdminProfile(payload) {
+  const response = await apiFetch("admin/me/profile", {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+  return response.data?.user || response.user || response.data;
+}

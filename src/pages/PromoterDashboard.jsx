@@ -26,6 +26,7 @@ import {
   ChevronDown,
   FileText,
   CreditCard,
+  Settings2,
   X,
 } from "lucide-react";
 
@@ -40,6 +41,7 @@ const navItems = [
   { label: "Analytics", to: "/promoter/analytics", icon: BarChart3 },
   { label: "Reports", to: "/promoter/reports", icon: FileText },
   { label: "Billing", to: "/promoter/billing", icon: CreditCard },
+  { label: "Platform Config", to: "/promoter/platform-config", icon: Settings2 },
 ];
 
 const PromoterDashboard = () => {
@@ -583,7 +585,7 @@ const PromoterDashboard = () => {
   }, [mobileSidebarOpen]);
 
   const sidebarContent = (isMobile = false) => (
-    <>
+    <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="rounded-2xl border border-sidebar-border/60 bg-sidebar/80 p-3 shadow-[var(--shadow-card)]">
         <div className="flex items-center justify-between gap-3">
           <button
@@ -616,7 +618,8 @@ const PromoterDashboard = () => {
         </div>
       </div>
 
-      <nav className="rounded-2xl border border-sidebar-border/60 bg-sidebar/70 p-2 space-y-1 shadow-[var(--shadow-card)]">
+      <nav className="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-sidebar-border/60 bg-sidebar/70 p-2 shadow-[var(--shadow-card)]">
+        <div className="space-y-1 pr-1">
         {navItems.map(({ label, to, icon: Icon }) => (
           <NavLink
             key={label}
@@ -634,17 +637,15 @@ const PromoterDashboard = () => {
             {(isMobile || sidebarOpen) && <span className="text-sm font-medium">{label}</span>}
           </NavLink>
         ))}
+        </div>
       </nav>
 
-      <div className="mt-auto">
+      <div className="shrink-0 pt-1">
         <div
           ref={footerMenuRef}
           className="relative rounded-2xl border border-sidebar-border/60 bg-sidebar/80 p-2 shadow-[var(--shadow-card)]"
         >
-          <button
-            onClick={() => setFooterMenuOpen((v) => !v)}
-            className="flex items-center gap-3 w-full text-left hover:bg-sidebar-accent/60 transition rounded-lg px-2 py-2"
-          >
+          <div className="flex items-center gap-3 rounded-lg px-2 py-2">
             <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary-foreground font-semibold border border-primary/30">
               {(user.name || "P").charAt(0).toUpperCase()}
             </div>
@@ -654,16 +655,47 @@ const PromoterDashboard = () => {
                 <p className="text-xs text-foreground/60 truncate">{user.email || "promoter@mapmyparty"}</p>
               </div>
             )}
-            {(isMobile || sidebarOpen) && (
-              <ChevronDown
-                className={`w-4 h-4 text-foreground/70 transition-transform ${
-                  footerMenuOpen ? "rotate-180" : ""
-                }`}
-              />
+            {!isMobile && (isMobile || sidebarOpen) && (
+              <button
+                onClick={() => setFooterMenuOpen((v) => !v)}
+                className="rounded-lg p-1.5 text-foreground/70 transition hover:bg-sidebar-accent/60"
+                aria-label="Toggle account menu"
+              >
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${
+                    footerMenuOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
             )}
-          </button>
+          </div>
 
-          {footerMenuOpen && (
+          {isMobile ? (
+            <div className="space-y-2 pt-2">
+              <button
+                onClick={() => {
+                  setMobileSidebarOpen(false);
+                  navigate("/promoter/profile");
+                }}
+                className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-sidebar-accent/40 border border-sidebar-border/60 text-foreground hover:bg-sidebar-accent transition"
+              >
+                <User className="w-4 h-4" />
+                <span>My Profile</span>
+              </button>
+              <button
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-destructive/15 border border-destructive/30 text-destructive-foreground hover:bg-destructive/25 transition disabled:opacity-60"
+              >
+                {isLoggingOut ? (
+                  <span className="h-4 w-4 border-2 border-destructive/60 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <LogOut className="w-4 h-4" />
+                )}
+                <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
+              </button>
+            </div>
+          ) : footerMenuOpen ? (
             <div className="absolute bottom-[calc(100%+10px)] left-0 right-0 z-20">
               <div className="rounded-xl border border-sidebar-border/60 bg-sidebar/95 backdrop-blur-md shadow-[var(--shadow-card)] p-2 space-y-2">
                 <button
@@ -691,10 +723,10 @@ const PromoterDashboard = () => {
                 </button>
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
-    </>
+    </div>
   );
 
   return (
@@ -709,7 +741,7 @@ const PromoterDashboard = () => {
 
       {/* Mobile Sidebar Drawer */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 flex flex-col gap-4 bg-sidebar border-r border-sidebar-border/60 px-3 py-5 transition-transform duration-300 lg:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-sidebar border-r border-sidebar-border/60 px-3 py-5 transition-transform duration-300 lg:hidden ${
           mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -718,7 +750,7 @@ const PromoterDashboard = () => {
 
       {/* Desktop Sidebar */}
       <aside
-        className={`hidden lg:flex ${sidebarOpen ? "w-64" : "w-20"} flex-col gap-4 bg-sidebar border-r border-sidebar-border/60 px-3 py-5 sticky top-0 h-screen transition-all duration-300`}
+        className={`hidden lg:flex ${sidebarOpen ? "w-64" : "w-20"} bg-sidebar border-r border-sidebar-border/60 px-3 py-5 sticky top-0 h-screen transition-all duration-300`}
       >
         {sidebarContent(false)}
       </aside>

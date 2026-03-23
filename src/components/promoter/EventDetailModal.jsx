@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AnalyticsProgressBar from "@/components/analytics/AnalyticsProgressBar";
 import { 
   Calendar, 
   Users, 
@@ -339,12 +340,12 @@ const EventDetailModal = ({ isOpen, onClose, event }) => {
                       <span className="text-sm font-medium">Enrollment Progress</span>
                       <span className="text-sm font-bold text-teal-600">{enrolledPercentage}%</span>
                     </div>
-                    <div className="w-full bg-muted rounded-full h-4 overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-1000 ease-out bg-gradient-to-r from-teal-500 to-emerald-500 animate-in slide-in-from-left duration-1000"
-                        style={{ width: `${enrolledPercentage}%` }}
-                      />
-                    </div>
+                    <AnalyticsProgressBar
+                      value={enrolledPercentage}
+                      heightClassName="h-4"
+                      trackClassName="bg-muted"
+                      fillStyle={{ background: "linear-gradient(90deg, #14b8a6 0%, #10b981 100%)" }}
+                    />
                     <div className="grid grid-cols-3 gap-4 pt-2">
                       <div className="text-center">
                         <p className="text-2xl font-bold text-teal-600">{event.ticketsSold}</p>

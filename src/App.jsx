@@ -32,6 +32,7 @@ import PromoterPayouts from "./components/promoter/PromoterPayouts";
 import PromoterReports from "./components/promoter/PromoterReports";
 import PromoterBilling from "./components/promoter/PromoterBilling";
 import PromoterBillingDetail from "./components/promoter/PromoterBillingDetail";
+import PromoterPlatformConfig from "./components/promoter/PromoterPlatformConfig";
 import CreateEvent from "./pages/CreateEvent.jsx";
 import EventTypeSelection from "./pages/EventTypeSelection";
 import NotFound from "./pages/NotFound";
@@ -239,6 +240,8 @@ const App = () => {
                 <Route path="reports" element={<PromoterReports />} />
                 <Route path="billing" element={<PromoterBilling />} />
                 <Route path="billing/:slug" element={<PromoterBillingDetail />} />
+                <Route path="platform-config" element={<PromoterPlatformConfig />} />
+                <Route path="profile" element={<PromoterProfile />} />
               </Route>
               <Route path="/promoter/dashboard" element={
                 <ProtectedRoute requiredRole="promoter">
@@ -250,12 +253,6 @@ const App = () => {
                   <PromoterEventDetail />
                 </ProtectedRoute>
               } />
-              <Route path="/promoter/profile" element={
-                <ProtectedRoute requiredRole="promoter">
-                  <PromoterProfile />
-                </ProtectedRoute>
-              } />
-              
               {/* Protected Profile Routes */}
               <Route path="/profile" element={
                 <ProtectedRoute>

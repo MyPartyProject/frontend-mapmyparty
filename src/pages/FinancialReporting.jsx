@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "@/config/api";
+import AnalyticsProgressBar from "@/components/analytics/AnalyticsProgressBar";
 
 const formatINR = (value) => `₹${(value ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 const formatNumber = (value, fallback = "0") => {
@@ -630,15 +631,11 @@ const FinancialReporting = () => {
                     <span>{row.label || row.name}</span>
                     <span>{formatINR(row.value)}</span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-white/10">
-                    <div
-                      className="h-2 rounded-full"
-                      style={{
-                        width: `${((row.value || 0) / (summary.gstCollected || 1)) * 100}%`,
-                        backgroundColor: row.color || palette[idx % palette.length],
-                      }}
-                    />
-                  </div>
+                  <AnalyticsProgressBar
+                    value={((row.value || 0) / (summary.gstCollected || 1)) * 100}
+                    trackStyle={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+                    fillStyle={{ backgroundColor: row.color || palette[idx % palette.length] }}
+                  />
                 </div>
               ))}
             </div>
