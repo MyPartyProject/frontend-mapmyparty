@@ -92,6 +92,62 @@ const normalizeGeography = (raw) => {
   return [...stateArr, ...cityArr];
 };
 
+const normalizeEventRecord = (raw = {}) => {
+  const source = raw?.event || raw || {};
+  const id = raw?.eventId || raw?.id || source?.id || "";
+
+  if (!id) return null;
+
+  return {
+    id,
+    title: source?.title || source?.name || raw?.title || raw?.name || "Untitled event",
+    category: source?.category || raw?.category || "",
+    city: source?.city || raw?.city || raw?.location || "",
+    startDate: source?.startDate || raw?.startDate || "",
+    revenue: Number(raw?.revenue ?? raw?.net ?? raw?.total ?? raw?.amount ?? 0) || 0,
+    ticketsSold: Number(raw?.ticketsSold ?? raw?.sold ?? 0) || 0,
+    bookings: Number(raw?.bookings ?? 0) || 0,
+    event: source,
+  };
+};
+
+const normalizeEventCollection = (raw) => {
+  const source = unwrap(raw);
+  const events = source?.events || source?.items || source?.topEvents || source?.data || source || [];
+  return Array.isArray(events) ? events.map(normalizeEventRecord).filter(Boolean) : [];
+};
+
+const mergeEventCollections = (...collections) => {
+  const merged = new Map();
+
+  collections
+    .flat()
+    .filter(Boolean)
+    .forEach((item) => {
+      const existing = merged.get(item.id) || {};
+      merged.set(item.id, {
+        ...existing,
+        ...item,
+        revenue: item.revenue || existing.revenue || 0,
+        ticketsSold: item.ticketsSold || existing.ticketsSold || 0,
+        bookings: item.bookings || existing.bookings || 0,
+      });
+    });
+
+  return Array.from(merged.values()).sort((a, b) => {
+    const performanceA = Number(a.revenue || 0) + Number(a.ticketsSold || 0) + Number(a.bookings || 0);
+    const performanceB = Number(b.revenue || 0) + Number(b.ticketsSold || 0) + Number(b.bookings || 0);
+
+    if (performanceA !== performanceB) {
+      return performanceB - performanceA;
+    }
+
+    const timeA = a.startDate ? new Date(a.startDate).getTime() : 0;
+    const timeB = b.startDate ? new Date(b.startDate).getTime() : 0;
+    return timeB - timeA;
+  });
+};
+
 const AudienceAnalytics = () => {
   const [timePeriod, setTimePeriod] = useState("month"); // day | week | month | year | all
   const [startDate, setStartDate] = useState("");
@@ -143,10 +199,10 @@ const AudienceAnalytics = () => {
     setLoading(true);
     setError("");
     const mainPeriod = computedPeriod;
-    const periodForAnalytics = mainPeriod === "custom" ? "custom" : mainPeriod === "all" ? "year" : mainPeriod; // analytics endpoint only allows day/week/month/year/custom
-    const periodForOthers = mainPeriod === "custom" ? "month" : mainPeriod; // backend for trends/top/breakdowns needs day|week|month|year|all
-    const trendPeriod = periodForOthers === "all" ? "year" : periodForOthers; // trends validator disallows "all"
-    const statsPeriod = mainPeriod === "all" ? "year" : periodForAnalytics; // stats validator disallows "all"
+    const periodForAnalytics = mainPeriod === "all" ? "year" : mainPeriod;
+    const periodForOthers = mainPeriod;
+    const trendPeriod = periodForOthers === "all" ? "year" : periodForOthers;
+    const statsPeriod = mainPeriod === "all" ? "year" : periodForAnalytics;
     const commonStats = { period: statsPeriod, startDate, endDate };
     const common = { period: periodForOthers, startDate, endDate };
     const breakdownPeriod = periodForOthers;
@@ -190,6 +246,7 @@ const AudienceAnalytics = () => {
           }),
           { method: "GET" }
         ),
+        apiFetch("event/my-events", { method: "GET" }),
       ]);
 
       const pick = (idx) => (results[idx].status === "fulfilled" ? results[idx].value : null);
@@ -206,6 +263,7 @@ const AudienceAnalytics = () => {
       const categoryBreakdownRes = pick(5);
       const geoBreakdownRes = pick(6);
       const ticketTypeBreakdownRes = pick(7);
+      const organizerEventsRes = pick(8);
 
       const statsData = unwrap(statisticsRes);
       const analyticsData = unwrap(analyticsRes);
@@ -221,14 +279,21 @@ const AudienceAnalytics = () => {
       const bookingsTrend = normalizeTrend(analyticsData?.trends?.bookings || []);
       setTrendSeries({ revenue: revenueTrend, bookings: bookingsTrend });
 
-      const normalizedTopEvents =
-        analyticsData?.topEvents || topEventsData?.items || topEventsData?.events || topEventsData?.topEvents || topEventsData || [];
+      const normalizedTopEvents = normalizeEventCollection(analyticsData?.topEvents || topEventsData || []);
+      const normalizedAllEvents = normalizeEventCollection(organizerEventsRes);
+      const mergedEventOptions = mergeEventCollections(normalizedAllEvents, normalizedTopEvents);
       setTopEvents(normalizedTopEvents);
-      setEventOptions(normalizedTopEvents);
-      if (!selectedEvent && normalizedTopEvents.length) {
-        setSelectedEvent(
-          normalizedTopEvents[0]?.eventId || normalizedTopEvents[0]?.id || normalizedTopEvents[0]?.event?.id || ""
-        );
+      setEventOptions(mergedEventOptions);
+      setSelectedEvent((prev) => {
+        if (!mergedEventOptions.length) return "";
+        return mergedEventOptions.some((item) => item.id === prev) ? prev : mergedEventOptions[0].id;
+      });
+
+      if (!mergedEventOptions.length) {
+        setEventTickets([]);
+        setEventTimeline([]);
+        setEventOverview(null);
+        setEventError("");
       }
 
       setBreakdowns({
@@ -258,16 +323,21 @@ const AudienceAnalytics = () => {
     } finally {
       setLoading(false);
     }
-  }, [timePeriod, startDate, endDate, includeDraft, includeCancelled, selectedEvent]);
+  }, [computedPeriod, startDate, endDate, includeDraft, includeCancelled]);
 
   const loadEventAnalytics = useCallback(
-    async (eventId) => {
-      if (!eventId) return;
+    async (eventId, eventMeta) => {
+      if (!eventId) {
+        setEventTickets([]);
+        setEventTimeline([]);
+        setEventOverview(null);
+        setEventError("");
+        return;
+      }
       setEventLoading(true);
       setEventError("");
       const mainPeriod = computedPeriod;
-      const periodForOthers = mainPeriod === "custom" ? "month" : mainPeriod;
-      const safePeriod = periodForOthers === "all" ? "year" : periodForOthers; // validators disallow "all" for these endpoints
+      const safePeriod = mainPeriod === "all" ? "year" : mainPeriod;
       const common = { period: safePeriod, startDate, endDate };
       try {
         const [ticketsRes, timelineRes] = await Promise.all([
@@ -288,17 +358,25 @@ const AudienceAnalytics = () => {
         const totalRevenue = totals.revenue ?? tickets.reduce((s, t) => s + (t.revenue || 0), 0);
         const totalSold = totals.ticketsSold ?? tickets.reduce((s, t) => s + (t.soldQuantity || 0), 0);
         const totalRefunds = totals.refunds ?? 0;
+        const totalPlatformFees = tickets.reduce((s, t) => s + (t.platformFee || 0), 0);
+        const totalGst = tickets.reduce((s, t) => s + (t.gst || 0), 0);
+        const timelineBookings = timeline.reduce(
+          (sum, row) => sum + Number(row.bookings ?? row.bookingCount ?? 0),
+          0
+        );
+        const totalBookings = totals.bookings ?? (timelineBookings || eventMeta?.bookings || 0);
+        const netPayout = Math.max(totalRevenue - totalPlatformFees - totalGst - totalRefunds, 0);
         setEventOverview({
           revenue: totalRevenue,
           ticketsSold: totalSold,
-          bookings: timeline.length,
-          payoutSummary: totalRevenue > 0
+          bookings: totalBookings,
+          payoutSummary: totalRevenue > 0 || totalRefunds > 0 || totalPlatformFees > 0 || totalGst > 0
             ? {
-                organizerPayout: totalRevenue - totalRefunds,
-                platformFees: tickets.reduce((s, t) => s + (t.platformFee || 0), 0),
-                gstCollected: tickets.reduce((s, t) => s + (t.gst || 0), 0),
+                organizerPayout: netPayout,
+                platformFees: totalPlatformFees,
+                gstCollected: totalGst,
                 refundsProcessed: totalRefunds,
-                netPayout: totalRevenue - totalRefunds,
+                netPayout,
               }
             : null,
         });
@@ -309,18 +387,28 @@ const AudienceAnalytics = () => {
         setEventLoading(false);
       }
     },
-    [timePeriod, startDate, endDate]
+    [computedPeriod, startDate, endDate]
   );
 
   useEffect(() => {
     loadOrganizerAnalytics();
   }, [loadOrganizerAnalytics]);
 
+  const selectedEventOption = useMemo(
+    () => eventOptions.find((event) => event.id === selectedEvent) || null,
+    [eventOptions, selectedEvent]
+  );
+
   useEffect(() => {
     if (selectedEvent) {
-      loadEventAnalytics(selectedEvent);
+      loadEventAnalytics(selectedEvent, selectedEventOption);
+    } else {
+      setEventTickets([]);
+      setEventTimeline([]);
+      setEventOverview(null);
+      setEventError("");
     }
-  }, [selectedEvent, loadEventAnalytics]);
+  }, [selectedEvent, selectedEventOption, loadEventAnalytics]);
 
   const summaryCards = useMemo(() => {
     const stats = statistics || {};
@@ -329,25 +417,25 @@ const AudienceAnalytics = () => {
         key: "events",
         title: "Events",
         icon: <Sparkles className="w-8 h-8 text-white" />,
-        tone: "from-blue-500/70 via-blue-400/70 to-sky-400/70",
+        tone: "from-primary/80 via-secondary/60 to-accent/60",
       },
       {
         key: "attendees",
         title: "Attendees",
         icon: <Users className="w-8 h-8 text-white" />,
-        tone: "from-blue-500/70 via-blue-400/70 to-sky-400/70",
+        tone: "from-secondary/80 via-primary/60 to-accent/60",
       },
       {
         key: "revenue",
         title: "Revenue",
         icon: <Coins className="w-8 h-8 text-white" />,
-        tone: "from-blue-500/70 via-blue-400/70 to-sky-400/70",
+        tone: "from-accent/80 via-primary/60 to-secondary/60",
       },
       {
         key: "ticketSales",
         title: "Tickets Sold",
         icon: <Ticket className="w-8 h-8 text-white" />,
-        tone: "from-blue-500/70 via-blue-400/70 to-sky-400/70",
+        tone: "from-primary/80 via-accent/60 to-secondary/60",
       },
     ];
 
@@ -397,7 +485,7 @@ const AudienceAnalytics = () => {
 
   const renderBarList = (
     items,
-    colorClass = "bg-gradient-to-r from-red-500 via-blue-500 to-cyan-400",
+    colorClass = "bg-gradient-to-r from-secondary via-primary to-accent",
     { showValues = true } = {}
   ) => {
     const total = sumValues(items);
@@ -458,13 +546,16 @@ const AudienceAnalytics = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#04060d] via-[#0a1020] to-[#04060d] text-white">
-      <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+    <div className="space-y-6 text-white">
+      <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-r from-[#0b1224] via-[#0d1630] to-[#0b0f1d] p-5 shadow-lg shadow-black/40">
-          <div className="absolute inset-0 opacity-35 bg-[radial-gradient(circle_at_20%_20%,rgba(76,161,255,0.3),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(56,107,241,0.25),transparent_30%)]" />
+        <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-card p-5 shadow-[var(--shadow-elegant)]">
+          <div className="absolute -left-10 top-0 h-32 w-32 rounded-full bg-primary/25 blur-3xl" />
+          <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-secondary/20 blur-3xl" />
+          <div className="absolute bottom-0 right-12 h-24 w-24 rounded-full bg-accent/15 blur-3xl" />
           <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="space-y-1">
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Organizer Portal</p>
               
               <h2 className="text-3xl font-extrabold">Audience Analytics</h2>
               <p className="text-sm text-white/70">Understand who’s engaging with your events.</p>
@@ -477,7 +568,7 @@ const AudienceAnalytics = () => {
                   onClick={() => setTimePeriod(period.value)}
                   className={`px-3 py-2 rounded-2xl text-sm border transition shadow-sm ${
                     timePeriod === period.value
-                      ? "bg-[#3b82f6] text-white border-transparent shadow-lg shadow-blue-500/20"
+                      ? "bg-primary text-primary-foreground border-primary/60 shadow-[var(--shadow-card)]"
                       : "bg-white/5 border-white/10 text-white/75 hover:bg-white/10"
                   }`}
                 >
@@ -488,7 +579,7 @@ const AudienceAnalytics = () => {
                 <label className="flex items-center gap-1">
                   <input
                     type="checkbox"
-                    className="accent-[#3b82f6]"
+                    className="accent-accent"
                     checked={includeDraft}
                     onChange={(e) => setIncludeDraft(e.target.checked)}
                   />
@@ -497,7 +588,7 @@ const AudienceAnalytics = () => {
                 <label className="flex items-center gap-1">
                   <input
                     type="checkbox"
-                    className="accent-[#3b82f6]"
+                    className="accent-accent"
                     checked={includeCancelled}
                     onChange={(e) => setIncludeCancelled(e.target.checked)}
                   />
@@ -521,7 +612,7 @@ const AudienceAnalytics = () => {
               </div>
               <button
                 onClick={loadOrganizerAnalytics}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#3b82f6] text-white text-sm font-semibold shadow-md hover:shadow-lg transition"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold shadow-[var(--shadow-card)] hover:bg-primary/90 transition"
               >
                 <RefreshCw className="w-4 h-4" />
                 Refresh
@@ -567,7 +658,7 @@ const AudienceAnalytics = () => {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-sky-300" />
+                  <BarChart3 className="w-5 h-5 text-accent" />
                   Engagement trends
                 </h3>
                 <div className="flex items-center gap-2 text-[11px] text-white/60">
@@ -628,16 +719,20 @@ const AudienceAnalytics = () => {
             </div>
             <div className="space-y-3 overflow-y-auto pr-1 flex-1">
               {topEvents.length === 0 && <p className="text-sm text-white/60">No events in this window.</p>}
-              {topEvents.map((evt, idx) => {
+              {topEvents.map((evt) => {
                 const eventNode = evt.event || evt;
-                const eventId = evt.eventId || evt.id || eventNode?.id || idx;
+                const isActive = selectedEvent === evt.id;
                 return (
-                  <div
-                    key={eventId}
-                    className="flex items-start justify-between rounded-xl bg-white/5 border border-white/10 px-3 py-2"
+                  <button
+                    key={evt.id}
+                    type="button"
+                    onClick={() => setSelectedEvent(evt.id)}
+                    className={`flex items-start justify-between rounded-xl bg-white/5 border px-3 py-2 text-left transition ${
+                      isActive ? "border-primary/60 bg-primary/10" : "border-white/10 hover:bg-white/10"
+                    }`}
                   >
                     <div className="pr-3">
-                      <p className="font-semibold leading-snug">{eventNode?.title || eventNode?.name || "Event"}</p>
+                      <p className="font-semibold leading-snug">{evt.title || "Event"}</p>
                       <p className="text-xs text-white/60 flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
                         {eventNode?.city || evt.city || evt.location || "—"}
@@ -649,7 +744,7 @@ const AudienceAnalytics = () => {
                       </p>
                       <p className="text-xs text-white/60">{formatNumber(evt.ticketsSold ?? evt.sold ?? 0, "0")} tickets</p>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -661,7 +756,7 @@ const AudienceAnalytics = () => {
           <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur shadow-lg shadow-black/30 lg:col-span-3">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
-                <PieChartIcon className="w-5 h-5 text-sky-300" />
+                  <PieChartIcon className="w-5 h-5 text-accent" />
                 Breakdown
               </h3>
               <span className="text-xs text-white/60">{periodLabel}</span>
@@ -679,7 +774,7 @@ const AudienceAnalytics = () => {
                       label: b.label || b.status || b.name,
                       value: b.value ?? b.percentage ?? 0,
                     })),
-                    "bg-gradient-to-r from-blue-400 via-blue-500 to-sky-400",
+                    "bg-gradient-to-r from-primary via-secondary to-accent",
                     { showValues: true }
                   )
                 )}
@@ -697,7 +792,7 @@ const AudienceAnalytics = () => {
                       label: b.label || b.category || b.name,
                       value: b.value ?? b.percentage ?? 0,
                     })),
-                    "bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400",
+                    "bg-gradient-to-r from-secondary via-primary to-accent",
                     { showValues: true }
                   )
                 )}
@@ -715,7 +810,7 @@ const AudienceAnalytics = () => {
                       label: b.label || b.name,
                       value: b.ticketsSold ?? b.count ?? b.value ?? 0,
                     })),
-                    "bg-gradient-to-r from-amber-400 via-orange-400 to-red-400",
+                    "bg-gradient-to-r from-accent via-secondary to-primary",
                     { showValues: true }
                   )
                 )}
@@ -733,7 +828,7 @@ const AudienceAnalytics = () => {
                       label: b.label || b.status || b.name,
                       value: b.value ?? b.count ?? 0,
                     })),
-                    "bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500",
+                    "bg-gradient-to-r from-primary via-accent to-secondary",
                     { showValues: true }
                   )
                 )}
@@ -767,8 +862,8 @@ const AudienceAnalytics = () => {
                 <div className="h-48 flex items-center justify-center">
                   <div className="relative w-40 h-40">
                     <div className="absolute inset-0 rounded-full border-8 border-white/10"></div>
-                    <div className="absolute inset-1 rounded-full border-6 border-[#3b82f6]"></div>
-                    <div className="absolute inset-2 rounded-full bg-gradient-to-br from-[#0b1224] via-[#0a0f1d] to-[#060910] flex flex-col items-center justify-center text-center">
+                    <div className="absolute inset-1 rounded-full border-6 border-primary/60"></div>
+                    <div className="absolute inset-2 rounded-full bg-gradient-to-br from-card via-background to-card flex flex-col items-center justify-center text-center">
                       <span className="text-2xl font-bold">{gender.female}%</span>
                       <span className="text-xs text-white/60">Female</span>
                       <span className="text-xs text-white/50">{gender.male}% Male</span>
@@ -785,25 +880,25 @@ const AudienceAnalytics = () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
             <div className="space-y-1">
               <h3 className="text-lg font-semibold">Event drill-down</h3>
-              <p className="text-xs text-white/60">Ticket performance & sales timeline</p>
+              <p className="text-xs text-white/60">
+                {selectedEventOption ? `${selectedEventOption.title} performance over the selected period` : "Ticket performance and sales timeline"}
+              </p>
             </div>
             <div className="flex items-center gap-2">
               <select
                 value={selectedEvent}
                 onChange={(e) => setSelectedEvent(e.target.value)}
-                className="bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-sm text-white min-w-[260px] focus:outline-none focus:border-[#3b82f6]"
+                className="bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-sm text-white min-w-[260px] focus:outline-none focus:border-accent"
               >
                 {!selectedEvent && (
-                  <option value="" className="bg-[#0b0f1d] text-white/70">
+                  <option value="" className="bg-card text-white/70">
                     Select event
                   </option>
                 )}
-                {eventOptions.map((evt, idx) => {
-                  const eventNode = evt.event || evt;
-                  const eventId = evt.eventId || evt.id || eventNode?.id || idx;
+                {eventOptions.map((evt) => {
                   return (
-                    <option key={eventId} value={eventId} className="bg-[#0b0f1d] text-white">
-                      {eventNode?.title || eventNode?.name || "Event"}
+                    <option key={evt.id} value={evt.id} className="bg-card text-white">
+                      {evt.title || "Event"}
                     </option>
                   );
                 })}
@@ -818,7 +913,7 @@ const AudienceAnalytics = () => {
             </div>
           )}
           {!selectedEvent ? (
-            <p className="text-sm text-white/60">Select a top event to view its analytics.</p>
+            <p className="text-sm text-white/60">Select an event to view its analytics.</p>
           ) : (
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
               <div className="xl:col-span-2 grid grid-cols-1 lg:grid-cols-5 gap-3">
