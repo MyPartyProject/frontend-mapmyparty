@@ -22,7 +22,7 @@ import QRCode from "qrcode";
 import StarRating from "@/components/StarRating";
 import { buildCanonicalQrPayload } from "@/utils/qrPayload";
 
-const MyBookings = () => {
+const MyBookings = ({ browseEventsPath = "/dashboard/browse-events" }) => {
   const feedbackSuggestions = [
     "Loved every minute of the performances!",
     "Great crowd energy and smooth entry experience.",
@@ -437,7 +437,7 @@ const MyBookings = () => {
             <Ticket className="w-10 h-10 text-white/15 mx-auto mb-3" />
             <h3 className="text-sm font-semibold text-white mb-1">No bookings yet</h3>
             <p className="text-xs text-white/40 mb-4">Start exploring and book your first event.</p>
-            <Link to="/dashboard/browse-events">
+            <Link to={browseEventsPath}>
               <Button className="bg-[#D60024] hover:bg-[#b8001f] text-white text-sm h-9 px-4">
                 Browse Events <ChevronRight className="ml-1 h-3.5 w-3.5" />
               </Button>

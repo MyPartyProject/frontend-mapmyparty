@@ -224,6 +224,21 @@ const ReceptionDetail = () => {
   const [scanProcessing, setScanProcessing] = useState(false);
   const [checkInResult, setCheckInResult] = useState(null);
 
+  const buildReceptionRequestBody = useCallback(
+    (payload) => JSON.stringify({ eventId: id, ...payload }),
+    [id]
+  );
+
+  const ensureCurrentEventMatch = useCallback(
+    (scanPayload) => {
+      const scannedEventId = scanPayload?.event?.id;
+      if (scannedEventId && scannedEventId !== id) {
+        throw new Error("This ticket belongs to a different event.");
+      }
+    },
+    [id]
+  );
+
   useEffect(() => {
     isMountedRef.current = true;
     hasFetchedRef.current = false;
@@ -300,6 +315,8 @@ const ReceptionDetail = () => {
   };
 
   const handleQuickCheckIn = async (qrDataString) => {
+    if (scanProcessing || checkInResult) return;
+
     setScanProcessing(true);
     setCheckInResult(null);
 
@@ -307,9 +324,10 @@ const ReceptionDetail = () => {
       const response = await apiFetch("booking/quick-check-in-qr", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ qrData: qrDataString }),
+        body: buildReceptionRequestBody({ qrData: qrDataString }),
       });
       const data = response.data || response;
+      ensureCurrentEventMatch(data);
 
       if (data.alreadyCheckedIn) {
         setCheckInResult({
@@ -345,11 +363,17 @@ const ReceptionDetail = () => {
   };
 
   const buildTicketFromScan = (scanPayload) => {
+    ensureCurrentEventMatch(scanPayload);
+
     const bookingItem = scanPayload?.bookingItem;
     const booking = scanPayload?.booking;
     const user = scanPayload?.user;
     const ticketInfo = scanPayload?.ticket;
-    const eventInfo = scanPayload?.event || event;
+    const scannedEvent = scanPayload?.event;
+    const eventInfo =
+      event && (!scannedEvent?.id || scannedEvent.id === event.id)
+        ? event
+        : scannedEvent || event;
 
     if (!bookingItem || !ticketInfo || !eventInfo) return null;
 
@@ -403,7 +427,7 @@ const ReceptionDetail = () => {
       const response = await apiFetch("booking/scan-manual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ manualCheckInCode: normalizedCode }),
+        body: buildReceptionRequestBody({ manualCheckInCode: normalizedCode }),
       });
       const data = response.data || response;
       const nextTicket = buildTicketFromScan(data);
@@ -440,7 +464,7 @@ const ReceptionDetail = () => {
       const response = await apiFetch("booking/quick-check-in", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ manualCheckInCode: ticket.manualCheckInCode }),
+        body: buildReceptionRequestBody({ manualCheckInCode: ticket.manualCheckInCode }),
       });
       const data = response.data || response;
       if (!data?.checkedIn) {
@@ -606,6 +630,7 @@ const ReceptionDetail = () => {
           onScan={handleQuickCheckIn}
           onClose={() => setShowScanner(false)}
           isProcessing={scanProcessing}
+          isPaused={!!checkInResult}
         />
       )}
 
