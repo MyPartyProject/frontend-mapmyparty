@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import EventCard from "@/components/EventCard";
 import { apiFetch, buildUrl } from "@/config/api";
 
@@ -117,6 +118,45 @@ const heroCarouselStyles = `
   }
 `;
 
+const SearchResultsSkeleton = () => (
+  <div className="space-y-5">
+    <div className="flex flex-wrap gap-2">
+      <Skeleton className="h-7 w-24 rounded-full bg-white/10" />
+      <Skeleton className="h-7 w-24 rounded-full bg-white/10" />
+      <Skeleton className="h-7 w-24 rounded-full bg-white/10" />
+    </div>
+
+    <div className="space-y-3">
+      <div className="space-y-2">
+        <Skeleton className="h-3 w-20 bg-white/10" />
+        <Skeleton className="h-7 w-40 bg-white/10" />
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div key={index} className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+            <Skeleton className="h-40 w-full rounded-xl bg-white/10" />
+            <Skeleton className="h-5 w-3/4 bg-white/10" />
+            <Skeleton className="h-4 w-1/2 bg-white/10" />
+            <Skeleton className="h-4 w-2/3 bg-white/10" />
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div className="space-y-3">
+      <div className="space-y-2">
+        <Skeleton className="h-3 w-16 bg-white/10" />
+        <Skeleton className="h-7 w-36 bg-white/10" />
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <Skeleton key={index} className="h-10 w-28 rounded-full bg-white/10" />
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
 const normalizeImageUrl = (src) => {
   if (!src || typeof src !== "string") return null;
 
@@ -202,7 +242,6 @@ const LandingPage = () => {
   const [eventSections, setEventSections] = useState({});
   const [sectionsLoading, setSectionsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [locationQuery, setLocationQuery] = useState("");
   const [searchResults, setSearchResults] = useState({ events: [], artists: [], venues: [], totalEvents: 0, totalArtists: 0, totalVenues: 0 });
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
@@ -218,11 +257,10 @@ const LandingPage = () => {
       });
   }, []);
 
-  const runSearch = async ({ query, location }) => {
+  const runSearch = async ({ query }) => {
     const normalizedQuery = query.trim();
-    const normalizedLocation = location.trim();
 
-    if (!normalizedQuery && !normalizedLocation) {
+    if (!normalizedQuery) {
       setSearchResults({ events: [], artists: [], venues: [], totalEvents: 0, totalArtists: 0, totalVenues: 0 });
       setSearchError("");
       setHasSearchResults(false);
@@ -230,7 +268,12 @@ const LandingPage = () => {
       return;
     }
 
-    if ((normalizedQuery && normalizedQuery.length < 2) || (normalizedLocation && normalizedLocation.length < 2)) {
+    if (normalizedQuery.length < 2) {
+      searchRequestRef.current += 1;
+      setSearchResults({ events: [], artists: [], venues: [], totalEvents: 0, totalArtists: 0, totalVenues: 0 });
+      setSearchError("");
+      setHasSearchResults(false);
+      setSearchLoading(false);
       return;
     }
 
@@ -240,8 +283,7 @@ const LandingPage = () => {
 
     try {
       const params = new URLSearchParams();
-      if (normalizedQuery) params.set("q", normalizedQuery);
-      if (normalizedLocation) params.set("location", normalizedLocation);
+      params.set("q", normalizedQuery);
       params.set("limit", "6");
 
       const response = await apiFetch(`/api/event/search?${params.toString()}`, {
@@ -274,11 +316,11 @@ const LandingPage = () => {
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      runSearch({ query: searchQuery, location: locationQuery });
+      runSearch({ query: searchQuery });
     }, 300);
 
     return () => window.clearTimeout(timeoutId);
-  }, [searchQuery, locationQuery]);
+  }, [searchQuery]);
 
   useEffect(() => {
     const activeSlide = heroSlides[activeHeroSlide];
@@ -368,7 +410,7 @@ const LandingPage = () => {
   };
 
   const handleSearchSubmit = () => {
-    runSearch({ query: searchQuery, location: locationQuery });
+    runSearch({ query: searchQuery });
   };
 
   const handleSearchKeyDown = (event) => {
@@ -381,7 +423,6 @@ const LandingPage = () => {
   const clearSearch = () => {
     searchRequestRef.current += 1;
     setSearchQuery("");
-    setLocationQuery("");
     setSearchError("");
     setHasSearchResults(false);
     setSearchLoading(false);
@@ -464,7 +505,7 @@ const LandingPage = () => {
         <section className="bg-slate-950">
           <div className="container px-6 md:px-8 lg:px-10 pt-6 pb-10 lg:pt-8 lg:pb-14">
             <div className="space-y-4 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-lg shadow-[0_25px_60px_-30px_rgba(0,0,0,0.65)]">
-              <div className="grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,0.8fr)_auto]">
+              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
                 <div className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 text-sm text-slate-200/90">
                   <Search className="h-4 w-4 text-slate-200/80" />
                   <input
@@ -476,27 +517,16 @@ const LandingPage = () => {
                     className="w-full bg-transparent text-sm text-slate-50 outline-none placeholder:text-slate-300/60"
                   />
                 </div>
-                <div className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 text-sm text-slate-200/90">
-                  <MapPin className="h-4 w-4 text-pink-200" />
-                  <input
-                    type="text"
-                    value={locationQuery}
-                    onChange={(event) => setLocationQuery(event.target.value)}
-                    onKeyDown={handleSearchKeyDown}
-                    placeholder="Location"
-                    className="w-full bg-transparent text-sm text-slate-50 outline-none placeholder:text-slate-300/60"
-                  />
-                </div>
                 <div className="flex items-center gap-3">
                   <Button
                     size="sm"
                     onClick={handleSearchSubmit}
-                    disabled={searchLoading || (!searchQuery.trim() && !locationQuery.trim())}
+                    disabled={searchLoading || searchQuery.trim().length < 2}
                     className="w-full bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white hover:from-fuchsia-400 hover:to-pink-400 lg:w-auto"
                   >
                     {searchLoading ? "Searching..." : "Search"}
                   </Button>
-                  {(searchQuery || locationQuery || hasSearchResults) && (
+                  {(searchQuery || hasSearchResults) && (
                     <Button
                       type="button"
                       variant="outline"
@@ -513,7 +543,7 @@ const LandingPage = () => {
                   Live search
                 </div>
                 <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5">
-                  Search by event, artist, venue, or city
+                  Search by event, artist, venue, organizer, or city
                 </div>
                 <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5">
                   Press Enter for instant results
@@ -522,9 +552,7 @@ const LandingPage = () => {
 
               {(searchLoading || searchError || hasSearchResults) && (
                 <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4 sm:p-5">
-                  {searchLoading && (
-                    <div className="text-sm text-slate-300/80">Searching live events, artists, and venues...</div>
-                  )}
+                  {searchLoading && <SearchResultsSkeleton />}
 
                   {!searchLoading && searchError && (
                     <div className="rounded-xl border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
@@ -603,7 +631,7 @@ const LandingPage = () => {
                                   <button
                                     key={`${venue.id}-${venue.eventId}`}
                                     type="button"
-                                    onClick={() => setLocationQuery(venue.city || venue.name || "")}
+                                    onClick={() => setSearchQuery(venue.name || venue.city || "")}
                                     className="rounded-xl border border-white/10 bg-white/5 p-4 text-left transition hover:border-amber-300/30 hover:bg-white/10"
                                   >
                                     <p className="font-medium text-white">{venue.name}</p>
