@@ -22,7 +22,10 @@ import QRCode from "qrcode";
 import StarRating from "@/components/StarRating";
 import { buildCanonicalQrPayload } from "@/utils/qrPayload";
 
-const MyBookings = ({ browseEventsPath = "/dashboard/browse-events" }) => {
+const MyBookings = ({
+  browseEventsPath = "/dashboard/browse-events",
+  showSummarySections = true,
+}) => {
   const feedbackSuggestions = [
     "Loved every minute of the performances!",
     "Great crowd energy and smooth entry experience.",
@@ -112,8 +115,10 @@ const MyBookings = ({ browseEventsPath = "/dashboard/browse-events" }) => {
 
   useEffect(() => {
     fetchBookings();
-    fetchBookingsAnalytics();
-  }, [fetchBookings, fetchBookingsAnalytics]);
+    if (showSummarySections) {
+      fetchBookingsAnalytics();
+    }
+  }, [fetchBookings, fetchBookingsAnalytics, showSummarySections]);
 
   const fetchBookingTickets = useCallback(async (booking) => {
     setTicketsLoading(true);
@@ -316,7 +321,13 @@ const MyBookings = ({ browseEventsPath = "/dashboard/browse-events" }) => {
   const hasBookings = bookings.length > 0;
   const hasFilteredBookings = filteredBookings.length > 0;
   const showEmptyState = !loading && !hasBookings;
-  const upcomingBookings = filteredBookings.filter(b => b?.eventDate && new Date(b.eventDate) > new Date());
+  const upcomingBookings = useMemo(() => {
+    if (!showSummarySections) {
+      return [];
+    }
+
+    return filteredBookings.filter((booking) => booking?.eventDate && new Date(booking.eventDate) > new Date());
+  }, [filteredBookings, showSummarySections]);
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 text-white space-y-6">
@@ -327,7 +338,7 @@ const MyBookings = ({ browseEventsPath = "/dashboard/browse-events" }) => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
+      {showSummarySections && <div className="grid grid-cols-3 gap-3">
         {[
           { label: "Total Bookings", value: stats.total, icon: Receipt, color: "#D60024" },
           { label: "Upcoming", value: stats.upcoming, icon: Calendar, color: "#60a5fa" },
@@ -346,7 +357,7 @@ const MyBookings = ({ browseEventsPath = "/dashboard/browse-events" }) => {
             </div>
           );
         })}
-      </div>
+      </div>}
 
       {/* Search & Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -378,7 +389,7 @@ const MyBookings = ({ browseEventsPath = "/dashboard/browse-events" }) => {
       </div>
 
       {/* Upcoming Events Section */}
-      {upcomingBookings.length > 0 && (
+      {showSummarySections && upcomingBookings.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-white">Upcoming Events</h2>

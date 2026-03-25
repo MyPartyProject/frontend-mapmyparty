@@ -1416,7 +1416,9 @@ const OrganizerDashboard = () => {
             )}
 
             {activeTab === "myevents" && <MyEvents />}
-            {activeTab === "bookings" && <MyBookings browseEventsPath="/browse-events" />}
+            {activeTab === "bookings" && (
+              <MyBookings browseEventsPath="/browse-events" showSummarySections={false} />
+            )}
             {activeTab === "analytics" && <AudienceAnalytics />}
             {activeTab === "live" && !liveEventId && <LiveEvents />}
             {activeTab === "live" && liveEventId && <LiveEventPage embedded />}

@@ -242,45 +242,45 @@ const Auth = () => {
 
   if (!userType) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-card text-foreground flex items-center justify-center p-3 sm:p-4">
         <Button
           variant="ghost"
-          className="absolute top-6 left-6 text-gray-400 hover:text-white hover:bg-gray-900 rounded-lg"
+          className="absolute top-4 left-4 h-9 rounded-xl border border-border/60 bg-card/70 px-3 text-sm text-muted-foreground hover:bg-card hover:text-foreground"
           onClick={() => navigate("/")}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
 
-        <div className="w-full max-w-3xl">
-          <div className="text-center mb-10">
-            <div className="flex items-center justify-center gap-3 mb-6">
-              <div className="w-16 h-16 bg-gray-900 rounded-xl flex items-center justify-center border border-gray-800">
-                <img src={Logo} alt="MapMyParty" className="w-10 h-10" />
+        <div className="w-full max-w-2xl">
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <div className="w-14 h-14 rounded-xl border border-border/60 bg-card/80 flex items-center justify-center shadow-[var(--shadow-card)]">
+                <img src={Logo} alt="MapMyParty" className="w-8 h-8" />
               </div>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
-              Welcome to <span className="text-red-500">MapMyParty</span>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2.5">
+              Welcome to <span className="bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">MapMyParty</span>
             </h1>
-            <p className="text-gray-400 max-w-xl mx-auto">
+            <p className="text-sm text-muted-foreground max-w-lg mx-auto">
               Your ultimate destination for discovering, creating, and managing unforgettable events
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-5 max-w-3xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             <Card
-              className="group cursor-pointer border border-gray-800 bg-gray-900 hover:border-gray-700 hover:bg-gray-800 transition-all duration-300"
+              className="group cursor-pointer rounded-2xl border border-border/60 bg-card/80 hover:border-accent/40 hover:bg-card transition-all duration-300 shadow-[var(--shadow-card)]"
               onClick={() => handleUserTypeSelect("user")}
             >
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-4 group-hover:bg-gray-700 transition-colors">
-                  <User className="w-8 h-8 text-gray-300" />
+              <CardContent className="p-6 text-center">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/25 via-secondary/20 to-accent/20 border border-border/60 flex items-center justify-center mx-auto mb-4 group-hover:border-accent/40 transition-colors">
+                  <User className="w-7 h-7 text-accent" />
                 </div>
-                <h2 className="text-xl font-bold text-white mb-2">I&apos;m an Attendee</h2>
-                <p className="text-gray-400 text-sm mb-4">
+                <h2 className="text-lg font-semibold text-foreground mb-2">I&apos;m an Attendee</h2>
+                <p className="text-muted-foreground text-sm mb-3.5">
                   Discover and book tickets to amazing events near you
                 </p>
-                <div className="flex items-center justify-center gap-2 text-red-500 font-medium text-sm">
+                <div className="flex items-center justify-center gap-2 text-accent font-medium text-sm">
                   <span>Explore Events</span>
                   <ArrowLeft className="w-4 h-4 rotate-180" />
                 </div>
@@ -288,18 +288,18 @@ const Auth = () => {
             </Card>
 
             <Card
-              className="group cursor-pointer border border-gray-800 bg-gray-900 hover:border-gray-700 hover:bg-gray-800 transition-all duration-300"
+              className="group cursor-pointer rounded-2xl border border-border/60 bg-card/80 hover:border-accent/40 hover:bg-card transition-all duration-300 shadow-[var(--shadow-card)]"
               onClick={() => handleUserTypeSelect("organizer")}
             >
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-4 group-hover:bg-gray-700 transition-colors">
-                  <Building2 className="w-8 h-8 text-gray-300" />
+              <CardContent className="p-6 text-center">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/25 via-secondary/20 to-accent/20 border border-border/60 flex items-center justify-center mx-auto mb-4 group-hover:border-accent/40 transition-colors">
+                  <Building2 className="w-7 h-7 text-accent" />
                 </div>
-                <h2 className="text-xl font-bold text-white mb-2">I&apos;m an Organizer</h2>
-                <p className="text-gray-400 text-sm mb-4">
+                <h2 className="text-lg font-semibold text-foreground mb-2">I&apos;m an Organizer</h2>
+                <p className="text-muted-foreground text-sm mb-3.5">
                   Create and manage your own events with ease
                 </p>
-                <div className="flex items-center justify-center gap-2 text-red-500 font-medium text-sm">
+                <div className="flex items-center justify-center gap-2 text-accent font-medium text-sm">
                   <span>Start Creating</span>
                   <ArrowLeft className="w-4 h-4 rotate-180" />
                 </div>
@@ -312,71 +312,71 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-card text-foreground flex items-center justify-center p-3 sm:p-4">
       <Button
         variant="ghost"
-        className="absolute top-6 left-6 text-gray-400 hover:text-white hover:bg-gray-900 rounded-lg"
+        className="absolute top-4 left-4 h-9 rounded-xl border border-border/60 bg-card/70 px-3 text-sm text-muted-foreground hover:bg-card hover:text-foreground"
         onClick={() => setUserType(null)}
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back
       </Button>
 
-      <div className="w-full max-w-sm">
-        <Card className="border border-gray-800 bg-gray-900 shadow-xl">
-          <CardHeader className="text-center pb-5 pt-6">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="w-14 h-14 bg-gray-800 rounded-xl flex items-center justify-center border border-gray-700">
-                <img src={Logo} alt="MapMyParty" className="w-9 h-9" />
+      <div className="w-full max-w-[22rem] sm:max-w-sm">
+        <Card className="rounded-2xl border border-border/60 bg-card/85 shadow-[var(--shadow-elegant)] backdrop-blur">
+          <CardHeader className="text-center pb-4 pt-5">
+            <div className="flex items-center justify-center gap-2 mb-3.5">
+              <div className="w-12 h-12 rounded-xl border border-border/60 bg-background/70 flex items-center justify-center">
+                <img src={Logo} alt="MapMyParty" className="w-8 h-8" />
               </div>
             </div>
-            <CardTitle className="text-3xl font-bold text-white">
+            <CardTitle className="text-2xl font-semibold text-foreground">
               {userType === "organizer" ? "Organizer" : "Attendee"} Account
             </CardTitle>
-            <CardDescription className="text-gray-400 text-sm mt-1">
+            <CardDescription className="text-muted-foreground text-xs sm:text-sm mt-1">
               {isLogin ? "Welcome back! Sign in to continue" : "Create your account to get started"}
             </CardDescription>
           </CardHeader>
-          <CardContent className="px-6 pb-6">
+          <CardContent className="px-5 pb-5">
             <Tabs
               value={isLogin ? "login" : "signup"}
               onValueChange={handleTabChange}
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-2 mb-5 bg-gray-800 p-1 rounded-lg h-10">
+              <TabsList className="grid w-full grid-cols-2 mb-4 h-9 rounded-lg border border-border/60 bg-muted/80 p-1">
                 <TabsTrigger
                   value="login"
-                  className="data-[state=active]:bg-gray-700 data-[state=active]:text-white text-gray-400 text-sm font-medium rounded-md"
+                  className="rounded-md text-xs sm:text-sm font-medium text-muted-foreground data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground"
                 >
                   Login
                 </TabsTrigger>
                 <TabsTrigger
                   value="signup"
-                  className="data-[state=active]:bg-gray-700 data-[state=active]:text-white text-gray-400 text-sm font-medium rounded-md"
+                  className="rounded-md text-xs sm:text-sm font-medium text-muted-foreground data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground"
                 >
                   Sign Up
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="login" className="space-y-4 mt-0">
+              <TabsContent value="login" className="space-y-3.5 mt-0">
                 {showForgotPassword ? (
-                  <div className="space-y-4">
-                    <div className="rounded-xl border border-gray-800 bg-gray-950/70 p-4">
-                      <div className="flex items-center gap-2 text-white font-medium">
-                        <Mail className="h-4 w-4 text-red-400" />
+                  <div className="space-y-3.5">
+                    <div className="rounded-xl border border-border/60 bg-background/70 p-3.5">
+                      <div className="flex items-center gap-2 text-sm text-foreground font-medium">
+                        <Mail className="h-4 w-4 text-accent" />
                         Password recovery
                       </div>
-                      <p className="mt-2 text-sm text-gray-400">{forgotPasswordDescription}</p>
+                      <p className="mt-2 text-xs sm:text-sm text-muted-foreground">{forgotPasswordDescription}</p>
                     </div>
 
                     {forgotPasswordSent ? (
-                      <div className="space-y-4">
-                        <div className="rounded-xl border border-green-500/20 bg-green-500/10 p-4 text-sm text-green-100">
+                      <div className="space-y-3.5">
+                        <div className="rounded-xl border border-accent/35 bg-accent/10 p-3.5 text-xs sm:text-sm text-accent">
                           If this email is registered, a reset link is on its way. Use the newest link within 10 minutes.
                         </div>
                         <Button
                           type="button"
-                          className="w-full bg-red-600 hover:bg-red-700 text-white h-10 text-sm font-medium"
+                          className="w-full h-9 text-sm font-medium bg-secondary text-secondary-foreground hover:bg-secondary/85"
                           onClick={() => setForgotPasswordSent(false)}
                         >
                           Send Another Link
@@ -384,7 +384,7 @@ const Auth = () => {
                         <Button
                           type="button"
                           variant="ghost"
-                          className="w-full text-gray-300 hover:text-white hover:bg-gray-800"
+                          className="w-full border border-border/50 bg-card/30 text-muted-foreground hover:bg-card hover:text-foreground"
                           onClick={() => {
                             setShowForgotPassword(false);
                             setForgotPasswordSent(false);
@@ -394,9 +394,9 @@ const Auth = () => {
                         </Button>
                       </div>
                     ) : (
-                      <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
+                      <form onSubmit={handleForgotPasswordSubmit} className="space-y-3.5">
                         <div className="space-y-2">
-                          <Label htmlFor="forgot-email" className="text-gray-300 text-sm font-medium">
+                          <Label htmlFor="forgot-email" className="text-muted-foreground text-xs sm:text-sm font-medium">
                             Email
                           </Label>
                           <Input
@@ -405,12 +405,12 @@ const Auth = () => {
                             placeholder="Enter your account email"
                             value={forgotPasswordEmail}
                             onChange={(event) => setForgotPasswordEmail(event.target.value)}
-                            className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 h-10 text-sm"
+                            className="h-9 border-border/60 bg-background/75 text-foreground placeholder:text-muted-foreground focus-visible:border-ring"
                           />
                         </div>
                         <Button
                           type="submit"
-                          className="w-full bg-red-600 hover:bg-red-700 text-white h-10 text-sm font-medium"
+                          className="w-full h-9 text-sm font-medium bg-secondary text-secondary-foreground hover:bg-secondary/85"
                           disabled={isLoading}
                         >
                           {isLoading ? (
@@ -425,7 +425,7 @@ const Auth = () => {
                         <Button
                           type="button"
                           variant="ghost"
-                          className="w-full text-gray-300 hover:text-white hover:bg-gray-800"
+                          className="w-full border border-border/50 bg-card/30 text-muted-foreground hover:bg-card hover:text-foreground"
                           onClick={() => {
                             setShowForgotPassword(false);
                             setForgotPasswordSent(false);
@@ -438,9 +438,9 @@ const Auth = () => {
                   </div>
                 ) : (
                   <>
-                    <form onSubmit={(event) => handleLoginSubmit(event, userType)} className="space-y-4">
+                    <form onSubmit={(event) => handleLoginSubmit(event, userType)} className="space-y-3.5">
                       <div className="space-y-2">
-                        <Label htmlFor="email" className="text-gray-300 text-sm font-medium">
+                        <Label htmlFor="email" className="text-muted-foreground text-xs sm:text-sm font-medium">
                           Email
                         </Label>
                         <Input
@@ -452,11 +452,11 @@ const Auth = () => {
                           onChange={(event) =>
                             setLoginForm((current) => ({ ...current, email: event.target.value }))
                           }
-                          className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 h-10 text-sm"
+                          className="h-9 border-border/60 bg-background/75 text-foreground placeholder:text-muted-foreground focus-visible:border-ring"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="password" className="text-gray-300 text-sm font-medium">
+                        <Label htmlFor="password" className="text-muted-foreground text-xs sm:text-sm font-medium">
                           Password
                         </Label>
                         <div className="relative">
@@ -469,13 +469,13 @@ const Auth = () => {
                             onChange={(event) =>
                               setLoginForm((current) => ({ ...current, password: event.target.value }))
                             }
-                            className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 pr-10 h-10 text-sm"
+                            className="h-9 pr-10 border-border/60 bg-background/75 text-foreground placeholder:text-muted-foreground focus-visible:border-ring"
                           />
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-300"
+                            className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground"
                             onClick={() => setShowLoginPassword((current) => !current)}
                           >
                             {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -487,7 +487,7 @@ const Auth = () => {
                         <Button
                           type="button"
                           variant="link"
-                          className="h-auto p-0 text-sm text-red-400 hover:text-red-300"
+                          className="h-auto p-0 text-xs sm:text-sm text-accent hover:text-accent/80"
                           onClick={() => {
                             setForgotPasswordEmail(loginForm.email.trim());
                             setShowForgotPassword(true);
@@ -500,7 +500,7 @@ const Auth = () => {
 
                       <Button
                         type="submit"
-                        className="w-full bg-red-600 hover:bg-red-700 text-white h-10 text-sm font-medium"
+                        className="w-full h-9 text-sm font-medium bg-secondary text-secondary-foreground hover:bg-secondary/85"
                         disabled={isLoading}
                       >
                         {isLoading ? (
@@ -515,13 +515,13 @@ const Auth = () => {
                     </form>
 
                     {userType === "user" ? (
-                      <div className="mt-4">
+                      <div className="mt-3.5">
                         <div className="relative">
                           <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t border-gray-700" />
+                            <span className="w-full border-t border-border/60" />
                           </div>
                           <div className="relative flex justify-center text-xs">
-                            <span className="bg-gray-900 px-2 text-gray-500 text-xs uppercase">
+                            <span className="bg-card px-2 text-muted-foreground text-xs uppercase">
                               Or continue with
                             </span>
                           </div>
@@ -529,7 +529,7 @@ const Auth = () => {
                         <Button
                           type="button"
                           variant="outline"
-                          className="w-full mt-3 border-gray-700 hover:border-gray-600 hover:bg-gray-800 text-gray-300 h-10 text-sm font-medium"
+                          className="w-full mt-3 h-9 border-border/60 bg-background/70 text-foreground hover:bg-card hover:text-foreground"
                           onClick={handleGoogleLogin}
                           disabled={isLoading}
                         >
@@ -559,10 +559,10 @@ const Auth = () => {
                 )}
               </TabsContent>
 
-              <TabsContent value="signup" className="space-y-4 mt-0">
-                <form onSubmit={(event) => handleSignupSubmit(event, userType)} className="space-y-4">
+              <TabsContent value="signup" className="space-y-3.5 mt-0">
+                <form onSubmit={(event) => handleSignupSubmit(event, userType)} className="space-y-3.5">
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-gray-300 text-sm font-medium">
+                    <Label htmlFor="name" className="text-muted-foreground text-xs sm:text-sm font-medium">
                       Full Name
                     </Label>
                     <Input
@@ -573,11 +573,11 @@ const Auth = () => {
                       onChange={(event) =>
                         setSignupForm((current) => ({ ...current, name: event.target.value }))
                       }
-                      className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 h-10 text-sm"
+                      className="h-9 border-border/60 bg-background/75 text-foreground placeholder:text-muted-foreground focus-visible:border-ring"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email" className="text-gray-300 text-sm font-medium">
+                    <Label htmlFor="signup-email" className="text-muted-foreground text-xs sm:text-sm font-medium">
                       Email
                     </Label>
                     <Input
@@ -589,11 +589,11 @@ const Auth = () => {
                       onChange={(event) =>
                         setSignupForm((current) => ({ ...current, email: event.target.value }))
                       }
-                      className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 h-10 text-sm"
+                      className="h-9 border-border/60 bg-background/75 text-foreground placeholder:text-muted-foreground focus-visible:border-ring"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-phone" className="text-gray-300 text-sm font-medium">
+                    <Label htmlFor="signup-phone" className="text-muted-foreground text-xs sm:text-sm font-medium">
                       Phone Number
                     </Label>
                     <Input
@@ -605,11 +605,11 @@ const Auth = () => {
                       onChange={(event) =>
                         setSignupForm((current) => ({ ...current, phone: event.target.value }))
                       }
-                      className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 h-10 text-sm"
+                      className="h-9 border-border/60 bg-background/75 text-foreground placeholder:text-muted-foreground focus-visible:border-ring"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password" className="text-gray-300 text-sm font-medium">
+                    <Label htmlFor="signup-password" className="text-muted-foreground text-xs sm:text-sm font-medium">
                       Password
                     </Label>
                     <div className="relative">
@@ -622,23 +622,23 @@ const Auth = () => {
                         onChange={(event) =>
                           setSignupForm((current) => ({ ...current, password: event.target.value }))
                         }
-                        className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 pr-10 h-10 text-sm"
+                        className="h-9 pr-10 border-border/60 bg-background/75 text-foreground placeholder:text-muted-foreground focus-visible:border-ring"
                       />
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-300"
+                        className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground"
                         onClick={() => setShowSignupPassword((current) => !current)}
                       >
                         {showSignupPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </Button>
                     </div>
-                    <p className="text-xs text-gray-500">{PASSWORD_REQUIREMENTS_TEXT}</p>
+                    <p className="text-[11px] text-muted-foreground">{PASSWORD_REQUIREMENTS_TEXT}</p>
                   </div>
                   <Button
                     type="submit"
-                    className="w-full bg-red-600 hover:bg-red-700 text-white h-10 text-sm font-medium mt-1"
+                    className="w-full h-9 text-sm font-medium mt-1 bg-secondary text-secondary-foreground hover:bg-secondary/85"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -653,13 +653,13 @@ const Auth = () => {
                 </form>
 
                 {userType === "user" ? (
-                  <div className="mt-4">
+                  <div className="mt-3.5">
                     <div className="relative">
                       <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-gray-700" />
+                        <span className="w-full border-t border-border/60" />
                       </div>
                       <div className="relative flex justify-center text-xs">
-                        <span className="bg-gray-900 px-2 text-gray-500 text-xs uppercase">
+                        <span className="bg-card px-2 text-muted-foreground text-xs uppercase">
                           Or continue with
                         </span>
                       </div>
@@ -667,7 +667,7 @@ const Auth = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full mt-3 border-gray-700 hover:border-gray-600 hover:bg-gray-800 text-gray-300 h-10 text-sm font-medium"
+                      className="w-full mt-3 h-9 border-border/60 bg-background/70 text-foreground hover:bg-card hover:text-foreground"
                       onClick={handleGoogleLogin}
                       disabled={isLoading}
                     >
