@@ -1245,7 +1245,8 @@ const CreateEvent = () => {
 
   const progress = (currentStep / steps.length) * 100;
   const basicDetailsFilled = Boolean(eventTitle.trim() && mainCategory && selectedCategories.length > 0);
-  const canJumpBetweenSections = isEditMode && !isSubmitting;
+  const isSectionBusy = isSubmitting || uploadingCover || uploadingGallery || showLoading;
+  const canJumpBetweenSections = isEditMode && !isSectionBusy;
 
   const nextStep = async ({ advance = true } = {}) => {
     const moveToNextStep = () => {
@@ -2179,7 +2180,7 @@ const CreateEvent = () => {
   };
 
   const goToStep = (stepNumber) => {
-    if (!isEditMode || isSubmitting || stepNumber === currentStep) {
+    if (!isEditMode || isSectionBusy || stepNumber === currentStep) {
       return;
     }
 
@@ -2187,7 +2188,7 @@ const CreateEvent = () => {
   };
 
   const prevStep = () => {
-    if (currentStep > 1) {
+    if (!isSectionBusy && currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
   };
@@ -2991,7 +2992,7 @@ const CreateEvent = () => {
                                 : "text-gray-400 hover:text-gray-300"
                             }`}
                             onClick={() => setPublishState(state)}
-                            disabled={isSubmitting}
+                            disabled={isSectionBusy}
                           >
                             {state === "DRAFT" ? "Draft" : "Publish"}
                           </button>
@@ -4417,7 +4418,7 @@ const CreateEvent = () => {
                               variant={isActive ? "accent" : "outline"}
                               className={`px-4 ${isActive ? "bg-gray-700 text-white" : "border-gray-600 text-white hover:bg-gray-800"}`}
                               onClick={() => setPublishState(state)}
-                              disabled={isSubmitting}
+                              disabled={isSectionBusy}
                             >
                               {state === "DRAFT" ? "Save as Draft" : "Publish"}
                             </Button>
@@ -4592,7 +4593,7 @@ const CreateEvent = () => {
                 <Button
                   variant="outline"
                   onClick={prevStep}
-                  disabled={currentStep === 1}
+                  disabled={currentStep === 1 || isSectionBusy}
                   className="h-11 rounded-[10px] border-[#2a2a2a] bg-transparent px-5 text-white hover:bg-[#151515]"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
@@ -4604,30 +4605,30 @@ const CreateEvent = () => {
                     <Button
                       variant="outline"
                       onClick={saveCurrentSection}
-                      disabled={isSubmitting}
+                      disabled={isSectionBusy}
                       className="h-11 rounded-[10px] border-[#2a2a2a] bg-transparent px-5 text-white hover:bg-[#151515]"
                     >
-                      {isSubmitting ? "Saving..." : "Save Section"}
+                      {isSectionBusy ? "Saving..." : "Save Section"}
                     </Button>
                   )}
 
                   {currentStep < 8 ? (
                     <Button
                       onClick={() => nextStep()}
-                      disabled={isSubmitting}
+                      disabled={isSectionBusy}
                       className="h-11 rounded-[10px] bg-[#ef4444] px-5 font-medium text-white hover:bg-[#dc2626]"
                     >
-                      {isSubmitting ? "Saving..." : "Next"}
+                      {isSectionBusy ? "Saving..." : "Next"}
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   ) : (
                     <Button
                       variant="accent"
                       onClick={() => handleSubmit(publishState)}
-                      disabled={isSubmitting}
+                      disabled={isSectionBusy}
                       className="h-11 rounded-[10px] bg-[#ef4444] px-5 font-medium text-white hover:bg-[#dc2626]"
                     >
-                      {isSubmitting
+                      {isSectionBusy
                         ? "Updating..."
                         : publishState === "PUBLISHED"
                           ? (isEditMode ? "Update & Publish" : "Publish Event")
