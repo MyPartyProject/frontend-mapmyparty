@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+﻿import { useState, useEffect, useMemo, useCallback } from "react";
 import { Ticket, Calendar, MapPin, Loader2, AlertCircle, Receipt, CreditCard, User, Download, Hash, Clock, CheckCircle2, XCircle, Search, Filter, ChevronRight, Star, TrendingUp, Mail, Eye, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +55,10 @@ const MyBookings = ({
   });
   const [bookingAnalyticsLoaded, setBookingAnalyticsLoaded] = useState(false);
 
+  const getBookingDisplayId = useCallback((booking) => {
+    return booking?.publicId || booking?.id || "N/A";
+  }, []);
+
   const fetchBookings = useCallback(async () => {
     try {
       setLoading(true);
@@ -67,7 +71,7 @@ const MyBookings = ({
           const endDate = evt.endDate || null;
           const statusNormalized = (item.status || "").toLowerCase();
           const paymentStatus = (item.payment?.status || "").toLowerCase();
-          const location = evt.venue ? [evt.venue.city, evt.venue.state].filter(Boolean).join(", ") : "Venue TBA";
+          const location = evt.venue ? [evt.venue.city, evt.venue.state].filter(Boolean).join(", ") : null;
           const formatTime = (date) => {
             if (!date) return "Time TBA";
             const d = new Date(date);
@@ -75,16 +79,28 @@ const MyBookings = ({
             return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
           };
           return {
-            id: item.id, orderId: item.payment?.transactionId || item.id, bookingDate: item.createdAt || evt.createdAt,
-            status: statusNormalized, paymentStatus, eventId: evt.id, eventTitle: evt.title || "Event",
-            eventDate: startDate || endDate, eventEndDate: endDate, eventTime: formatTime(startDate),
-            image: evt.flyerImage || evt.image || "https://via.placeholder.com/600x400?text=Event",
-            category: evt.category || evt.subCategory || "Event", location,
-            ticketType: "Ticket", quantity: 1,
+            id: item.id,
+            publicId: item.publicId || item.id,
+            paymentTransactionId: item.payment?.transactionId || null,
+            bookingDate: item.createdAt || evt.createdAt,
+            status: statusNormalized,
+            paymentStatus,
+            eventId: evt.id,
+            eventTitle: evt.title || "Event",
+            eventDate: startDate || endDate,
+            eventEndDate: endDate,
+            eventTime: formatTime(startDate),
+            image: evt.flyerImage || evt.image || null,
+            category: evt.category || evt.subCategory || null,
+            location,
             totalPrice: Number(item.totalAmount) || 0,
-            payment: item.payment, review: item.review || null,
-            status1: evt.status1, status2: evt.status2, eventStatus: evt.eventStatus,
-            venue: evt.venue, organizer: evt.organizer,
+            payment: item.payment,
+            review: item.review || null,
+            status1: evt.status1,
+            status2: evt.status2,
+            eventStatus: evt.eventStatus,
+            venue: evt.venue,
+            organizer: evt.organizer,
           };
         });
         setBookings(normalized);
@@ -130,51 +146,12 @@ const MyBookings = ({
         const bookingTickets = response.data.items.filter(t => t.bookingId === booking.id);
         setSelectedBookingTickets(bookingTickets);
       } else {
-        setSelectedBookingTickets([{
-          id: `${booking.id}-fallback`,
-          bookingId: booking.id,
-          bookingStatus: booking.status?.toUpperCase(),
-          bookingDate: booking.bookingDate,
-          ticketName: "Ticket",
-          ticketType: "STANDARD_TICKET",
-          ticketPrice: booking.totalPrice || 0,
-          quantity: 1,
-          qrCode: null,
-          manualCheckInCode: null,
-          checkedIn: false,
-          eventId: booking.eventId,
-          eventTitle: booking.eventTitle,
-          eventImage: booking.image,
-          eventStartDate: booking.eventDate,
-          eventEndDate: booking.eventEndDate,
-          eventStatus: booking.eventStatus,
-          eventCategory: booking.category,
-          venueName: booking.venue?.name || null,
-          venueCity: booking.venue?.city || null,
-          venueState: booking.venue?.state || null,
-          organizerName: booking.organizer?.name || null,
-        }]);
+        setSelectedBookingTickets([]);
       }
     } catch (err) {
       console.error("Failed to fetch tickets", err);
       toast.error("Failed to load tickets");
-      setSelectedBookingTickets([{
-        id: `${booking.id}-fallback`,
-        bookingId: booking.id,
-        bookingStatus: booking.status?.toUpperCase(),
-        ticketName: "Ticket",
-        ticketType: "STANDARD_TICKET",
-        ticketPrice: booking.totalPrice || 0,
-        quantity: 1,
-        eventId: booking.eventId,
-        eventTitle: booking.eventTitle,
-        eventStartDate: booking.eventDate,
-        eventEndDate: booking.eventEndDate,
-        eventCategory: booking.category,
-        venueName: null,
-        venueCity: booking.location?.split(", ")[0] || null,
-        organizerName: null,
-      }]);
+      setSelectedBookingTickets([]);
     } finally { setTicketsLoading(false); }
   }, []);
 
@@ -216,7 +193,7 @@ const MyBookings = ({
       doc.text(`Date: ${ticket.eventStartDate ? new Date(ticket.eventStartDate).toLocaleDateString() : 'TBA'}`, 20, 100);
       const venue = [ticket.venueName, ticket.venueCity].filter(Boolean).join(', ') || 'TBA';
       doc.text(`Venue: ${venue}`, 20, 110);
-      if (ticket.ticketPrice) doc.text(`Price: ₹${ticket.ticketPrice.toLocaleString()}`, 20, 120);
+      if (ticket.ticketPrice) doc.text(`Price: â‚¹${ticket.ticketPrice.toLocaleString()}`, 20, 120);
       if (ticket.qrCode) {
         const qrData = buildCanonicalQrPayload(ticket.qrCode);
         if (qrData) {
@@ -246,7 +223,11 @@ const MyBookings = ({
 
   const filteredBookings = useMemo(() => {
     return bookings.filter(booking => {
-      const matchesSearch = (booking.eventTitle || "").toLowerCase().includes(searchQuery.toLowerCase()) || (booking.orderId || "").toLowerCase().includes(searchQuery.toLowerCase());
+      const query = searchQuery.toLowerCase();
+      const matchesSearch =
+        (booking.eventTitle || "").toLowerCase().includes(query) ||
+        (booking.publicId || "").toLowerCase().includes(query) ||
+        (booking.paymentTransactionId || "").toLowerCase().includes(query);
       const matchesFilter = filterStatus === 'all' || booking.status === filterStatus;
       return matchesSearch && matchesFilter;
     });
@@ -342,7 +323,7 @@ const MyBookings = ({
         {[
           { label: "Total Bookings", value: stats.total, icon: Receipt, color: "#D60024" },
           { label: "Upcoming", value: stats.upcoming, icon: Calendar, color: "#60a5fa" },
-          { label: "Total Spent", value: `₹${stats.totalSpent.toLocaleString()}`, icon: CreditCard, color: "#22c55e" },
+          { label: "Total Spent", value: `â‚¹${stats.totalSpent.toLocaleString()}`, icon: CreditCard, color: "#22c55e" },
         ].map((stat) => {
           const Icon = stat.icon;
           return (
@@ -365,7 +346,7 @@ const MyBookings = ({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
           <Input
             type="search"
-            placeholder="Search by event name or order ID..."
+            placeholder="Search by event name or booking ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-4 h-10 bg-white/[0.05] border-white/[0.08] text-white text-sm placeholder:text-white/30 rounded-lg focus:ring-1 focus:ring-[#D60024]/50"
@@ -403,9 +384,17 @@ const MyBookings = ({
                 onClick={() => fetchBookingTickets(booking)}
               >
                 <div className="relative h-36 overflow-hidden">
-                  <img src={booking.image} alt={booking.eventTitle} className="w-full h-full object-cover" />
+                  {booking.image ? (
+                    <img src={booking.image} alt={booking.eventTitle} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-[#1b1b2d] via-[#141422] to-[#0e0e18] flex items-center justify-center px-4 text-center text-sm font-semibold text-white/60">
+                      {booking.eventTitle}
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                  <Badge className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm text-white text-[10px] border-0">{booking.category}</Badge>
+                  {booking.category && (
+                    <Badge className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm text-white text-[10px] border-0">{booking.category}</Badge>
+                  )}
                   <div className="absolute bottom-3 left-3 right-3">
                     <h3 className="text-white font-semibold text-sm line-clamp-1">{booking.eventTitle}</h3>
                   </div>
@@ -420,12 +409,12 @@ const MyBookings = ({
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                      <span className="line-clamp-1">{booking.location}</span>
+                      <span className="line-clamp-1">{booking.location || "Venue TBA"}</span>
                     </div>
                   </div>
                   <div className="flex items-center justify-between pt-2.5 border-t border-white/[0.06]">
-                    <span className="text-xs text-white/40">{booking.quantity} {booking.quantity > 1 ? "tickets" : "ticket"}</span>
-                    <span className="text-sm font-bold text-[#D60024]">₹{booking.totalPrice.toLocaleString()}</span>
+                    <span className="text-xs font-mono text-white/40">{getBookingDisplayId(booking)}</span>
+                    <span className="text-sm font-bold text-[#D60024]">â‚¹{booking.totalPrice.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -467,7 +456,7 @@ const MyBookings = ({
                 {/* Header bar */}
                 <div className="px-4 py-2.5 border-b border-white/[0.04] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div className="flex items-center gap-2 text-xs text-white/40">
-                    <span className="font-mono">{booking.orderId?.substring(0, 12)}...</span>
+                    <span className="font-mono text-white/70">{getBookingDisplayId(booking)}</span>
                     <span className="text-white/15">|</span>
                     <span>{formatBookingDate(booking.bookingDate)}</span>
                   </div>
@@ -495,10 +484,18 @@ const MyBookings = ({
                     {/* Event info */}
                     <div className="flex gap-3 flex-1 min-w-0">
                       <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0 border border-white/[0.06]">
-                        <img src={booking.image} alt={booking.eventTitle} className="w-full h-full object-cover" />
+                        {booking.image ? (
+                          <img src={booking.image} alt={booking.eventTitle} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-[#1b1b2d] via-[#141422] to-[#0e0e18] flex items-center justify-center px-2 text-center text-[10px] font-semibold text-white/60">
+                            {booking.eventTitle}
+                          </div>
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <Badge className="bg-white/[0.06] text-white/50 border-0 text-[10px] mb-1.5">{booking.category}</Badge>
+                        {booking.category && (
+                          <Badge className="bg-white/[0.06] text-white/50 border-0 text-[10px] mb-1.5">{booking.category}</Badge>
+                        )}
                         <h3 className="text-sm font-semibold text-white line-clamp-1 mb-1.5">{booking.eventTitle}</h3>
                         <div className="space-y-1 text-xs text-white/40">
                           <div className="flex items-center gap-2">
@@ -509,28 +506,19 @@ const MyBookings = ({
                           </div>
                           <div className="flex items-center gap-2">
                             <MapPin className="h-3 w-3 flex-shrink-0" />
-                            <span className="line-clamp-1">{booking.location}</span>
+                            <span className="line-clamp-1">{booking.location || "Venue TBA"}</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Ticket summary */}
-                    <div className="flex items-center gap-4 sm:gap-6 px-4 py-3 rounded-lg bg-white/[0.03] border border-white/[0.04] flex-shrink-0">
-                      <div className="text-center">
-                        <p className="text-[10px] text-white/30 mb-0.5">Tickets</p>
-                        <p className="text-sm font-semibold text-white">{booking.quantity}</p>
-                      </div>
-                      <div className="h-6 w-px bg-white/[0.06]" />
-                      <div className="text-center">
-                        <p className="text-[10px] text-white/30 mb-0.5">Type</p>
-                        <p className="text-sm font-semibold text-white line-clamp-1">{booking.ticketType}</p>
-                      </div>
-                      <div className="h-6 w-px bg-white/[0.06]" />
-                      <div className="text-center">
-                        <p className="text-[10px] text-white/30 mb-0.5">Total</p>
-                        <p className="text-sm font-bold text-[#D60024]">₹{booking.totalPrice.toLocaleString()}</p>
-                      </div>
+                    {/* Amount summary */}
+                    <div className="px-4 py-3 rounded-lg bg-white/[0.03] border border-white/[0.04] flex-shrink-0 min-w-[110px]">
+                      <p className="text-[10px] text-white/30 mb-0.5 uppercase tracking-wide">Total</p>
+                      <p className="text-sm font-bold text-[#D60024]">Rs {booking.totalPrice.toLocaleString()}</p>
+                      {booking.payment?.paymentMethod && (
+                        <p className="text-[10px] text-white/40 mt-1 uppercase tracking-wide">{booking.payment.paymentMethod}</p>
+                      )}
                     </div>
 
                     {/* Actions */}
@@ -646,3 +634,4 @@ const MyBookings = ({
 };
 
 export default MyBookings;
+
