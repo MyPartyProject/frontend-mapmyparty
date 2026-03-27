@@ -31,7 +31,7 @@ const formatDateTime = (date) =>
     minute: "2-digit",
   }).format(new Date(date));
 
-const buildQrPreview = (value, maxLength = 180) => {
+const buildQrPreview = (value, maxLength = 120) => {
   if (typeof value !== "string") return "";
   const normalized = value.replace(/\s+/g, " ").trim();
   return normalized.length > maxLength
@@ -337,15 +337,6 @@ const ReceptionDetail = () => {
       normalizedQrToken = extractValidQrToken(qrDataString);
       normalizedQrPayload = buildCanonicalQrPayload(qrDataString);
 
-      console.log("[ReceptionDetail] Quick check-in scan received", {
-        eventId: id,
-        rawType: typeof qrDataString,
-        rawLength: typeof qrDataString === "string" ? qrDataString.length : 0,
-        rawPreview: rawQrPreview,
-        normalizedQrToken,
-        normalizedQrPayloadPreview: buildQrPreview(normalizedQrPayload || ""),
-      });
-
       if (!normalizedQrToken || !normalizedQrPayload) {
         console.warn("[ReceptionDetail] Unable to normalize scanned QR payload", {
           eventId: id,
@@ -364,13 +355,6 @@ const ReceptionDetail = () => {
         }),
       });
       const data = response.data || response;
-      console.log("[ReceptionDetail] Quick check-in response", {
-        eventId: id,
-        bookingItemId: data?.bookingItemId || null,
-        alreadyCheckedIn: Boolean(data?.alreadyCheckedIn),
-        checkedIn: Boolean(data?.checkedIn),
-        attendeeName: data?.attendeeName || null,
-      });
       ensureCurrentEventMatch(data);
 
       if (data.alreadyCheckedIn) {
@@ -386,12 +370,11 @@ const ReceptionDetail = () => {
         setAccepted((prev) => prev + 1);
       }
     } catch (err) {
-      console.error("Quick check-in failed:", {
+      console.error("[ReceptionDetail] Quick check-in failed", {
         eventId: id,
-        error: err,
+        message: err?.message || "Check-in failed",
         rawPreview: rawQrPreview,
         normalizedQrToken,
-        normalizedQrPayloadPreview: buildQrPreview(normalizedQrPayload || ""),
       });
       setCheckInResult({
         type: "error",

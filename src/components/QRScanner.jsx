@@ -4,14 +4,6 @@ import { X, Camera, CameraOff, Loader2, SwitchCamera } from "lucide-react";
 
 const SCAN_COOLDOWN_MS = 3000;
 
-const buildDecodedPreview = (value, maxLength = 160) => {
-  if (typeof value !== "string") return "";
-  const normalized = value.replace(/\s+/g, " ").trim();
-  return normalized.length > maxLength
-    ? `${normalized.slice(0, maxLength)}...`
-    : normalized;
-};
-
 const getQrBoxSize = () => {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
@@ -67,11 +59,6 @@ const QRScanner = ({ onScan, onClose, isProcessing, isPaused = false }) => {
     }
 
     lastScannedRef.current = { text: decodedText, time: now };
-
-    console.log("[QRScanner] QR decoded", {
-      length: typeof decodedText === "string" ? decodedText.length : 0,
-      preview: buildDecodedPreview(decodedText),
-    });
 
     if (navigator.vibrate) {
       navigator.vibrate(200);
