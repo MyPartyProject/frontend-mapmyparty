@@ -19,6 +19,7 @@ import {
 import { apiFetch } from "@/config/api";
 import QRScanner from "@/components/QRScanner";
 import CheckInResult from "@/components/CheckInResult";
+import { buildCanonicalQrPayload, extractValidQrToken } from "@/utils/qrPayload";
 
 // Date formatter utility
 const formatDateTime = (date) =>
@@ -29,6 +30,14 @@ const formatDateTime = (date) =>
     hour: "numeric",
     minute: "2-digit",
   }).format(new Date(date));
+
+const buildQrPreview = (value, maxLength = 180) => {
+  if (typeof value !== "string") return "";
+  const normalized = value.replace(/\s+/g, " ").trim();
+  return normalized.length > maxLength
+    ? `${normalized.slice(0, maxLength)}...`
+    : normalized;
+};
 
 const transformEvent = (event) => {
   if (!event) return null;
@@ -320,13 +329,48 @@ const ReceptionDetail = () => {
     setScanProcessing(true);
     setCheckInResult(null);
 
+    const rawQrPreview = buildQrPreview(qrDataString);
+    let normalizedQrToken = null;
+    let normalizedQrPayload = null;
+
     try {
+      normalizedQrToken = extractValidQrToken(qrDataString);
+      normalizedQrPayload = buildCanonicalQrPayload(qrDataString);
+
+      console.log("[ReceptionDetail] Quick check-in scan received", {
+        eventId: id,
+        rawType: typeof qrDataString,
+        rawLength: typeof qrDataString === "string" ? qrDataString.length : 0,
+        rawPreview: rawQrPreview,
+        normalizedQrToken,
+        normalizedQrPayloadPreview: buildQrPreview(normalizedQrPayload || ""),
+      });
+
+      if (!normalizedQrToken || !normalizedQrPayload) {
+        console.warn("[ReceptionDetail] Unable to normalize scanned QR payload", {
+          eventId: id,
+          rawType: typeof qrDataString,
+          rawPreview: rawQrPreview,
+        });
+        throw new Error("Unable to read this QR ticket. Try scanning again or use the manual code.");
+      }
+
       const response = await apiFetch("booking/quick-check-in-qr", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: buildReceptionRequestBody({ qrData: qrDataString }),
+        body: buildReceptionRequestBody({
+          qrData: normalizedQrPayload,
+          qrToken: normalizedQrToken,
+        }),
       });
       const data = response.data || response;
+      console.log("[ReceptionDetail] Quick check-in response", {
+        eventId: id,
+        bookingItemId: data?.bookingItemId || null,
+        alreadyCheckedIn: Boolean(data?.alreadyCheckedIn),
+        checkedIn: Boolean(data?.checkedIn),
+        attendeeName: data?.attendeeName || null,
+      });
       ensureCurrentEventMatch(data);
 
       if (data.alreadyCheckedIn) {
@@ -342,7 +386,13 @@ const ReceptionDetail = () => {
         setAccepted((prev) => prev + 1);
       }
     } catch (err) {
-      console.error("Quick check-in failed:", err);
+      console.error("Quick check-in failed:", {
+        eventId: id,
+        error: err,
+        rawPreview: rawQrPreview,
+        normalizedQrToken,
+        normalizedQrPayloadPreview: buildQrPreview(normalizedQrPayload || ""),
+      });
       setCheckInResult({
         type: "error",
         error: err.message || "Check-in failed. Please try again.",
