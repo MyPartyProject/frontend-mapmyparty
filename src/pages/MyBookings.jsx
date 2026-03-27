@@ -248,10 +248,12 @@ const MyBookings = ({
       }
 
       const blob = await response.blob();
+      const contentDisposition = response.headers.get("content-disposition") || "";
+      const fileNameMatch = /filename="?([^"]+)"?/i.exec(contentDisposition);
       const downloadUrl = window.URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = downloadUrl;
-      anchor.download = `invoice-${booking.publicId || booking.id}.pdf`;
+      anchor.download = fileNameMatch?.[1] || `invoice-${booking.publicId || booking.id}.pdf`;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
