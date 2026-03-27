@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import VintageTicket from "@/components/VintageTicket";
-import { apiFetch } from "@/config/api";
+import { apiFetch, buildUrl } from "@/config/api";
 import { toast } from "sonner";
 import { jsPDF } from "jspdf";
 import QRCode from "qrcode";
@@ -33,7 +33,6 @@ const MyBookings = ({
     "Felt the schedule ran late; could improve timing.",
   ];
 
-  const [selectedTicket, setSelectedTicket] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -48,6 +47,7 @@ const MyBookings = ({
   const [ticketsLoading, setTicketsLoading] = useState(false);
   const [selectedBookingTickets, setSelectedBookingTickets] = useState([]);
   const [selectedBookingForTickets, setSelectedBookingForTickets] = useState(null);
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState(null);
   const [bookingAnalytics, setBookingAnalytics] = useState({
     totalBookings: 0,
     upcomingBookings: 0,
@@ -157,6 +157,10 @@ const MyBookings = ({
 
   const closeTicketsModal = () => { setTicketsModalOpen(false); setSelectedBookingTickets([]); setSelectedBookingForTickets(null); };
 
+  const canDownloadInvoice = useCallback((booking) => {
+    return booking?.status === "confirmed" && booking?.paymentStatus === "success";
+  }, []);
+
   const formatDate = (dateString) => {
     if (!dateString) return "Date TBA";
     const d = new Date(dateString);
@@ -216,6 +220,50 @@ const MyBookings = ({
       toast.error('Failed to download ticket');
     }
   };
+
+  const handleDownloadInvoice = useCallback(async (booking) => {
+    if (!booking?.id) return;
+
+    if (!canDownloadInvoice(booking)) {
+      toast.error("Invoice is available after payment confirmation.");
+      return;
+    }
+
+    setDownloadingInvoiceId(booking.id);
+    try {
+      const url = buildUrl(`booking/${booking.id}/invoice`);
+      const response = await fetch(url, {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        let message = "Failed to download invoice";
+        try {
+          const errorData = await response.json();
+          message = errorData?.errorMessage || errorData?.message || message;
+        } catch (_error) {
+          // Ignore parse failures and use the fallback message.
+        }
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = downloadUrl;
+      anchor.download = `invoice-${booking.publicId || booking.id}.pdf`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+      toast.success("Invoice download started");
+    } catch (err) {
+      console.error("Failed to download invoice", err);
+      toast.error(err?.message || "Failed to download invoice");
+    } finally {
+      setDownloadingInvoiceId(null);
+    }
+  }, [canDownloadInvoice]);
 
   const handleResendTicket = (booking) => {
     toast.success(`Ticket for ${booking.eventTitle} has been sent to your email!`);
@@ -526,8 +574,19 @@ const MyBookings = ({
                       <Button size="sm" className="flex-1 lg:flex-none h-8 bg-[#D60024] hover:bg-[#b8001f] text-white text-xs font-medium px-3" onClick={() => fetchBookingTickets(booking)}>
                         <Eye className="h-3 w-3 mr-1.5" /> View Tickets
                       </Button>
-                      <Button size="sm" variant="outline" className="flex-1 lg:flex-none h-8 border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.06] text-xs px-3" onClick={() => setSelectedTicket(booking)}>
-                        <Ticket className="h-3 w-3 mr-1.5" /> Details
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 lg:flex-none h-8 border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.06] text-xs px-3 disabled:opacity-50"
+                        onClick={() => handleDownloadInvoice(booking)}
+                        disabled={downloadingInvoiceId === booking.id || !canDownloadInvoice(booking)}
+                      >
+                        {downloadingInvoiceId === booking.id ? (
+                          <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
+                        ) : (
+                          <Receipt className="h-3 w-3 mr-1.5" />
+                        )}
+                        Invoice
                       </Button>
                       {isEventPast(booking) && (
                         <Button size="sm" variant="ghost" className="flex-1 lg:flex-none h-8 text-white/40 hover:text-white hover:bg-white/[0.06] text-xs px-3 border border-dashed border-white/[0.08]" onClick={() => handleOpenReview(booking)}>

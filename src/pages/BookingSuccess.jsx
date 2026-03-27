@@ -92,6 +92,20 @@ const BookingSuccess = () => {
     });
   };
 
+  const taxSummary = useMemo(() => {
+    if ((booking?.gstType || "").includes("IGST")) {
+      return {
+        label: "IGST",
+        amount: Number(booking?.gstTotal || 0),
+      };
+    }
+
+    return {
+      label: "GST",
+      amount: Number(booking?.gstTotal || 0),
+    };
+  }, [booking?.gstTotal, booking?.gstType]);
+
   const handleDownloadTickets = () => {
     try {
       toast.info("Preparing your tickets...");
@@ -219,12 +233,12 @@ const BookingSuccess = () => {
                 <span className="text-white">{formatCurrency(subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm text-white/70">
-                <span>Platform Fee</span>
+                <span>Platform charges</span>
                 <span className="text-white">{formatCurrency(booking.platformFeeTotal || 0)}</span>
               </div>
               <div className="flex justify-between text-sm text-white/70">
-                <span>GST ({(booking.gstType || "IGST").replace(/_/g, " + ")})</span>
-                <span className="text-white">{formatCurrency(booking.gstTotal || 0)}</span>
+                <span>{taxSummary.label}</span>
+                <span className="text-white">{formatCurrency(taxSummary.amount)}</span>
               </div>
               <div className="border-t border-white/10 pt-2 mt-2" />
               <div className="flex justify-between text-lg font-bold">

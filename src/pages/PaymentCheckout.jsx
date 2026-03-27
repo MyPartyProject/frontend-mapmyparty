@@ -91,7 +91,7 @@ const PaymentCheckout = () => {
       subtotal: totals.ticketSubtotal ?? 0,
       platformFee: totals.platformFeeTotal ?? 0,
       gst: totals.gst?.gstTotal ?? 0,
-      gstType: totals.gst?.gstType || "IGST",
+      gstType: totals.gst?.gstType || "NONE",
       cgst: totals.gst?.cgst ?? 0,
       sgst: totals.gst?.sgst ?? 0,
       igst: totals.gst?.igst ?? 0,
@@ -105,15 +105,31 @@ const PaymentCheckout = () => {
     new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(value);
 
   const itemsForDisplay = useMemo(() => {
-    const nameMap = new Map();
-    tickets.forEach((ticket) => nameMap.set(ticket.id, ticket.name));
+    const ticketMap = new Map();
+    tickets.forEach((ticket) => ticketMap.set(ticket.id, ticket));
+
     return (bookingData?.items || []).map((item) => ({
       ...item,
-      displayName: item.name || nameMap.get(item.ticketId) || item.ticketId || "Ticket",
+      displayName: item.name || ticketMap.get(item.ticketId)?.name || item.ticketId || "Ticket",
       quantity: item.quantity || 0,
+      ticketPrice: item.ticketPrice ?? ticketMap.get(item.ticketId)?.price ?? 0,
       subtotal: item.subtotal ?? 0,
     }));
   }, [bookingData?.items, tickets]);
+
+  const taxSummary = useMemo(() => {
+    if ((totalsSafe.gstType || "").includes("IGST")) {
+      return {
+        label: "IGST",
+        amount: totalsSafe.igst || totalsSafe.gst || 0,
+      };
+    }
+
+    return {
+      label: "GST",
+      amount: totalsSafe.gst || 0,
+    };
+  }, [totalsSafe.gst, totalsSafe.gstType, totalsSafe.igst]);
 
   const gatewayPreview = useMemo(() => {
     if (!bookingData?.bookingId) return null;
@@ -269,9 +285,8 @@ const PaymentCheckout = () => {
                   <div key={item.ticketId || item.id} className="flex justify-between items-start gap-3">
                     <div className="text-white/80">
                       <div className="font-semibold text-white">{item.displayName}</div>
-                      <div className="text-xs text-white/60">Qty: {item.quantity}</div>
-                      <div className="text-[11px] text-white/50">
-                        Platform fee: {formatCurrency(item.platformFee || 0)} | GST: {formatCurrency(item.gstAmount || 0)}
+                      <div className="text-xs text-white/60">
+                        Qty: {item.quantity} x {formatCurrency(item.ticketPrice || 0)}
                       </div>
                     </div>
                     <div className="text-white font-semibold">{formatCurrency(item.subtotal || 0)}</div>
@@ -287,26 +302,15 @@ const PaymentCheckout = () => {
                   <span className="text-white">{formatCurrency(totalsSafe.subtotal || 0)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Platform fee</span>
+                  <span>
+                    Platform charges
+                  </span>
                   <span className="text-white">{formatCurrency(totalsSafe.platformFee || 0)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>
-                    GST {totalsSafe.gstType ? `(${totalsSafe.gstType.replace(/_/g, " + ")})` : ""}
-                  </span>
-                  <span className="text-white">{formatCurrency(totalsSafe.gst || 0)}</span>
+                  <span>{taxSummary.label}</span>
+                  <span className="text-white">{formatCurrency(taxSummary.amount)}</span>
                 </div>
-                {totalsSafe.gstType === "CGST_SGST" && (
-                  <div className="text-[11px] text-white/60 flex justify-end gap-3">
-                    <span>CGST: {formatCurrency(totalsSafe.cgst || 0)}</span>
-                    <span>SGST: {formatCurrency(totalsSafe.sgst || 0)}</span>
-                  </div>
-                )}
-                {totalsSafe.gstType === "IGST" && (
-                  <div className="text-[11px] text-white/60 flex justify-end">
-                    <span>IGST: {formatCurrency(totalsSafe.igst || 0)}</span>
-                  </div>
-                )}
               </div>
 
               <Separator className="bg-white/10" />
