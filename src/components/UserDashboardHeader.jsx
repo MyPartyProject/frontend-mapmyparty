@@ -63,9 +63,9 @@ const UserDashboardHeader = () => {
     e.preventDefault();
     const q = (searchText || "").trim();
     if (q.length > 0) {
-      navigate(`/events?search=${encodeURIComponent(q)}`);
+      navigate(`/dashboard/browse-events?search=${encodeURIComponent(q)}`);
     } else {
-      navigate("/events");
+      navigate("/dashboard/browse-events");
     }
     setMobileMenuOpen(false);
   };

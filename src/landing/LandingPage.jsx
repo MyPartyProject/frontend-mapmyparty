@@ -26,6 +26,8 @@ const EVENT_SECTION_CONFIG = [
     label: "Live Concerts",
     eyebrow: "Music",
     description: "Big-stage nights, headline acts, and live crowd energy.",
+    icon: Music2,
+    color: "from-fuchsia-500/20 to-orange-500/20",
     filters: { category: "Music", subCategory: "Live Concerts" },
   },
   {
@@ -33,6 +35,8 @@ const EVENT_SECTION_CONFIG = [
     label: "Club Nights",
     eyebrow: "Music",
     description: "After-dark lineups built for high-energy dance floors.",
+    icon: PartyPopper,
+    color: "from-amber-500/20 to-rose-500/20",
     filters: { category: "Music", subCategory: "Club Nights" },
   },
   {
@@ -40,6 +44,8 @@ const EVENT_SECTION_CONFIG = [
     label: "Music Festivals",
     eyebrow: "Music",
     description: "Multi-artist festival weekends worth planning around.",
+    icon: Sparkles,
+    color: "from-blue-500/20 to-cyan-500/20",
     filters: { category: "Music", subCategory: "Music Festivals" },
   },
   {
@@ -47,6 +53,8 @@ const EVENT_SECTION_CONFIG = [
     label: "Comedy Shows",
     eyebrow: "Workshop",
     description: "Stand-up sets, roast nights, and packed comedy rooms.",
+    icon: Star,
+    color: "from-violet-500/20 to-pink-500/20",
     filters: { category: "Workshop", subCategory: "Comedy Shows" },
   },
   {
@@ -54,6 +62,8 @@ const EVENT_SECTION_CONFIG = [
     label: "Theater Shows",
     eyebrow: "Workshop",
     description: "Stage productions, dramatic nights, and live performance craft.",
+    icon: ShieldCheck,
+    color: "from-emerald-500/20 to-lime-500/20",
     filters: { category: "Workshop", subCategory: "Theater Shows" },
   },
 ];
@@ -62,13 +72,6 @@ const highlights = [
   { label: "Live events", value: "12K+", icon: CalendarRange },
   { label: "Cities covered", value: "240+", icon: MapPin },
   { label: "Tickets issued", value: "3.2M", icon: TicketIcon },
-];
-
-const categories = [
-  { name: "Concerts", icon: Music2, color: "from-fuchsia-500/20 to-orange-500/20" },
-  { name: "Tech & Business", icon: Sparkles, color: "from-blue-500/20 to-cyan-500/20" },
-  { name: "Food & Drinks", icon: PartyPopper, color: "from-amber-500/20 to-rose-500/20" },
-  { name: "Workshops", icon: ShieldCheck, color: "from-emerald-500/20 to-lime-500/20" },
 ];
 
 const steps = [
@@ -236,6 +239,16 @@ const mapEventToCard = (event) => {
   };
 };
 
+const buildBrowseEventsPath = ({ category, subCategory, search } = {}) => {
+  const params = new URLSearchParams();
+
+  if (category) params.set("category", category);
+  if (subCategory) params.set("subCategory", subCategory);
+  if (search) params.set("search", search);
+
+  return `/browse-events${params.toString() ? `?${params.toString()}` : ""}`;
+};
+
 const LandingPage = () => {
   const [activeHeroSlide, setActiveHeroSlide] = useState(0);
   const heroVideoRef = useRef(null);
@@ -364,15 +377,14 @@ const LandingPage = () => {
             const params = new URLSearchParams();
             if (section.filters.category) params.set("category", section.filters.category);
             if (section.filters.subCategory) params.set("subCategory", section.filters.subCategory);
+            params.set("limit", "3");
 
             const response = await apiFetch(`/api/event${params.toString() ? `?${params.toString()}` : ""}`, {
               method: "GET",
             });
 
             const rawEvents = Array.isArray(response?.data) ? response.data : [];
-            const mappedEvents = rawEvents
-              .slice(0, 3)
-              .map((event) => mapEventToCard(event));
+            const mappedEvents = rawEvents.map((event) => mapEventToCard(event));
 
             return [section.key, mappedEvents];
           })
@@ -428,6 +440,9 @@ const LandingPage = () => {
     setSearchLoading(false);
     setSearchResults({ events: [], artists: [], venues: [], totalEvents: 0, totalArtists: 0, totalVenues: 0 });
   };
+
+  const featuredVibe = EVENT_SECTION_CONFIG[0];
+  const featuredVibeEvents = eventSections[featuredVibe.key] || [];
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-50">
@@ -587,7 +602,10 @@ const LandingPage = () => {
                                   <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Events</p>
                                   <h3 className="text-lg font-semibold text-white">Matching events</h3>
                                 </div>
-                                <Link to="/browse-events" className="text-sm text-amber-200 transition hover:text-amber-100">
+                                <Link
+                                  to={buildBrowseEventsPath({ search: searchQuery.trim() })}
+                                  className="text-sm text-amber-200 transition hover:text-amber-100"
+                                >
                                   Browse all
                                 </Link>
                               </div>
@@ -662,6 +680,9 @@ const LandingPage = () => {
               <div>
                 <p className="text-sm uppercase tracking-[0.18em] text-slate-400">Discover</p>
                 <h2 className="text-3xl font-bold">Pick your vibe</h2>
+                <p className="mt-2 max-w-2xl text-sm text-slate-300/80">
+                  Switch between real event moods and jump straight into a filtered browse page when one feels right.
+                </p>
               </div>
               <Link to="/browse-events">
                 <Button variant="outline" className="border-white/20 text-white hover:bg-white hover:text-slate-900">
@@ -670,34 +691,85 @@ const LandingPage = () => {
                 </Button>
               </Link>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {categories.map(({ name, icon: Icon, color }) => (
-                <Link key={name} to="/events" className="group">
-                  <div
-                    className={`relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-amber-300/40 hover:shadow-[0_25px_80px_-24px_rgba(0,0,0,0.65)]`}
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+              {EVENT_SECTION_CONFIG.map((section) => {
+                const Icon = section.icon;
+                const previewCount = eventSections[section.key]?.length || 0;
+
+                return (
+                  <Link
+                    key={section.key}
+                    to={buildBrowseEventsPath(section.filters)}
+                    className="group block h-full text-left"
                   >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-80 transition-opacity group-hover:opacity-100`} />
-                    <div className="relative flex items-start justify-between">
-                      <div>
-                        <p className="text-xs uppercase tracking-[0.15em] text-slate-200/70">Category</p>
-                        <p className="text-lg font-semibold">{name}</p>
+                    <div
+                      className="relative flex h-full min-h-[15.5rem] flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-amber-300/30 hover:shadow-[0_25px_80px_-24px_rgba(0,0,0,0.65)]"
+                    >
+                      <div className={`absolute inset-0 bg-gradient-to-br ${section.color} opacity-80 transition-opacity group-hover:opacity-100`} />
+                      <div className="relative flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.15em] text-slate-200/70">{section.eyebrow}</p>
+                          <p className="mt-1 text-lg font-semibold">{section.label}</p>
+                        </div>
+                        <div className="rounded-xl bg-white/20 p-2 text-white">
+                          <Icon className="h-5 w-5" />
+                        </div>
                       </div>
-                      <div className="rounded-xl bg-white/20 p-2 text-white">
-                        <Icon className="h-5 w-5" />
+                      <p className="relative mt-4 text-sm text-slate-100/80">{section.description}</p>
+                      <div className="relative mt-auto flex items-center justify-between gap-3 pt-6 text-sm text-slate-100/80">
+                        <span>{previewCount > 0 ? `${previewCount} live pick${previewCount === 1 ? "" : "s"}` : "Explore this vibe"}</span>
+                        <ArrowRight className="h-4 w-4" />
                       </div>
                     </div>
-                    <div className="relative mt-6 flex items-center gap-2 text-sm text-slate-100/80">
-                      Explore now
-                      <ArrowRight className="h-4 w-4" />
-                    </div>
-                  </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-[0_30px_100px_-40px_rgba(0,0,0,0.8)] backdrop-blur">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.18em] text-amber-200/80">{featuredVibe.eyebrow}</p>
+                  <h3 className="text-2xl font-bold text-white">{featuredVibe.label}</h3>
+                  <p className="mt-2 text-sm text-slate-300/80">{featuredVibe.description}</p>
+                </div>
+                <Link to={buildBrowseEventsPath(featuredVibe.filters)}>
+                  <Button variant="accent" className="bg-amber-400 text-slate-900 hover:bg-amber-300">
+                    Explore live concerts
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </Link>
-              ))}
+              </div>
+
+              <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {sectionsLoading ? (
+                  Array.from({ length: 3 }).map((_, index) => (
+                    <div
+                      key={`${featuredVibe.key}-preview-skeleton-${index}`}
+                      className="overflow-hidden rounded-2xl border border-white/10 bg-white/5"
+                    >
+                      <div className="aspect-[16/9] animate-pulse bg-white/10" />
+                      <div className="space-y-3 p-5">
+                        <div className="h-4 w-24 animate-pulse rounded bg-white/10" />
+                        <div className="h-5 w-3/4 animate-pulse rounded bg-white/10" />
+                        <div className="h-4 w-2/3 animate-pulse rounded bg-white/10" />
+                        <div className="h-4 w-1/2 animate-pulse rounded bg-white/10" />
+                      </div>
+                    </div>
+                  ))
+                ) : featuredVibeEvents.length > 0 ? (
+                  featuredVibeEvents.map((event) => <EventCard key={event.id} {...event} />)
+                ) : (
+                  <div className="md:col-span-2 lg:col-span-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-8 text-sm text-slate-300/80">
+                    No live events are available in this vibe yet. Try another vibe or browse the full catalog.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </section>
 
-        {EVENT_SECTION_CONFIG.map((section) => {
+        {EVENT_SECTION_CONFIG.filter((section) => section.key !== featuredVibe.key).map((section) => {
           const events = eventSections[section.key] || [];
 
           return (
@@ -709,7 +781,7 @@ const LandingPage = () => {
                     <h2 className="text-3xl font-bold">{section.label}</h2>
                     <p className="text-slate-300/80">{section.description}</p>
                   </div>
-                  <Link to="/browse-events">
+                  <Link to={buildBrowseEventsPath(section.filters)}>
                     <Button variant="accent" className="bg-amber-400 text-slate-900 hover:bg-amber-300">
                       Browse all
                     </Button>

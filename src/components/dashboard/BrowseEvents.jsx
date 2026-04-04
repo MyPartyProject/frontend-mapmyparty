@@ -1,158 +1,552 @@
-import { useState, useEffect, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
-  Calendar,
-  MapPin,
-  Search,
-  TrendingUp,
-  Star,
-  Users,
-  Ticket,
-  SlidersHorizontal,
-  Sparkles,
   Briefcase,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
   Music,
+  Search,
+  Sparkles,
+  TrendingUp,
   X,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { usePublicEvents } from "@/hooks/usePublicEvents";
 import Header from "@/components/Header";
 import { isAuthenticated as checkAuth } from "@/utils/auth";
+import { buildUrl } from "@/config/api";
 
-const CATEGORY_CONFIG = [
-  {
-    id: "WORKSHOP",
-    label: "Workshop",
-    icon: Briefcase,
-    color: "#f97316",
-  },
-  {
-    id: "MUSIC",
-    label: "Music",
-    icon: Music,
-    color: "#a855f7",
-  },
-];
+const PAGE_SIZE = 20;
+
+const CATEGORY_ORDER = ["music", "workshop", "business", "entertainment", "food", "wellness"];
+const FALLBACK_CATEGORY_COLORS = ["#60a5fa", "#f472b6", "#2dd4bf", "#f59e0b", "#818cf8"];
+
+const KNOWN_CATEGORY_META = {
+  business: { label: "Business", icon: Briefcase, color: "#38bdf8" },
+  entertainment: { label: "Entertainment", icon: Sparkles, color: "#ef4444" },
+  food: { label: "Food", icon: Sparkles, color: "#f59e0b" },
+  music: { label: "Music", icon: Music, color: "#a855f7" },
+  wellness: { label: "Wellness", icon: Sparkles, color: "#10b981" },
+  workshop: { label: "Workshop", icon: Briefcase, color: "#f97316" },
+};
 
 const WORKSHOP_SUBCATEGORIES = [
-  "Sports", "Arts", "Meeting", "Conference", "Seminar", "Yoga",
-  "Cooking", "Dance", "Self Help", "Consultation", "Corporate Event", "Communication",
-].map((label) => ({ label, value: label.toUpperCase() }));
+  "Comedy Shows",
+  "Theater Shows",
+  "Sports",
+  "Arts",
+  "Meeting",
+  "Conference",
+  "Seminar",
+  "Yoga",
+  "Cooking",
+  "Dance",
+  "Self Help",
+  "Consultation",
+  "Corporate Event",
+  "Communication",
+].map((label) => ({ label, value: label }));
 
 const MUSIC_SUBCATEGORIES = [
-  "Bollywood", "Hiphop", "Electronic", "Melodic", "Live Music", "Metal",
-  "Rap", "Music House", "Techno", "K-pop", "Hollywood", "Pop",
-  "Punjabi", "Disco", "Rock", "Afrobeat", "Dancehall", "Thumri", "Bolly Tech",
-].map((label) => ({ label, value: label.toUpperCase() }));
+  "Live Concerts",
+  "Club Nights",
+  "Music Festivals",
+  "Bollywood",
+  "Hip Hop",
+  "Electronic",
+  "Melodic",
+  "Live Music",
+  "Metal",
+  "Rap",
+  "Music House",
+  "Techno",
+  "K-pop",
+  "Hollywood",
+  "POP",
+  "Punjabi",
+  "Disco",
+  "Rock",
+  "Afrobeat",
+  "Dance Hall",
+  "Thumri",
+  "Bolly Tech",
+].map((label) => ({ label, value: label }));
+
+const KNOWN_SUBCATEGORY_OPTIONS = {
+  music: MUSIC_SUBCATEGORIES,
+  workshop: WORKSHOP_SUBCATEGORIES,
+};
+
+const PINNED_CATEGORY_KEYS = ["music", "workshop"];
+
+const normalizeBrowseValue = (value) => (typeof value === "string" ? value.trim() : "");
+
+const getLookupKey = (value) => normalizeBrowseValue(value).toLowerCase();
+
+const toDisplayLabel = (value) => {
+  const normalized = normalizeBrowseValue(value);
+  if (!normalized) return "";
+
+  return normalized
+    .split(/[\s_-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
+};
+
+const parseBrowsePage = (value) => Math.max(1, Number.parseInt(value, 10) || 1);
+
+const normalizeSubCategoryValue = (value) => {
+  const normalized = normalizeBrowseValue(value);
+  if (!normalized) return null;
+
+  const knownOptions = [...WORKSHOP_SUBCATEGORIES, ...MUSIC_SUBCATEGORIES];
+  const match = knownOptions.find((option) => getLookupKey(option.value) === getLookupKey(normalized));
+
+  return match?.value || normalized;
+};
+
+const inferCategoryKeyFromSubCategory = (subCategory) => {
+  const normalized = getLookupKey(subCategory);
+  if (!normalized) return null;
+
+  if (MUSIC_SUBCATEGORIES.some((option) => getLookupKey(option.value) === normalized)) {
+    return "music";
+  }
+
+  if (WORKSHOP_SUBCATEGORIES.some((option) => getLookupKey(option.value) === normalized)) {
+    return "workshop";
+  }
+
+  return null;
+};
+
+const resolveCategoryMeta = (value, fallbackIndex = 0) => {
+  const normalizedValue = normalizeBrowseValue(value) || "Other";
+  const key = getLookupKey(normalizedValue) || "other";
+  const knownMeta = KNOWN_CATEGORY_META[key];
+
+  return {
+    key,
+    value: knownMeta?.label || normalizedValue,
+    label: knownMeta?.label || toDisplayLabel(normalizedValue),
+    icon: knownMeta?.icon || Sparkles,
+    color: knownMeta?.color || FALLBACK_CATEGORY_COLORS[fallbackIndex % FALLBACK_CATEGORY_COLORS.length],
+  };
+};
+
+const sortCategoryEntries = (left, right) => {
+  const leftOrder = CATEGORY_ORDER.indexOf(left.key);
+  const rightOrder = CATEGORY_ORDER.indexOf(right.key);
+
+  if (leftOrder !== -1 || rightOrder !== -1) {
+    if (leftOrder === -1) return 1;
+    if (rightOrder === -1) return -1;
+    if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+  }
+
+  return left.label.localeCompare(right.label);
+};
+
+const getBrowseStateFromSearchParams = (searchParams) => {
+  const selectedSubCategory = normalizeSubCategoryValue(searchParams.get("subCategory")) || "all";
+  const selectedCategory =
+    getLookupKey(searchParams.get("category")) ||
+    inferCategoryKeyFromSubCategory(selectedSubCategory) ||
+    "all";
+
+  return {
+    searchQuery: normalizeBrowseValue(searchParams.get("search")),
+    selectedCategory,
+    selectedSubCategory,
+    page: parseBrowsePage(searchParams.get("page")),
+  };
+};
+
+const buildBrowseSearchParams = ({ searchQuery, selectedCategory, selectedSubCategory, page }) => {
+  const params = new URLSearchParams();
+  const normalizedSearch = normalizeBrowseValue(searchQuery);
+
+  if (normalizedSearch) {
+    params.set("search", normalizedSearch);
+  }
+
+  if (selectedCategory !== "all") {
+    params.set("category", KNOWN_CATEGORY_META[selectedCategory]?.label || toDisplayLabel(selectedCategory));
+  }
+
+  if (selectedSubCategory !== "all") {
+    params.set("subCategory", selectedSubCategory);
+  }
+
+  if (page > 1) {
+    params.set("page", String(page));
+  }
+
+  return params;
+};
+
+const getEventCategoryValue = (event) => normalizeBrowseValue(event.category || event.mainCategory);
+
+const getEventSubCategoryValue = (event) =>
+  normalizeSubCategoryValue(event.subCategory || event.secondaryCategory);
+
+const getEventTrendScore = (event) => {
+  const soldTickets = Array.isArray(event.tickets)
+    ? event.tickets.reduce((total, ticket) => {
+        const soldQty = Number(ticket?.soldQty);
+        return total + (Number.isFinite(soldQty) ? soldQty : 0);
+      }, 0)
+    : 0;
+
+  const bookingCount = Number(event?._count?.bookings) || 0;
+  return soldTickets * 10 + bookingCount * 3;
+};
 
 export default function BrowseEvents({ showPublicHeader = false }) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedSubCategory, setSelectedSubCategory] = useState("all");
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlState = useMemo(() => getBrowseStateFromSearchParams(searchParams), [searchParams]);
+  const [searchQuery, setSearchQuery] = useState(() => urlState.searchQuery);
+
+  const updateBrowseState = useCallback((updates, options = {}) => {
+    const nextState = {
+      searchQuery: updates.searchQuery ?? urlState.searchQuery,
+      selectedCategory: updates.selectedCategory ?? urlState.selectedCategory,
+      selectedSubCategory: updates.selectedSubCategory ?? urlState.selectedSubCategory,
+      page: updates.page ?? urlState.page,
+    };
+
+    if (nextState.selectedCategory === "all") {
+      nextState.selectedSubCategory = "all";
+    }
+
+    if (nextState.selectedSubCategory !== "all" && nextState.selectedCategory === "all") {
+      nextState.selectedCategory =
+        inferCategoryKeyFromSubCategory(nextState.selectedSubCategory) || "all";
+    }
+
+    const nextParams = buildBrowseSearchParams(nextState);
+
+    if (nextParams.toString() !== searchParams.toString()) {
+      setSearchParams(nextParams, { replace: options.replace ?? false });
+    }
+  }, [searchParams, setSearchParams, urlState]);
 
   const {
-    events: apiEvents = [],
-    loading,
-    error,
-    updateFilters,
-  } = usePublicEvents();
+    allEvents: catalogEvents = [],
+    loading: catalogLoading,
+    error: catalogError,
+  } = usePublicEvents({
+    search: urlState.searchQuery || null,
+  });
 
-  const events = apiEvents;
+  const {
+    events: visibleEvents = [],
+    allEvents: filteredEvents = [],
+    loading: eventsLoading,
+    error: eventsError,
+    pagination,
+  } = usePublicEvents({
+    search: urlState.searchQuery || null,
+    category: urlState.selectedCategory === "all" ? null : urlState.selectedCategory,
+    subCategory: urlState.selectedSubCategory === "all" ? null : urlState.selectedSubCategory,
+    page: urlState.page,
+    limit: PAGE_SIZE,
+  });
+
+  const loading = catalogLoading || eventsLoading;
+  const error = eventsError || catalogError;
+  const appliedSearchQuery = urlState.searchQuery;
 
   useEffect(() => {
     if (showPublicHeader && checkAuth()) {
       const role = (sessionStorage.getItem("role") || "USER").toUpperCase();
       if (role === "USER") {
-        navigate("/dashboard/browse-events", { replace: true });
+        navigate(
+          {
+            pathname: "/dashboard/browse-events",
+            search: location.search,
+          },
+          { replace: true }
+        );
       }
     }
-  }, [showPublicHeader, navigate]);
+  }, [showPublicHeader, navigate, location.search]);
 
   useEffect(() => {
+    setSearchQuery(urlState.searchQuery);
+  }, [urlState.searchQuery]);
+
+  useEffect(() => {
+    const normalizedSearch = normalizeBrowseValue(searchQuery);
+    if (normalizedSearch === urlState.searchQuery) return;
+
     const timer = setTimeout(() => {
-      updateFilters({
-        search: searchQuery || null,
-        category: selectedCategory === "all" ? null : selectedCategory,
-        subCategory: selectedSubCategory === "all" ? null : selectedSubCategory,
-      });
+      updateBrowseState(
+        {
+          searchQuery: normalizedSearch,
+          page: 1,
+        },
+        { replace: true }
+      );
     }, 300);
+
     return () => clearTimeout(timer);
-  }, [searchQuery, selectedCategory, selectedSubCategory, updateFilters]);
+  }, [searchQuery, updateBrowseState, urlState.searchQuery]);
+
+  useEffect(() => {
+    if (eventsLoading) return;
+
+    if (pagination.page !== urlState.page) {
+      updateBrowseState({ page: pagination.page }, { replace: true });
+    }
+  }, [eventsLoading, pagination.page, updateBrowseState, urlState.page]);
+
+  const categoryOptions = useMemo(() => {
+    const categories = new Map();
+
+    PINNED_CATEGORY_KEYS.forEach((key) => {
+      const meta = KNOWN_CATEGORY_META[key];
+      if (!meta) return;
+
+      categories.set(key, {
+        key,
+        value: meta.label,
+        label: meta.label,
+        icon: meta.icon,
+        color: meta.color,
+        count: 0,
+      });
+    });
+
+    catalogEvents.forEach((event) => {
+      const categoryValue = getEventCategoryValue(event);
+      if (!categoryValue) return;
+
+      const key = getLookupKey(categoryValue);
+      const existing = categories.get(key);
+
+      if (existing) {
+        existing.count += 1;
+        return;
+      }
+
+      categories.set(key, {
+        ...resolveCategoryMeta(categoryValue, categories.size),
+        count: 1,
+      });
+    });
+
+    if (urlState.selectedCategory !== "all" && !categories.has(urlState.selectedCategory)) {
+      categories.set(urlState.selectedCategory, {
+        ...resolveCategoryMeta(urlState.selectedCategory, categories.size),
+        count: 0,
+      });
+    }
+
+    return Array.from(categories.values()).sort(sortCategoryEntries);
+  }, [catalogEvents, urlState.selectedCategory]);
+
+  const categoryLookup = useMemo(
+    () => new Map(categoryOptions.map((category) => [category.key, category])),
+    [categoryOptions]
+  );
+
+  const activeSubcategories = useMemo(() => {
+    if (urlState.selectedCategory === "all") return [];
+
+    const subcategories = new Map();
+
+    (KNOWN_SUBCATEGORY_OPTIONS[urlState.selectedCategory] || []).forEach((option) => {
+      subcategories.set(getLookupKey(option.value), {
+        ...option,
+        count: 0,
+      });
+    });
+
+    catalogEvents.forEach((event) => {
+      if (getLookupKey(getEventCategoryValue(event)) !== urlState.selectedCategory) return;
+
+      const subCategoryValue = getEventSubCategoryValue(event);
+      if (!subCategoryValue) return;
+
+      const key = getLookupKey(subCategoryValue);
+
+      if (!subcategories.has(key)) {
+        subcategories.set(key, {
+          label: subCategoryValue,
+          value: subCategoryValue,
+          count: 0,
+        });
+      }
+
+      subcategories.get(key).count += 1;
+    });
+
+    if (
+      urlState.selectedSubCategory !== "all" &&
+      !subcategories.has(getLookupKey(urlState.selectedSubCategory))
+    ) {
+      subcategories.set(getLookupKey(urlState.selectedSubCategory), {
+        label: urlState.selectedSubCategory,
+        value: urlState.selectedSubCategory,
+        count: 0,
+      });
+    }
+
+    return Array.from(subcategories.values());
+  }, [catalogEvents, urlState.selectedCategory, urlState.selectedSubCategory]);
+
+  const trendingEvents = useMemo(() => {
+    return [...filteredEvents]
+      .sort((left, right) => {
+        const scoreDifference = getEventTrendScore(right) - getEventTrendScore(left);
+        if (scoreDifference !== 0) return scoreDifference;
+
+        const leftDate = left.startDate ? new Date(left.startDate).getTime() : Number.MAX_SAFE_INTEGER;
+        const rightDate = right.startDate ? new Date(right.startDate).getTime() : Number.MAX_SAFE_INTEGER;
+        return leftDate - rightDate;
+      })
+      .slice(0, 4);
+  }, [filteredEvents]);
+
+  const groupedByCategory = useMemo(() => {
+    const groups = new Map();
+
+    visibleEvents.forEach((event) => {
+      const categoryValue = getEventCategoryValue(event) || "Other";
+      const key = getLookupKey(categoryValue) || "other";
+
+      if (!groups.has(key)) {
+        groups.set(key, {
+          ...resolveCategoryMeta(categoryValue, groups.size),
+          events: [],
+        });
+      }
+
+      groups.get(key).events.push(event);
+    });
+
+    return Array.from(groups.values()).sort(sortCategoryEntries);
+  }, [visibleEvents]);
+
+  const hasActiveFilters =
+    urlState.selectedCategory !== "all" ||
+    urlState.selectedSubCategory !== "all" ||
+    Boolean(appliedSearchQuery);
+
+  const resultsStart =
+    pagination.totalEvents > 0 ? (pagination.page - 1) * pagination.limit + 1 : 0;
+  const resultsEnd = Math.min(pagination.page * pagination.limit, pagination.totalEvents);
+
+  const normalizeImageUrl = (src) => {
+    if (!src || typeof src !== "string") return null;
+
+    const trimmed = src.trim().replace(/[\\,]+$/, "");
+    if (!trimmed) return null;
+
+    if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("data:")) {
+      return trimmed;
+    }
+
+    return buildUrl(trimmed);
+  };
 
   const formatDate = (dateString) => {
     if (!dateString) return "Date TBA";
+
     try {
-      return new Date(dateString).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-    } catch { return dateString; }
+      return new Date(dateString).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    } catch {
+      return dateString;
+    }
   };
 
   const getEventLocation = (event) => {
     if (event.venues?.length > 0) {
       const venue = event.venues[0];
-      return `${venue.city || ""}${venue.city && venue.state ? ", " : ""}${venue.state || ""}`.trim() || "Location TBA";
+      const cityState = `${venue.city || ""}${venue.city && venue.state ? ", " : ""}${venue.state || ""}`.trim();
+
+      return cityState || venue.name || event.location || "Location TBA";
     }
+
     return event.location || "Location TBA";
+  };
+
+  const getEventImage = (event) => {
+    if (Array.isArray(event.images) && event.images.length > 0) {
+      const galleryImage = event.images.find((image) => image.type === "EVENT_GALLERY") || event.images[0];
+      const normalizedGalleryImage = normalizeImageUrl(galleryImage?.url || galleryImage?.imageUrl);
+
+      if (normalizedGalleryImage) {
+        return normalizedGalleryImage;
+      }
+    }
+
+    const directSources = [event.flyerImage, event.image, event.coverImage, event.thumbnail];
+    for (const source of directSources) {
+      const normalizedImage = normalizeImageUrl(source);
+      if (normalizedImage) {
+        return normalizedImage;
+      }
+    }
+
+    return "https://via.placeholder.com/400x250?text=Event";
   };
 
   const getEventPriceDisplay = (event) => {
     if (Array.isArray(event.tickets) && event.tickets.length > 0) {
-      const prices = event.tickets.map((t) => Number(t.price)).filter((p) => !isNaN(p) && p > 0);
+      const prices = event.tickets
+        .map((ticket) => Number(ticket.price))
+        .filter((price) => !Number.isNaN(price) && price > 0);
+
       if (prices.length > 0) {
         const minPrice = Math.min(...prices);
-        return minPrice > 0 ? `₹${minPrice.toLocaleString()}` : "Free";
+        return minPrice > 0 ? `Rs.${minPrice.toLocaleString()}` : "Free";
       }
     }
-    return typeof event.price === "number" && event.price > 0 ? `₹${event.price}` : "Free";
+
+    return typeof event.price === "number" && event.price > 0 ? `Rs.${event.price}` : "Free";
   };
-
-  const filteredEvents = events || [];
-  const trendingEvents = useMemo(() => filteredEvents.filter((e) => e.trending).slice(0, 4), [filteredEvents]);
-
-  const activeSubcategories =
-    selectedCategory === "all"
-      ? []
-      : selectedCategory === "WORKSHOP"
-      ? WORKSHOP_SUBCATEGORIES
-      : MUSIC_SUBCATEGORIES;
-
-  const groupedByCategory = useMemo(() => {
-    return CATEGORY_CONFIG.map((cat) => ({
-      ...cat,
-      events: filteredEvents.filter(
-        (event) => (event.category || event.mainCategory || "").toUpperCase() === cat.id
-      ),
-    }));
-  }, [filteredEvents]);
-
-  const hasActiveFilters = selectedCategory !== "all" || selectedSubCategory !== "all" || searchQuery;
 
   const clearAllFilters = () => {
-    setSelectedCategory("all");
-    setSelectedSubCategory("all");
     setSearchQuery("");
+    updateBrowseState({
+      searchQuery: "",
+      selectedCategory: "all",
+      selectedSubCategory: "all",
+      page: 1,
+    });
   };
 
-  // Reusable event card
   const EventCard = ({ event }) => (
-    <Link to={`/events/${event.organizer?.slug}/${event.slug}`} key={event.id} className="group block">
-      <div className="rounded-xl overflow-hidden border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.05] hover:border-white/[0.12] transition-all duration-200 h-full">
+    <Link
+      to={`/events/${event.organizer?.slug || "events"}/${event.slug || event.id}`}
+      className="group block"
+    >
+      <div className="h-full overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.03] transition-all duration-200 hover:border-white/[0.12] hover:bg-white/[0.05]">
         <div className="relative h-44 overflow-hidden">
           <img
-            src={event.flyerImage || event.image || event.coverImage || event.thumbnail || "https://via.placeholder.com/400x250?text=Event"}
-            alt={event.title || event.eventTitle}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            src={getEventImage(event)}
+            alt={event.title || event.eventTitle || "Event"}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-          <span className="absolute top-3 left-3 text-xs font-semibold text-white bg-[#D60024] px-2.5 py-1 rounded-lg">
+          <span className="absolute left-3 top-3 rounded-lg bg-[#D60024] px-2.5 py-1 text-xs font-semibold text-white">
             {getEventPriceDisplay(event)}
           </span>
         </div>
-        <div className="p-4 space-y-2.5">
-          <h3 className="font-semibold text-sm text-white line-clamp-2 group-hover:text-[#D60024] transition-colors leading-snug">
+        <div className="space-y-2.5 p-4">
+          <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white transition-colors group-hover:text-[#D60024]">
             {event.title || event.eventTitle}
           </h3>
           <div className="space-y-1.5 text-xs text-white/50">
@@ -167,12 +561,12 @@ export default function BrowseEvents({ showPublicHeader = false }) {
           </div>
           <div className="flex flex-wrap gap-1.5 pt-1">
             {event.subCategory && (
-              <Badge className="bg-white/[0.06] text-white/60 border-0 text-[10px] px-2 py-0.5 font-normal">
+              <Badge className="border-0 bg-white/[0.06] px-2 py-0.5 text-[10px] font-normal text-white/60">
                 {event.subCategory}
               </Badge>
             )}
             {event.eventStatus && (
-              <Badge className="bg-[#60a5fa]/10 text-[#60a5fa] border-0 text-[10px] px-2 py-0.5 font-normal">
+              <Badge className="border-0 bg-[#60a5fa]/10 px-2 py-0.5 text-[10px] font-normal text-[#60a5fa]">
                 {event.eventStatus}
               </Badge>
             )}
@@ -183,16 +577,14 @@ export default function BrowseEvents({ showPublicHeader = false }) {
   );
 
   return (
-    <div className="w-full text-white min-h-screen">
+    <div className="min-h-screen w-full text-white">
       {showPublicHeader && <Header forceMainHeader />}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Page Header */}
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">Browse Events</h1>
-          <p className="text-sm text-white/40 mt-1">Discover amazing events happening near you</p>
+          <h1 className="text-2xl font-bold text-white sm:text-3xl">Browse Events</h1>
+          <p className="mt-1 text-sm text-white/40">Discover amazing events happening near you</p>
         </div>
 
-        {/* Search Bar */}
         <div className="mb-6">
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
@@ -200,177 +592,267 @@ export default function BrowseEvents({ showPublicHeader = false }) {
               type="search"
               placeholder="Search events by name or location..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 h-11 bg-white/[0.05] border-white/[0.08] text-white text-sm placeholder:text-white/30 rounded-xl focus:ring-1 focus:ring-[#D60024]/50 focus:border-[#D60024]/50"
+              onChange={(event) => setSearchQuery(event.target.value)}
+              className="h-11 w-full rounded-xl border-white/[0.08] bg-white/[0.05] pl-10 pr-4 text-sm text-white placeholder:text-white/30 focus:border-[#D60024]/50 focus:ring-1 focus:ring-[#D60024]/50"
             />
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="mb-8 rounded-xl border border-white/[0.06] bg-white/[0.03] p-4 sm:p-5 space-y-4">
-          {/* Category tabs */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <span className="text-xs font-medium text-white/40 uppercase tracking-wider flex-shrink-0">Category</span>
-            <div className="flex gap-2">
+        <div className="mb-6 flex flex-col gap-2 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-sm text-white/45 sm:flex-row sm:items-center sm:justify-between">
+          <span>
+            {pagination.totalEvents > 0
+              ? `Showing ${resultsStart}-${resultsEnd} of ${pagination.totalEvents} events`
+              : "No events match the current filters"}
+          </span>
+          <span className="text-xs uppercase tracking-wider text-white/25">
+            Page {pagination.page} of {Math.max(pagination.totalPages, 1)}
+          </span>
+        </div>
+
+        <div className="mb-8 space-y-4 rounded-xl border border-white/[0.06] bg-white/[0.03] p-4 sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <span className="flex-shrink-0 text-xs font-medium uppercase tracking-wider text-white/40">
+              Category
+            </span>
+            <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => { setSelectedCategory("all"); setSelectedSubCategory("all"); }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  selectedCategory === "all"
+                type="button"
+                onClick={() =>
+                  updateBrowseState({
+                    selectedCategory: "all",
+                    selectedSubCategory: "all",
+                    page: 1,
+                  })
+                }
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                  urlState.selectedCategory === "all"
                     ? "bg-[#D60024] text-white"
-                    : "bg-white/[0.05] text-white/60 hover:text-white hover:bg-white/[0.08] border border-white/[0.06]"
+                    : "border border-white/[0.06] bg-white/[0.05] text-white/60 hover:bg-white/[0.08] hover:text-white"
                 }`}
               >
                 All Events
               </button>
-              {CATEGORY_CONFIG.map((cat) => {
-                const Icon = cat.icon;
-                const isActive = selectedCategory === cat.id;
-                const count = filteredEvents.filter(
-                  (event) => (event.category || event.mainCategory || "").toUpperCase() === cat.id
-                ).length;
+              {categoryOptions.map((category) => {
+                const Icon = category.icon;
+                const isActive = urlState.selectedCategory === category.key;
+
                 return (
                   <button
-                    key={cat.id}
-                    onClick={() => { setSelectedCategory(cat.id); setSelectedSubCategory("all"); }}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    key={category.key}
+                    type="button"
+                    onClick={() =>
+                      updateBrowseState({
+                        selectedCategory: category.key,
+                        selectedSubCategory: "all",
+                        page: 1,
+                      })
+                    }
+                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
                       isActive
                         ? "bg-[#D60024] text-white"
-                        : "bg-white/[0.05] text-white/60 hover:text-white hover:bg-white/[0.08] border border-white/[0.06]"
+                        : "border border-white/[0.06] bg-white/[0.05] text-white/60 hover:bg-white/[0.08] hover:text-white"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
-                    {cat.label}
-                    <span className={`text-xs ml-1 ${isActive ? 'text-white/70' : 'text-white/30'}`}>({count})</span>
+                    {category.label}
+                    <span className={`ml-1 text-xs ${isActive ? "text-white/70" : "text-white/30"}`}>
+                      ({category.count})
+                    </span>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Subcategory pills */}
           {activeSubcategories.length > 0 && (
-            <div className="pt-3 border-t border-white/[0.06]">
+            <div className="border-t border-white/[0.06] pt-3">
               <div className="flex flex-wrap gap-2">
                 <button
-                  onClick={() => setSelectedSubCategory("all")}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    selectedSubCategory === "all"
+                  type="button"
+                  onClick={() =>
+                    updateBrowseState({
+                      selectedSubCategory: "all",
+                      page: 1,
+                    })
+                  }
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                    urlState.selectedSubCategory === "all"
                       ? "bg-white/[0.12] text-white"
-                      : "bg-white/[0.04] text-white/50 hover:text-white/70 hover:bg-white/[0.06]"
+                      : "bg-white/[0.04] text-white/50 hover:bg-white/[0.06] hover:text-white/70"
                   }`}
                 >
                   All
                 </button>
-                {activeSubcategories.map((sub) => (
+                {activeSubcategories.map((subCategory) => (
                   <button
-                    key={sub.value}
-                    onClick={() => setSelectedSubCategory(sub.value)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                      selectedSubCategory === sub.value
+                    key={subCategory.value}
+                    type="button"
+                    onClick={() =>
+                      updateBrowseState({
+                        selectedSubCategory: subCategory.value,
+                        page: 1,
+                      })
+                    }
+                    className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                      urlState.selectedSubCategory === subCategory.value
                         ? "bg-[#D60024] text-white"
-                        : "bg-white/[0.04] text-white/50 hover:text-white/70 hover:bg-white/[0.06]"
+                        : "bg-white/[0.04] text-white/50 hover:bg-white/[0.06] hover:text-white/70"
                     }`}
                   >
-                    {sub.label}
+                    {subCategory.label}
+                    {subCategory.count > 0 && (
+                      <span className="ml-1 text-[10px] opacity-70">({subCategory.count})</span>
+                    )}
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Active filters summary */}
           {hasActiveFilters && (
-            <div className="flex items-center gap-2 pt-2">
+            <div className="flex flex-wrap items-center gap-2 pt-2">
               <span className="text-xs text-white/30">Filters:</span>
-              {selectedCategory !== "all" && (
-                <Badge className="bg-white/[0.06] text-white/60 border-0 text-xs">
-                  {CATEGORY_CONFIG.find((c) => c.id === selectedCategory)?.label}
+              {urlState.selectedCategory !== "all" && (
+                <Badge className="border-0 bg-white/[0.06] text-xs text-white/60">
+                  {categoryLookup.get(urlState.selectedCategory)?.label || toDisplayLabel(urlState.selectedCategory)}
                 </Badge>
               )}
-              {selectedSubCategory !== "all" && (
-                <Badge className="bg-white/[0.06] text-white/60 border-0 text-xs">
-                  {selectedSubCategory}
+              {urlState.selectedSubCategory !== "all" && (
+                <Badge className="border-0 bg-white/[0.06] text-xs text-white/60">
+                  {urlState.selectedSubCategory}
                 </Badge>
               )}
-              {searchQuery && (
-                <Badge className="bg-white/[0.06] text-white/60 border-0 text-xs">"{searchQuery}"</Badge>
+              {appliedSearchQuery && (
+                <Badge className="border-0 bg-white/[0.06] text-xs text-white/60">
+                  "{appliedSearchQuery}"
+                </Badge>
               )}
-              <button onClick={clearAllFilters} className="text-xs text-white/40 hover:text-white ml-auto flex items-center gap-1">
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="ml-auto flex items-center gap-1 text-xs text-white/40 hover:text-white"
+              >
                 <X className="h-3 w-3" /> Clear all
               </button>
             </div>
           )}
         </div>
 
-        {/* Trending Events */}
+        {error && (
+          <div className="mb-6 rounded-xl border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
+            {error}
+          </div>
+        )}
+
         {trendingEvents.length > 0 && (
           <section className="mb-10">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-lg font-bold text-white">
                 <TrendingUp className="h-5 w-5 text-[#D60024]" />
                 Trending Now
               </h2>
               <span className="text-xs text-white/30">{trendingEvents.length} events</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {trendingEvents.map((event) => <EventCard key={event.id} event={event} />)}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {trendingEvents.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
             </div>
           </section>
         )}
 
-        {/* Events by Category */}
         <div className="space-y-10">
-          {groupedByCategory.map((cat) => {
-            if (cat.events.length === 0) return null;
-            const Icon = cat.icon;
+          {groupedByCategory.map((category) => {
+            if (category.events.length === 0) return null;
+            const Icon = category.icon;
+
             return (
-              <section key={cat.id} className="space-y-4">
+              <section key={category.key} className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${cat.color}18` }}>
-                      <Icon className="h-4.5 w-4.5" style={{ color: cat.color }} />
+                    <div
+                      className="flex h-9 w-9 items-center justify-center rounded-lg"
+                      style={{ backgroundColor: `${category.color}18` }}
+                    >
+                      <Icon className="h-4.5 w-4.5" style={{ color: category.color }} />
                     </div>
                     <div>
-                      <h3 className="text-base font-bold text-white">{cat.label}</h3>
-                      <p className="text-xs text-white/30">{cat.events.length} events</p>
+                      <h3 className="text-base font-bold text-white">{category.label}</h3>
+                      <p className="text-xs text-white/30">{category.events.length} events on this page</p>
                     </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {cat.events.map((event) => <EventCard key={event.id} event={event} />)}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {category.events.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))}
                 </div>
               </section>
             );
           })}
         </div>
 
-        {/* Loading */}
         {loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="rounded-xl bg-white/[0.04] border border-white/[0.06] animate-pulse">
-                <div className="h-44 bg-white/[0.06] rounded-t-xl" />
-                <div className="p-4 space-y-3">
-                  <div className="h-4 bg-white/[0.08] rounded w-3/4" />
-                  <div className="h-3 bg-white/[0.06] rounded w-1/2" />
-                  <div className="h-3 bg-white/[0.06] rounded w-1/3" />
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {[1, 2, 3, 4, 5, 6].map((index) => (
+              <div key={index} className="animate-pulse rounded-xl border border-white/[0.06] bg-white/[0.04]">
+                <div className="h-44 rounded-t-xl bg-white/[0.06]" />
+                <div className="space-y-3 p-4">
+                  <div className="h-4 w-3/4 rounded bg-white/[0.08]" />
+                  <div className="h-3 w-1/2 rounded bg-white/[0.06]" />
+                  <div className="h-3 w-1/3 rounded bg-white/[0.06]" />
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Empty State */}
-        {!loading && filteredEvents.length === 0 && (
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-12 text-center mt-6">
-            <Search className="w-12 h-12 text-white/15 mx-auto mb-4" />
-            <h3 className="text-base font-semibold text-white mb-1">No events found</h3>
-            <p className="text-sm text-white/40 mb-5">
-              {searchQuery ? "Try adjusting your search or filters" : "No events available in this category"}
+        {!loading && visibleEvents.length === 0 && (
+          <div className="mt-6 rounded-xl border border-white/[0.06] bg-white/[0.03] p-12 text-center">
+            <Search className="mx-auto mb-4 h-12 w-12 text-white/15" />
+            <h3 className="mb-1 text-base font-semibold text-white">No events found</h3>
+            <p className="mb-5 text-sm text-white/40">
+              {appliedSearchQuery
+                ? "Try adjusting your search or filters"
+                : "No events are available for this category yet"}
             </p>
-            <Button onClick={clearAllFilters} className="bg-[#D60024] hover:bg-[#b8001f] text-white text-sm h-9 px-4">
+            <Button
+              onClick={clearAllFilters}
+              className="h-9 bg-[#D60024] px-4 text-sm text-white hover:bg-[#b8001f]"
+            >
               Clear Filters
             </Button>
+          </div>
+        )}
+
+        {!loading && pagination.totalPages > 1 && visibleEvents.length > 0 && (
+          <div className="mt-10 flex flex-col gap-4 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm text-white/45">
+              {`Showing ${resultsStart}-${resultsEnd} of ${pagination.totalEvents} events`}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => updateBrowseState({ page: pagination.page - 1 })}
+                disabled={pagination.page <= 1}
+                className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.04] px-4 text-sm text-white transition hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Prev
+              </button>
+              <div className="min-w-[88px] text-center text-sm text-white/60">
+                Page {pagination.page} / {pagination.totalPages}
+              </div>
+              <button
+                type="button"
+                onClick={() => updateBrowseState({ page: pagination.page + 1 })}
+                disabled={pagination.page >= pagination.totalPages}
+                className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.04] px-4 text-sm text-white transition hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         )}
       </div>
