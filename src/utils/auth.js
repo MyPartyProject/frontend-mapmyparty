@@ -61,10 +61,17 @@ function normalizeSessionResponse(data) {
     null;
 
   const bankDetails = payload?.bankDetails || data?.bankDetails || null;
+  const normalizedUser = user
+    ? {
+        ...user,
+        role,
+        authProvider: user.authProvider || user.provider || null,
+      }
+    : null;
 
   return {
     isAuthenticated: true,
-    user: { ...user, role },
+    user: normalizedUser,
     role,
     organizer,
     hasOrganizerProfile: Boolean(payload?.hasOrganizerProfile ?? organizer?.id),
@@ -87,6 +94,12 @@ function syncSessionStorage(session) {
       }
       if (session.user) {
         sessionStorage.setItem("userProfile", JSON.stringify(session.user));
+      }
+      if (session.user?.authProvider || session.user?.provider) {
+        sessionStorage.setItem("authProvider", session.user.authProvider || session.user.provider);
+      }
+      if (session.user?.hasPassword !== undefined) {
+        sessionStorage.setItem("hasPassword", session.user.hasPassword ? "true" : "false");
       }
       if (session.user?.name) {
         sessionStorage.setItem("userName", session.user.name);

@@ -55,7 +55,7 @@ import { isAuthenticated } from "@/utils/auth";
 import { apiFetch } from "@/config/api";
 import { toast } from "sonner";
 
-const CREATE_PASSWORD_ENDPOINT = "/api/user/create-password"; // TODO: replace with provided API for first-time password creation
+const CREATE_PASSWORD_ENDPOINT = "/api/user/create-password";
 
 const roleLabelMap = {
   organizer: "Organizer",
@@ -86,6 +86,7 @@ const normalizeRole = (value) => {
 };
 
 const getStoredProfile = () => {
+  const storedRaw = sessionStorage.getItem("userProfile");
   const fallback = {
     name: sessionStorage.getItem("userName") || "",
     email: sessionStorage.getItem("userEmail") || "",
@@ -95,16 +96,24 @@ const getStoredProfile = () => {
     hasPassword: sessionStorage.getItem("hasPassword") === "true",
   };
 
-  const storedRaw = sessionStorage.getItem("userProfile");
   if (!storedRaw) {
     return fallback;
   }
 
   try {
     const parsed = JSON.parse(storedRaw);
+    const authProvider = parsed.authProvider || parsed.provider || fallback.authProvider || "password";
+    const hasPassword =
+      parsed.hasPassword !== undefined
+        ? Boolean(parsed.hasPassword)
+        : authProvider === "google"
+          ? false
+          : fallback.hasPassword;
     return {
       ...fallback,
       ...parsed,
+      authProvider,
+      hasPassword,
     };
   } catch (error) {
     console.warn("⚠️ Failed to parse stored user profile", error);
@@ -162,10 +171,19 @@ const Profile = () => {
 
       if (response?.success && response?.data) {
         const avatar = response.data.avatar || response.data.avatarUrl || "";
+        const authProvider = response.data.authProvider || response.data.provider || "password";
+        const hasPassword =
+          response.data.hasPassword !== undefined
+            ? Boolean(response.data.hasPassword)
+            : authProvider === "google"
+              ? false
+              : true;
         const normalizedProfile = {
           ...response.data,
           avatar,
           avatarUrl: response.data.avatarUrl || avatar,
+          authProvider,
+          hasPassword,
         };
 
         setProfileData(normalizedProfile);
@@ -205,7 +223,10 @@ const Profile = () => {
   }, [fetchProfile]);
 
   const profile = useMemo(() => {
-    const storedProvider = storedProfile.authProvider || sessionStorage.getItem("authProvider");
+    const storedProvider =
+      storedProfile.authProvider ||
+      storedProfile.provider ||
+      sessionStorage.getItem("authProvider");
     const storedHasPassword =
       storedProfile.hasPassword !== undefined
         ? storedProfile.hasPassword
@@ -215,8 +236,8 @@ const Profile = () => {
       const apiRole = profileData.user_roles?.[0]?.roles?.name || 'USER';
       const provider =
         profileData.authProvider ||
+        profileData.provider ||
         storedProvider ||
-        sampleProfile.authProvider ||
         "password";
       const passwordState =
         provider === "password"

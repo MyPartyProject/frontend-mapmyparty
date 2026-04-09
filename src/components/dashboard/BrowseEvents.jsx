@@ -580,13 +580,15 @@ export default function BrowseEvents({ showPublicHeader = false }) {
     <div className="min-h-screen w-full text-white">
       {showPublicHeader && <Header forceMainHeader />}
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white sm:text-3xl">Browse Events</h1>
-          <p className="mt-1 text-sm text-white/40">Discover amazing events happening near you</p>
-        </div>
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-2xl">
+            <h1 className="text-2xl font-bold text-white sm:text-3xl">
+              Discover amazing events happening near you
+            </h1>
+          </div>
 
-        <div className="mb-6">
-          <div className="relative">
+          <div className="w-full lg:w-[360px] xl:w-[400px] lg:flex-shrink-0">
+            <div className="relative">
             <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
             <Input
               type="search"
@@ -597,24 +599,14 @@ export default function BrowseEvents({ showPublicHeader = false }) {
             />
           </div>
         </div>
-
-        <div className="mb-6 flex flex-col gap-2 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-sm text-white/45 sm:flex-row sm:items-center sm:justify-between">
-          <span>
-            {pagination.totalEvents > 0
-              ? `Showing ${resultsStart}-${resultsEnd} of ${pagination.totalEvents} events`
-              : "No events match the current filters"}
-          </span>
-          <span className="text-xs uppercase tracking-wider text-white/25">
-            Page {pagination.page} of {Math.max(pagination.totalPages, 1)}
-          </span>
         </div>
 
-        <div className="mb-8 space-y-4 rounded-xl border border-white/[0.06] bg-white/[0.03] p-4 sm:p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <span className="flex-shrink-0 text-xs font-medium uppercase tracking-wider text-white/40">
+        <div className="mb-6 max-w-4xl space-y-3 rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-3 sm:px-4">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center">
+            <span className="flex-shrink-0 text-[10px] font-medium uppercase tracking-[0.22em] text-white/35">
               Category
             </span>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               <button
                 type="button"
                 onClick={() =>
@@ -624,7 +616,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                     page: 1,
                   })
                 }
-                className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
                   urlState.selectedCategory === "all"
                     ? "bg-[#D60024] text-white"
                     : "border border-white/[0.06] bg-white/[0.05] text-white/60 hover:bg-white/[0.08] hover:text-white"
@@ -647,15 +639,15 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                         page: 1,
                       })
                     }
-                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
                       isActive
                         ? "bg-[#D60024] text-white"
                         : "border border-white/[0.06] bg-white/[0.05] text-white/60 hover:bg-white/[0.08] hover:text-white"
                     }`}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-3.5 w-3.5" />
                     {category.label}
-                    <span className={`ml-1 text-xs ${isActive ? "text-white/70" : "text-white/30"}`}>
+                    <span className={`ml-0.5 text-[10px] ${isActive ? "text-white/70" : "text-white/30"}`}>
                       ({category.count})
                     </span>
                   </button>
@@ -666,7 +658,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
 
           {activeSubcategories.length > 0 && (
             <div className="border-t border-white/[0.06] pt-3">
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 <button
                   type="button"
                   onClick={() =>
@@ -675,7 +667,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                       page: 1,
                     })
                   }
-                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
                     urlState.selectedSubCategory === "all"
                       ? "bg-white/[0.12] text-white"
                       : "bg-white/[0.04] text-white/50 hover:bg-white/[0.06] hover:text-white/70"
@@ -693,7 +685,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                         page: 1,
                       })
                     }
-                    className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
                       urlState.selectedSubCategory === subCategory.value
                         ? "bg-[#D60024] text-white"
                         : "bg-white/[0.04] text-white/50 hover:bg-white/[0.06] hover:text-white/70"
@@ -710,27 +702,27 @@ export default function BrowseEvents({ showPublicHeader = false }) {
           )}
 
           {hasActiveFilters && (
-            <div className="flex flex-wrap items-center gap-2 pt-2">
-              <span className="text-xs text-white/30">Filters:</span>
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <span className="text-[11px] text-white/30">Filters:</span>
               {urlState.selectedCategory !== "all" && (
-                <Badge className="border-0 bg-white/[0.06] text-xs text-white/60">
+                <Badge className="border-0 bg-white/[0.06] px-2 py-0.5 text-[11px] text-white/60">
                   {categoryLookup.get(urlState.selectedCategory)?.label || toDisplayLabel(urlState.selectedCategory)}
                 </Badge>
               )}
               {urlState.selectedSubCategory !== "all" && (
-                <Badge className="border-0 bg-white/[0.06] text-xs text-white/60">
+                <Badge className="border-0 bg-white/[0.06] px-2 py-0.5 text-[11px] text-white/60">
                   {urlState.selectedSubCategory}
                 </Badge>
               )}
               {appliedSearchQuery && (
-                <Badge className="border-0 bg-white/[0.06] text-xs text-white/60">
+                <Badge className="border-0 bg-white/[0.06] px-2 py-0.5 text-[11px] text-white/60">
                   "{appliedSearchQuery}"
                 </Badge>
               )}
               <button
                 type="button"
                 onClick={clearAllFilters}
-                className="ml-auto flex items-center gap-1 text-xs text-white/40 hover:text-white"
+                className="ml-auto flex items-center gap-1 text-[11px] text-white/40 hover:text-white"
               >
                 <X className="h-3 w-3" /> Clear all
               </button>
@@ -840,9 +832,6 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                 <ChevronLeft className="h-4 w-4" />
                 Prev
               </button>
-              <div className="min-w-[88px] text-center text-sm text-white/60">
-                Page {pagination.page} / {pagination.totalPages}
-              </div>
               <button
                 type="button"
                 onClick={() => updateBrowseState({ page: pagination.page + 1 })}
