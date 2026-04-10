@@ -350,67 +350,51 @@ const PaymentCheckout = () => {
       </div>
 
       <Dialog open={mockGatewayOpen} onOpenChange={setMockGatewayOpen}>
-        <DialogContent className="w-[calc(100vw-1rem)] max-w-md max-h-[calc(100vh-1rem)] overflow-y-auto border-white/10 bg-background text-foreground p-0 sm:max-w-lg">
-          <div className="space-y-5 p-4 sm:p-5">
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-md max-h-[calc(100vh-1rem)] overflow-y-auto border-gray-800 bg-gray-900 text-white p-0">
+          <div className="space-y-4 p-4 sm:p-5">
             <DialogHeader className="space-y-2">
-              <DialogTitle className="flex items-center gap-2 text-base sm:text-lg font-medium tracking-[0.02em]">
-                <ShieldCheck className="h-4 w-4 text-[#D60024]" />
+              <DialogTitle className="flex items-center gap-2 text-lg font-bold">
+                <ShieldCheck className="h-5 w-5 text-red-600" />
                 Mock Payment Gateway
               </DialogTitle>
-              <DialogDescription className="text-xs sm:text-sm text-muted-foreground">
+              <DialogDescription className="text-sm text-gray-400">
                 Sandbox preview for the current booking. No real transaction will be processed.
               </DialogDescription>
             </DialogHeader>
 
             {gatewayPreview && (
               <div className="space-y-3">
-                <div className="rounded-2xl border border-border/60 bg-card/70 p-4 shadow-[0_18px_50px_-28px_rgba(0,0,0,0.7)] space-y-3">
+                <div className="space-y-3 rounded-xl border border-gray-700/50 bg-transparent p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Merchant</p>
-                      <p className="text-sm font-semibold text-foreground">{gatewayPreview.merchant}</p>
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500">Merchant</p>
+                      <p className="text-sm font-semibold text-white">{gatewayPreview.merchant}</p>
                     </div>
-                    <Badge className="border border-[#D60024]/30 bg-[#D60024]/10 text-[#ff9cae] text-[10px] px-2 py-0.5">
+                    <Badge className="border border-red-600/25 bg-red-600/10 text-red-300 text-[10px] px-2 py-0.5">
                       Sandbox
                     </Badge>
                   </div>
-                  <Separator className="bg-white/10" />
                   <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
                     <div className="space-y-0.5">
-                      <p className="text-muted-foreground uppercase tracking-[0.14em] text-[10px]">Order ID</p>
-                      <p className="font-medium text-foreground break-all">{gatewayPreview.orderId}</p>
+                      <p className="text-[10px] uppercase tracking-[0.14em] text-gray-500">Booking ID</p>
+                      <p className="break-all font-medium text-white">{gatewayPreview.bookingId}</p>
                     </div>
                     <div className="space-y-0.5">
-                      <p className="text-muted-foreground uppercase tracking-[0.14em] text-[10px]">Gateway Ref</p>
-                      <p className="font-medium text-foreground break-all">{gatewayPreview.gatewayReference}</p>
+                      <p className="text-[10px] uppercase tracking-[0.14em] text-gray-500">Method</p>
+                      <p className="font-medium text-white">{gatewayPreview.method}</p>
                     </div>
                     <div className="space-y-0.5">
-                      <p className="text-muted-foreground uppercase tracking-[0.14em] text-[10px]">Booking ID</p>
-                      <p className="font-medium text-foreground break-all">{gatewayPreview.bookingId}</p>
+                      <p className="text-[10px] uppercase tracking-[0.14em] text-gray-500">Amount</p>
+                      <p className="font-medium text-red-600">{formatCurrency(gatewayPreview.amount)}</p>
                     </div>
                     <div className="space-y-0.5">
-                      <p className="text-muted-foreground uppercase tracking-[0.14em] text-[10px]">Method</p>
-                      <p className="font-medium text-foreground">{gatewayPreview.method}</p>
+                      <p className="text-[10px] uppercase tracking-[0.14em] text-gray-500">Status</p>
+                      <p className="font-medium text-white">Test only</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-border/60 bg-card/70 p-4 space-y-3">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1">
-                      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Payer</p>
-                      <p className="text-sm font-semibold text-foreground">{gatewayPreview.customerName}</p>
-                      <p className="text-xs text-muted-foreground break-all">{gatewayPreview.customerEmail}</p>
-                      <p className="text-xs text-muted-foreground">{gatewayPreview.customerPhone}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Amount</p>
-                      <p className="text-xl sm:text-2xl font-semibold text-[#D60024]">{formatCurrency(gatewayPreview.amount)}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-[#D60024]/20 bg-[#D60024]/8 p-3 text-xs leading-5 text-foreground/80">
+                <div className="rounded-xl border border-gray-700/50 bg-gray-800/30 p-3 text-xs leading-5 text-gray-400">
                   This simulates the final gateway step only. On confirm, the app will call the test payment endpoint and complete the booking.
                 </div>
               </div>
@@ -420,7 +404,7 @@ const PaymentCheckout = () => {
               <Button
                 type="button"
                 variant="outline"
-                className="border-border/60 bg-card text-foreground hover:bg-white/5 text-sm"
+                className="border-gray-700 text-white bg-gray-800 hover:bg-gray-700 text-sm"
                 onClick={() => setMockGatewayOpen(false)}
                 disabled={isProcessing}
               >
@@ -430,7 +414,7 @@ const PaymentCheckout = () => {
                 type="button"
                 onClick={handleMockGatewayConfirm}
                 disabled={isProcessing}
-                className="bg-gradient-to-r from-[#D60024] to-[#ff4d67] text-white text-sm"
+                className="bg-red-600 text-white hover:bg-red-700 text-sm"
               >
                 {isProcessing ? (
                   <>
