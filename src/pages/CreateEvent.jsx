@@ -107,6 +107,7 @@ const CreateEvent = () => {
   const [publishState, setPublishState] = useState("DRAFT");
   const [isPublished, setIsPublished] = useState(false);
   const eventCacheRef = useRef(null);
+  const editHydratedRef = useRef(null);
   const sponsorsLoadedRef = useRef(false);
   const artistsLoadedRef = useRef(false);
   const originalAdditionalRef = useRef(null);
@@ -124,14 +125,22 @@ const CreateEvent = () => {
 
   const hourOptions = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
   const minuteOptions = ["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"];
+  const isValidDateObject = (date) => date instanceof Date && !Number.isNaN(date.getTime());
+  const parseSafeDate = (value) => {
+    if (!value) return null;
+    const date = new Date(value);
+    return isValidDateObject(date) ? date : null;
+  };
+  const parseSafeDateOnly = (value) => {
+    if (!value) return null;
+    const date = new Date(`${value}T00:00:00`);
+    return isValidDateObject(date) ? date : null;
+  };
 
   const formatDateValue = (value) => {
     if (!value) return "";
-    try {
-      return format(new Date(`${value}T00:00:00`), "dd MMM yyyy");
-    } catch {
-      return value;
-    }
+    const date = parseSafeDateOnly(value);
+    return date ? format(date, "dd MMM yyyy") : value;
   };
 
   const parseTime = (value) => {
@@ -222,6 +231,95 @@ const CreateEvent = () => {
   const eventTypeParam = searchParams.get('type');
   const isEditMode = !!editId;
 
+  const clearTransientUiState = () => {
+    setIsSubmitting(false);
+    setShowLoading(false);
+    setLoadingMessage("");
+    setTicketModalOpen(false);
+    setSelectedTicketType(null);
+    setShowEmojiPicker(false);
+    setAdvisoryDialogOpen(false);
+    setStartCalendarOpen(false);
+    setEndCalendarOpen(false);
+    setStartTimeOpen(false);
+    setEndTimeOpen(false);
+  };
+
+  const releaseGlobalOverlayLocks = () => {
+    if (typeof document === "undefined") return;
+    document.body.style.pointerEvents = "";
+    document.body.style.overflow = "";
+    document.body.removeAttribute("data-scroll-locked");
+    document.body.removeAttribute("aria-hidden");
+  };
+
+  const buildEventFetchUrl = ({ eventId, organizerSlug, eventSlug, bustCache = false }) => {
+    const suffix = bustCache ? `?t=${Date.now()}` : "";
+
+    // This page is organizer-authenticated; fetch by protected endpoint so drafts are accessible.
+    if (eventId) {
+      return `api/event/manage/${encodeURIComponent(eventId)}${suffix}`;
+    }
+
+    if (organizerSlug && eventSlug) {
+      return `api/event/${encodeURIComponent(organizerSlug)}/${encodeURIComponent(eventSlug)}${suffix}`;
+    }
+
+    return null;
+  };
+
+  const normalizeTicketForEdit = (ticket) => {
+    if (!ticket) return null;
+
+    const typeMap = {
+      GUESTLIST: "vip-guest",
+      STANDARD_TICKET: "standard",
+      TABLE_TICKET: "table",
+      GROUP_TICKET: "group-pass",
+    };
+
+    const entryTypeLabelMap = {
+      SINGLE_ENTRY: "Single",
+      COUPLE_ENTRY: "Couple",
+    };
+
+    const ticketTypeLabelMap = {
+      GUESTLIST: "Guest List",
+      STANDARD_TICKET: "Standard Ticket",
+      TABLE_TICKET: "Table Ticket",
+      GROUP_TICKET: "Group Pass",
+    };
+
+    return {
+      id: ticket.id,
+      publicId: ticket.publicId || "",
+      ticketName: ticket.name || "",
+      ticketCategory: entryTypeLabelMap[ticket.entryType] || "Single",
+      ticketEntryType: ticketTypeLabelMap[ticket.type] || "Standard Ticket",
+      price: String(ticket.price ?? 0),
+      quantity: String(ticket.totalQty ?? 0),
+      available: Number(ticket.totalQty ?? 0),
+      soldQty: Number(ticket.soldQty ?? 0),
+      description: ticket.info || "",
+      maxPerCustomer: String(ticket.maxPerUser ?? 10),
+      purchaseExpiry: ticket.purchaseExpiry || "",
+      comingSoon: Boolean(ticket.comingSoon),
+      onsiteOnly: Boolean(ticket.onGroundOnly),
+      type: typeMap[ticket.type] || "standard",
+      gstRate: ticket.gstRate ?? 18,
+      gstType: ticket.gstType || "",
+    };
+  };
+
+  useEffect(() => {
+    clearTransientUiState();
+    releaseGlobalOverlayLocks();
+
+    return () => {
+      releaseGlobalOverlayLocks();
+    };
+  }, [location.key, editId]);
+
   // Form data
   const [eventTitle, setEventTitle] = useState("");
   const [eventDescription, setEventDescription] = useState("");
@@ -277,6 +375,8 @@ const CreateEvent = () => {
   const [selectedEventTypeCategory, setSelectedEventTypeCategory] = useState("");
   const [fullAddress, setFullAddress] = useState("");
   const [venueThemePulse, setVenueThemePulse] = useState(false);
+  const [editHydrationError, setEditHydrationError] = useState("");
+  const [isEditHydrating, setIsEditHydrating] = useState(false);
 
   // Ensure backendEventId is set when editing (even if session flags are missing)
   useEffect(() => {
@@ -300,16 +400,17 @@ const CreateEvent = () => {
   const pageTheme = {
     background: "bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510]",
     card: "bg-[#0a0a0a]/80",
-    border: "border-gray-800",
+    border: "#1f1f1f",
     accent: "#D60024",
     text: "text-white",
     muted: "text-gray-400",
+    glow: "0 14px 32px rgba(0, 0, 0, 0.28)",
   };
 
   const fieldClass =
-    "bg-[#0a0a0a] border-gray-700 text-white placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-[#D60024]/50 focus-visible:border-[#D60024] transition-all duration-200";
-  const cardBase = "border border-gray-800 bg-[#0a0a0a]/80 rounded-2xl";
-  const selectMenuClass = "bg-[#0a0a0a] text-white border border-gray-700 rounded-lg";
+    "h-12 bg-[#0f0f0f] border border-[#262626] rounded-[10px] px-[14px] text-sm text-white placeholder:text-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[#ef4444] focus-visible:shadow-[0_0_0_1px_#ef4444] transition-[border,box-shadow,background] duration-200";
+  const cardBase = "create-event-card border border-[#1f1f1f] bg-[#0c0c0c] rounded-2xl transition-all duration-200 hover:border-[#2a2a2a]";
+  const selectMenuClass = "bg-[#0f0f0f] text-white border border-[#262626] rounded-[10px]";
 
   const ensureBackendEventId = async () => {
     if (backendEventId) return backendEventId;
@@ -360,8 +461,46 @@ const CreateEvent = () => {
   };
 
   const categoryHierarchy = {
-    Music: ["Bollywood", "Hip Hop", "Electronic", "Melodic", "Live Music", "Metal", "Rap", "Music House", "Techno", "K-pop", "Hollywood", "POP", "Punjabi", "Disco", "Rock", "Afrobeat", "Dance Hall", "Thumri", "Bolly Tech"],
-    Workshop: ["Sports", "Arts", "Meeting", "Conference", "Seminar", "Yoga", "Cooking", "Dance", "Self Help", "Consultation", "Corporate Event", "Communication"]
+    Music: [
+      "Live Concerts",
+      "Club Nights",
+      "Music Festivals",
+      "Bollywood",
+      "Hip Hop",
+      "Electronic",
+      "Melodic",
+      "Live Music",
+      "Metal",
+      "Rap",
+      "Music House",
+      "Techno",
+      "K-pop",
+      "Hollywood",
+      "POP",
+      "Punjabi",
+      "Disco",
+      "Rock",
+      "Afrobeat",
+      "Dance Hall",
+      "Thumri",
+      "Bolly Tech",
+    ],
+    Workshop: [
+      "Comedy Shows",
+      "Theater Shows",
+      "Sports",
+      "Arts",
+      "Meeting",
+      "Conference",
+      "Seminar",
+      "Yoga",
+      "Cooking",
+      "Dance",
+      "Self Help",
+      "Consultation",
+      "Corporate Event",
+      "Communication"
+    ]
   };
 
   // Load saved tickets and venue data when component mounts or when backendEventId changes
@@ -386,6 +525,14 @@ const CreateEvent = () => {
           console.error("Error parsing saved tickets:", error);
           localStorage.removeItem(`event_${backendEventId}_tickets`);
         }
+      } else if (Array.isArray(eventCacheRef.current?.tickets) && eventCacheRef.current.tickets.length > 0) {
+        const normalizedTickets = eventCacheRef.current.tickets
+          .map(normalizeTicketForEdit)
+          .filter(Boolean);
+
+        setSavedTickets(normalizedTickets);
+        setCreatedTicketIds(normalizedTickets.map((ticket) => ticket.id).filter(Boolean));
+        localStorage.setItem(`event_${backendEventId}_tickets`, JSON.stringify(normalizedTickets));
       }
       
       // Load venue data from localStorage if it exists
@@ -440,10 +587,8 @@ const CreateEvent = () => {
 
   useEffect(() => {
     if (!editId) return;
-    const stateEvent = location.state?.event;
-    const eventToEdit = stateEvent || events.find((e) => e.id === editId);
-    if (!eventToEdit) return;
-    eventCacheRef.current = eventToEdit;
+    if (editHydratedRef.current === editId) return;
+    let isMounted = true;
 
     const pickVenueName = (venueObj) => {
       if (!venueObj) return "";
@@ -543,215 +688,215 @@ const CreateEvent = () => {
       }
     };
 
-    const start = eventToEdit.startDate ? new Date(eventToEdit.startDate) : null;
-    const end = eventToEdit.endDate ? new Date(eventToEdit.endDate) : null;
-    const toDateStr = (d) => (d ? d.toISOString().slice(0, 10) : "");
-    const toTimeStr = (d) => {
-      if (!d) return "";
-      const iso = d.toISOString();
-      return iso.slice(11, 16);
+    const hydrateEvent = async (eventToEdit) => {
+      if (!isMounted || !eventToEdit) return;
+
+      editHydratedRef.current = editId;
+      eventCacheRef.current = eventToEdit;
+      setEditHydrationError("");
+
+      const start = parseSafeDate(eventToEdit.startDate);
+      const end = parseSafeDate(eventToEdit.endDate);
+      const toDateStr = (d) => (isValidDateObject(d) ? d.toISOString().slice(0, 10) : "");
+      const toTimeStr = (d) => {
+        if (!isValidDateObject(d)) return "";
+        const iso = d.toISOString();
+        return iso.slice(11, 16);
+      };
+
+      setBackendEventId(eventToEdit.id || eventToEdit._id || backendEventId);
+      setEventTitle(eventToEdit.title || "");
+      setEventDescription(eventToEdit.description || "");
+      setMainCategory(eventToEdit.category || "");
+      setSelectedCategories([eventToEdit.subCategory || eventToEdit.subcategory || ""]);
+      setCoverImage(eventToEdit.flyerImage || eventToEdit.image || eventToEdit.flyer);
+      hydrateGallery(eventToEdit.images);
+      setAdditionalFromEvent(eventToEdit);
+      const startDateStr = toDateStr(start);
+      const startTimeStr = toTimeStr(start);
+      const endDateStr = toDateStr(end);
+      const endTimeStr = toTimeStr(end);
+      setStartDate(startDateStr);
+      setStartTime(startTimeStr);
+      setEndDate(endDateStr);
+      setEndTime(endTimeStr);
+      const normalizedStatus = (eventToEdit.publishStatus || eventToEdit.status || "").toUpperCase();
+      setPublishState(normalizedStatus === "PUBLISHED" || normalizedStatus === "ACTIVE" ? "PUBLISHED" : "DRAFT");
+      const normalizedTickets = Array.isArray(eventToEdit.tickets)
+        ? eventToEdit.tickets.map(normalizeTicketForEdit).filter(Boolean)
+        : [];
+      setSavedTickets(normalizedTickets);
+      setCreatedTicketIds(normalizedTickets.map((ticket) => ticket.id).filter(Boolean));
+      if (eventToEdit.id || eventToEdit._id) {
+        localStorage.setItem(
+          `event_${eventToEdit.id || eventToEdit._id}_tickets`,
+          JSON.stringify(normalizedTickets)
+        );
+      }
+      setOriginalDateTime({
+        start: isValidDateObject(start) ? start.toISOString() : null,
+        end: isValidDateObject(end) ? end.toISOString() : null,
+      });
+      setOriginalDateInputs({
+        startDate: startDateStr,
+        startTime: startTimeStr,
+        endDate: endDateStr,
+        endTime: endTimeStr,
+      });
+
+      if (Array.isArray(eventToEdit.sponsors) && eventToEdit.sponsors.length > 0) {
+        const normalizedSponsors = eventToEdit.sponsors.map((s, idx) => flattenSponsor(s, idx));
+        const normalizedForCompare = normalizeSponsors(normalizedSponsors);
+        setSponsors(normalizedSponsors);
+        setOriginalSponsors(normalizedForCompare);
+        setIsSponsored(normalizedForCompare.length > 0);
+        setOriginalIsSponsored(normalizedForCompare.length > 0);
+        sponsorsLoadedRef.current = true;
+      } else {
+        setSponsors([emptySponsor]);
+        setOriginalSponsors([]);
+        setIsSponsored(Boolean(eventToEdit.isSponsored));
+        setOriginalIsSponsored(Boolean(eventToEdit.isSponsored));
+      }
+
+      setTicketPrice(
+        eventToEdit.price
+          ? String(eventToEdit.price).replace(/[^0-9.]/g, "")
+          : ticketPrice
+      );
+
+      if (eventToEdit.template) {
+        const templateName = mapTemplateId(eventToEdit.template);
+        setSelectedTemplate(templateName);
+      }
+
+      const firstVenue = Array.isArray(eventToEdit.venues) && eventToEdit.venues.length > 0
+        ? eventToEdit.venues[0]
+        : null;
+      if (firstVenue) {
+        setVenueId(firstVenue.id || firstVenue._id || venueId);
+        setVenueName(pickVenueName(firstVenue));
+        setCity(firstVenue.city || "");
+        setState(firstVenue.state || "");
+        setCountry(firstVenue.country || eventToEdit.country || "India");
+        setPostalCode(firstVenue.postalCode || eventToEdit.postalCode || "");
+        setVenueContact(firstVenue.contact || eventToEdit.venueContact || "");
+        setVenueEmail(firstVenue.email || eventToEdit.venueEmail || "");
+        setFullAddress(firstVenue.fullAddress || firstVenue.address || "");
+        setOriginalVenueData({
+          name: pickVenueName(firstVenue),
+          contact: firstVenue.contact || eventToEdit.venueContact || "",
+          email: firstVenue.email || eventToEdit.venueEmail || "",
+          fullAddress: firstVenue.fullAddress || firstVenue.address || "",
+          city: firstVenue.city || "",
+          state: firstVenue.state || "",
+          country: firstVenue.country || eventToEdit.country || "India",
+          postalCode: firstVenue.postalCode || eventToEdit.postalCode || "",
+          latitude: firstVenue.latitude || 0,
+          longitude: firstVenue.longitude || 0,
+        });
+        setVenueCreated(true);
+      } else if (eventToEdit.location) {
+        const locationParts = eventToEdit.location.split(", ");
+        if (locationParts.length > 0) setVenueName(locationParts[0]);
+        if (locationParts.length > 1) setCity(locationParts[1]);
+        if (locationParts.length > 2) setState(locationParts[2]);
+      }
+
+      const tcData = eventToEdit.TC || eventToEdit.tc;
+      if (tcData) {
+        if (typeof tcData === "string") {
+          setTermsAndConditions(tcData);
+        } else if (tcData?.content) {
+          setTermsAndConditions(tcData.content);
+        }
+      }
+
+      const advisoryData = eventToEdit.advisory || {};
+      const normalizedAdvisory = { ...initialAdvisoryState };
+      Object.keys(normalizedAdvisory).forEach((key) => {
+        if (advisoryData[key]) normalizedAdvisory[key] = true;
+      });
+      setAdvisory(normalizedAdvisory);
+      const customList = Array.isArray(advisoryData.customAdvisories) ? advisoryData.customAdvisories : [];
+      setCustomAdvisories(customList);
+
+      const questionsData = Array.isArray(eventToEdit.questions) ? eventToEdit.questions : [];
+      setCustomQuestions(questionsData);
+      setOrganizerNote(eventToEdit.organizerNote || "");
+
+      if (eventToEdit.type) {
+        setSelectedEventTypeCategory(eventToEdit.type);
+        setCurrentEventType(eventToEdit.type);
+      }
+
+      const normalizedArtists = Array.isArray(eventToEdit.artists)
+        ? eventToEdit.artists.map((a) => ({
+            name: a.name || "",
+            photo: a.photo || a.image || "",
+            instagram: a.instagram || a.instagramLink || "",
+            spotify: a.spotify || a.spotifyLink || "",
+            gender: a.gender || "PREFER_NOT_TO_SAY",
+          }))
+        : [];
+
+      setArtists(
+        normalizedArtists.length
+          ? normalizedArtists
+          : [{ name: "", photo: "", instagram: "", spotify: "", gender: "PREFER_NOT_TO_SAY" }]
+      );
+      if (normalizedArtists.length) {
+        setCreatedArtistIndices(normalizedArtists.map((_, idx) => idx));
+        artistsLoadedRef.current = true;
+        setOriginalArtists(normalizedArtists);
+      } else {
+        setOriginalArtists([]);
+      }
     };
 
-    setBackendEventId(eventToEdit.id || eventToEdit._id || backendEventId);
-    setEventTitle(eventToEdit.title || "");
-    setEventDescription(eventToEdit.description || "");
-    setMainCategory(eventToEdit.category || "");
-    setSelectedCategories([eventToEdit.subCategory || eventToEdit.subcategory || ""]);
-    setCoverImage(eventToEdit.flyerImage || eventToEdit.image || eventToEdit.flyer);
-    hydrateGallery(eventToEdit.images);
-    setAdditionalFromEvent(eventToEdit);
-    const startDateStr = toDateStr(start);
-    const startTimeStr = toTimeStr(start);
-    const endDateStr = toDateStr(end);
-    const endTimeStr = toTimeStr(end);
-    setStartDate(startDateStr);
-    setStartTime(startTimeStr);
-    setEndDate(endDateStr);
-    setEndTime(endTimeStr);
-    const normalizedStatus = (eventToEdit.publishStatus || eventToEdit.status || "").toUpperCase();
-    setPublishState(normalizedStatus === "PUBLISHED" || normalizedStatus === "ACTIVE" ? "PUBLISHED" : "DRAFT");
-    // Track originals for change detection in Step 2
-    setOriginalDateTime({
-      start: start ? start.toISOString() : null,
-      end: end ? end.toISOString() : null,
-    });
-    setOriginalDateInputs({
-      startDate: startDateStr,
-      startTime: startTimeStr,
-      endDate: endDateStr,
-      endTime: endTimeStr,
-    });
-    // Sponsors (Step 5)
-    if (Array.isArray(eventToEdit.sponsors) && eventToEdit.sponsors.length > 0) {
-      const normalizedSponsors = eventToEdit.sponsors.map((s, idx) => flattenSponsor(s, idx));
-      const normalizedForCompare = normalizeSponsors(normalizedSponsors);
-      setSponsors(normalizedSponsors);
-      setOriginalSponsors(normalizedForCompare);
-      setIsSponsored(normalizedForCompare.length > 0);
-      setOriginalIsSponsored(normalizedForCompare.length > 0);
-      sponsorsLoadedRef.current = true;
-    } else {
-      setSponsors([emptySponsor]);
-      setOriginalSponsors([]);
-      setIsSponsored(Boolean(eventToEdit.isSponsored));
-      setOriginalIsSponsored(Boolean(eventToEdit.isSponsored));
-    }
-    setTicketPrice(
-      eventToEdit.price
-        ? String(eventToEdit.price).replace(/[^0-9.]/g, "")
-        : ticketPrice
-    );
-
-    // Load template if available (map old IDs to new names)
-    if (eventToEdit.template) {
-      const templateName = mapTemplateId(eventToEdit.template);
-      setSelectedTemplate(templateName);
-    }
-
-    // Parse location from venues
-    const firstVenue = Array.isArray(eventToEdit.venues) && eventToEdit.venues.length > 0
-      ? eventToEdit.venues[0]
-      : null;
-    if (firstVenue) {
-      setVenueId(firstVenue.id || firstVenue._id || venueId);
-      setVenueName(pickVenueName(firstVenue));
-      setCity(firstVenue.city || "");
-      setState(firstVenue.state || "");
-      setCountry(eventToEdit.country || "India");
-      setPostalCode(eventToEdit.postalCode || "");
-      setVenueContact(eventToEdit.venueContact || "");
-      setVenueEmail(eventToEdit.venueEmail || "");
-      setFullAddress(firstVenue.fullAddress || firstVenue.address || "");
-
-      // Set original venue data for change detection
-      setOriginalVenueData({
-        name: pickVenueName(firstVenue),
-        contact: eventToEdit.venueContact || "",
-        email: eventToEdit.venueEmail || "",
-        fullAddress: firstVenue.fullAddress || firstVenue.address || "",
-        city: firstVenue.city || "",
-        state: firstVenue.state || "",
-        country: eventToEdit.country || "India",
-        postalCode: eventToEdit.postalCode || "",
-        latitude: firstVenue.latitude || 0,
-        longitude: firstVenue.longitude || 0,
-      });
-      setVenueCreated(true);
-    } else if (eventToEdit.location) {
-      const locationParts = eventToEdit.location.split(", ");
-      if (locationParts.length > 0) setVenueName(locationParts[0]);
-      if (locationParts.length > 1) setCity(locationParts[1]);
-      if (locationParts.length > 2) setState(locationParts[2]);
-    }
-
-    const tcData = eventToEdit.TC || eventToEdit.tc;
-    if (tcData) {
-      if (typeof tcData === "string") {
-        setTermsAndConditions(tcData);
-      } else if (tcData?.content) {
-        setTermsAndConditions(tcData.content);
-      }
-    }
-
-    const advisoryData = eventToEdit.advisory || {};
-    const normalizedAdvisory = { ...initialAdvisoryState };
-    Object.keys(normalizedAdvisory).forEach((key) => {
-      if (advisoryData[key]) normalizedAdvisory[key] = true;
-    });
-    setAdvisory(normalizedAdvisory);
-    const customList = Array.isArray(advisoryData.customAdvisories) ? advisoryData.customAdvisories : [];
-    setCustomAdvisories(customList);
-
-    const questionsData = Array.isArray(eventToEdit.questions) ? eventToEdit.questions : [];
-    setCustomQuestions(questionsData);
-    setOrganizerNote(eventToEdit.organizerNote || "");
-
-    if (eventToEdit.type) {
-      setSelectedEventTypeCategory(eventToEdit.type);
-      setCurrentEventType(eventToEdit.type);
-    }
-
-    const normalizedArtists = Array.isArray(eventToEdit.artists)
-      ? eventToEdit.artists.map((a) => ({
-          name: a.name || "",
-          photo: a.photo || a.image || "",
-          instagram: a.instagram || a.instagramLink || "",
-          spotify: a.spotify || a.spotifyLink || "",
-          gender: a.gender || "PREFER_NOT_TO_SAY",
-        }))
-      : [];
-
-    setArtists(
-      normalizedArtists.length
-        ? normalizedArtists
-        : [{ name: "", photo: "", instagram: "", spotify: "", gender: "PREFER_NOT_TO_SAY" }]
-    );
-    if (normalizedArtists.length) {
-      setCreatedArtistIndices(normalizedArtists.map((_, idx) => idx));
-      artistsLoadedRef.current = true;
-      setOriginalArtists(normalizedArtists);
-    } else {
-      setOriginalArtists([]);
-    }
-
-    // If images or description/venue were not present in the cached event, fetch full event details (by slug if available)
-    if (((!eventToEdit.images || eventToEdit.images.length === 0) || !eventToEdit.description || !eventToEdit.venues?.length) && (eventToEdit.slug || eventToEdit.id || eventToEdit._id)) {
-      (async () => {
-        if (eventFetchInProgressRef.current) return;
-        eventFetchInProgressRef.current = true;
-        try {
-          const organizerSlug = eventToEdit.organizer?.slug;
-          const eventSlug = eventToEdit.slug;
-          const fetchUrl = organizerSlug && eventSlug
-            ? `api/event/${encodeURIComponent(organizerSlug)}/${encodeURIComponent(eventSlug)}`
-            : eventToEdit.id || eventToEdit._id
-              ? `api/event/${eventToEdit.id || eventToEdit._id}`
-              : null;
-          if (!fetchUrl) return;
-          const response = await apiFetch(fetchUrl, { method: "GET" });
-          const eventData = response.data?.event || response.data || response.event || response;
-          eventCacheRef.current = eventData;
-
-          if (eventData?.flyerImage) {
-            setCoverImage(eventData.flyerImage);
-          }
-          if (eventData?.description) {
-            setEventDescription(eventData.description);
-          }
-          if (!sponsorsLoadedRef.current && Array.isArray(eventData?.sponsors) && eventData.sponsors.length > 0) {
-            const normalizedSponsors = eventData.sponsors.map((s, idx) => flattenSponsor(s, idx));
-            const normalizedForCompare = normalizeSponsors(normalizedSponsors);
-            setSponsors(normalizedSponsors);
-            setOriginalSponsors(normalizedForCompare);
-            setIsSponsored(normalizedForCompare.length > 0);
-            setOriginalIsSponsored(normalizedForCompare.length > 0);
-            sponsorsLoadedRef.current = true;
-          }
-          if (Array.isArray(eventData?.venues) && eventData.venues.length > 0) {
-            const v = eventData.venues[0];
-            setVenueId(v.id || v._id || venueId);
-            setVenueName(pickVenueName(v));
-            setCity(v.city || city);
-            setState(v.state || state);
-            setCountry(v.country || country);
-            setPostalCode(v.postalCode || postalCode);
-            setVenueContact(v.contact || venueContact);
-            setVenueEmail(v.email || venueEmail);
-            setFullAddress(v.fullAddress || fullAddress);
-          }
-          if (eventData?.id || eventData?._id) {
-            setBackendEventId(eventData.id || eventData._id);
-          }
-          hydrateGallery(eventData?.images);
-          setAdditionalFromEvent(eventData);
-        } catch (err) {
-          console.error("Failed to fetch full event details for gallery hydration:", err);
-        } finally {
-          eventFetchInProgressRef.current = false;
+    const hydrateFromRoute = async () => {
+      try {
+        if (isMounted) {
+          setIsEditHydrating(true);
+          setEditHydrationError("");
         }
-      })();
-    }
-  }, [editId, events, location.state, backendEventId, ticketPrice]);
+
+        const stateEvent = location.state?.event;
+        const cachedEvent =
+          stateEvent ||
+          events.find((e) => e.id === editId || e.publicId === editId || e.eventId === editId);
+
+        if (cachedEvent) {
+          await hydrateEvent(cachedEvent);
+        }
+
+        const fetchUrl = buildEventFetchUrl({ eventId: editId, bustCache: true });
+        const response = await apiFetch(fetchUrl, { method: "GET" });
+        const fetchedEvent = response.data?.event || response.data || response.event || response;
+
+        if (!fetchedEvent) {
+          throw new Error("Event not found.");
+        }
+
+        await hydrateEvent(fetchedEvent);
+      } catch (err) {
+        console.error("Failed to hydrate edit event:", err);
+        if (isMounted) {
+          setEditHydrationError(err?.message || "Failed to load event for editing.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsEditHydrating(false);
+        }
+      }
+    };
+
+    hydrateFromRoute();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [editId, events, location.state]);
 
   // Fetch sponsors from backend in edit mode when entering Step 5 (or when ID changes)
   useEffect(() => {
@@ -784,9 +929,11 @@ const CreateEvent = () => {
 
         const organizerSlug = eventCacheRef.current?.organizer?.slug;
         const eventSlug = eventCacheRef.current?.slug;
-        const fetchUrl = organizerSlug && eventSlug
-          ? `api/event/${encodeURIComponent(organizerSlug)}/${encodeURIComponent(eventSlug)}`
-          : `api/event/${backendEventId}`;
+        const fetchUrl = buildEventFetchUrl({
+          eventId: backendEventId,
+          organizerSlug,
+          eventSlug,
+        });
         const response = await apiFetch(fetchUrl, { method: "GET" });
         const eventData = response.data?.event || response.data || response.event || response;
         eventCacheRef.current = eventData;
@@ -842,9 +989,11 @@ const CreateEvent = () => {
 
         const organizerSlug = eventCacheRef.current?.organizer?.slug;
         const eventSlug = eventCacheRef.current?.slug;
-        const fetchUrl = organizerSlug && eventSlug
-          ? `api/event/${encodeURIComponent(organizerSlug)}/${encodeURIComponent(eventSlug)}`
-          : `api/event/${backendEventId}`;
+        const fetchUrl = buildEventFetchUrl({
+          eventId: backendEventId,
+          organizerSlug,
+          eventSlug,
+        });
         const response = await apiFetch(fetchUrl, { method: "GET" });
         const eventData = response.data?.event || response.data || response.event || response;
         eventCacheRef.current = eventData;
@@ -899,13 +1048,34 @@ const CreateEvent = () => {
           console.log("📥 Fetching FRESH images from backend");
           console.log("📥 Event ID:", backendEventId);
           console.log("📥 Current Step:", currentStep);
+
+          // If gallery already exists in UI state, avoid a redundant fetch.
+          if (Array.isArray(galleryImages) && galleryImages.length > 0) {
+            return;
+          }
           
-          // Clear existing state first to prevent showing stale data
-          console.log("🧹 Clearing existing image state...");
-          setGalleryImages([]);
-          setGalleryImageIds({});
-          setExistingGalleryUrls([]);
-          
+          const cachedEvent = eventCacheRef.current;
+          const cachedEventId = cachedEvent?.id || cachedEvent?._id;
+          const isSameEvent = String(cachedEventId || '') === String(backendEventId);
+
+          // Avoid redundant network calls when edit payload is already cached in memory.
+          if (isSameEvent && Array.isArray(cachedEvent?.images)) {
+            if (cachedEvent?.flyerImage) {
+              setCoverImage(cachedEvent.flyerImage);
+            }
+
+            const galleryImagesData = cachedEvent.images.filter(img => img.type === 'EVENT_GALLERY');
+            const validGalleryImages = galleryImagesData.filter(img => !deletedImageIds.has(img.id));
+            const imageUrls = validGalleryImages.map(img => img.url);
+            const imageIdMap = {};
+            validGalleryImages.forEach(img => { imageIdMap[img.url] = img.id; });
+
+            setExistingGalleryUrls(imageUrls);
+            setGalleryImages(imageUrls);
+            setGalleryImageIds(imageIdMap);
+            return;
+          }
+
           // Fetch event details to get images (with timestamp to prevent caching)
           // Check if fetch is already in progress
           if (eventFetchInProgressRef.current) return;
@@ -913,14 +1083,18 @@ const CreateEvent = () => {
 
           const organizerSlug = eventCacheRef.current?.organizer?.slug;
           const eventSlug = eventCacheRef.current?.slug;
-          const fetchUrl = organizerSlug && eventSlug
-            ? `api/event/${encodeURIComponent(organizerSlug)}/${encodeURIComponent(eventSlug)}?t=${Date.now()}`
-            : `api/event/${backendEventId}?t=${Date.now()}`;
+          const fetchUrl = buildEventFetchUrl({
+            eventId: backendEventId,
+            organizerSlug,
+            eventSlug,
+            bustCache: true,
+          });
           const response = await apiFetch(fetchUrl, {
             method: "GET",
           });
           
           const eventData = response.data || response;
+          eventCacheRef.current = eventData;
           console.log("📋 Full event data received:", eventData);
           
           // Load cover image (or clear if none exists)
@@ -984,10 +1158,6 @@ const CreateEvent = () => {
           
         } catch (error) {
           console.error("❌ Failed to load existing images:", error);
-          // Clear state on error to prevent showing stale data
-          setGalleryImages([]);
-          setGalleryImageIds({});
-          setExistingGalleryUrls([]);
         } finally {
           eventFetchInProgressRef.current = false;
         }
@@ -1075,8 +1245,16 @@ const CreateEvent = () => {
 
   const progress = (currentStep / steps.length) * 100;
   const basicDetailsFilled = Boolean(eventTitle.trim() && mainCategory && selectedCategories.length > 0);
+  const isSectionBusy = isSubmitting || uploadingCover || uploadingGallery || showLoading;
+  const canJumpBetweenSections = isEditMode && !isSectionBusy;
 
-  const nextStep = async () => {
+  const nextStep = async ({ advance = true } = {}) => {
+    const moveToNextStep = () => {
+      if (advance) {
+        setCurrentStep((prev) => Math.min(prev + 1, steps.length));
+      }
+    };
+
     // Validate required fields for each step
     if (currentStep === 1) {
       if (!eventTitle.trim()) {
@@ -1120,7 +1298,7 @@ const CreateEvent = () => {
             if (!hasAnyChanges) {
               console.log("ℹ️ No field or image changes detected in Step 1");
               toast.info("No changes to update");
-              setCurrentStep(currentStep + 1);
+              moveToNextStep();
               return;
             }
 
@@ -1199,7 +1377,7 @@ const CreateEvent = () => {
             // If only images changed, advance without JSON update
             if (!textFieldsChanged) {
               console.log("ℹ️ Only image changes detected; skipping update-event payload");
-              setCurrentStep(currentStep + 1);
+              moveToNextStep();
               return;
             }
 
@@ -1373,7 +1551,7 @@ const CreateEvent = () => {
         console.log("API Response:", response);
         
         // Move to next step after successful API call
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
       } catch (error) {
         console.error("Error saving event:", error);
         const errorMessage = error.message || "Failed to save event details. Please try again.";
@@ -1423,7 +1601,7 @@ const CreateEvent = () => {
 
       if (isEditMode && backendEventId && !hasInputChanges) {
         toast.info("No changes to update");
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
         return;
       }
 
@@ -1458,7 +1636,7 @@ const CreateEvent = () => {
         setOriginalDateInputs({ startDate, startTime, endDate, endTime });
         
         // Move to next step after successful API call
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
       } catch (error) {
         console.error("Error updating event:", error);
         const errorMessage = error.message || "Failed to update date & time. Please try again.";
@@ -1490,9 +1668,14 @@ const CreateEvent = () => {
         toast.error("Event ID not found. Please go back to Step 1.");
         return;
       }
-      
+
+      if (!advance) {
+        toast.success("Tickets are already saved.");
+        return;
+      }
+
       // Move to next step - tickets are already created when added
-      setCurrentStep(currentStep + 1);
+      moveToNextStep();
       return; // Exit early to prevent default next step behavior
     }
 
@@ -1558,7 +1741,7 @@ const CreateEvent = () => {
       if (!hasVenueChanged) {
         console.log("ℹ️ No changes detected in venue details");
         toast.info("No changes to update");
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
         return;
       }
 
@@ -1676,7 +1859,7 @@ const CreateEvent = () => {
         }
         
         // Move to next step after successful API call
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
       } catch (error) {
         console.error("Error creating venue:", error);
         const errorMessage = error.message || "Failed to save venue details. Please try again.";
@@ -1703,14 +1886,17 @@ const CreateEvent = () => {
       // In edit mode, if sponsors are loaded and nothing changed (including toggle), skip API
       if (isEditMode && sponsorsLoadedRef.current && isSponsored === originalIsSponsored && !hasChanges) {
         toast.info("No changes to update");
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
         return;
       }
 
       // If toggle is off, clear sponsors only if previously set, otherwise skip
       if (!isSponsored) {
         if (!hasChanges) {
-          setCurrentStep(currentStep + 1);
+          if (!advance) {
+            toast.success("Sponsor section is already up to date.");
+          }
+          moveToNextStep();
           return;
         }
         try {
@@ -1730,7 +1916,7 @@ const CreateEvent = () => {
           setOriginalIsSponsored(false);
           setSponsors([emptySponsor]);
           toast.success("Sponsor details saved");
-          setCurrentStep(currentStep + 1);
+          moveToNextStep();
         } catch (error) {
           console.error("Error saving sponsors:", error);
           toast.error(error.message || "Failed to save sponsor details. Please try again.");
@@ -1757,7 +1943,7 @@ const CreateEvent = () => {
 
       if (!hasChanges) {
         toast.info("No changes to update");
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
         return;
       }
 
@@ -1783,7 +1969,7 @@ const CreateEvent = () => {
         setOriginalSponsors(cleanedSponsors);
         setOriginalIsSponsored(true);
         toast.success("Sponsor details saved");
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
       } catch (error) {
         console.error("Error saving sponsors:", error);
         toast.error(error.message || "Failed to save sponsor details. Please try again.");
@@ -1836,7 +2022,10 @@ const CreateEvent = () => {
           // No artists to create, just move to next step
           setIsSubmitting(false);
           setShowLoading(false);
-          setCurrentStep(currentStep + 1);
+          if (!advance) {
+            toast.success("Artist section is already up to date.");
+          }
+          moveToNextStep();
           return;
         }
         
@@ -1888,9 +2077,12 @@ const CreateEvent = () => {
         }
 
         console.log("Step 6 API Response:", artistResponses);
+        if (!advance) {
+          toast.success("Artist details processed.");
+        }
         
         // Move to next step after successful API call
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
       } catch (error) {
         console.error("Error creating artists:", error);
         const errorMessage = error.message || "Failed to add artists. Please try again.";
@@ -1918,7 +2110,7 @@ const CreateEvent = () => {
         JSON.stringify(currentNormalized) === JSON.stringify(originalAdditionalRef.current)
       ) {
         toast.info("No changes to update");
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
         return;
       }
       try {
@@ -1966,7 +2158,7 @@ const CreateEvent = () => {
         originalAdditionalRef.current = normalizeAdditionalFromState();
         currentAdditionalRef.current = originalAdditionalRef.current;
         toast.success("Additional info saved");
-        setCurrentStep(currentStep + 1);
+        moveToNextStep();
       } catch (error) {
         console.error("Error saving additional info:", error);
         toast.error(error.message || "Failed to save additional info. Please try again.");
@@ -1978,13 +2170,25 @@ const CreateEvent = () => {
       return;
     }
 
-    if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
+  if (currentStep < steps.length) {
+      moveToNextStep();
     }
   };
 
+  const saveCurrentSection = async () => {
+    await nextStep({ advance: false });
+  };
+
+  const goToStep = (stepNumber) => {
+    if (!isEditMode || isSectionBusy || stepNumber === currentStep) {
+      return;
+    }
+
+    setCurrentStep(stepNumber);
+  };
+
   const prevStep = () => {
-    if (currentStep > 1) {
+    if (!isSectionBusy && currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
   };
@@ -2669,18 +2873,39 @@ const CreateEvent = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] text-white">
+    <div className="create-event-shell min-h-screen flex flex-col bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] text-white">
       <LoadingOverlay show={showLoading} message={loadingMessage} />
       <Header isAuthenticated userRole="organizer" />
 
-      <main className="flex-1 py-4 md:py-5">
-        <div className="px-4 md:px-6 w-full max-w-5xl mx-auto space-y-3">
+      <main className="flex-1 py-10">
+        <div className="w-full max-w-[1100px] mx-auto px-4 md:px-8 space-y-8 pb-8">
+          {isEditMode && isEditHydrating && (
+            <Card className={`${cardBase} p-8`}>
+              <div className="flex items-center gap-3 text-white/80">
+                <Loader2 className="h-5 w-5 animate-spin text-[#D60024]" />
+                <div>
+                  <p className="text-sm font-medium">Loading event for editing...</p>
+                  <p className="text-xs text-white/50">Fetching the latest event data from the server.</p>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {isEditMode && editHydrationError && (
+            <Card className={`${cardBase} border-red-500/30 bg-red-950/20 p-6`}>
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-red-300">Could not load this event</p>
+                <p className="text-sm text-red-200/80">{editHydrationError}</p>
+              </div>
+            </Card>
+          )}
+
           {/* Back Button and Clear Draft */}
-          <div className="flex items-center justify-between mb-0">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
-                className="text-white hover:bg-[#0a0a0a] px-3"
+                className="h-10 rounded-lg px-3 text-white hover:bg-[#111111]"
                 onClick={() => navigate(-1)}
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -2693,7 +2918,7 @@ const CreateEvent = () => {
               <Button
                 variant="outline"
                 size="sm"
-                className="border-[#D60024]/30 bg-[#D60024]/10 text-white hover:bg-[#D60024]/20"
+                className="h-10 rounded-lg border-[#2a2a2a] bg-[#0f0f0f] text-white hover:bg-[#151515] hover:border-[#D60024]/40"
                 onClick={() => {
                   if (confirm("Are you sure you want to start a new event? This will discard the current draft.")) {
                     sessionStorage.removeItem('draftEventId');
@@ -2717,38 +2942,38 @@ const CreateEvent = () => {
 
           {/* Progress Header */}
           <Card
-            className={`mb-6 border ${cardBase}`}
+            className={`border ${cardBase}`}
             style={{ borderColor: pageTheme.border, boxShadow: pageTheme.glow }}
           >
-            <CardContent className="p-4 space-y-4 rounded-2xl">
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div className="space-y-2">
-                  <p className="text-xs uppercase tracking-wider text-gray-500">
+            <CardContent className="p-8 space-y-8 rounded-2xl">
+              <div className="flex items-start justify-between gap-6 flex-wrap">
+                <div className="space-y-3">
+                  <p className="text-[12px] uppercase tracking-[0.12em] text-white/60">
                     Event Builder
                   </p>
                   <div className="flex items-center gap-3 flex-wrap">
-                    <h1 className="text-2xl font-bold text-white drop-shadow-sm">
+                    <h1 className="text-3xl md:text-[32px] font-semibold tracking-[-0.02em] text-white">
                       {isEditMode ? "Update Event" : "Create New Event"}
                     </h1>
                     {selectedEventTypeCategory && (
-                      <Badge className="bg-[#0a0a0a] text-gray-300 border-gray-700">
+                      <Badge className="h-7 rounded-full border-[#2a2a2a] bg-[#111111] px-3 text-[11px] uppercase tracking-[0.12em] text-white/80">
                         {selectedEventTypeCategory}
                       </Badge>
                     )}
                     
                     {backendEventId && !isEditMode && (
-                      <Badge className="bg-[#D60024]/15 text-white border-[#D60024]/30">
+                      <Badge className="h-7 rounded-full bg-[#ef4444]/20 text-white border-[#ef4444]/40 px-3 text-[11px] uppercase tracking-[0.12em]">
                         Draft
                       </Badge>
                     )}
                   </div>
                 </div>
-                <div className="flex items-end sm:items-center gap-3 flex-col sm:flex-row sm:flex-wrap justify-end">
+                <div className="flex items-end sm:items-center gap-4 flex-col sm:flex-row sm:flex-wrap justify-end">
                   
                     
                   <div className="flex items-center gap-3">
                    
-                    <div className="relative flex rounded-full overflow-hidden border border-gray-700 bg-[#0a0a0a] p-1">
+                    <div className="relative flex h-10 rounded-full overflow-hidden border border-[#2a2a2a] bg-[#0f0f0f] p-1">
                       <div
                         className="absolute top-1 left-1 h-[calc(100%-8px)] w-[calc(50%-4px)] bg-[#D60024] rounded-full transition-all duration-300 ease-out"
                         style={{
@@ -2767,7 +2992,7 @@ const CreateEvent = () => {
                                 : "text-gray-400 hover:text-gray-300"
                             }`}
                             onClick={() => setPublishState(state)}
-                            disabled={isSubmitting}
+                            disabled={isSectionBusy}
                           >
                             {state === "DRAFT" ? "Draft" : "Publish"}
                           </button>
@@ -2776,9 +3001,9 @@ const CreateEvent = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-[#0a0a0a] border border-gray-700">
+                  <div className="flex items-center gap-2 px-3 h-10 rounded-full bg-[#0f0f0f] border border-[#2a2a2a]">
                     <div className="w-2 h-2 rounded-full bg-[#D60024] animate-pulse" />
-                    <span className="text-xs text-gray-400 whitespace-nowrap">
+                    <span className="text-xs text-gray-300 whitespace-nowrap tracking-[0.08em] uppercase">
                       Step {currentStep} of {steps.length} • {steps[currentStep - 1].title}
                     </span>
                   </div>
@@ -2786,64 +3011,80 @@ const CreateEvent = () => {
               </div>
 
               {/* Circle+bar tracker */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
+              <div className="space-y-2">
+                <div className="flex items-center gap-8 overflow-x-auto pb-1">
                   {steps.map((step, idx) => {
                     const isCurrent = step.number === currentStep;
                     const isDone = step.number < currentStep;
                     const barActive =
                       idx < currentStep - 1
-                        ? "bg-[#D60024]"
+                        ? "bg-[#ef4444]"
                         : idx === currentStep - 1
-                        ? "bg-gray-700"
-                        : "bg-gray-800";
+                        ? "bg-[#2a2a2a]"
+                        : "bg-[#1a1a1a]";
 
                     return (
-                      <div key={step.number} className="flex-1 min-w-[90px] flex items-center gap-1">
-                        <div className="flex flex-col items-center gap-1 w-full">
+                      <div key={step.number} className="min-w-max flex items-center gap-4">
+                        <button
+                          type="button"
+                          onClick={() => goToStep(step.number)}
+                          disabled={!canJumpBetweenSections}
+                          className={`flex flex-col items-center gap-2 rounded-xl transition ${
+                            canJumpBetweenSections ? "cursor-pointer" : "cursor-default"
+                          }`}
+                        >
                           <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center border-2 text-sm transition-all ${
+                            className={`w-9 h-9 rounded-full flex items-center justify-center border text-sm font-medium transition-all ${
                               isDone
-                                ? "bg-[#D60024] border-[#D60024] text-white"
+                                ? "bg-[#ef4444] border-[#ef4444] text-white"
                                 : isCurrent
-                                ? "border-[#D60024] bg-[#0a0a0a] text-white"
-                                : "border-gray-800 bg-[#0a0a0a] text-gray-500"
+                                ? "border-[#ef4444] bg-[#111111] text-white"
+                                : canJumpBetweenSections
+                                ? "border-[#2a2a2a] bg-[#111111] text-[#777777] hover:border-[#ef4444]/60 hover:text-white"
+                                : "border-[#2a2a2a] bg-[#111111] text-[#777777]"
                             }`}
                           >
                             {isDone ? <Check className="w-4 h-4" /> : step.number}
                           </div>
-                          <p className="text-xs font-medium text-gray-400 text-center leading-tight">
+                          <p
+                            className={`text-xs font-medium text-center leading-tight whitespace-nowrap ${
+                              isCurrent ? "text-white" : canJumpBetweenSections ? "text-gray-300" : "text-gray-400"
+                            }`}
+                          >
                             {step.title}
                           </p>
-                        </div>
+                        </button>
                         {idx !== steps.length - 1 && (
-                          <div className={`flex-1 h-1 rounded-full ${barActive}`} />
+                          <div className={`h-px w-14 rounded-full ${barActive}`} />
                         )}
                       </div>
                     );
                   })}
                 </div>
+                {isEditMode && (
+                  <p className="text-xs text-white/50">Click any section to jump directly while editing.</p>
+                )}
               </div>
             </CardContent>
           </Card>
 
           {/* Step Content */}
-          <Card className={cardBase}>
-            <CardHeader className="border-b border-gray-800 bg-transparent pb-5">
-              <CardTitle className="text-xl text-white flex items-center gap-2">
-                <span className="inline-flex w-8 h-8 items-center justify-center rounded-full bg-gray-800 text-sm font-semibold">
+          <Card className={`${cardBase} overflow-hidden`}>
+            <CardHeader className="border-b border-[#1f1f1f] bg-[#0f0f0f] px-8 py-6">
+              <CardTitle className="text-2xl text-white flex items-center gap-3">
+                <span className="inline-flex w-9 h-9 items-center justify-center rounded-full border border-[#2a2a2a] bg-[#111111] text-sm font-semibold">
                   {currentStep}
                 </span>
                 {steps[currentStep - 1].title}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 text-gray-200 pt-5">
+            <CardContent className="space-y-6 text-gray-200 px-8 py-8">
               {/* Step 1: Event Details + Images */}
               {currentStep === 1 && (
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="eventTitle">Event Title *</Label>
+                <div className="space-y-8">
+                  <div className="space-y-5">
+                    <div className="space-y-2.5">
+                      <Label htmlFor="eventTitle" className="text-[13px] font-medium text-[#d4d4d4]">Event Title *</Label>
                       <Input
                         id="eventTitle"
                         placeholder="Enter event title"
@@ -2856,14 +3097,14 @@ const CreateEvent = () => {
                       />
                     </div>
 
-                    <div>
-                      <Label>Main Category *</Label>
+                    <div className="space-y-2.5">
+                      <Label className="text-[13px] font-medium text-[#d4d4d4]">Main Category *</Label>
                       <Select value={mainCategory} onValueChange={(value) => {
                         setMainCategory(value);
                         setSelectedCategories([]);
                         if (backendEventId) setTextFieldsChanged(true);
                       }}>
-                        <SelectTrigger className={`${fieldClass} h-10`}>
+                        <SelectTrigger className={fieldClass}>
                           <SelectValue placeholder="Select main category" />
                         </SelectTrigger>
                         <SelectContent className={selectMenuClass}>
@@ -2874,13 +3115,13 @@ const CreateEvent = () => {
                     </div>
 
                     {mainCategory && (
-                      <div>
-                        <Label>Subcategory *</Label>
+                      <div className="space-y-2.5">
+                        <Label className="text-[13px] font-medium text-[#d4d4d4]">Subcategory *</Label>
                         <Select value={selectedCategories[0] || ""} onValueChange={(value) => {
                           setSelectedCategories([value]);
                           if (backendEventId) setTextFieldsChanged(true);
                         }}>
-                          <SelectTrigger className={`${fieldClass} h-10`}>
+                          <SelectTrigger className={fieldClass}>
                             <SelectValue placeholder="Select subcategory" />
                           </SelectTrigger>
                           <SelectContent className={selectMenuClass}>
@@ -2893,14 +3134,14 @@ const CreateEvent = () => {
                         </Select>
                       </div>
                     )}
-                    <div>
-                      <Label htmlFor="description">Event Description</Label>
+                    <div className="space-y-2.5">
+                      <Label htmlFor="description" className="text-[13px] font-medium text-[#d4d4d4]">Event Description</Label>
                       <Textarea
                         id="description"
                         placeholder="Describe your event..."
                         rows={4}
                         value={eventDescription}
-                        className={`${fieldClass} min-h-[130px]`}
+                        className={`${fieldClass} min-h-[120px] py-3`}
                         onChange={(e) => {
                           setEventDescription(e.target.value);
                           if (backendEventId) setTextFieldsChanged(true);
@@ -2909,26 +3150,31 @@ const CreateEvent = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="text-sm text-muted-foreground mb-2">
+                  <div className="space-y-6">
+                    <div className="text-sm text-muted-foreground">
                       Add a striking cover and gallery to make your event pop.
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="cover-image">Cover Image *</Label>
-                      <div className="space-y-3">
+                    <div className="space-y-3">
+                      <Label htmlFor="cover-image" className="text-[13px] font-medium text-[#d4d4d4]">Cover Image *</Label>
+                      <div className="space-y-4">
+                        <div className={`relative rounded-xl border border-dashed border-[#333333] bg-[#0e0e0e] p-6 text-center transition-all duration-200 ${!basicDetailsFilled ? "opacity-70" : "hover:border-[#ef4444]/60"}`}>
                         <input
                           id="cover-image" 
                           type="file" 
                           accept="image/*" 
                           onChange={handleCoverImageChange}
-                          className={`${fieldClass} cursor-pointer`}
+                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
                           disabled={uploadingCover || !basicDetailsFilled}
                           ref={coverImageInputRef}
                         />
-                        <p className="text-xs text-muted-foreground">
-                          Recommended size: 1920x1080px.
-                        </p>
+                          <div className="pointer-events-none flex flex-col items-center gap-2">
+                            <Upload className="h-5 w-5 text-gray-400" />
+                            <p className="text-sm text-gray-200">Drag and drop your cover image</p>
+                            <p className="text-sm text-gray-400">or click to upload</p>
+                            <p className="text-xs text-gray-500">Recommended size: 1920x1080</p>
+                          </div>
+                        </div>
                         {!basicDetailsFilled && (
                           <p className="text-xs text-amber-400">
                             Fill title, category, and subcategory to enable image uploads.
@@ -2944,7 +3190,7 @@ const CreateEvent = () => {
                         )}
                         
                         {coverImage && !uploadingCover && (
-                          <div className="relative w-full h-40 rounded-lg overflow-hidden border border-border">
+                          <div className="relative w-full h-44 rounded-xl overflow-hidden border border-[#262626]">
                             <img 
                               src={coverImage} 
                               alt="Cover preview" 
@@ -2954,7 +3200,7 @@ const CreateEvent = () => {
                               type="button"
                               variant="destructive"
                               size="icon"
-                              className="absolute top-2 right-2"
+                              className="absolute top-2 right-2 h-8 w-8"
                               onClick={handleRemoveCoverImage}
                               title="Delete from cloud"
                             >
@@ -2965,18 +3211,26 @@ const CreateEvent = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="gallery">Gallery Images (optional)</Label>
-                      <div className="space-y-3">
-                        <Input 
+                    <div className="space-y-3">
+                      <Label htmlFor="gallery" className="text-[13px] font-medium text-[#d4d4d4]">Gallery Images (optional)</Label>
+                      <div className="space-y-4">
+                        <div className={`relative rounded-xl border border-dashed border-[#333333] bg-[#0e0e0e] p-6 text-center transition-all duration-200 ${!basicDetailsFilled ? "opacity-70" : "hover:border-[#ef4444]/60"}`}>
+                        <input 
                           id="gallery" 
                           type="file" 
                           accept="image/*" 
                           multiple 
                           onChange={handleGalleryImagesChange}
-                          className={`${fieldClass} cursor-pointer`}
+                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
                           disabled={uploadingGallery || !basicDetailsFilled}
                         />
+                          <div className="pointer-events-none flex flex-col items-center gap-2">
+                            <Upload className="h-5 w-5 text-gray-400" />
+                            <p className="text-sm text-gray-200">Drag and drop gallery images</p>
+                            <p className="text-sm text-gray-400">or click to upload</p>
+                            <p className="text-xs text-gray-500">Supported formats: JPG, PNG, WebP. Up to 10 images.</p>
+                          </div>
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           Add up to 10 images. Max file size: 10MB each. Images upload immediately after selection.
                         </p>
@@ -2990,9 +3244,12 @@ const CreateEvent = () => {
                         )}
                         
                         {galleryImages.length > 0 && (
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          <div
+                            className="grid gap-3"
+                            style={{ gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))" }}
+                          >
                             {galleryImages.map((img, index) => (
-                              <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-border group">
+                              <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-[#262626] group bg-[#0f0f0f]">
                                 <img 
                                   src={img} 
                                   alt={`Gallery preview ${index + 1}`} 
@@ -3002,7 +3259,7 @@ const CreateEvent = () => {
                                   type="button"
                                   variant="destructive"
                                   size="icon"
-                                  className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
                                   onClick={() => removeGalleryImage(index)}
                                   title="Delete from cloud"
                                   disabled={uploadingGallery}
@@ -3026,8 +3283,8 @@ const CreateEvent = () => {
 
               {/* Step 5: Sponsor */}
               {currentStep === 5 && (
-                <div className="space-y-5">
-                  <div className="flex flex-col gap-3 rounded-lg border border-gray-800 bg-[#0a0a0a]/80 p-3">
+                <div className="space-y-6">
+                  <div className="flex flex-col gap-4 rounded-xl border border-[#1f1f1f] bg-[#0f0f0f] p-5">
                     <div className="flex items-center justify-between gap-3">
                       <div className="space-y-1">
                         <p className="text-sm font-semibold text-white">Is this event sponsored?</p>
@@ -3063,7 +3320,7 @@ const CreateEvent = () => {
                         variant="outline"
                         size="sm"
                         onClick={addSponsorRow}
-                        className="border-gray-700 bg-[#0a0a0a] text-white hover:border-[#D60024]/50"
+                        className="h-10 rounded-lg border-[#2a2a2a] bg-[#0f0f0f] px-4 text-white hover:border-[#ef4444]/60 hover:bg-[#151515]"
                       >
                         <Plus className="w-4 h-4 mr-2" />
                         Add Sponsor
@@ -3072,10 +3329,10 @@ const CreateEvent = () => {
                   )}
 
                   {isSponsored && (
-                    <div className="space-y-4">
+                    <div className="space-y-5">
                       {sponsors.map((sponsor, index) => (
                         <Card key={index} className={`border ${cardBase}`} style={{ borderColor: pageTheme.border }}>
-                          <CardContent className="p-4 space-y-3">
+                          <CardContent className="p-5 space-y-5">
                             <div className="flex items-start justify-between">
                               <div>
                                 <p className="text-sm text-muted-foreground">Sponsor {index + 1}</p>
@@ -3094,36 +3351,45 @@ const CreateEvent = () => {
                               )}
                             </div>
 
-                            <div className="grid gap-4 md:grid-cols-2">
-                              <div className="space-y-2">
-                                <Label>Sponsor Name *</Label>
+                            <div className="grid gap-5 md:grid-cols-2">
+                              <div className="space-y-2.5">
+                                <Label className="text-[13px] font-medium text-[#d4d4d4]">Sponsor Name *</Label>
                                 <Input
                                   placeholder="BrandCo"
                                   value={sponsor.name}
+                                  className={fieldClass}
                                   onChange={(e) => handleSponsorChange(index, "name", e.target.value)}
                                 />
                               </div>
-                              <div className="space-y-2">
-                                <Label>Website URL</Label>
+                              <div className="space-y-2.5">
+                                <Label className="text-[13px] font-medium text-[#d4d4d4]">Website URL</Label>
                                 <Input
                                   type="url"
                                   placeholder="https://brandco.example.com"
                                   value={sponsor.websiteUrl}
+                                  className={fieldClass}
                                   onChange={(e) => handleSponsorChange(index, "websiteUrl", e.target.value)}
                                 />
                               </div>
                             </div>
 
-                            <div className="grid gap-4 md:grid-cols-2">
-                              <div className="space-y-2">
-                                <Label>Logo</Label>
-                                <div className="space-y-2">
-                                  <Input
+                            <div className="grid gap-5 md:grid-cols-2">
+                              <div className="space-y-2.5">
+                                <Label className="text-[13px] font-medium text-[#d4d4d4]">Logo</Label>
+                                <div className="space-y-3">
+                                  <div className="relative rounded-xl border border-dashed border-[#333333] bg-[#0e0e0e] px-4 py-5 text-center transition-all duration-200 hover:border-[#ef4444]/60">
+                                  <input
                                     type="file"
                                     accept="image/*"
                                     onChange={(e) => handleSponsorLogoChange(index, e.target.files?.[0])}
-                                    className="cursor-pointer"
+                                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                                   />
+                                    <div className="pointer-events-none flex flex-col items-center gap-2">
+                                      <Upload className="h-4 w-4 text-gray-400" />
+                                      <p className="text-sm text-gray-300">Upload sponsor logo</p>
+                                      <p className="text-xs text-gray-500">PNG / SVG preferred</p>
+                                    </div>
+                                  </div>
                                   <p className="text-xs text-muted-foreground">PNG / SVG with transparent background preferred</p>
                                   {sponsorUploadIndex === index && (
                                     <div className="flex items-center gap-2 text-sm text-primary">
@@ -3187,15 +3453,15 @@ const CreateEvent = () => {
 
               {/* Step 2: Date & Time */}
               {currentStep === 2 && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-5">
                     <div className="flex flex-col gap-2">
-                      <Label>Starting Date *</Label>
+                      <Label className="text-[13px] font-medium text-[#d4d4d4]">Starting Date *</Label>
                       <Popover open={startCalendarOpen} onOpenChange={setStartCalendarOpen}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
-                            className={`w-full justify-between ${fieldClass} h-10 hover:border-[#D60024]/50`}
+                            className={`w-full justify-between ${fieldClass}`}
                           >
                             <span className="flex items-center gap-2 text-white">
                               <CalendarIcon className="w-4 h-4 text-gray-400" />
@@ -3206,7 +3472,7 @@ const CreateEvent = () => {
                         <PopoverContent align="start" className="w-auto p-0 border-gray-700 bg-[#0a0a0a]">
                           <Calendar
                             mode="single"
-                            selected={startDate ? new Date(`${startDate}T00:00:00`) : undefined}
+                            selected={parseSafeDateOnly(startDate) || undefined}
                             onSelect={(date) => {
                               if (!date) return;
                               const iso = format(date, "yyyy-MM-dd");
@@ -3217,18 +3483,18 @@ const CreateEvent = () => {
                               setStartCalendarOpen(false);
                             }}
                             disabled={{ before: today }}
-                            defaultMonth={startDate ? new Date(`${startDate}T00:00:00`) : today}
+                            defaultMonth={parseSafeDateOnly(startDate) || today}
                           />
                         </PopoverContent>
                       </Popover>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Label>Ending Time *</Label>
+                      <Label className="text-[13px] font-medium text-[#d4d4d4]">Starting Time *</Label>
                       <Popover open={endTimeOpen} onOpenChange={setEndTimeOpen}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
-                            className={`w-full justify-between ${fieldClass} h-10 hover:border-[#D60024]/50`}
+                            className={`w-full justify-between ${fieldClass}`}
                           >
                             <span className="flex items-center gap-2 text-white">
                               <Clock className="w-4 h-4 text-gray-400" />
@@ -3253,14 +3519,14 @@ const CreateEvent = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid md:grid-cols-2 gap-5">
                     <div className="flex flex-col gap-2">
-                      <Label>Ending Date *</Label>
+                      <Label className="text-[13px] font-medium text-[#d4d4d4]">Ending Date *</Label>
                       <Popover open={endCalendarOpen} onOpenChange={setEndCalendarOpen}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
-                            className={`w-full justify-between ${fieldClass} h-10 hover:border-[#D60024]/50`}
+                            className={`w-full justify-between ${fieldClass}`}
                           >
                             <span className="flex items-center gap-2 text-white">
                               <CalendarIcon className="w-4 h-4 text-gray-400" />
@@ -3271,7 +3537,7 @@ const CreateEvent = () => {
                         <PopoverContent align="start" className="w-auto p-0 border-gray-700 bg-[#0a0a0a]">
                           <Calendar
                             mode="single"
-                            selected={endDate ? new Date(`${endDate}T00:00:00`) : undefined}
+                            selected={parseSafeDateOnly(endDate) || undefined}
                             onSelect={(date) => {
                               if (!date) return;
                               const iso = format(date, "yyyy-MM-dd");
@@ -3279,20 +3545,20 @@ const CreateEvent = () => {
                               setEndCalendarOpen(false);
                             }}
                             disabled={{
-                              before: startDate ? new Date(`${startDate}T00:00:00`) : today,
+                              before: parseSafeDateOnly(startDate) || today,
                             }}
-                            defaultMonth={endDate ? new Date(`${endDate}T00:00:00`) : startDate ? new Date(`${startDate}T00:00:00`) : today}
+                            defaultMonth={parseSafeDateOnly(endDate) || parseSafeDateOnly(startDate) || today}
                           />
                         </PopoverContent>
                       </Popover>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Label>Ending Time *</Label>
+                      <Label className="text-[13px] font-medium text-[#d4d4d4]">Ending Time *</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
-                            className={`w-full justify-between ${fieldClass} h-10 hover:border-[#D60024]/50`}
+                            className={`w-full justify-between ${fieldClass}`}
                           >
                             <span className="flex items-center gap-2 text-white">
                               <Clock className="w-4 h-4 text-gray-400" />
@@ -3321,19 +3587,19 @@ const CreateEvent = () => {
 
               {/* Step 3: Tickets */}
               {currentStep === 3 && (
-                <div className="space-y-6">
+                <div className="space-y-8">
                   <div className="text-sm text-gray-400">
                     Select ticket types to add for your event
                   </div>
 
-                  <div className="p-3 rounded-xl border border-dashed border-gray-700 bg-[#0a0a0a]/80 text-xs md:text-sm text-gray-400">
+                  <div className="p-4 rounded-xl border border-dashed border-[#333333] bg-[#0f0f0f] text-xs md:text-sm text-gray-400">
                     Need a custom ticket? Pick <span className="font-medium text-white">Add Standard Ticket</span>, name it (e.g., <span className="font-medium text-white">Silver</span>) and set any price. You can add multiple categories.
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-4">
                     {/* VIP Guest List Card */}
                     <Card 
-                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#D60024]/50`}
+                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#ef4444]/60`}
                       onClick={() => openTicketModal("vip-guest")}
                     >
                       <CardContent className="p-4 space-y-3">
@@ -3351,7 +3617,7 @@ const CreateEvent = () => {
 
                     {/* Standard Ticket Card */}
                     <Card 
-                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#D60024]/50`}
+                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#ef4444]/60`}
                       onClick={() => openTicketModal("standard")}
                     >
                       <CardContent className="p-4 space-y-3">
@@ -3369,7 +3635,7 @@ const CreateEvent = () => {
 
                     {/* Table Ticket Card */}
                     <Card 
-                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#D60024]/50`}
+                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#ef4444]/60`}
                       onClick={() => openTicketModal("table")}
                     >
                       <CardContent className="p-4 space-y-3">
@@ -3387,7 +3653,7 @@ const CreateEvent = () => {
 
                     {/* Group Pass Card */}
                     <Card 
-                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#D60024]/50`}
+                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#ef4444]/60`}
                       onClick={() => openTicketModal("group-pass")}
                     >
                       <CardContent className="p-4 space-y-3">
@@ -3410,7 +3676,7 @@ const CreateEvent = () => {
                       <h5 className="font-semibold">Added Tickets ({savedTickets.length})</h5>
                       <div className="grid gap-3">
                         {savedTickets.map((ticket, index) => (
-                          <Card key={index} className="border border-gray-800 bg-[#0a0a0a]/80">
+                          <Card key={index} className={`${cardBase}`}>
                             <CardContent className="p-4">
                               <div className="flex justify-between items-start">
                                 <div>
@@ -3457,7 +3723,7 @@ const CreateEvent = () => {
               {/* Step 4: Venue & Location */}
               {currentStep === 4 && (
                 <div className="space-y-6">
-                  <div className="rounded-xl border border-gray-800 bg-[#0a0a0a]/80 p-4">
+                  <div className="rounded-2xl border border-[#1f1f1f] bg-[#0f0f0f] p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
                         <p className="text-xs uppercase tracking-[0.12em] text-white/60">Venue</p>
@@ -3477,7 +3743,7 @@ const CreateEvent = () => {
                           placeholder="e.g., Red Fort Delhi"
                           value={venueName}
                           onChange={(e) => setVenueName(e.target.value)}
-                          className={`${fieldClass} h-11`}
+                          className={fieldClass}
                         />
                       </div>
                       <div className="space-y-2">
@@ -3487,7 +3753,7 @@ const CreateEvent = () => {
                           placeholder="Enter city"
                           value={city}
                           onChange={(e) => setCity(e.target.value)}
-                          className={`${fieldClass} h-11`}
+                          className={fieldClass}
                         />
                       </div>
                     </div>
@@ -3500,7 +3766,7 @@ const CreateEvent = () => {
                           placeholder="Enter state"
                           value={state}
                           onChange={(e) => setState(e.target.value)}
-                          className={`${fieldClass} h-11`}
+                          className={fieldClass}
                         />
                       </div>
                       <div className="space-y-2">
@@ -3510,7 +3776,7 @@ const CreateEvent = () => {
                           placeholder="Enter country"
                           value={country}
                           onChange={(e) => setCountry(e.target.value)}
-                          className={`${fieldClass} h-11`}
+                          className={fieldClass}
                         />
                       </div>
                     </div>
@@ -3523,7 +3789,7 @@ const CreateEvent = () => {
                           placeholder="e.g., 110025"
                           value={postalCode}
                           onChange={(e) => setPostalCode(e.target.value)}
-                          className={`${fieldClass} h-11`}
+                          className={fieldClass}
                         />
                       </div>
                       <div className="space-y-2">
@@ -3534,7 +3800,7 @@ const CreateEvent = () => {
                           placeholder="Enter contact number"
                           value={venueContact}
                           onChange={(e) => setVenueContact(e.target.value)}
-                          className={`${fieldClass} h-11`}
+                          className={fieldClass}
                         />
                       </div>
                     </div>
@@ -3548,7 +3814,7 @@ const CreateEvent = () => {
                           placeholder="Enter email"
                           value={venueEmail}
                           onChange={(e) => setVenueEmail(e.target.value)}
-                          className={`${fieldClass} h-11`}
+                          className={fieldClass}
                         />
                       </div>
                       <div className="space-y-2">
@@ -3559,7 +3825,7 @@ const CreateEvent = () => {
                           value={fullAddress}
                           onChange={(e) => setFullAddress(e.target.value)}
                           rows={3}
-                          className={`${fieldClass} min-h-[44px]`}
+                          className={`${fieldClass} min-h-[120px] py-3`}
                         />
                         <p className="text-xs text-white/60">Provide extra directions if needed. This won’t block submission.</p>
                       </div>
@@ -3577,6 +3843,7 @@ const CreateEvent = () => {
                       type="button"
                       variant="outline"
                       size="sm"
+                      className="h-10 rounded-lg border-[#2a2a2a] bg-[#0f0f0f] px-4 text-white hover:border-[#ef4444]/60 hover:bg-[#151515]"
                       onClick={() => setArtists([...artists, { name: "", photo: "", image: "", instagram: "", spotify: "", gender: "PREFER_NOT_TO_SAY" }])}
                     >
                       <Plus className="w-4 h-4 mr-2" />
@@ -3585,7 +3852,7 @@ const CreateEvent = () => {
                   </div>
 
                   {artists.map((artist, index) => (
-                    <Card key={index} className="p-3 border border-gray-800">
+                    <Card key={index} className={`${cardBase} p-5`}>
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <p className="text-sm text-muted-foreground">Artist {index + 1}</p>
@@ -3603,13 +3870,14 @@ const CreateEvent = () => {
                         )}
                       </div>
 
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label htmlFor={`artist-name-${index}`}>Artist Name *</Label>
+                      <div className="grid gap-5 md:grid-cols-2">
+                        <div className="space-y-2.5">
+                          <Label htmlFor={`artist-name-${index}`} className="text-[13px] font-medium text-[#d4d4d4]">Artist Name *</Label>
                           <Input
                             id={`artist-name-${index}`}
                             placeholder="e.g., John Doe"
                             value={artist.name}
+                            className={fieldClass}
                             onChange={(e) => {
                               const newArtists = [...artists];
                               newArtists[index].name = e.target.value;
@@ -3618,8 +3886,8 @@ const CreateEvent = () => {
                           />
                         </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor={`artist-gender-${index}`}>Gender</Label>
+                        <div className="space-y-2.5">
+                          <Label htmlFor={`artist-gender-${index}`} className="text-[13px] font-medium text-[#d4d4d4]">Gender</Label>
                           <Select 
                             value={artist.gender || "PREFER_NOT_TO_SAY"} 
                             onValueChange={(value) => {
@@ -3628,10 +3896,10 @@ const CreateEvent = () => {
                               setArtists(newArtists);
                             }}
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className={fieldClass}>
                               <SelectValue placeholder="Select gender" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className={selectMenuClass}>
                               <SelectItem value="MALE">Male</SelectItem>
                               <SelectItem value="FEMALE">Female</SelectItem>
                               <SelectItem value="OTHER">Other</SelectItem>
@@ -3640,19 +3908,26 @@ const CreateEvent = () => {
                         </div>
                       </div>
 
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label htmlFor={`artist-photo-${index}`}>Artist Photo *</Label>
-                          <div className="space-y-2">
-                            <Input
+                      <div className="grid gap-5 md:grid-cols-2">
+                        <div className="space-y-2.5">
+                          <Label htmlFor={`artist-photo-${index}`} className="text-[13px] font-medium text-[#d4d4d4]">Artist Photo *</Label>
+                          <div className="space-y-3">
+                            <div className="relative rounded-xl border border-dashed border-[#333333] bg-[#0e0e0e] px-4 py-5 text-center transition-all duration-200 hover:border-[#ef4444]/60">
+                            <input
                               id={`artist-photo-${index}`}
                               type="file"
                               accept="image/*"
                               onChange={(e) => handleArtistPhotoChange(index, e)}
-                              className="cursor-pointer"
+                              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                             />
+                              <div className="pointer-events-none flex flex-col items-center gap-2">
+                                <Upload className="h-4 w-4 text-gray-400" />
+                                <p className="text-sm text-gray-300">Upload artist photo</p>
+                                <p className="text-xs text-gray-500">JPG/PNG/WebP</p>
+                              </div>
+                            </div>
                             {artist.photo && (
-                              <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-border">
+                              <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-[#262626]">
                                 <img 
                                   src={artist.photo} 
                                   alt={`${artist.name} preview`} 
@@ -3674,12 +3949,13 @@ const CreateEvent = () => {
                           </div>
                         </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor={`artist-instagram-${index}`}>Instagram *</Label>
+                        <div className="space-y-2.5">
+                          <Label htmlFor={`artist-instagram-${index}`} className="text-[13px] font-medium text-[#d4d4d4]">Instagram *</Label>
                           <Input
                             id={`artist-instagram-${index}`}
                             placeholder="@artist_handle"
                             value={artist.instagram}
+                            className={fieldClass}
                             onChange={(e) => {
                               const newArtists = [...artists];
                               newArtists[index].instagram = e.target.value;
@@ -3690,12 +3966,13 @@ const CreateEvent = () => {
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor={`artist-spotify-${index}`}>Spotify (Optional)</Label>
+                      <div className="space-y-2.5">
+                        <Label htmlFor={`artist-spotify-${index}`} className="text-[13px] font-medium text-[#d4d4d4]">Spotify (Optional)</Label>
                         <Input
                           id={`artist-spotify-${index}`}
                           placeholder="https://open.spotify.com/artist/..."
                           value={artist.spotify}
+                          className={fieldClass}
                           onChange={(e) => {
                             const newArtists = [...artists];
                             newArtists[index].spotify = e.target.value;
@@ -3736,7 +4013,7 @@ const CreateEvent = () => {
 
                 return (
                   <div className="space-y-5">
-                    <Card className="border border-gray-800 bg-[#0a0a0a]/80">
+                    <Card className={`${cardBase}`}>
                       <CardHeader className="pb-2">
                         <p className="text-xs uppercase tracking-[0.2em] text-white/50">Step 7</p>
                         <CardTitle className="text-xl text-white">Additional Info</CardTitle>
@@ -3786,7 +4063,7 @@ const CreateEvent = () => {
                               <Button
                                 type="button"
                                 variant="outline"
-                                className="border-gray-700 bg-[#0a0a0a] text-white hover:border-[#D60024]/50"
+                                className="h-10 rounded-lg border-[#2a2a2a] bg-[#0f0f0f] text-white hover:border-[#ef4444]/60 hover:bg-[#151515]"
                                 onClick={() => setAdvisoryDialogOpen(true)}
                               >
                                 {hasSelections ? `${selectedBuiltIns.length + customAdvisories.length} selected` : "Open advisory picker"}
@@ -3837,12 +4114,12 @@ const CreateEvent = () => {
                                         placeholder="e.g., No re-entry after 10 PM"
                                         value={newCustomAdvisory}
                                         onChange={(e) => setNewCustomAdvisory(e.target.value)}
-                                        className="bg-[#0a0a0a] border-gray-700 text-white placeholder:text-gray-500"
+                                        className={fieldClass}
                                       />
                                       <Button
                                         type="button"
                                         variant="outline"
-                                        className="border-gray-700 bg-[#0a0a0a] text-white hover:border-[#D60024]/50"
+                                        className="h-12 w-12 rounded-[10px] border-[#2a2a2a] bg-[#0f0f0f] text-white hover:border-[#ef4444]/60 hover:bg-[#151515]"
                                         onClick={() => setShowEmojiPicker((prev) => !prev)}
                                       >
                                         <Smile className="w-4 h-4" />
@@ -3969,7 +4246,7 @@ const CreateEvent = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="border-gray-600 text-white bg-gray-800 hover:bg-gray-700"
+                              className="h-10 rounded-lg border-[#2a2a2a] text-white bg-[#0f0f0f] hover:bg-[#151515] hover:border-[#ef4444]/60"
                               onClick={() => {
                                 if (newQuestion.trim()) {
                                   setCustomQuestions([...customQuestions, { question: newQuestion, answer: newAnswer }]);
@@ -3991,14 +4268,14 @@ const CreateEvent = () => {
                               placeholder="Question (e.g., Dietary requirements?)"
                               value={newQuestion}
                               onChange={(e) => setNewQuestion(e.target.value)}
-                              className="bg-[#0a0a0a] border-gray-700 text-white placeholder:text-gray-500"
+                              className={fieldClass}
                             />
                             <Textarea
                               placeholder="Answer (optional - organizer can provide default answer)"
                               value={newAnswer}
                               onChange={(e) => setNewAnswer(e.target.value)}
                               rows={2}
-                              className="bg-[#0a0a0a] border-gray-700 text-white placeholder:text-gray-500"
+                              className={`${fieldClass} min-h-[120px] py-3`}
                             />
                           </div>
 
@@ -4041,7 +4318,7 @@ const CreateEvent = () => {
                             rows={3}
                             value={organizerNote}
                             onChange={(e) => setOrganizerNote(e.target.value)}
-                            className="bg-[#0a0a0a] border-gray-700 text-white placeholder:text-gray-500"
+                            className={`${fieldClass} min-h-[120px] py-3`}
                           />
                         </div>
                       </CardContent>
@@ -4141,7 +4418,7 @@ const CreateEvent = () => {
                               variant={isActive ? "accent" : "outline"}
                               className={`px-4 ${isActive ? "bg-gray-700 text-white" : "border-gray-600 text-white hover:bg-gray-800"}`}
                               onClick={() => setPublishState(state)}
-                              disabled={isSubmitting}
+                              disabled={isSectionBusy}
                             >
                               {state === "DRAFT" ? "Save as Draft" : "Publish"}
                             </Button>
@@ -4310,44 +4587,58 @@ const CreateEvent = () => {
                 );
               })()}
             </CardContent>
+
+            <div className="sticky bottom-4 z-20 mt-8 border-t border-[#1f1f1f] bg-[#0c0c0c]/95 backdrop-blur px-8 py-5">
+              <div className="flex items-center justify-between gap-3">
+                <Button
+                  variant="outline"
+                  onClick={prevStep}
+                  disabled={currentStep === 1 || isSectionBusy}
+                  className="h-11 rounded-[10px] border-[#2a2a2a] bg-transparent px-5 text-white hover:bg-[#151515]"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Previous
+                </Button>
+
+                <div className="flex items-center gap-3">
+                  {isEditMode && currentStep < 8 && (
+                    <Button
+                      variant="outline"
+                      onClick={saveCurrentSection}
+                      disabled={isSectionBusy}
+                      className="h-11 rounded-[10px] border-[#2a2a2a] bg-transparent px-5 text-white hover:bg-[#151515]"
+                    >
+                      {isSectionBusy ? "Saving..." : "Save Section"}
+                    </Button>
+                  )}
+
+                  {currentStep < 8 ? (
+                    <Button
+                      onClick={() => nextStep()}
+                      disabled={isSectionBusy}
+                      className="h-11 rounded-[10px] bg-[#ef4444] px-5 font-medium text-white hover:bg-[#dc2626]"
+                    >
+                      {isSectionBusy ? "Saving..." : "Next"}
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="accent"
+                      onClick={() => handleSubmit(publishState)}
+                      disabled={isSectionBusy}
+                      className="h-11 rounded-[10px] bg-[#ef4444] px-5 font-medium text-white hover:bg-[#dc2626]"
+                    >
+                      {isSectionBusy
+                        ? "Updating..."
+                        : publishState === "PUBLISHED"
+                          ? (isEditMode ? "Update & Publish" : "Publish Event")
+                          : (isEditMode ? "Update as Draft" : "Save as Draft")}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
           </Card>
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-between mt-6">
-            <Button
-              variant="outline"
-              onClick={prevStep}
-              disabled={currentStep === 1}
-              className="border-gray-700 text-white hover:bg-[#0a0a0a]"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Previous
-            </Button>
-
-            {currentStep < 8 ? (
-              <Button
-                onClick={nextStep}
-                disabled={isSubmitting}
-                className="bg-[#D60024] text-white hover:bg-[#ff1a3c]"
-              >
-                {isSubmitting ? "Saving..." : "Next"}
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            ) : (
-              <Button 
-                variant="accent" 
-                onClick={() => handleSubmit(publishState)}
-                disabled={isSubmitting}
-                className="bg-[#D60024] text-white hover:bg-[#ff1a3c]"
-              >
-                {isSubmitting
-                  ? "Updating..."
-                  : publishState === "PUBLISHED"
-                    ? (isEditMode ? "Update & Publish" : "Publish Event")
-                    : (isEditMode ? "Update as Draft" : "Save as Draft")}
-              </Button>
-            )}
-          </div>
         </div>
       </main>
 

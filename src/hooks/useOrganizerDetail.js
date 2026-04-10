@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
-  fetchOrganizerById,
   fetchOrganizerStats,
   fetchOrganizerEventsAdmin,
   fetchOrganizerReviews,
 } from "@/services/organizerService";
+import { fetchAdminOrganizerDetail } from "@/services/adminService";
 
 export function useOrganizerDetail(organizerId) {
   const [profile, setProfile] = useState(null);
@@ -25,8 +25,26 @@ export function useOrganizerDetail(organizerId) {
     events: null,
     reviews: null,
   });
+  const [reloadToken, setReloadToken] = useState(0);
 
   const mountedRef = useRef(true);
+
+  const refresh = useCallback(() => {
+    if (!organizerId) return;
+    setLoading({
+      profile: true,
+      stats: true,
+      events: true,
+      reviews: true,
+    });
+    setErrors({
+      profile: null,
+      stats: null,
+      events: null,
+      reviews: null,
+    });
+    setReloadToken((value) => value + 1);
+  }, [organizerId]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -55,7 +73,7 @@ export function useOrganizerDetail(organizerId) {
     };
 
     // Fetch all 4 APIs in parallel
-    fetchOrganizerById(organizerId)
+    fetchAdminOrganizerDetail(organizerId)
       .then((data) => set("profile", data))
       .catch((err) => setErrorKey("profile", err.message))
       .finally(() => setLoadingKey("profile", false));
@@ -78,7 +96,7 @@ export function useOrganizerDetail(organizerId) {
     return () => {
       mountedRef.current = false;
     };
-  }, [organizerId]);
+  }, [organizerId, reloadToken]);
 
-  return { profile, stats, events, reviews, loading, errors };
+  return { profile, stats, events, reviews, loading, errors, refresh };
 }

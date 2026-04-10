@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+﻿import { useState, useEffect, useMemo, useCallback } from "react";
 import { Ticket, Calendar, MapPin, Loader2, AlertCircle, Receipt, CreditCard, User, Download, Hash, Clock, CheckCircle2, XCircle, Search, Filter, ChevronRight, Star, TrendingUp, Mail, Eye, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,14 +15,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import VintageTicket from "@/components/VintageTicket";
-import { apiFetch } from "@/config/api";
+import { apiFetch, buildUrl } from "@/config/api";
 import { toast } from "sonner";
 import { jsPDF } from "jspdf";
 import QRCode from "qrcode";
 import StarRating from "@/components/StarRating";
 import { buildCanonicalQrPayload } from "@/utils/qrPayload";
 
-const MyBookings = () => {
+const MyBookings = ({
+  browseEventsPath = "/dashboard/browse-events",
+  showSummarySections = true,
+}) => {
   const feedbackSuggestions = [
     "Loved every minute of the performances!",
     "Great crowd energy and smooth entry experience.",
@@ -44,12 +47,17 @@ const MyBookings = () => {
   const [ticketsLoading, setTicketsLoading] = useState(false);
   const [selectedBookingTickets, setSelectedBookingTickets] = useState([]);
   const [selectedBookingForTickets, setSelectedBookingForTickets] = useState(null);
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState(null);
   const [bookingAnalytics, setBookingAnalytics] = useState({
     totalBookings: 0,
     upcomingBookings: 0,
     totalSpent: 0,
   });
   const [bookingAnalyticsLoaded, setBookingAnalyticsLoaded] = useState(false);
+
+  const getBookingDisplayId = useCallback((booking) => {
+    return booking?.publicId || booking?.id || "N/A";
+  }, []);
 
   const fetchBookings = useCallback(async () => {
     try {
@@ -63,7 +71,7 @@ const MyBookings = () => {
           const endDate = evt.endDate || null;
           const statusNormalized = (item.status || "").toLowerCase();
           const paymentStatus = (item.payment?.status || "").toLowerCase();
-          const location = evt.venue ? [evt.venue.city, evt.venue.state].filter(Boolean).join(", ") : "Venue TBA";
+          const location = evt.venue ? [evt.venue.city, evt.venue.state].filter(Boolean).join(", ") : null;
           const formatTime = (date) => {
             if (!date) return "Time TBA";
             const d = new Date(date);
@@ -71,16 +79,28 @@ const MyBookings = () => {
             return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
           };
           return {
-            id: item.id, orderId: item.payment?.transactionId || item.id, bookingDate: item.createdAt || evt.createdAt,
-            status: statusNormalized, paymentStatus, eventId: evt.id, eventTitle: evt.title || "Event",
-            eventDate: startDate || endDate, eventEndDate: endDate, eventTime: formatTime(startDate),
-            image: evt.flyerImage || evt.image || "https://via.placeholder.com/600x400?text=Event",
-            category: evt.category || evt.subCategory || "Event", location,
-            ticketType: "Ticket", quantity: 1,
+            id: item.id,
+            publicId: item.publicId || item.id,
+            paymentTransactionId: item.payment?.transactionId || null,
+            bookingDate: item.createdAt || evt.createdAt,
+            status: statusNormalized,
+            paymentStatus,
+            eventId: evt.id,
+            eventTitle: evt.title || "Event",
+            eventDate: startDate || endDate,
+            eventEndDate: endDate,
+            eventTime: formatTime(startDate),
+            image: evt.flyerImage || evt.image || null,
+            category: evt.category || evt.subCategory || null,
+            location,
             totalPrice: Number(item.totalAmount) || 0,
-            payment: item.payment, review: item.review || null,
-            status1: evt.status1, status2: evt.status2, eventStatus: evt.eventStatus,
-            venue: evt.venue, organizer: evt.organizer,
+            payment: item.payment,
+            review: item.review || null,
+            status1: evt.status1,
+            status2: evt.status2,
+            eventStatus: evt.eventStatus,
+            venue: evt.venue,
+            organizer: evt.organizer,
           };
         });
         setBookings(normalized);
@@ -111,8 +131,10 @@ const MyBookings = () => {
 
   useEffect(() => {
     fetchBookings();
-    fetchBookingsAnalytics();
-  }, [fetchBookings, fetchBookingsAnalytics]);
+    if (showSummarySections) {
+      fetchBookingsAnalytics();
+    }
+  }, [fetchBookings, fetchBookingsAnalytics, showSummarySections]);
 
   const fetchBookingTickets = useCallback(async (booking) => {
     setTicketsLoading(true);
@@ -124,55 +146,20 @@ const MyBookings = () => {
         const bookingTickets = response.data.items.filter(t => t.bookingId === booking.id);
         setSelectedBookingTickets(bookingTickets);
       } else {
-        setSelectedBookingTickets([{
-          id: `${booking.id}-fallback`,
-          bookingId: booking.id,
-          bookingStatus: booking.status?.toUpperCase(),
-          bookingDate: booking.bookingDate,
-          ticketName: "Ticket",
-          ticketType: "STANDARD_TICKET",
-          ticketPrice: booking.totalPrice || 0,
-          quantity: 1,
-          qrCode: null,
-          manualCheckInCode: null,
-          checkedIn: false,
-          eventId: booking.eventId,
-          eventTitle: booking.eventTitle,
-          eventImage: booking.image,
-          eventStartDate: booking.eventDate,
-          eventEndDate: booking.eventEndDate,
-          eventStatus: booking.eventStatus,
-          eventCategory: booking.category,
-          venueName: booking.venue?.name || null,
-          venueCity: booking.venue?.city || null,
-          venueState: booking.venue?.state || null,
-          organizerName: booking.organizer?.name || null,
-        }]);
+        setSelectedBookingTickets([]);
       }
     } catch (err) {
       console.error("Failed to fetch tickets", err);
       toast.error("Failed to load tickets");
-      setSelectedBookingTickets([{
-        id: `${booking.id}-fallback`,
-        bookingId: booking.id,
-        bookingStatus: booking.status?.toUpperCase(),
-        ticketName: "Ticket",
-        ticketType: "STANDARD_TICKET",
-        ticketPrice: booking.totalPrice || 0,
-        quantity: 1,
-        eventId: booking.eventId,
-        eventTitle: booking.eventTitle,
-        eventStartDate: booking.eventDate,
-        eventEndDate: booking.eventEndDate,
-        eventCategory: booking.category,
-        venueName: null,
-        venueCity: booking.location?.split(", ")[0] || null,
-        organizerName: null,
-      }]);
+      setSelectedBookingTickets([]);
     } finally { setTicketsLoading(false); }
   }, []);
 
   const closeTicketsModal = () => { setTicketsModalOpen(false); setSelectedBookingTickets([]); setSelectedBookingForTickets(null); };
+
+  const canDownloadInvoice = useCallback((booking) => {
+    return booking?.status === "confirmed" && booking?.paymentStatus === "success";
+  }, []);
 
   const formatDate = (dateString) => {
     if (!dateString) return "Date TBA";
@@ -210,7 +197,7 @@ const MyBookings = () => {
       doc.text(`Date: ${ticket.eventStartDate ? new Date(ticket.eventStartDate).toLocaleDateString() : 'TBA'}`, 20, 100);
       const venue = [ticket.venueName, ticket.venueCity].filter(Boolean).join(', ') || 'TBA';
       doc.text(`Venue: ${venue}`, 20, 110);
-      if (ticket.ticketPrice) doc.text(`Price: ₹${ticket.ticketPrice.toLocaleString()}`, 20, 120);
+      if (ticket.ticketPrice) doc.text(`Price: â‚¹${ticket.ticketPrice.toLocaleString()}`, 20, 120);
       if (ticket.qrCode) {
         const qrData = buildCanonicalQrPayload(ticket.qrCode);
         if (qrData) {
@@ -234,16 +221,63 @@ const MyBookings = () => {
     }
   };
 
+  const handleDownloadInvoice = useCallback(async (booking) => {
+    if (!booking?.id) return;
+
+    if (!canDownloadInvoice(booking)) {
+      toast.error("Invoice is available after payment confirmation.");
+      return;
+    }
+
+    setDownloadingInvoiceId(booking.id);
+    try {
+      const url = buildUrl(`booking/${booking.id}/invoice`);
+      const response = await fetch(url, {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        let message = "Failed to download invoice";
+        try {
+          const errorData = await response.json();
+          message = errorData?.errorMessage || errorData?.message || message;
+        } catch (_error) {
+          // Ignore parse failures and use the fallback message.
+        }
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+      const contentDisposition = response.headers.get("content-disposition") || "";
+      const fileNameMatch = /filename="?([^"]+)"?/i.exec(contentDisposition);
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = downloadUrl;
+      anchor.download = fileNameMatch?.[1] || `invoice-${booking.publicId || booking.id}.pdf`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+      toast.success("Invoice download started");
+    } catch (err) {
+      console.error("Failed to download invoice", err);
+      toast.error(err?.message || "Failed to download invoice");
+    } finally {
+      setDownloadingInvoiceId(null);
+    }
+  }, [canDownloadInvoice]);
+
   const handleResendTicket = (booking) => {
     toast.success(`Ticket for ${booking.eventTitle} has been sent to your email!`);
   };
 
   const filteredBookings = useMemo(() => {
     return bookings.filter(booking => {
+      const query = searchQuery.toLowerCase();
       const matchesSearch =
-        (booking.eventTitle || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (booking.location || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (booking.venue?.name || "").toLowerCase().includes(searchQuery.toLowerCase());
+        (booking.eventTitle || "").toLowerCase().includes(query) ||
+        (booking.publicId || "").toLowerCase().includes(query) ||
+        (booking.paymentTransactionId || "").toLowerCase().includes(query);
       const matchesFilter = filterStatus === 'all' || booking.status === filterStatus;
       return matchesSearch && matchesFilter;
     });
@@ -318,7 +352,13 @@ const MyBookings = () => {
   const hasBookings = bookings.length > 0;
   const hasFilteredBookings = filteredBookings.length > 0;
   const showEmptyState = !loading && !hasBookings;
-  const upcomingBookings = filteredBookings.filter(b => b?.eventDate && new Date(b.eventDate) > new Date());
+  const upcomingBookings = useMemo(() => {
+    if (!showSummarySections) {
+      return [];
+    }
+
+    return filteredBookings.filter((booking) => booking?.eventDate && new Date(booking.eventDate) > new Date());
+  }, [filteredBookings, showSummarySections]);
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 text-white space-y-6">
@@ -329,11 +369,11 @@ const MyBookings = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
+      {showSummarySections && <div className="grid grid-cols-3 gap-3">
         {[
           { label: "Total Bookings", value: stats.total, icon: Receipt, color: "#D60024" },
           { label: "Upcoming", value: stats.upcoming, icon: Calendar, color: "#60a5fa" },
-          { label: "Total Spent", value: `₹${stats.totalSpent.toLocaleString()}`, icon: CreditCard, color: "#22c55e" },
+          { label: "Total Spent", value: `â‚¹${stats.totalSpent.toLocaleString()}`, icon: CreditCard, color: "#22c55e" },
         ].map((stat) => {
           const Icon = stat.icon;
           return (
@@ -348,38 +388,39 @@ const MyBookings = () => {
             </div>
           );
         })}
+      </div>}
+
+      {/* Search & Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+          <Input
+            type="search"
+            placeholder="Search by event name or booking ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-4 h-10 bg-white/[0.05] border-white/[0.08] text-white text-sm placeholder:text-white/30 rounded-lg focus:ring-1 focus:ring-[#D60024]/50"
+          />
+        </div>
+        <div className="flex gap-2">
+          {["all", "confirmed"].map((status) => (
+            <Button
+              key={status}
+              onClick={() => setFilterStatus(status)}
+              className={`text-xs h-10 px-4 ${
+                filterStatus === status
+                  ? "bg-[#D60024] text-white hover:bg-[#b8001f]"
+                  : "bg-white/[0.05] text-white/60 hover:bg-white/[0.08] border border-white/[0.06]"
+              }`}
+            >
+              {status === "all" ? "All" : "Confirmed"}
+            </Button>
+          ))}
+        </div>
       </div>
 
-        {/* Search and Filter */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#C99774]" />
-            <Input
-              type="search"
-              placeholder="Search by event name or venue..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-[rgba(255,255,255,0.08)] border border-[#772256]/30 text-white placeholder:text-[rgba(255,255,255,0.6)] focus:ring-2 focus:ring-[#772256] focus:border-[#772256] rounded-lg"
-            />
-          </div>
-          <div className="flex gap-2">
-            {["all", "confirmed"].map((status) => (
-              <Button
-                key={status}
-                onClick={() => setFilterStatus(status)}
-                className={`text-xs h-10 px-4 ${
-                  filterStatus === status
-                    ? "bg-[#D60024] text-white hover:bg-[#b8001f]"
-                    : "bg-white/[0.05] text-white/60 hover:bg-white/[0.08] border border-white/[0.06]"
-                }`}
-              >
-                {status === "all" ? "All" : "Confirmed"}
-              </Button>
-            ))}
-          </div>
-        </div>
       {/* Upcoming Events Section */}
-      {upcomingBookings.length > 0 && (
+      {showSummarySections && upcomingBookings.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-white">Upcoming Events</h2>
@@ -393,9 +434,17 @@ const MyBookings = () => {
                 onClick={() => fetchBookingTickets(booking)}
               >
                 <div className="relative h-36 overflow-hidden">
-                  <img src={booking.image} alt={booking.eventTitle} className="w-full h-full object-cover" />
+                  {booking.image ? (
+                    <img src={booking.image} alt={booking.eventTitle} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-[#1b1b2d] via-[#141422] to-[#0e0e18] flex items-center justify-center px-4 text-center text-sm font-semibold text-white/60">
+                      {booking.eventTitle}
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                  <Badge className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm text-white text-[10px] border-0">{booking.category}</Badge>
+                  {booking.category && (
+                    <Badge className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm text-white text-[10px] border-0">{booking.category}</Badge>
+                  )}
                   <div className="absolute bottom-3 left-3 right-3">
                     <h3 className="text-white font-semibold text-sm line-clamp-1">{booking.eventTitle}</h3>
                   </div>
@@ -410,12 +459,12 @@ const MyBookings = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                      <span className="line-clamp-1">{booking.location}</span>
+                      <span className="line-clamp-1">{booking.location || "Venue TBA"}</span>
                     </div>
                   </div>
                   <div className="flex items-center justify-between pt-2.5 border-t border-white/[0.06]">
-                    <span className="text-xs text-white/40">{booking.quantity} {booking.quantity > 1 ? "tickets" : "ticket"}</span>
-                    <span className="text-sm font-bold text-[#D60024]">₹{booking.totalPrice.toLocaleString()}</span>
+                    <span className="text-xs font-mono text-white/40">{getBookingDisplayId(booking)}</span>
+                    <span className="text-sm font-bold text-[#D60024]">â‚¹{booking.totalPrice.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -438,98 +487,119 @@ const MyBookings = () => {
             <Ticket className="w-10 h-10 text-white/15 mx-auto mb-3" />
             <h3 className="text-sm font-semibold text-white mb-1">No bookings yet</h3>
             <p className="text-xs text-white/40 mb-4">Start exploring and book your first event.</p>
-            <Link to="/dashboard/browse-events">
+            <Link to={browseEventsPath}>
               <Button className="bg-[#D60024] hover:bg-[#b8001f] text-white text-sm h-9 px-4">
                 Browse Events <ChevronRight className="ml-1 h-3.5 w-3.5" />
               </Button>
             </Link>
           </div>
-      ) : !hasFilteredBookings ? (
-        <Card className="border-2 border-[#772256]/20 bg-gradient-to-br from-[rgba(255,255,255,0.08)] to-[#48285D]/10 rounded-xl">
-          <CardContent className="p-12 text-center">
-            <Search className="w-16 h-16 text-[rgba(255,255,255,0.4)] mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2 text-white">No matching bookings</h3>
-            <p className="text-[rgba(255,255,255,0.65)]">
-              Try adjusting your search or filters.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredBookings.map((booking) => (
-            <Card
-              key={booking.id}
-              className="border-2 border-[#772256]/20 bg-gradient-to-br from-[rgba(255,255,255,0.08)] via-[#48285D]/05 to-[#772256]/05 rounded-xl hover:border-[#772256]/40 hover:shadow-[0_20px_50px_-20px_rgba(119,34,86,0.3)] transition-all duration-300 overflow-hidden"
-            >
-              <div className="relative h-44 overflow-hidden">
-                <img
-                  src={booking.image}
-                  alt={booking.eventTitle}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                <Badge
-                  className={`${booking.status === 'confirmed'
-                    ? 'bg-[#772256]/80 text-[#C99774] border border-[#772256]/50'
-                    : 'bg-amber-500/30 text-amber-100 border border-amber-500/50'
-                    } absolute top-3 right-3 text-xs px-2 py-0.5`}
-                >
-                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                  {booking.status === 'confirmed' ? 'Confirmed' : 'Pending'}
-                </Badge>
+        ) : !hasFilteredBookings ? (
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-12 text-center">
+            <Search className="w-10 h-10 text-white/15 mx-auto mb-3" />
+            <h3 className="text-sm font-semibold text-white mb-1">No matching bookings</h3>
+            <p className="text-xs text-white/40">Try adjusting your search or filters.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filteredBookings.map((booking) => (
+              <div key={booking.id} className="rounded-xl border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.04] hover:border-white/[0.1] transition-all overflow-hidden">
+                {/* Header bar */}
+                <div className="px-4 py-2.5 border-b border-white/[0.04] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div className="flex items-center gap-2 text-xs text-white/40">
+                    <span className="font-mono text-white/70">{getBookingDisplayId(booking)}</span>
+                    <span className="text-white/15">|</span>
+                    <span>{formatBookingDate(booking.bookingDate)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className={`text-[10px] px-2 py-0.5 border ${
+                      booking.status === 'confirmed'
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                    }`}>
+                      {booking.status === 'confirmed' ? 'Confirmed' : 'Pending'}
+                    </Badge>
+                    <Badge className={`text-[10px] px-2 py-0.5 border ${
+                      booking.paymentStatus === 'success'
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                    }`}>
+                      {booking.paymentStatus ? booking.paymentStatus.charAt(0).toUpperCase() + booking.paymentStatus.slice(1) : 'Payment'}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Body */}
+                <div className="p-4">
+                  <div className="flex flex-col lg:flex-row gap-4">
+                    {/* Event info */}
+                    <div className="flex gap-3 flex-1 min-w-0">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0 border border-white/[0.06]">
+                        {booking.image ? (
+                          <img src={booking.image} alt={booking.eventTitle} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-[#1b1b2d] via-[#141422] to-[#0e0e18] flex items-center justify-center px-2 text-center text-[10px] font-semibold text-white/60">
+                            {booking.eventTitle}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        {booking.category && (
+                          <Badge className="bg-white/[0.06] text-white/50 border-0 text-[10px] mb-1.5">{booking.category}</Badge>
+                        )}
+                        <h3 className="text-sm font-semibold text-white line-clamp-1 mb-1.5">{booking.eventTitle}</h3>
+                        <div className="space-y-1 text-xs text-white/40">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-3 w-3 flex-shrink-0" />
+                            <span>{formatDate(booking.eventDate)}</span>
+                            <span className="text-white/15">|</span>
+                            <span>{booking.eventTime}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-3 w-3 flex-shrink-0" />
+                            <span className="line-clamp-1">{booking.location || "Venue TBA"}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Amount summary */}
+                    <div className="px-4 py-3 rounded-lg bg-white/[0.03] border border-white/[0.04] flex-shrink-0 min-w-[110px]">
+                      <p className="text-[10px] text-white/30 mb-0.5 uppercase tracking-wide">Total</p>
+                      <p className="text-sm font-bold text-[#D60024]">Rs {booking.totalPrice.toLocaleString()}</p>
+                      {booking.payment?.paymentMethod && (
+                        <p className="text-[10px] text-white/40 mt-1 uppercase tracking-wide">{booking.payment.paymentMethod}</p>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex lg:flex-col gap-2 flex-shrink-0">
+                      <Button size="sm" className="flex-1 lg:flex-none h-8 bg-[#D60024] hover:bg-[#b8001f] text-white text-xs font-medium px-3" onClick={() => fetchBookingTickets(booking)}>
+                        <Eye className="h-3 w-3 mr-1.5" /> View Tickets
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 lg:flex-none h-8 border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.06] text-xs px-3 disabled:opacity-50"
+                        onClick={() => handleDownloadInvoice(booking)}
+                        disabled={downloadingInvoiceId === booking.id || !canDownloadInvoice(booking)}
+                      >
+                        {downloadingInvoiceId === booking.id ? (
+                          <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
+                        ) : (
+                          <Receipt className="h-3 w-3 mr-1.5" />
+                        )}
+                        Invoice
+                      </Button>
+                      {isEventPast(booking) && (
+                        <Button size="sm" variant="ghost" className="flex-1 lg:flex-none h-8 text-white/40 hover:text-white hover:bg-white/[0.06] text-xs px-3 border border-dashed border-white/[0.08]" onClick={() => handleOpenReview(booking)}>
+                          <Star className="h-3 w-3 mr-1.5" />
+                          {booking.review ? "Edit Feedback" : "Feedback"}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-center gap-2 text-xs text-[rgba(255,255,255,0.65)]">
-                  <Calendar className="h-3.5 w-3.5 text-[#C99774] flex-shrink-0" />
-                  <span>Booked on {formatBookingDate(booking.bookingDate)}</span>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-bold text-white line-clamp-2">{booking.eventTitle}</h3>
-                  <p className="text-xs text-[rgba(255,255,255,0.6)] mt-1">{booking.category}</p>
-                </div>
-
-                <div className="space-y-2 text-sm text-[rgba(255,255,255,0.8)]">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-[#C99774] flex-shrink-0" />
-                    <span className="line-clamp-1">{formatDate(booking.eventDate)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-[#C99774] flex-shrink-0" />
-                    <span>{booking.eventTime}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-[#C99774] flex-shrink-0" />
-                    <span className="line-clamp-1">
-                      {booking.venue?.name || booking.location || "Venue TBA"}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2 pt-2">
-                  <Button
-                    size="sm"
-                    className="flex-1 min-w-[130px] bg-gradient-to-r from-[#772256] to-[#48285D] text-white font-semibold hover:shadow-[0_10px_25px_-10px_rgba(119,34,86,0.5)] transition-all text-xs px-3 py-2"
-                    onClick={() => fetchBookingTickets(booking)}
-                  >
-                    <Eye className="h-3.5 w-3.5 mr-1.5" />
-                    View Tickets
-                  </Button>
-                  {isEventPast(booking) && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="flex-1 min-w-[130px] border border-dashed border-[#C99774]/40 text-[#C99774] hover:border-[#C99774] hover:bg-[#772256]/10 text-xs px-3 py-2"
-                      onClick={() => handleOpenReview(booking)}
-                    >
-                      <Star className="h-3.5 w-3.5 mr-1.5 fill-current" />
-                      {booking.review ? "Edit Feedback" : "Leave Feedback"}
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
             ))}
           </div>
         )}
@@ -625,3 +695,4 @@ const MyBookings = () => {
 };
 
 export default MyBookings;
+

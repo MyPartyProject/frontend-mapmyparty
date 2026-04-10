@@ -91,7 +91,7 @@ const PromoterDashboardHeader = ({ isHeaderVisible = true }) => {
                             <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg p-1 transition-all duration-300 hover:scale-105 bg-gradient-to-br from-[#1a1a2e] to-[#16213e] border border-[rgba(255,255,255,0.1)]">
                                 <img src={logoSvg} alt="MMP Logo" className="w-8 h-8 object-contain opacity-90 hover:opacity-100 transition-opacity duration-300" />
                             </div>
-                            <span className="hidden sm:inline">MapMyParty</span>
+                            <span className="hidden text-sm font-semibold tracking-[0.04em] sm:inline">MapMyParty</span>
                         </Link>
 
                         {/* Navigation Items */}

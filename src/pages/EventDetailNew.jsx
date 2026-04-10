@@ -19,11 +19,23 @@ import { apiFetch, buildUrl } from "@/config/api";
 import usePublicEventDetail from "@/hooks/usePublicEventDetail";
 import { fetchSession, resetSessionCache, isAuthenticated as isAuthedSync } from "@/utils/auth";
 import BillingDetailsModal from "@/components/BillingDetailsModal";
+import logoSvg from "@/assets/MMP logo.svg";
 // import PromoterDashboardHeader from "@/components/PromoterDashboardHeader";
 
 const FALLBACK_IMAGE = "https://via.placeholder.com/1200x600?text=Event";
 const SPONSOR_PLACEHOLDER = "https://via.placeholder.com/200x200?text=Sponsor";
 const TAB_PAUSE_DURATION_MS = 2 * 60 * 1000; // 2 minutes
+const hasHtmlTag = (value) =>
+  typeof value === "string" && /<\/?[a-z][\s\S]*>/i.test(value);
+const hasEscapedHtmlTag = (value) =>
+  typeof value === "string" && /&lt;\/?[a-z][\s\S]*&gt;/i.test(value);
+const decodeHtmlEntities = (value) => {
+  if (typeof value !== "string" || !value.includes("&")) return value;
+  if (typeof document === "undefined") return value;
+  const textarea = document.createElement("textarea");
+  textarea.innerHTML = value;
+  return textarea.value;
+};
 
 const EventDetailNew = () => {
   const { organizerSlug, eventSlug } = useParams();
@@ -53,6 +65,14 @@ const EventDetailNew = () => {
   const aboutRef = useRef(null);
   const [organizerNoteExpanded, setOrganizerNoteExpanded] = useState(false);
   const [organizerNoteCanExpand, setOrganizerNoteCanExpand] = useState(true);
+  const galleryImages = useMemo(
+    () => (Array.isArray(event?.gallery) ? event.gallery.filter(Boolean) : []),
+    [event?.gallery]
+  );
+  const selectedImageIndex = useMemo(
+    () => galleryImages.findIndex((image) => image === selectedImage),
+    [galleryImages, selectedImage]
+  );
   const normalizedFaqs = useMemo(() => {
     if (Array.isArray(event?.faqs) && event.faqs.length > 0) return event.faqs;
     if (Array.isArray(event?.questions) && event.questions.length > 0) return event.questions;
@@ -63,11 +83,22 @@ const EventDetailNew = () => {
     if (Array.isArray(event?.termsAndConditions) && event.termsAndConditions.length > 0) {
       return event.termsAndConditions;
     }
-    if (event?.TC?.content) {
+    if (event?.TC?.content || event?.TC?.terms) {
       return [event.TC];
     }
     return [];
   }, [event?.termsAndConditions, event?.TC]);
+
+  const getTermHtml = (term) => {
+    if (!term) return "";
+    const decodedContent = decodeHtmlEntities(term.content || "");
+    if (decodedContent && (hasHtmlTag(decodedContent) || hasEscapedHtmlTag(term.content))) {
+      return decodedContent;
+    }
+    const decodedTerms = decodeHtmlEntities(term.terms || "");
+    if (hasHtmlTag(decodedTerms) || hasEscapedHtmlTag(term.terms)) return decodedTerms;
+    return "";
+  };
 
   const showFaqTc = useMemo(() => {
     const hasFaq = normalizedFaqs.length > 0;
@@ -143,11 +174,22 @@ const EventDetailNew = () => {
   }, [event?.about, aboutExpanded, activeTab]);
 
   const renderTermsContent = () => {
-    if (event?.termsHtml) {
+    const decodedTermsHtml = decodeHtmlEntities(event?.termsHtml || "");
+    if (decodedTermsHtml && (hasHtmlTag(decodedTermsHtml) || hasEscapedHtmlTag(event?.termsHtml))) {
       return (
         <div
           className="prose prose-invert max-w-none text-gray-400 prose-p:my-1 prose-li:my-0.5 prose-ol:list-decimal prose-ul:list-disc prose-headings:text-white text-[11px] leading-4"
-          dangerouslySetInnerHTML={{ __html: event.termsHtml }}
+          dangerouslySetInnerHTML={{ __html: decodedTermsHtml }}
+        />
+      );
+    }
+
+    const decodedTerms = decodeHtmlEntities(event?.terms || "");
+    if (hasHtmlTag(decodedTerms) || hasEscapedHtmlTag(event?.terms)) {
+      return (
+        <div
+          className="prose prose-invert max-w-none text-gray-400 prose-p:my-1 prose-li:my-0.5 prose-ol:list-decimal prose-ul:list-disc prose-headings:text-white text-[11px] leading-4"
+          dangerouslySetInnerHTML={{ __html: decodedTerms }}
         />
       );
     }
@@ -221,11 +263,11 @@ const EventDetailNew = () => {
             {normalizedTerms.length > 0 ? (
               normalizedTerms.map((t, idx) => (
                 <div key={`term-${idx}`} className="mb-3 last:mb-0">
-                  {t.content ? (
+                  {getTermHtml(t) ? (
                     <div
                       className="text-gray-300 text-sm leading-6 space-y-2"
                       style={{ lineHeight: 1.6 }}
-                      dangerouslySetInnerHTML={{ __html: t.content }}
+                      dangerouslySetInnerHTML={{ __html: getTermHtml(t) }}
                     />
                   ) : (
                     renderTermsContent()
@@ -278,6 +320,18 @@ const EventDetailNew = () => {
 
   const getArtistImage = (artist) =>
     artist.image || artist.photo || artist.avatar || artist.profileImage || FALLBACK_IMAGE;
+
+  const showPreviousImage = () => {
+    if (galleryImages.length <= 1 || selectedImageIndex === -1) return;
+    const previousIndex = (selectedImageIndex - 1 + galleryImages.length) % galleryImages.length;
+    setSelectedImage(galleryImages[previousIndex]);
+  };
+
+  const showNextImage = () => {
+    if (galleryImages.length <= 1 || selectedImageIndex === -1) return;
+    const nextIndex = (selectedImageIndex + 1) % galleryImages.length;
+    setSelectedImage(galleryImages[nextIndex]);
+  };
 
   // Resume booking after Google OAuth redirect
   useEffect(() => {
@@ -400,16 +454,12 @@ const EventDetailNew = () => {
         setSessionUser(session.user || null);
         return true;
       }
-      setIsSessionAuthed(false);
-      setSessionUser(null);
     } catch (err) {
       console.warn("Auth check failed, using cached flag", err);
       if (isAuthedSync()) {
         setIsSessionAuthed(true);
         return true;
       }
-      setIsSessionAuthed(false);
-      setSessionUser(null);
     } finally {
       setAuthLoading(false);
     }
@@ -422,16 +472,16 @@ const EventDetailNew = () => {
       return;
     }
 
-    // Always verify session before deciding auth UI.
-    // This prevents false login prompts when local auth cache is stale.
-    const hasValidSession = await ensureSession();
-    if (!hasValidSession) {
+    // Check if user is authenticated
+    if (!isSessionAuthed) {
       setAuthModalOpen(true);
       return;
     }
 
+    // Ensure we have fresh session data
+    await ensureSession();
+
     // Show billing modal to collect address details
-    setAuthModalOpen(false);
     setBillingModalOpen(true);
   };
 
@@ -455,33 +505,34 @@ const EventDetailNew = () => {
         method: "POST",
         body: JSON.stringify(payload),
       });
-      if (!res?.success || !res?.data?.bookingId) {
-        throw new Error(res?.errorMessage || res?.message || "Booking failed");
+      if (!res?.success) {
+        throw new Error(res?.message || "Booking failed");
       }
-      const bookingData = res.data;
+
+      const checkoutState = {
+        eventSummary: {
+          id: event?.id,
+          title: event.title || event.eventTitle || event.name || "Event",
+          date: event.startDate,
+          time: event.time,
+          venue: event.venue,
+          address: event.address,
+          banner: event.flyerImage || event.coverImage || FALLBACK_IMAGE,
+        },
+        tickets: selectedTickets,
+        bookingData: res.data,
+      };
 
       // Close billing modal
       setBillingModalOpen(false);
+      sessionStorage.setItem("pendingCheckout", JSON.stringify(checkoutState));
 
       // Navigate to payment checkout
       navigate(`/events/${organizerSlug}/${eventSlug}/checkout`, {
-        state: {
-          eventSummary: {
-            id: event?.id,
-            title: event.title || event.eventTitle || event.name || "Event",
-            date: event.startDate,
-            time: event.time,
-            venue: event.venue,
-            address: event.address,
-            banner: event.flyerImage || event.coverImage || FALLBACK_IMAGE,
-          },
-          tickets: selectedTickets,
-          bookingData,
-        },
+        state: checkoutState,
       });
     } catch (err) {
       toast.error(err?.message || "Unable to create booking. Please try again.");
-    } finally {
       setBookingLoading(false);
     }
   };
@@ -582,7 +633,7 @@ const EventDetailNew = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] flex items-center justify-center">
+      <div className="event-detail-theme min-h-screen bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-[#D60024] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white">Loading event details...</p>
@@ -593,10 +644,10 @@ const EventDetailNew = () => {
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] flex items-center justify-center">
+      <div className="event-detail-theme min-h-screen bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-white mb-4">Event Not Found</h2>
-          <Button onClick={() => navigate("/dashboard/browse-events")} className="bg-gradient-to-r from-[#D60024] to-[#ff4d67]">
+          <Button onClick={() => navigate("/browse-events")} className="bg-gradient-to-r from-[#D60024] to-[#ff4d67]">
             Browse Events
           </Button>
         </div>
@@ -605,14 +656,31 @@ const EventDetailNew = () => {
   }
 
   return (
-    <div className="min-h-screen text-white bg-gray-950">
+    <div className="event-detail-theme min-h-screen text-white bg-gray-950">
       <style>{pageCss}</style>
 
-      {/* Header */}
-      {/* <PromoterDashboardHeader /> */}
+      <header className="sticky top-0 z-40 bg-black/35 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-12">
+          <Link to="/" className="flex items-center gap-3">
+            <img src={logoSvg} alt="Map My Party" className="h-9 w-auto" />
+            <span className="text-sm font-semibold tracking-[0.06em] text-white">
+              MapMyParty
+            </span>
+          </Link>
+
+          <nav className="flex items-center gap-6 text-sm font-medium text-white/75">
+            <Link to="/" className="transition hover:text-white">
+              Home
+            </Link>
+            <Link to="/browse-events" className="transition hover:text-white">
+              Events
+            </Link>
+          </nav>
+        </div>
+      </header>
 
       {/* Hero Section - matching reference design */}
-      <div className="pt-14 pb-2">
+      <div className="pt-8 pb-2">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="grid lg:grid-cols-[1.3fr,0.6fr] gap-8 items-start px-8">
             {/* Left: Hero Image with Overlays */}
@@ -1296,10 +1364,10 @@ const EventDetailNew = () => {
                     {normalizedTerms.length > 0 ? (
                       normalizedTerms.map((t, idx) => (
                         <div key={`term-${idx}`} className="mb-2 last:mb-0">
-                          {t.content ? (
+                          {getTermHtml(t) ? (
                             <div
                               className="text-gray-400 text-[11px] leading-4 space-y-1"
-                              dangerouslySetInnerHTML={{ __html: t.content }}
+                              dangerouslySetInnerHTML={{ __html: getTermHtml(t) }}
                             />
                           ) : (
                             renderTermsContent()
@@ -1556,12 +1624,46 @@ const EventDetailNew = () => {
           >
             <X className="h-6 w-6" />
           </Button>
+          {galleryImages.length > 1 && (
+            <>
+              <Button
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  showPreviousImage();
+                }}
+                className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 text-white hover:bg-white/10 rounded-full h-12 w-12 p-0"
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="h-7 w-7" />
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  showNextImage();
+                }}
+                className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 text-white hover:bg-white/10 rounded-full h-12 w-12 p-0"
+                aria-label="Next image"
+              >
+                <ChevronRight className="h-7 w-7" />
+              </Button>
+            </>
+          )}
           <img
             src={selectedImage}
             alt="Gallery"
             className="max-w-full max-h-full object-contain rounded-xl"
             onClick={(e) => e.stopPropagation()}
           />
+          {galleryImages.length > 1 && selectedImageIndex !== -1 && (
+            <div
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-4 py-2 text-sm text-white/80"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {selectedImageIndex + 1} / {galleryImages.length}
+            </div>
+          )}
         </div>
       )}
 
@@ -1605,6 +1707,14 @@ const EventDetailNew = () => {
                     value={loginForm.password}
                     onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                   />
+                </div>
+                <div className="flex justify-end">
+                  <Link
+                    to={`/auth?type=user&forgot=true${loginForm.email.trim() ? `&email=${encodeURIComponent(loginForm.email.trim())}` : ""}`}
+                    className="text-xs text-red-400 hover:text-red-300"
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
                 <Button type="submit" className="w-full py-5 bg-red-600 hover:bg-red-700" disabled={authLoading}>
                   {authLoading ? (

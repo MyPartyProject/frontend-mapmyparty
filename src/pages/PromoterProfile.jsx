@@ -1,344 +1,385 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useMemo, useState } from "react";
+import { useOutletContext } from "react-router-dom";
+import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  ArrowLeft, 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Calendar, 
-  TrendingUp, 
-  DollarSign, 
-  Users, 
-  Activity,
-  Edit,
-  Building2,
-  Award,
-  BarChart3,
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { fetchAdminProfile, updateAdminProfile } from "@/services/adminService";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  Calendar,
+  CreditCard,
+  Loader2,
+  Mail,
+  Phone,
+  Save,
   Shield,
-  Settings,
-  Database,
-  Server,
-  Globe,
-  CreditCard
+  User,
+  Wallet2,
 } from "lucide-react";
 
+const getInitials = (name, email) => {
+  if (name) {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  }
+  return (email || "PR").slice(0, 2).toUpperCase();
+};
+
+const formatDate = (value) => {
+  if (!value) return "Unknown";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Unknown";
+  return new Intl.DateTimeFormat("en-IN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(date);
+};
+
 const PromoterProfile = () => {
-  const navigate = useNavigate();
-  const [promoterData, setPromoterData] = useState({
-    name: "Application Owner",
-    email: "admin@mapmyparty.com",
-    phone: "+1 (555) 123-4567",
-    role: "Platform Administrator",
-    location: "Headquarters",
-    joinDate: "January 2023",
-    // Platform Statistics
-    totalEvents: 28,
-    totalUsers: 1250,
-    totalOrganizers: 45,
-    totalAttendees: 8500,
-    platformRevenue: 248560,
-    activeEvents: 5,
-    systemUptime: "99.9%",
-    verified: true,
+  const { refreshAuth } = useAuth();
+  const { data, dashboardLoading } = useOutletContext();
+  const [profile, setProfile] = useState(null);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    avatar: "",
+    password: "",
   });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const user = await fetchAdminProfile();
+        setProfile(user);
+        setForm({
+          name: user?.name || "",
+          email: user?.email || "",
+          phone: user?.phone || "",
+          avatar: user?.avatar || "",
+          password: "",
+        });
+      } catch (loadError) {
+        setError(loadError.message || "Failed to load profile.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, []);
+
+  const hasChanges = useMemo(() => {
+    if (!profile) return false;
+    return (
+      form.name.trim() !== (profile.name || "") ||
+      form.email.trim() !== (profile.email || "") ||
+      form.phone.trim() !== (profile.phone || "") ||
+      form.avatar.trim() !== (profile.avatar || "") ||
+      Boolean(form.password.trim())
+    );
+  }, [form, profile]);
+
+  const stats = useMemo(() => {
+    const allStats = Array.isArray(data?.stats) ? data.stats : [];
+    return allStats.slice(0, 4);
+  }, [data]);
+
+  const handleChange = (field) => (event) => {
+    setForm((current) => ({ ...current, [field]: event.target.value }));
+  };
+
+  const handleSave = async (event) => {
+    event.preventDefault();
+    if (!profile) return;
+
+    const payload = {};
+    if (form.name.trim() !== (profile.name || "")) payload.name = form.name.trim();
+    if (form.email.trim() !== (profile.email || "")) payload.email = form.email.trim();
+    if (form.phone.trim() !== (profile.phone || "")) payload.phone = form.phone.trim();
+    if (form.avatar.trim() !== (profile.avatar || "")) payload.avatar = form.avatar.trim();
+    if (form.password.trim()) payload.password = form.password.trim();
+
+    if (Object.keys(payload).length === 0) {
+      toast.info("No profile changes to save.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const updatedUser = await updateAdminProfile(payload);
+      setProfile(updatedUser);
+      setForm({
+        name: updatedUser?.name || "",
+        email: updatedUser?.email || "",
+        phone: updatedUser?.phone || "",
+        avatar: updatedUser?.avatar || "",
+        password: "",
+      });
+      sessionStorage.setItem("userName", updatedUser?.name || "");
+      sessionStorage.setItem("userEmail", updatedUser?.email || "");
+      sessionStorage.setItem("userPhone", updatedUser?.phone || "");
+      sessionStorage.setItem(
+        "userProfile",
+        JSON.stringify({
+          ...(profile || {}),
+          ...updatedUser,
+        })
+      );
+      await refreshAuth();
+      toast.success("Profile updated successfully.");
+    } catch (saveError) {
+      toast.error(saveError.message || "Failed to update profile.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          Loading profile...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Card className="w-full max-w-md border-border/60 bg-card/80">
+          <CardContent className="space-y-4 pt-6 text-center">
+            <p className="text-sm text-red-400">{error}</p>
+            <Button onClick={() => window.location.reload()} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header isAuthenticated userRole="promoter" />
-
-      <main className="flex-1 py-12">
-        <div className="container max-w-6xl">
-          {/* Back Button */}
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/promoter/dashboard")}
-            className="mb-6 hover:bg-accent/50"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Button>
-
-          {/* Profile Header */}
-          <Card className="mb-6 border-2 overflow-hidden">
-            <div className="bg-black h-32 relative">
-              <div className="absolute bottom-0 left-6 transform translate-y-1/2">
-                <Avatar className="w-24 h-24 border-4 border-background shadow-xl">
-                  <AvatarImage src="https://api.dicebear.com/7.x/avataaars/png?seed=Promoter" />
-                  <AvatarFallback className="bg-red-600 text-white text-2xl">
-                    {promoterData.name.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
+    <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-border/60 bg-card/80 shadow-[var(--shadow-card)]">
+        <div className="relative overflow-hidden px-6 py-7 sm:px-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,hsla(var(--accent)/0.18),transparent_35%),linear-gradient(135deg,hsla(var(--primary)/0.18),transparent_55%),linear-gradient(180deg,hsla(var(--secondary)/0.18),transparent)]" />
+          <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-end">
+              <Avatar className="h-24 w-24 border-4 border-background shadow-[var(--shadow-card)] sm:h-28 sm:w-28">
+                <AvatarImage src={form.avatar || profile?.avatar || ""} alt={profile?.name || "Promoter"} />
+                <AvatarFallback className="bg-primary/20 text-2xl font-semibold text-primary-foreground">
+                  {getInitials(profile?.name, profile?.email)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Account</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-3xl font-semibold tracking-tight">{profile?.name || "Promoter"}</h2>
+                    <Badge className="border border-primary/30 bg-primary/15 text-foreground">
+                      <Shield className="mr-1 h-3.5 w-3.5" />
+                      Platform Admin
+                    </Badge>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Mail className="h-4 w-4" />
+                    {profile?.email || "No email"}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Phone className="h-4 w-4" />
+                    {profile?.phone || "No phone"}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Calendar className="h-4 w-4" />
+                    Joined {formatDate(profile?.createdAt)}
+                  </span>
+                </div>
               </div>
             </div>
-            <CardContent className="pt-16 pb-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-3xl font-bold text-red-600">
-                      {promoterData.name}
-                    </h1>
-                    {promoterData.verified && (
-                      <Badge className="bg-red-600 text-white border-0">
-                        <Shield className="w-3 h-3 mr-1" />
-                        Administrator
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-muted-foreground">{promoterData.role}</p>
-                  <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      {promoterData.location}
+
+            <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[480px]">
+              {dashboardLoading
+                ? Array.from({ length: 4 }).map((_, index) => (
+                    <div key={index} className="rounded-2xl border border-border/60 bg-background/50 p-4 animate-pulse">
+                      <div className="mb-3 h-4 w-24 rounded bg-white/10" />
+                      <div className="h-7 w-28 rounded bg-white/10" />
+                      <div className="mt-2 h-3 w-20 rounded bg-white/10" />
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      Joined {promoterData.joinDate}
+                  ))
+                : stats.map((item) => (
+                    <div key={item.title} className="rounded-2xl border border-border/60 bg-background/55 p-4 backdrop-blur-sm">
+                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                        <item.icon className="h-5 w-5" />
+                      </div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{item.title}</p>
+                      <p className="mt-1 text-2xl font-semibold tracking-tight">{item.value}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{item.delta}</p>
+                    </div>
+                  ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_360px]">
+        <Card className="border-border/60 bg-card/80">
+          <CardHeader className="border-b border-border/60 pb-5">
+            <CardTitle>Profile Details</CardTitle>
+            <CardDescription>
+              Update the promoter account details shown in the sidebar and across the dashboard.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <form className="space-y-6" onSubmit={handleSave}>
+              <div className="grid gap-5 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="promoter-name">Full Name</Label>
+                  <Input id="promoter-name" value={form.name} onChange={handleChange("name")} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="promoter-email">Email Address</Label>
+                  <Input id="promoter-email" type="email" value={form.email} onChange={handleChange("email")} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="promoter-phone">Phone Number</Label>
+                  <Input id="promoter-phone" value={form.phone} onChange={handleChange("phone")} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="promoter-avatar">Avatar URL</Label>
+                  <Input
+                    id="promoter-avatar"
+                    value={form.avatar}
+                    onChange={handleChange("avatar")}
+                    placeholder="https://example.com/avatar.png"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_240px]">
+                <div className="space-y-2">
+                  <Label htmlFor="promoter-password">New Password</Label>
+                  <Input
+                    id="promoter-password"
+                    type="password"
+                    value={form.password}
+                    onChange={handleChange("password")}
+                    placeholder="Leave blank to keep the current password"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Use this only when you want to rotate the promoter account password.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-border/60 bg-background/55 p-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Live Preview</p>
+                  <div className="mt-4 flex items-center gap-3">
+                    <Avatar className="h-14 w-14 border border-border/60">
+                      <AvatarImage src={form.avatar || profile?.avatar || ""} alt={form.name || profile?.name || "Promoter"} />
+                      <AvatarFallback className="bg-primary/20 text-primary-foreground">
+                        {getInitials(form.name || profile?.name, form.email || profile?.email)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold">{form.name || "Promoter"}</p>
+                      <p className="truncate text-xs text-muted-foreground">{form.email || "No email"}</p>
                     </div>
                   </div>
                 </div>
-                <Button className="bg-red-600 hover:bg-red-700 text-white">
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Profile
+              </div>
+
+              <div className="flex flex-col gap-3 border-t border-border/60 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted-foreground">
+                  {hasChanges ? "Unsaved changes are ready to publish." : "Profile details are up to date."}
+                </p>
+                <Button
+                  type="submit"
+                  disabled={saving || !hasChanges}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  {saving ? "Saving..." : "Save Changes"}
                 </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-6">
+          <Card className="border-border/60 bg-card/80">
+            <CardHeader>
+              <CardTitle>Account Snapshot</CardTitle>
+              <CardDescription>Key promoter account metadata and current session identity.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="rounded-2xl border border-border/60 bg-background/55 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Role</p>
+                <p className="mt-2 flex items-center gap-2 font-semibold">
+                  <Shield className="h-4 w-4 text-primary" />
+                  Platform Administrator
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border/60 bg-background/55 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Member Since</p>
+                <p className="mt-2 flex items-center gap-2 font-semibold">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  {formatDate(profile?.createdAt)}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border/60 bg-background/55 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Last Updated</p>
+                <p className="mt-2 flex items-center gap-2 font-semibold">
+                  <User className="h-4 w-4 text-primary" />
+                  {formatDate(profile?.updatedAt)}
+                </p>
               </div>
             </CardContent>
           </Card>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {/* Left Column - Personal Info */}
-            <div className="md:col-span-1 space-y-6">
-              {/* Contact Information */}
-              <Card className="border-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="w-5 h-5 text-red-600" />
-                    Contact Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 dark:bg-red-950/20">
-                    <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30">
-                      <Mail className="w-4 h-4 text-red-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Email</p>
-                      <p className="font-medium">{promoterData.email}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 dark:bg-red-950/20">
-                    <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30">
-                      <Phone className="w-4 h-4 text-red-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Phone</p>
-                      <p className="font-medium">{promoterData.phone}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-neutral-900/20">
-                    <div className="p-2 rounded-lg bg-gray-100 dark:bg-neutral-800/30">
-                      <Shield className="w-4 h-4 text-black" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Role</p>
-                      <p className="font-medium">{promoterData.role}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-neutral-900/20">
-                    <div className="p-2 rounded-lg bg-gray-100 dark:bg-neutral-800/30">
-                      <Server className="w-4 h-4 text-black" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">System Uptime</p>
-                      <p className="font-medium">{promoterData.systemUptime}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* System Status */}
-              <Card className="border-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Server className="w-5 h-5 text-black" />
-                    System Status
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-neutral-900/20">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
-                        <span className="text-sm font-medium">Platform Status</span>
-                      </div>
-                      <Badge className="bg-red-600 text-white">Online</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-neutral-900/20">
-                      <div className="flex items-center gap-2">
-                        <Database className="w-4 h-4 text-black" />
-                        <span className="text-sm font-medium">Database</span>
-                      </div>
-                      <Badge className="bg-red-600 text-white">Healthy</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-neutral-900/20">
-                      <div className="flex items-center gap-2">
-                        <Globe className="w-4 h-4 text-black" />
-                        <span className="text-sm font-medium">API</span>
-                      </div>
-                      <Badge className="bg-red-600 text-white">Active</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Quick Actions */}
-              <Card className="border-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="w-5 h-5 text-indigo-600" />
-                    Quick Actions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Button variant="outline" className="w-full justify-start hover:bg-accent/50">
-                    <Settings className="w-4 h-4 mr-2" />
-                    System Settings
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start hover:bg-accent/50">
-                    <Database className="w-4 h-4 mr-2" />
-                    Database Management
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start hover:bg-accent/50">
-                    <Users className="w-4 h-4 mr-2" />
-                    User Management
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Right Column - Platform Statistics */}
-            <div className="md:col-span-2 space-y-6">
-              {/* Platform Metrics */}
-              <div className="grid grid-cols-2 gap-4">
-                <Card className="border-2 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-3 rounded-xl bg-black text-white">
-                        <Calendar className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Events</p>
-                        <p className="text-2xl font-bold text-red-600">{promoterData.totalEvents}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{promoterData.activeEvents} active</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-2 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-3 rounded-xl bg-red-600 text-white">
-                        <CreditCard className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Platform Revenue</p>
-                        <p className="text-2xl font-bold text-red-600">
-                          ₹{promoterData.platformRevenue.toLocaleString()}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">All transactions</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-2 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-3 rounded-xl bg-red-600 text-white">
-                        <Users className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Users</p>
-                        <p className="text-2xl font-bold text-red-600">{promoterData.totalUsers.toLocaleString()}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{promoterData.totalAttendees.toLocaleString()} attendees</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-2 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-3 rounded-xl bg-black text-white">
-                        <Building2 className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Organizers</p>
-                        <p className="text-2xl font-bold text-black">{promoterData.totalOrganizers}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Registered</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+          <Card className="border-border/60 bg-card/80">
+            <CardHeader>
+              <CardTitle>Revenue Access</CardTitle>
+              <CardDescription>Quick financial indicators already available in the promoter dashboard.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="rounded-2xl border border-border/60 bg-background/55 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Platform Earnings</p>
+                <p className="mt-2 flex items-center gap-2 text-lg font-semibold">
+                  <Wallet2 className="h-4 w-4 text-primary" />
+                  {stats[3]?.value || "0"}
+                </p>
               </div>
-
-              {/* Platform Activity */}
-              <Card className="border-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5 text-indigo-600" />
-                    Platform Activity
-                  </CardTitle>
-                  <CardDescription>Recent system activities and changes</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {[
-                      { action: "Event Verified", event: "Summer Music Festival", date: "2 hours ago", type: "success" },
-                      { action: "New Organizer", event: "TechCorp joined platform", date: "1 day ago", type: "info" },
-                      { action: "System Update", event: "Platform maintenance completed", date: "2 days ago", type: "warning" },
-                      { action: "User Registration", event: "150 new users registered", date: "3 days ago", type: "success" },
-                    ].map((activity, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                      >
-                        <div className={`p-2 rounded-lg ${
-                          activity.type === "success" ? "bg-emerald-100 dark:bg-emerald-900/30" :
-                          activity.type === "info" ? "bg-blue-100 dark:bg-blue-900/30" :
-                          "bg-amber-100 dark:bg-amber-900/30"
-                        }`}>
-                          <Activity className={`w-4 h-4 ${
-                            activity.type === "success" ? "text-emerald-600" :
-                            activity.type === "info" ? "text-blue-600" :
-                            "text-amber-600"
-                          }`} />
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium">{activity.action} - {activity.event}</p>
-                          <p className="text-sm text-muted-foreground">{activity.date}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+              <div className="rounded-2xl border border-border/60 bg-background/55 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Gross Revenue</p>
+                <p className="mt-2 flex items-center gap-2 text-lg font-semibold">
+                  <CreditCard className="h-4 w-4 text-primary" />
+                  {stats[2]?.value || "0"}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/10 p-4 text-sm text-muted-foreground">
+                Changes saved here immediately refresh the sidebar account identity for the active session.
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </main>
-
-      <Footer />
+      </div>
     </div>
   );
 };
 
 export default PromoterProfile;
-

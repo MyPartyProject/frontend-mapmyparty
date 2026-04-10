@@ -1,12 +1,26 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiFetch } from "@/config/api";
 
+const PUBLIC_EVENTS_STORAGE_KEY = "mapMyParty_events";
+
+const getFilterCacheKey = (filterParams = {}) => {
+  const params = new URLSearchParams();
+
+  if (filterParams.category) params.set("category", filterParams.category);
+  if (filterParams.subCategory) params.set("subCategory", filterParams.subCategory);
+  if (filterParams.search) params.set("search", filterParams.search);
+
+  const query = params.toString();
+  return query ? `${PUBLIC_EVENTS_STORAGE_KEY}:${query}` : PUBLIC_EVENTS_STORAGE_KEY;
+};
+
 /**
  * Hook for fetching public published events
  * Shows events from localStorage until backend API is ready
  */
 export const usePublicEvents = (initialFilters = {}) => {
   const [events, setEvents] = useState([]);
+  const [allEvents, setAllEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({
@@ -25,7 +39,7 @@ export const usePublicEvents = (initialFilters = {}) => {
     limit: initialFilters.limit || 20,
   });
 
-  const applyFiltersAndPaginate = useCallback((rawEvents = [], filterParams = filters) => {
+  const applyFiltersAndPaginate = useCallback((rawEvents = [], filterParams = {}) => {
     let filtered = Array.isArray(rawEvents) ? [...rawEvents] : [];
 
     // Only keep published events
@@ -52,6 +66,8 @@ export const usePublicEvents = (initialFilters = {}) => {
           event?.venues?.[0]?.name,
           event?.venues?.[0]?.city,
           event?.venues?.[0]?.state,
+          event?.venues?.[0]?.country,
+          event?.venues?.[0]?.fullAddress,
           event?.organizer?.name,
         ];
 
@@ -90,14 +106,16 @@ export const usePublicEvents = (initialFilters = {}) => {
       });
     }
 
-    const page = filterParams.page || 1;
+    const requestedPage = filterParams.page || 1;
     const limit = filterParams.limit || 20;
     const totalEvents = filtered.length;
     const totalPages = Math.max(1, Math.ceil(totalEvents / limit));
+    const page = Math.min(requestedPage, totalPages);
     const startIndex = (page - 1) * limit;
     const paginatedEvents = filtered.slice(startIndex, startIndex + limit);
 
     return {
+      allEvents: filtered,
       events: paginatedEvents,
       pagination: {
         page,
@@ -106,7 +124,7 @@ export const usePublicEvents = (initialFilters = {}) => {
         totalEvents,
       },
     };
-  }, [filters]);
+  }, []);
 
   /**
    * Fetch events from API or localStorage
@@ -118,17 +136,29 @@ export const usePublicEvents = (initialFilters = {}) => {
       let sourceEvents = [];
 
       try {
-        const response = await apiFetch("/api/event", {
+        const params = new URLSearchParams();
+        if (filterParams.category) params.set("category", filterParams.category);
+        if (filterParams.subCategory) params.set("subCategory", filterParams.subCategory);
+        if (filterParams.search) params.set("search", filterParams.search);
+
+        const response = await apiFetch(`/api/event${params.toString() ? `?${params.toString()}` : ""}`, {
           method: "GET",
         });
-
-        console.log("📅 Fetched events list:", response);
 
         const eventsData = response.data?.events || response.data || response;
         sourceEvents = Array.isArray(eventsData) ? eventsData : [];
 
         try {
-          localStorage.setItem("mapMyParty_events", JSON.stringify(sourceEvents));
+          localStorage.setItem(getFilterCacheKey(filterParams), JSON.stringify(sourceEvents));
+
+          const hasServerFilters =
+            Boolean(filterParams.category) ||
+            Boolean(filterParams.subCategory) ||
+            Boolean(filterParams.search);
+
+          if (!hasServerFilters) {
+            localStorage.setItem(PUBLIC_EVENTS_STORAGE_KEY, JSON.stringify(sourceEvents));
+          }
         } catch (storageError) {
           console.warn("⚠️ Unable to cache events in localStorage", storageError);
         }
@@ -136,10 +166,9 @@ export const usePublicEvents = (initialFilters = {}) => {
         // Fallback to localStorage if API not ready
         if (apiError.message?.includes("404") || apiError.message?.includes("Cannot GET")) {
           console.warn("⚠️ Public events API not available yet. Using localStorage fallback.");
-          
-          // Get events from localStorage
-          const STORAGE_KEY = "mapMyParty_events";
-          const stored = localStorage.getItem(STORAGE_KEY);
+
+          const queryScopedCache = localStorage.getItem(getFilterCacheKey(filterParams));
+          const stored = queryScopedCache || localStorage.getItem(PUBLIC_EVENTS_STORAGE_KEY);
           sourceEvents = stored ? JSON.parse(stored) : [];
           setError(null);
         } else {
@@ -147,17 +176,29 @@ export const usePublicEvents = (initialFilters = {}) => {
         }
       }
 
-      const { events: processedEvents, pagination: paginationData } = applyFiltersAndPaginate(
+      const {
+        allEvents: processedAllEvents,
+        events: processedEvents,
+        pagination: paginationData,
+      } = applyFiltersAndPaginate(
         sourceEvents,
         filterParams
       );
 
+      setAllEvents(processedAllEvents);
       setEvents(processedEvents);
       setPagination(paginationData);
     } catch (err) {
       console.error("❌ Error fetching public events:", err);
       setError(err.message || "Failed to fetch events");
+      setAllEvents([]);
       setEvents([]);
+      setPagination({
+        page: 1,
+        limit: filterParams.limit || 20,
+        totalPages: 0,
+        totalEvents: 0,
+      });
     } finally {
       setLoading(false);
     }
@@ -179,6 +220,63 @@ export const usePublicEvents = (initialFilters = {}) => {
       return updated;
     });
   }, []);
+
+  useEffect(() => {
+    const has = (key) => Object.prototype.hasOwnProperty.call(initialFilters, key);
+
+    setFilters((prev) => {
+      const next = { ...prev };
+      let changed = false;
+
+      if (has("category")) {
+        const value = initialFilters.category || null;
+        if (prev.category !== value) {
+          next.category = value;
+          changed = true;
+        }
+      }
+
+      if (has("subCategory")) {
+        const value = initialFilters.subCategory || null;
+        if (prev.subCategory !== value) {
+          next.subCategory = value;
+          changed = true;
+        }
+      }
+
+      if (has("search")) {
+        const value = initialFilters.search || null;
+        if (prev.search !== value) {
+          next.search = value;
+          changed = true;
+        }
+      }
+
+      if (has("page")) {
+        const value = Math.max(1, Number.parseInt(initialFilters.page, 10) || 1);
+        if (prev.page !== value) {
+          next.page = value;
+          changed = true;
+        }
+      }
+
+      if (has("limit")) {
+        const value = Math.max(1, Number.parseInt(initialFilters.limit, 10) || 20);
+        if (prev.limit !== value) {
+          next.limit = value;
+          changed = true;
+        }
+      }
+
+      return changed ? next : prev;
+    });
+  }, [
+    initialFilters.category,
+    initialFilters.subCategory,
+    initialFilters.search,
+    initialFilters.page,
+    initialFilters.limit,
+  ]);
 
   /**
    * Clear all filters
@@ -207,6 +305,7 @@ export const usePublicEvents = (initialFilters = {}) => {
 
   return {
     events,
+    allEvents,
     loading,
     error,
     pagination,

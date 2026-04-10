@@ -19,6 +19,7 @@ import {
   Linkedin,
   Facebook,
   Globe,
+  Lock,
   AlertCircle,
 } from "lucide-react";
 import { useOrganizers } from "@/hooks/useOrganizers";
@@ -82,6 +83,12 @@ const OrganizerCard = ({ org }) => {
               {org.isVerified && (
                 <ShieldCheck className="w-4 h-4 text-accent shrink-0" />
               )}
+              {org.isSuspended && (
+                <Badge variant="destructive" className="text-[10px]">
+                  <Lock className="mr-1 h-3 w-3" />
+                  Suspended
+                </Badge>
+              )}
             </div>
 
             {/* Location */}
@@ -99,6 +106,12 @@ const OrganizerCard = ({ org }) => {
           <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
             {org.description}
           </p>
+        )}
+
+        {org.isSuspended && org.suspensionReason && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+            {org.suspensionReason}
+          </div>
         )}
 
         <Separator className="bg-border/40" />

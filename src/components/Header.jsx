@@ -53,7 +53,24 @@ const Header = ({
   };
 
   const handleAuthClick = () => {
-    navigate("/auth");
+    const currentPath = `${location.pathname}${location.search}`;
+    const authParams = new URLSearchParams();
+
+    if (currentPath && currentPath !== "/" && !location.pathname.startsWith("/auth")) {
+      authParams.set("redirect", currentPath);
+    }
+
+    const isUserFacingRoute =
+      location.pathname === "/browse-events" ||
+      location.pathname.startsWith("/events/") ||
+      location.pathname.startsWith("/dashboard");
+
+    if (isUserFacingRoute) {
+      authParams.set("type", "user");
+    }
+
+    const query = authParams.toString();
+    navigate(query ? `/auth?${query}` : "/auth");
   };
 
   const handleLogout = () => {
@@ -65,6 +82,7 @@ const Header = ({
   const isDashboard = location.pathname.startsWith('/dashboard') || 
                      location.pathname.startsWith('/organizer') ||
                      location.pathname.startsWith('/promoter');
+  const isLandingPage = forceMainHeader && location.pathname === "/";
 
   // Don't show header on dashboard/organizer/promoter pages unless forced
   if (resolvedIsAuthenticated && isDashboard && !forceMainHeader) {
@@ -72,7 +90,13 @@ const Header = ({
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.08)] backdrop-blur-xl shadow-[0_18px_60px_-24px_rgba(0,0,0,0.65)]">
+    <header
+      className={`sticky top-0 z-50 w-full ${
+        isLandingPage
+          ? "-mb-16 bg-gradient-to-b from-slate-950/60 via-slate-950/18 to-transparent backdrop-blur-md shadow-none"
+          : "bg-[rgba(255,255,255,0.08)] backdrop-blur-xl shadow-[0_18px_60px_-24px_rgba(0,0,0,0.65)]"
+      } ${forceMainHeader ? "" : "border-b border-[rgba(255,255,255,0.18)]"}`}
+    >
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
         {/* Brand */}
         {/* Always show Map MyParty logo that links to home */}
@@ -89,6 +113,12 @@ const Header = ({
               className="hover:text-white transition-colors duration-200"
             >
               Browse Events
+            </Link>
+            <Link
+              to="/host-events"
+              className="hover:text-white transition-colors duration-200"
+            >
+              Host Events
             </Link>
             <Link
               to="/about"
@@ -225,14 +255,21 @@ const Header = ({
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-border bg-background">
           <nav className="container py-4 flex flex-col gap-4">
-            {isAttendee && (
+            {(!resolvedIsAuthenticated || forceMainHeader || isAttendee) && (
               <>
                  <Link
-                  to="/browse-events"
+                 to="/browse-events"
                   className="text-sm font-medium hover:text-primary transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Browse Events
+                </Link>
+                <Link
+                  to="/host-events"
+                  className="text-sm font-medium hover:text-primary transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Host Events
                 </Link>
                 <Link
                   to="/about"

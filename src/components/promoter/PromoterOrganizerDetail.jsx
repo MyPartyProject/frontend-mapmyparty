@@ -1,9 +1,23 @@
+import { useCallback, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   ArrowLeft,
   Building2,
@@ -24,8 +38,15 @@ import {
   AlertCircle,
   TrendingUp,
   BarChart3,
+  Lock,
 } from "lucide-react";
 import { useOrganizerDetail } from "@/hooks/useOrganizerDetail";
+import {
+  updateAdminOrganizerSuspension,
+  verifyAdminOrganizer,
+  unverifyAdminOrganizer,
+} from "@/services/adminService";
+import { toast } from "sonner";
 
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
@@ -88,7 +109,19 @@ const SectionError = ({ label, message }) => (
 );
 
 // ─── Section 1: Profile header ─────────────────────────────────
-const ProfileHeader = ({ profile }) => {
+const ProfileHeader = ({
+  profile,
+  suspensionReason,
+  onSuspensionReasonChange,
+  onSuspend,
+  onReactivate,
+  onVerifyToggle,
+  isSubmittingAction,
+  isSuspendDialogOpen,
+  onSuspendDialogChange,
+  isReactivateDialogOpen,
+  onReactivateDialogChange,
+}) => {
   const socials = ["instagram", "linkedin", "facebook", "x", "reddit", "snapchat"];
   const activeSocials = socials.filter((s) => profile[s]);
 
@@ -110,6 +143,11 @@ const ProfileHeader = ({ profile }) => {
               {profile.isVerified && (
                 <Badge className="bg-accent/15 text-accent border-accent/30 gap-1">
                   <ShieldCheck className="w-3 h-3" /> Verified
+                </Badge>
+              )}
+              {profile.isSuspended && (
+                <Badge variant="destructive" className="gap-1">
+                  <Lock className="w-3 h-3" /> Suspended
                 </Badge>
               )}
               {!profile.isVerified && (
@@ -147,6 +185,21 @@ const ProfileHeader = ({ profile }) => {
             <p className="text-sm text-muted-foreground leading-relaxed">
               {profile.description}
             </p>
+          </>
+        )}
+
+        {profile.isSuspended && (
+          <>
+            <Separator className="bg-border/40" />
+            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4">
+              <p className="text-sm font-semibold text-destructive">Organizer suspended</p>
+              <p className="mt-1 text-sm text-destructive/80">
+                {profile.suspensionReason || "No suspension reason was recorded."}
+              </p>
+              <p className="mt-2 text-xs text-destructive/70">
+                Suspended at {formatDate(profile.suspendedAt)}
+              </p>
+            </div>
           </>
         )}
 
@@ -205,6 +258,107 @@ const ProfileHeader = ({ profile }) => {
               </div>
             </div>
           )}
+        </div>
+
+        <Separator className="bg-border/40" />
+
+        <div className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="rounded-xl border border-border/60 bg-card/80 p-4">
+              <p className="text-xs text-muted-foreground">Access control</p>
+              <p className="mt-1 font-semibold">{profile.isSuspended ? "Suspended" : "Active"}</p>
+              {profile.suspensionReason && (
+                <p className="mt-2 text-xs text-muted-foreground">{profile.suspensionReason}</p>
+              )}
+            </div>
+            <div className="rounded-xl border border-border/60 bg-card/80 p-4">
+              <p className="text-xs text-muted-foreground">Bank verification</p>
+              <p className="mt-1 font-semibold">{profile.bankDetails?.verificationStatus || "Not submitted"}</p>
+              {profile.bankDetails?.reviewNotes && (
+                <p className="mt-2 text-xs text-muted-foreground">{profile.bankDetails.reviewNotes}</p>
+              )}
+            </div>
+          </div>
+
+          {profile.adminNotes && (
+            <div className="rounded-xl border border-border/60 bg-card/80 p-4">
+              <p className="text-xs text-muted-foreground">Admin notes</p>
+              <p className="mt-1 text-sm text-muted-foreground">{profile.adminNotes}</p>
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-3">
+            <Button
+              type="button"
+              variant={profile.isVerified ? "outline" : "default"}
+              onClick={onVerifyToggle}
+              disabled={isSubmittingAction}
+            >
+              {isSubmittingAction ? "Updating..." : profile.isVerified ? "Unverify organizer" : "Verify organizer"}
+            </Button>
+
+            {!profile.isSuspended ? (
+              <AlertDialog open={isSuspendDialogOpen} onOpenChange={onSuspendDialogChange}>
+                <AlertDialogTrigger asChild>
+                  <Button type="button" variant="destructive" disabled={isSubmittingAction}>
+                    Suspend organizer
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Suspend this organizer?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This prevents organizer-side access while preserving existing events and bookings.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium" htmlFor="organizer-suspension-reason">
+                      Suspension reason
+                    </label>
+                    <Textarea
+                      id="organizer-suspension-reason"
+                      value={suspensionReason}
+                      onChange={(event) => onSuspensionReasonChange(event.target.value)}
+                      placeholder="Explain why this organizer is being suspended."
+                      maxLength={500}
+                    />
+                  </div>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isSubmittingAction}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={onSuspend}
+                      disabled={isSubmittingAction}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {isSubmittingAction ? "Suspending..." : "Suspend organizer"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            ) : (
+              <AlertDialog open={isReactivateDialogOpen} onOpenChange={onReactivateDialogChange}>
+                <AlertDialogTrigger asChild>
+                  <Button type="button" variant="outline" disabled={isSubmittingAction}>
+                    Reactivate organizer
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Reactivate this organizer?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This restores organizer-side access and clears the active suspension reason.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isSubmittingAction}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={onReactivate} disabled={isSubmittingAction}>
+                      {isSubmittingAction ? "Updating..." : "Reactivate organizer"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -461,7 +615,59 @@ const ReviewsList = ({ reviewsData }) => {
 // ─── Main component ────────────────────────────────────────────
 const PromoterOrganizerDetail = () => {
   const { id } = useParams();
-  const { profile, stats, events, reviews, loading, errors } = useOrganizerDetail(id);
+  const { profile, stats, events, reviews, loading, errors, refresh } = useOrganizerDetail(id);
+  const [suspensionReason, setSuspensionReason] = useState("");
+  const [isSubmittingAction, setIsSubmittingAction] = useState(false);
+  const [isSuspendDialogOpen, setIsSuspendDialogOpen] = useState(false);
+  const [isReactivateDialogOpen, setIsReactivateDialogOpen] = useState(false);
+
+  const handleVerifyToggle = useCallback(async () => {
+    if (!profile?.id || isSubmittingAction) return;
+
+    setIsSubmittingAction(true);
+    try {
+      if (profile.isVerified) {
+        await unverifyAdminOrganizer(profile.id);
+        toast.success("Organizer unverified.");
+      } else {
+        await verifyAdminOrganizer(profile.id);
+        toast.success("Organizer verified.");
+      }
+      refresh();
+    } catch (error) {
+      toast.error(error.message || "Failed to update organizer verification.");
+    } finally {
+      setIsSubmittingAction(false);
+    }
+  }, [isSubmittingAction, profile?.id, profile?.isVerified, refresh]);
+
+  const handleOrganizerSuspension = useCallback(
+    async (nextIsSuspended) => {
+      if (!profile?.id || isSubmittingAction) return;
+      if (nextIsSuspended && !suspensionReason.trim()) {
+        toast.error("Suspension reason is required.");
+        return;
+      }
+
+      setIsSubmittingAction(true);
+      try {
+        await updateAdminOrganizerSuspension(profile.id, {
+          isSuspended: nextIsSuspended,
+          reason: nextIsSuspended ? suspensionReason.trim() : "",
+        });
+        toast.success(nextIsSuspended ? "Organizer suspended." : "Organizer reactivated.");
+        setIsSuspendDialogOpen(false);
+        setIsReactivateDialogOpen(false);
+        setSuspensionReason("");
+        refresh();
+      } catch (error) {
+        toast.error(error.message || "Failed to update organizer status.");
+      } finally {
+        setIsSubmittingAction(false);
+      }
+    },
+    [isSubmittingAction, profile?.id, refresh, suspensionReason]
+  );
 
   return (
     <div className="space-y-6">
@@ -476,7 +682,21 @@ const PromoterOrganizerDetail = () => {
       {/* Section 1: Profile (API: GET /api/organizer/:id) */}
       {loading.profile && <SectionSkeleton lines={5} />}
       {errors.profile && <SectionError label="profile" message={errors.profile} />}
-      {!loading.profile && !errors.profile && profile && <ProfileHeader profile={profile} />}
+      {!loading.profile && !errors.profile && profile && (
+        <ProfileHeader
+          profile={profile}
+          suspensionReason={suspensionReason}
+          onSuspensionReasonChange={setSuspensionReason}
+          onSuspend={() => handleOrganizerSuspension(true)}
+          onReactivate={() => handleOrganizerSuspension(false)}
+          onVerifyToggle={handleVerifyToggle}
+          isSubmittingAction={isSubmittingAction}
+          isSuspendDialogOpen={isSuspendDialogOpen}
+          onSuspendDialogChange={setIsSuspendDialogOpen}
+          isReactivateDialogOpen={isReactivateDialogOpen}
+          onReactivateDialogChange={setIsReactivateDialogOpen}
+        />
+      )}
 
       {/* Section 2: Stats (API: GET /api/organizer/:id/stats) */}
       {loading.stats && (

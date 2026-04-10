@@ -15,10 +15,12 @@ const getQrBoxSize = () => {
   return 280;
 };
 
-const QRScanner = ({ onScan, onClose, isProcessing }) => {
+const QRScanner = ({ onScan, onClose, isProcessing, isPaused = false }) => {
   const scannerRef = useRef(null);
   const html5QrCodeRef = useRef(null);
   const lastScannedRef = useRef({ text: "", time: 0 });
+  const isScanBlockedRef = useRef(false);
+  const hadBlockedScanRef = useRef(false);
   const [cameraError, setCameraError] = useState("");
   const [isStarting, setIsStarting] = useState(true);
   const [cameras, setCameras] = useState([]);
@@ -26,8 +28,29 @@ const QRScanner = ({ onScan, onClose, isProcessing }) => {
 
   const stableOnScan = useRef(onScan);
   stableOnScan.current = onScan;
+  isScanBlockedRef.current = isProcessing || isPaused;
+
+  useEffect(() => {
+    const isBlocked = isProcessing || isPaused;
+    if (isBlocked) {
+      hadBlockedScanRef.current = true;
+      return;
+    }
+
+    if (hadBlockedScanRef.current) {
+      lastScannedRef.current = {
+        ...lastScannedRef.current,
+        time: Date.now(),
+      };
+      hadBlockedScanRef.current = false;
+    }
+  }, [isPaused, isProcessing]);
 
   const handleDecoded = useCallback((decodedText) => {
+    if (isScanBlockedRef.current) {
+      return;
+    }
+
     const now = Date.now();
     const last = lastScannedRef.current;
 

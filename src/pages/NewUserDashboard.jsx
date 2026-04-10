@@ -204,13 +204,24 @@ const NewUserDashboard = () => {
     );
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
-    contextLogout();
-    toast.success("Logged out");
-    setIsLoggingOut(false);
-    navigate("/", { replace: true });
+    try {
+      await contextLogout();
+      toast.success("Logged out");
+    } catch (err) {
+      if (err?.status === 401) {
+        console.warn("Logout 401: session already invalid/expired");
+        toast("Session expired, logging out");
+      } else {
+        console.warn("Logout API call failed:", err);
+        toast.error(err?.message || "Logout failed, clearing session");
+      }
+    } finally {
+      setIsLoggingOut(false);
+      navigate("/");
+    }
   };
 
   const navItems = [

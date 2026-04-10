@@ -24,12 +24,28 @@ import {
   RefreshCw,
   Wifi,
   WifiOff,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
 } from "lucide-react";
 // import Footer from "@/components/Footer";
 import { apiFetch } from "@/config/api";
 import { useTicketAnalytics } from "@/hooks/useTicketAnalytics";
+import {
+  createOffPlatformTicket,
+  deleteOffPlatformTicket,
+  fetchOffPlatformTickets,
+  updateOffPlatformTicket,
+} from "@/services/offPlatformService";
 
 const number = (v) => new Intl.NumberFormat("en-IN").format(v || 0);
+const currency = (v) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 2,
+  }).format(v || 0);
 
 const formatDateTime = (date) =>
   new Intl.DateTimeFormat("en-IN", {
@@ -58,6 +74,20 @@ const LiveEventPage = ({ embedded = false }) => {
   const [error, setError] = useState(null);
   const [bookings, setBookings] = useState({ confirmed: 0, pending: 0, cancelled: 0 });
   const [checkIns, setCheckIns] = useState({ total: 0, last15m: 0 });
+  const [offPlatformRecords, setOffPlatformRecords] = useState([]);
+  const [offPlatformLoading, setOffPlatformLoading] = useState(false);
+  const [offPlatformError, setOffPlatformError] = useState("");
+  const [offPlatformModalOpen, setOffPlatformModalOpen] = useState(false);
+  const [offPlatformSaving, setOffPlatformSaving] = useState(false);
+  const [editingOffPlatformRecord, setEditingOffPlatformRecord] = useState(null);
+  const [offPlatformForm, setOffPlatformForm] = useState({
+    recipientName: "",
+    ticketLabel: "",
+    members: 1,
+    price: 0,
+    checkinTime: "",
+    notes: "",
+  });
 
   // Refs to prevent duplicate API calls
   const isFetchingRef = useRef(false);
@@ -267,6 +297,168 @@ const LiveEventPage = ({ embedded = false }) => {
     navigate(to);
   };
 
+  const organizerId = event?.organizerId || event?.organizer?.id || null;
+  const offPlatformFormValid =
+    Boolean(organizerId) &&
+    offPlatformForm.recipientName.trim() &&
+    offPlatformForm.ticketLabel.trim() &&
+    Number(offPlatformForm.members) > 0 &&
+    Number(offPlatformForm.price) >= 0;
+
+  const loadOffPlatformRecords = useCallback(async () => {
+    if (!organizerId || !id) return;
+    setOffPlatformLoading(true);
+    setOffPlatformError("");
+    try {
+      const data = await fetchOffPlatformTickets(organizerId, id);
+      setOffPlatformRecords(data?.items || data || []);
+    } catch (err) {
+      console.error("Failed to load off-platform tickets:", err);
+      setOffPlatformError(err.message || "Failed to load off-platform tickets.");
+    } finally {
+      setOffPlatformLoading(false);
+    }
+  }, [organizerId, id]);
+
+  useEffect(() => {
+    if (!organizerId || !id) return undefined;
+
+    let cancelled = false;
+
+    const run = async () => {
+      setOffPlatformLoading(true);
+      setOffPlatformError("");
+      try {
+        const data = await fetchOffPlatformTickets(organizerId, id);
+        if (cancelled) return;
+        setOffPlatformRecords(data?.items || data || []);
+      } catch (err) {
+        if (cancelled) return;
+        console.error("Failed to load off-platform tickets:", err);
+        setOffPlatformError(err.message || "Failed to load off-platform tickets.");
+      } finally {
+        if (!cancelled) {
+          setOffPlatformLoading(false);
+        }
+      }
+    };
+
+    run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [organizerId, id]);
+
+  const resetOffPlatformForm = useCallback(() => {
+    setEditingOffPlatformRecord(null);
+    setOffPlatformForm({
+      recipientName: "",
+      ticketLabel: "",
+      members: 1,
+      price: 0,
+      checkinTime: "",
+      notes: "",
+    });
+  }, []);
+
+  const openOffPlatformModal = useCallback(() => {
+    resetOffPlatformForm();
+    setOffPlatformModalOpen(true);
+  }, [resetOffPlatformForm]);
+
+  const openEditOffPlatformModal = useCallback((record) => {
+    setEditingOffPlatformRecord(record);
+    setOffPlatformForm({
+      recipientName: record.recipientName || "",
+      ticketLabel: record.ticketLabel || "",
+      members: record.members ?? 1,
+      price: record.price ?? 0,
+      checkinTime: record.checkinTime ? new Date(record.checkinTime).toISOString().slice(0, 16) : "",
+      notes: record.notes || "",
+    });
+    setOffPlatformModalOpen(true);
+  }, []);
+
+  const closeOffPlatformModal = useCallback(() => {
+    setOffPlatformModalOpen(false);
+    resetOffPlatformForm();
+  }, [resetOffPlatformForm]);
+
+  const handleSaveOffPlatformRecord = useCallback(async () => {
+    if (!offPlatformFormValid || !organizerId || !id) return;
+
+    setOffPlatformSaving(true);
+    setOffPlatformError("");
+    try {
+      const payload = {
+        recipientName: offPlatformForm.recipientName.trim(),
+        ticketLabel: offPlatformForm.ticketLabel.trim(),
+        members: Number(offPlatformForm.members),
+        price: Number(offPlatformForm.price),
+        checkinTime: offPlatformForm.checkinTime || null,
+        notes: offPlatformForm.notes?.trim() || null,
+      };
+
+      if (editingOffPlatformRecord?.id) {
+        await updateOffPlatformTicket(organizerId, id, editingOffPlatformRecord.id, payload);
+      } else {
+        await createOffPlatformTicket(organizerId, id, payload);
+      }
+
+      closeOffPlatformModal();
+      await loadOffPlatformRecords();
+    } catch (err) {
+      console.error("Failed to save off-platform ticket:", err);
+      setOffPlatformError(err.message || "Failed to save off-platform ticket.");
+    } finally {
+      setOffPlatformSaving(false);
+    }
+  }, [
+    closeOffPlatformModal,
+    editingOffPlatformRecord,
+    id,
+    loadOffPlatformRecords,
+    offPlatformForm,
+    offPlatformFormValid,
+    organizerId,
+  ]);
+
+  const handleDeleteOffPlatformRecord = useCallback(
+    async (record) => {
+      if (!organizerId || !id) return;
+      if (!window.confirm(`Delete off-platform ticket for "${record.recipientName}"?`)) return;
+
+      setOffPlatformError("");
+      try {
+        await deleteOffPlatformTicket(organizerId, id, record.id);
+        await loadOffPlatformRecords();
+      } catch (err) {
+        console.error("Failed to delete off-platform ticket:", err);
+        setOffPlatformError(err.message || "Failed to delete off-platform ticket.");
+      }
+    },
+    [id, loadOffPlatformRecords, organizerId]
+  );
+
+  const handleMarkOffPlatformCheckIn = useCallback(
+    async (record) => {
+      if (!organizerId || !id) return;
+
+      setOffPlatformError("");
+      try {
+        await updateOffPlatformTicket(organizerId, id, record.id, {
+          checkinTime: new Date().toISOString(),
+        });
+        await loadOffPlatformRecords();
+      } catch (err) {
+        console.error("Failed to mark off-platform ticket as checked in:", err);
+        setOffPlatformError(err.message || "Failed to update check-in time.");
+      }
+    },
+    [id, loadOffPlatformRecords, organizerId]
+  );
+
   // Loading state
   if (loading) {
     return (
@@ -308,12 +500,258 @@ const LiveEventPage = ({ embedded = false }) => {
     email: venue.contactEmail || venue.email || "",
   };
 
-  // When embedded in OrganizerDashboardV2, only render the main content
+  const offPlatformTotals = offPlatformRecords.reduce(
+    (acc, record) => {
+      acc.count += 1;
+      acc.members += Number(record.members || 0);
+      acc.revenue += Number(record.price || 0);
+      return acc;
+    },
+    { count: 0, members: 0, revenue: 0 }
+  );
+
+  const offPlatformSection = (
+    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 shadow-lg shadow-black/30 space-y-4">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Ticket className="w-5 h-5 text-amber-300" /> Off-Platform Tickets
+          </h3>
+          <p className="text-sm text-white/55 mt-1">
+            Track manual and offline ticket entries for this live event.
+          </p>
+        </div>
+        <button
+          onClick={openOffPlatformModal}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-400/30 text-amber-100 hover:bg-amber-500/25 transition text-sm"
+        >
+          <Plus className="w-4 h-4" />
+          Off Platform Ticket
+        </button>
+      </div>
+
+      {offPlatformError ? (
+        <div className="rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          {offPlatformError}
+        </div>
+      ) : null}
+
+      {offPlatformRecords.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <p className="text-xs uppercase tracking-wide text-white/60">Records</p>
+            <p className="text-2xl font-bold mt-1 text-white">{offPlatformTotals.count}</p>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <p className="text-xs uppercase tracking-wide text-white/60">Members</p>
+            <p className="text-2xl font-bold mt-1 text-cyan-100">{number(offPlatformTotals.members)}</p>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <p className="text-xs uppercase tracking-wide text-white/60">Revenue</p>
+            <p className="text-2xl font-bold mt-1 text-amber-100">{currency(offPlatformTotals.revenue)}</p>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0f1628]/80">
+        {offPlatformLoading ? (
+          <div className="px-4 py-12 flex items-center justify-center">
+            <Loader2 className="w-6 h-6 animate-spin text-white/40" />
+          </div>
+        ) : offPlatformRecords.length === 0 ? (
+          <div className="px-4 py-12 text-center">
+            <p className="text-white/70 text-sm">No off-platform tickets recorded yet.</p>
+            <p className="text-white/45 text-xs mt-1">Use the button above to add the first record.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="text-white/60 text-xs uppercase">
+                <tr className="border-b border-white/10">
+                  <th className="py-3 px-4 text-left">Recipient</th>
+                  <th className="py-3 px-4 text-left">Ticket</th>
+                  <th className="py-3 px-4 text-left">Members</th>
+                  <th className="py-3 px-4 text-left">Price</th>
+                  <th className="py-3 px-4 text-left">Check-in</th>
+                  <th className="py-3 px-4 text-left">Notes</th>
+                  <th className="py-3 px-4 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {offPlatformRecords.map((record) => (
+                  <tr key={record.id} className="hover:bg-white/5 transition">
+                    <td className="py-3 px-4 font-semibold text-white">{record.recipientName}</td>
+                    <td className="py-3 px-4">
+                      <span className="inline-flex items-center rounded-full border border-amber-400/20 bg-amber-500/10 px-2 py-1 text-xs text-amber-100">
+                        {record.ticketLabel}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-white/75">{number(record.members)}</td>
+                    <td className="py-3 px-4 text-emerald-300">{currency(record.price)}</td>
+                    <td className="py-3 px-4">
+                      {record.checkinTime ? (
+                        <span className="text-cyan-200 text-xs">
+                          {new Date(record.checkinTime).toLocaleString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleMarkOffPlatformCheckIn(record)}
+                          className="inline-flex items-center rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-xs text-cyan-100 hover:bg-cyan-500/20 transition"
+                        >
+                          Mark Checked In
+                        </button>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-white/55 max-w-[220px] truncate">{record.notes || "-"}</td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => openEditOffPlatformModal(record)}
+                          className="p-2 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition"
+                          title="Edit"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteOffPlatformRecord(record)}
+                          className="p-2 rounded-lg hover:bg-red-500/10 text-white/70 hover:text-red-300 transition"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const offPlatformModal = offPlatformModalOpen ? (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+      <div className="w-full max-w-[22rem] sm:max-w-[24rem] max-h-[min(88vh,42rem)] overflow-hidden rounded-xl border border-white/10 bg-[#0f1628] shadow-2xl shadow-black/50 flex flex-col">
+        <div className="flex items-start justify-between gap-3 px-4 py-3 border-b border-white/10 shrink-0">
+          <div className="min-w-0">
+            <h3 className="text-base font-semibold text-white">
+              {editingOffPlatformRecord ? "Edit Off-Platform Ticket" : "Add Off-Platform Ticket"}
+            </h3>
+            <p className="text-[11px] text-white/50 mt-1">Fill the required details to save this record.</p>
+          </div>
+          <button
+            onClick={closeOffPlatformModal}
+            className="p-1.5 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3">
+          <div className="space-y-3">
+            <div className="min-w-0">
+            <label className="block text-[11px] uppercase tracking-wide text-white/60 mb-1.5">Recipient Name *</label>
+            <input
+              type="text"
+              value={offPlatformForm.recipientName}
+              onChange={(e) => setOffPlatformForm((current) => ({ ...current, recipientName: e.target.value }))}
+              placeholder="e.g. John Doe"
+              className="w-full min-w-0 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs leading-5 text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+            />
+            </div>
+
+            <div className="min-w-0">
+            <label className="block text-[11px] uppercase tracking-wide text-white/60 mb-1.5">Ticket Label *</label>
+            <input
+              type="text"
+              value={offPlatformForm.ticketLabel}
+              onChange={(e) => setOffPlatformForm((current) => ({ ...current, ticketLabel: e.target.value }))}
+              placeholder="e.g. VIP / Backstage"
+              className="w-full min-w-0 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs leading-5 text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+            />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="min-w-0">
+              <label className="block text-[11px] uppercase tracking-wide text-white/60 mb-1.5">Members *</label>
+              <input
+                type="number"
+                min={1}
+                value={offPlatformForm.members}
+                onChange={(e) => setOffPlatformForm((current) => ({ ...current, members: e.target.value }))}
+                className="w-full min-w-0 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs leading-5 text-white focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+              />
+              </div>
+              <div className="min-w-0">
+              <label className="block text-[11px] uppercase tracking-wide text-white/60 mb-1.5">Price *</label>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={offPlatformForm.price}
+                onChange={(e) => setOffPlatformForm((current) => ({ ...current, price: e.target.value }))}
+                className="w-full min-w-0 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs leading-5 text-white focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+              />
+              </div>
+            </div>
+
+            <div className="min-w-0">
+            <label className="block text-[11px] uppercase tracking-wide text-white/60 mb-1.5">Check-in Time</label>
+            <input
+              type="datetime-local"
+              value={offPlatformForm.checkinTime}
+              onChange={(e) => setOffPlatformForm((current) => ({ ...current, checkinTime: e.target.value }))}
+              className="w-full min-w-0 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs leading-5 text-white focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+            />
+            </div>
+
+            <div className="min-w-0">
+            <label className="block text-[11px] uppercase tracking-wide text-white/60 mb-1.5">Notes</label>
+            <textarea
+              rows={2}
+              value={offPlatformForm.notes}
+              onChange={(e) => setOffPlatformForm((current) => ({ ...current, notes: e.target.value }))}
+              placeholder="Any optional notes"
+              className="w-full min-w-0 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs leading-5 text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-amber-400/50 resize-none"
+            />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-white/10 shrink-0">
+          <button
+            onClick={closeOffPlatformModal}
+            className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white transition text-xs"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSaveOffPlatformRecord}
+            disabled={!offPlatformFormValid || offPlatformSaving}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-400/30 text-amber-100 hover:bg-amber-500/25 transition text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {offPlatformSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+            {editingOffPlatformRecord ? "Save Changes" : "Add Record"}
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  // When embedded in OrganizerDashboard, only render the main content
   if (embedded) {
     return (
-      <div className="flex-1 flex flex-col overflow-hidden text-white">
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-4 lg:p-6 space-y-6">
+      <>
+        <div className="flex-1 flex flex-col overflow-hidden text-white">
+          <main className="flex-1 overflow-y-auto">
+            <div className="p-4 lg:p-6 space-y-6">
             {/* Hero */}
             <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-red-600/25 via-purple-500/15 to-blue-600/25 shadow-lg shadow-black/40">
               <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.2),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(255,255,255,0.15),transparent_30%)]" />
@@ -325,7 +763,7 @@ const LiveEventPage = ({ embedded = false }) => {
                   >
                     <ArrowLeft className="w-4 h-4" /> Back
                   </button>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap justify-end">
                     {/* Real-time connection indicator */}
                     <div
                       className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs ${
@@ -347,6 +785,12 @@ const LiveEventPage = ({ embedded = false }) => {
                         </>
                       )}
                     </div>
+                    <button
+                      onClick={openOffPlatformModal}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-400/30 text-amber-100 hover:bg-amber-500/25 transition text-sm"
+                    >
+                      <Plus className="w-4 h-4" /> Off Platform Ticket
+                    </button>
                     <button
                       onClick={() => navigate("/organizer/reception")}
                       className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-100 hover:bg-emerald-500/25 transition text-sm"
@@ -682,15 +1126,19 @@ const LiveEventPage = ({ embedded = false }) => {
                 </div>
               </div>
             </div>
+            {offPlatformSection}
           </div>
-        </main>
-      </div>
+          </main>
+        </div>
+        {offPlatformModal}
+      </>
     );
   }
 
   // Non-embedded: Full page with sidebar (standalone view)
   return (
-    <div className="min-h-screen lg:h-screen flex flex-col lg:flex-row bg-gradient-to-br from-[#0b1220] via-[#0b0f1a] to-[#0a0b10] text-white">
+    <>
+      <div className="min-h-screen lg:h-screen flex flex-col lg:flex-row bg-gradient-to-br from-[#0b1220] via-[#0b0f1a] to-[#0a0b10] text-white">
       {/* Sidebar */}
       <aside
         className={`${sidebarOpen ? "w-64" : "w-24"} flex-shrink-0 h-full lg:h-screen lg:sticky lg:top-0 bg-[#0f1628] border-r border-white/10 flex flex-col transition-all duration-300`}
@@ -760,7 +1208,7 @@ const LiveEventPage = ({ embedded = false }) => {
                   >
                     <ArrowLeft className="w-4 h-4" /> Back
                   </button>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap justify-end">
                     <div
                       className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs ${
                         socketConnected
@@ -781,6 +1229,12 @@ const LiveEventPage = ({ embedded = false }) => {
                         </>
                       )}
                     </div>
+                    <button
+                      onClick={openOffPlatformModal}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-400/30 text-amber-100 hover:bg-amber-500/25 transition text-sm"
+                    >
+                      <Plus className="w-4 h-4" /> Off Platform Ticket
+                    </button>
                     <button
                       onClick={() => navigate("/organizer/reception")}
                       className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-100 hover:bg-emerald-500/25 transition text-sm"
@@ -1116,10 +1570,13 @@ const LiveEventPage = ({ embedded = false }) => {
                 </div>
               </div>
             </div>
+            {offPlatformSection}
           </div>
         </main>
       </div>
-    </div>
+      </div>
+      {offPlatformModal}
+    </>
   );
 };
 

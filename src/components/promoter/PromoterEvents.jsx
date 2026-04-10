@@ -30,6 +30,10 @@ const PromoterEvents = () => {
     updateFilters({ eventStatus: status });
   }, [updateFilters]);
 
+  const handlePublishStatusFilter = useCallback((publishStatus) => {
+    updateFilters({ publishStatus });
+  }, [updateFilters]);
+
   const paginationNumbers = useMemo(() => {
     const pages = [];
     const maxPages = pagination.totalPages;
@@ -77,20 +81,45 @@ const PromoterEvents = () => {
             <Loader className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
           )}
         </div>
-        <div className="flex flex-wrap gap-2 text-sm">
-          {["ALL", "ONGOING", "UPCOMING", "COMPLETED", "CANCELLED"].map((status) => (
-            <button
-              key={status}
-              onClick={() => handleStatusFilter(status)}
-              className={`px-3 py-2 rounded-lg border border-border/60 transition ${
-                filters.eventStatus === status
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card/70 text-muted-foreground hover:bg-card"
-              }`}
-            >
-              {status}
-            </button>
-          ))}
+        <div className="flex flex-col gap-2 text-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            Event Status
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {["ALL", "ONGOING", "UPCOMING", "COMPLETED", "CANCELLED"].map((status) => (
+              <button
+                key={status}
+                onClick={() => handleStatusFilter(status)}
+                className={`px-3 py-2 rounded-lg border border-border/60 transition ${
+                  filters.eventStatus === status
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card/70 text-muted-foreground hover:bg-card"
+                }`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-col gap-2 text-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            Publish Status
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {["ALL", "DRAFT", "PENDING", "PUBLISHED"].map((status) => (
+              <button
+                key={status}
+                onClick={() => handlePublishStatusFilter(status)}
+                className={`px-3 py-2 rounded-lg border border-border/60 transition ${
+                  filters.publishStatus === status
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card/70 text-muted-foreground hover:bg-card"
+                }`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -158,7 +187,14 @@ const PromoterEvents = () => {
                           )}
                         </CardDescription>
                       </div>
-                      <Badge variant={statusBadge(event.eventStatus)}>{event.eventStatus}</Badge>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant={statusBadge(event.eventStatus)}>{event.eventStatus}</Badge>
+                        {event.publishStatus && (
+                          <Badge variant={event.publishStatus === "PUBLISHED" ? "success" : "secondary"}>
+                            {event.publishStatus}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">

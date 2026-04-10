@@ -1,5 +1,16 @@
 import { useCallback, useMemo } from "react";
 import { Link, useOutletContext } from "react-router-dom";
+import {
+  AlertCircle,
+  Calendar,
+  ChevronRight,
+  Lock,
+  Loader,
+  Mail,
+  Phone,
+  Search,
+  ShieldCheck,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -13,25 +24,28 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Search, Mail, Phone, ChevronRight, Loader, AlertCircle } from "lucide-react";
 import { usePromoterUsers } from "@/hooks/usePromoterUsers";
 
 const PromoterUsers = () => {
   const { currency } = useOutletContext();
-  const {
-    users,
-    loading,
-    isFetching,
-    error,
-    pagination,
-    filters,
-    updateFilters,
-    changePage,
-  } = usePromoterUsers();
+  const { users, loading, isFetching, error, pagination, filters, updateFilters, changePage } =
+    usePromoterUsers();
 
-  const handleSearchChange = useCallback((e) => {
-    updateFilters({ search: e.target.value });
-  }, [updateFilters]);
+  const handleSearchChange = useCallback(
+    (e) => {
+      updateFilters({ search: e.target.value });
+    },
+    [updateFilters]
+  );
+
+  const formatDate = useCallback((value) => {
+    if (!value) return "N/A";
+    return new Date(value).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }, []);
 
   const paginationNumbers = useMemo(() => {
     const pages = [];
@@ -45,8 +59,8 @@ const PromoterUsers = () => {
     const endPage = Math.min(maxPages - 1, currentPage + 1);
 
     if (startPage > 2) pages.push("...");
-    for (let i = startPage; i <= endPage; i += 1) {
-      if (i !== 1 && i !== maxPages) pages.push(i);
+    for (let pageNum = startPage; pageNum <= endPage; pageNum += 1) {
+      if (pageNum !== 1 && pageNum !== maxPages) pages.push(pageNum);
     }
     if (endPage < maxPages - 1) pages.push("...");
     if (maxPages > 1) pages.push(maxPages);
@@ -59,7 +73,7 @@ const PromoterUsers = () => {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold">Users</h2>
-          <p className="text-muted-foreground">All registered attendee accounts with booking and spend insights.</p>
+          <p className="text-muted-foreground">All attendee accounts with booking activity and spend.</p>
         </div>
         <Badge variant="outline" className="text-sm py-1 px-3 border-border/70">
           {pagination.total} Users
@@ -69,7 +83,7 @@ const PromoterUsers = () => {
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
-          placeholder="Search by name, email, or phone..."
+          placeholder="Search users (min 2 chars)..."
           value={filters.search}
           onChange={handleSearchChange}
           className="pl-9"
@@ -78,6 +92,12 @@ const PromoterUsers = () => {
           <Loader className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
         )}
       </div>
+
+      {isFetching && !loading && (
+        <div className="h-0.5 w-full bg-muted overflow-hidden rounded-full">
+          <div className="h-full w-1/3 bg-primary rounded-full animate-pulse" />
+        </div>
+      )}
 
       {error && (
         <Card className="bg-destructive/10 border-destructive/30">
@@ -111,42 +131,75 @@ const PromoterUsers = () => {
             {users.map((user) => (
               <Card key={user.id} className="bg-card/70 border-border/60">
                 <CardContent className="p-4">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex items-center gap-4 min-w-0">
+                  <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                    <div className="flex items-start gap-4">
                       <Avatar className="h-10 w-10">
                         <AvatarFallback>{user.name?.slice(0, 2).toUpperCase() || "U"}</AvatarFallback>
                       </Avatar>
-                      <div className="min-w-0">
-                        <p className="font-semibold truncate">{user.name}</p>
-                        <p className="text-sm text-muted-foreground flex flex-wrap items-center gap-2">
-                          <Mail className="w-3 h-3" />
-                          <span className="truncate">{user.email}</span>
-                          <span className="text-muted-foreground/60">|</span>
-                          <Phone className="w-3 h-3" />
-                          <span>{user.phone || "-"}</span>
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-semibold">{user.name || "Unnamed user"}</p>
+                          <Badge variant={user.status === "active" ? "success" : "secondary"}>
+                            {user.status}
+                          </Badge>
+                          {user.isSuspended && (
+                            <Badge variant="destructive" className="gap-1">
+                              <Lock className="h-3 w-3" />
+                              Suspended
+                            </Badge>
+                          )}
+                          {user.isVerified && (
+                            <Badge variant="outline" className="border-emerald-500/30 text-emerald-600">
+                              <ShieldCheck className="mr-1 h-3 w-3" />
+                              Verified
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <span className="inline-flex items-center gap-1.5">
+                            <Mail className="w-3 h-3" />
+                            {user.email || "No email"}
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <Phone className="w-3 h-3" />
+                            {user.phone || "No phone"}
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <Calendar className="w-3 h-3" />
+                            Joined {formatDate(user.joinedAt)}
+                          </span>
                         </p>
+                        {user.isSuspended && user.suspensionReason && (
+                          <p className="text-xs text-destructive">
+                            Suspension reason: {user.suspensionReason}
+                          </p>
+                        )}
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between gap-4 lg:justify-end">
-                      <div className="grid grid-cols-3 gap-3 text-sm">
-                        <div className="text-center min-w-[74px]">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                      <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+                        <div className="text-center">
                           <p className="text-xs text-muted-foreground">Bookings</p>
-                          <p className="font-semibold">{user.totalBookings}</p>
+                          <p className="font-semibold">{Number(user.totalBookings || 0).toLocaleString()}</p>
                         </div>
-                        <div className="text-center min-w-[74px]">
+                        <div className="text-center">
                           <p className="text-xs text-muted-foreground">Tickets</p>
-                          <p className="font-semibold">{user.totalTickets}</p>
+                          <p className="font-semibold">{Number(user.totalTickets || 0).toLocaleString()}</p>
                         </div>
-                        <div className="text-center min-w-[100px]">
+                        <div className="text-center">
                           <p className="text-xs text-muted-foreground">Spent</p>
                           <p className="font-semibold text-accent">{currency(user.totalSpent)}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-muted-foreground">Last booking</p>
+                          <p className="font-semibold">{formatDate(user.lastBookingAt)}</p>
                         </div>
                       </div>
 
                       <Link
                         to={`/promoter/users/${user.id}`}
-                        className="inline-flex items-center gap-2 text-sm font-semibold text-accent hover:text-accent/80 transition whitespace-nowrap"
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-accent hover:text-accent/80 transition"
                       >
                         View details <ChevronRight className="w-4 h-4" />
                       </Link>

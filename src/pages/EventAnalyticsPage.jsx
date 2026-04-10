@@ -50,6 +50,7 @@ import {
 } from "recharts";
 import { buildUrl } from "@/config/api";
 import { useEventAnalytics } from "@/hooks/useEventAnalytics";
+import AnalyticsProgressBar from "@/components/analytics/AnalyticsProgressBar";
 
 const fmt = (n) =>
   new Intl.NumberFormat("en-IN", {
@@ -138,13 +139,21 @@ const ChartTooltip = ({ active, payload, label }) => {
 
 // ─── Progress Bar ───────────────────────────────────────────────────────────
 
-const ProgressBar = ({ value, color = "bg-violet-500" }) => (
-  <div className="w-full h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
-    <div
-      className={`h-full ${color} rounded-full transition-all duration-500`}
-      style={{ width: `${Math.min(value, 100)}%` }}
-    />
-  </div>
+const PROGRESS_FILL_STYLES = {
+  cyan: { backgroundColor: "#06b6d4" },
+  violet: { backgroundColor: "#8b5cf6" },
+  emerald: { backgroundColor: "#10b981" },
+  amber: { backgroundColor: "#f59e0b" },
+  muted: { backgroundColor: "rgba(255, 255, 255, 0.24)" },
+};
+
+const ProgressBar = ({ value, tone = "violet" }) => (
+  <AnalyticsProgressBar
+    value={value}
+    heightClassName="h-1.5"
+    trackStyle={{ backgroundColor: "rgba(255, 255, 255, 0.08)" }}
+    fillStyle={PROGRESS_FILL_STYLES[tone] || PROGRESS_FILL_STYLES.violet}
+  />
 );
 
 // ─── Main Page ──────────────────────────────────────────────────────────────
@@ -547,7 +556,7 @@ const EventAnalyticsPage = () => {
                   </span>
                   <span className="text-cyan-400 font-medium">{checkins.checkInRate}%</span>
                 </div>
-                <ProgressBar value={checkins.checkInRate} color="bg-cyan-500" />
+                <ProgressBar value={checkins.checkInRate} tone="cyan" />
               </div>
               {/* Per ticket */}
               <div className="space-y-3">
@@ -557,7 +566,7 @@ const EventAnalyticsPage = () => {
                       <span className="text-white/70 truncate max-w-[180px]">{t.ticketName}</span>
                       <span className="text-white/40">{t.checkedIn}/{t.total} ({t.checkInRate}%)</span>
                     </div>
-                    <ProgressBar value={t.checkInRate} color="bg-violet-500" />
+                    <ProgressBar value={t.checkInRate} tone="violet" />
                   </div>
                 ))}
               </div>
@@ -613,7 +622,7 @@ const EventAnalyticsPage = () => {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <div className="w-16">
-                              <ProgressBar value={row.sellThroughRate} color={row.sellThroughRate > 80 ? "bg-emerald-500" : row.sellThroughRate > 50 ? "bg-amber-500" : "bg-white/20"} />
+                              <ProgressBar value={row.sellThroughRate} tone={row.sellThroughRate > 80 ? "emerald" : row.sellThroughRate > 50 ? "amber" : "muted"} />
                             </div>
                             <span className="text-white/50">{row.sellThroughRate}%</span>
                           </div>

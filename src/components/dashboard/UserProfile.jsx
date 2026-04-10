@@ -67,6 +67,7 @@ const normalizeRole = (value) => {
 };
 
 const getStoredProfile = () => {
+  const storedRaw = sessionStorage.getItem("userProfile");
   const fallback = {
     name: sessionStorage.getItem("userName") || "",
     email: sessionStorage.getItem("userEmail") || "",
@@ -75,10 +76,17 @@ const getStoredProfile = () => {
     authProvider: sessionStorage.getItem("authProvider") || "password",
     hasPassword: sessionStorage.getItem("hasPassword") === "true",
   };
-  const storedRaw = sessionStorage.getItem("userProfile");
   if (!storedRaw) return fallback;
   try {
-    return { ...fallback, ...JSON.parse(storedRaw) };
+    const parsed = JSON.parse(storedRaw);
+    const authProvider = parsed.authProvider || parsed.provider || fallback.authProvider || "password";
+    const hasPassword =
+      parsed.hasPassword !== undefined
+        ? Boolean(parsed.hasPassword)
+        : authProvider === "google"
+          ? false
+          : fallback.hasPassword;
+    return { ...fallback, ...parsed, authProvider, hasPassword };
   } catch (error) {
     console.warn("Failed to parse stored user profile", error);
     return fallback;
@@ -132,7 +140,20 @@ export default function UserProfile() {
       const response = await apiFetch("/api/user/profile", { method: "GET" });
       if (response?.success && response?.data) {
         const avatar = response.data.avatar || response.data.avatarUrl || "";
-        const normalizedProfile = { ...response.data, avatar, avatarUrl: response.data.avatarUrl || avatar };
+        const authProvider = response.data.authProvider || response.data.provider || "password";
+        const hasPassword =
+          response.data.hasPassword !== undefined
+            ? Boolean(response.data.hasPassword)
+            : authProvider === "google"
+              ? false
+              : true;
+        const normalizedProfile = {
+          ...response.data,
+          avatar,
+          avatarUrl: response.data.avatarUrl || avatar,
+          authProvider,
+          hasPassword,
+        };
         setProfileData(normalizedProfile);
         sessionStorage.setItem("userName", normalizedProfile.name || "");
         sessionStorage.setItem("userEmail", normalizedProfile.email || "");
@@ -162,11 +183,14 @@ export default function UserProfile() {
   }, [fetchProfile]);
 
   const profile = useMemo(() => {
-    const storedProvider = storedProfile.authProvider || sessionStorage.getItem("authProvider");
+    const storedProvider =
+      storedProfile.authProvider ||
+      storedProfile.provider ||
+      sessionStorage.getItem("authProvider");
     const storedHasPassword = storedProfile.hasPassword !== undefined ? storedProfile.hasPassword : sessionStorage.getItem("hasPassword") === "true";
     if (profileData) {
       const apiRole = profileData.user_roles?.[0]?.roles?.name || 'USER';
-      const provider = profileData.authProvider || storedProvider || sampleProfile.authProvider || "password";
+      const provider = profileData.authProvider || profileData.provider || storedProvider || "password";
       const passwordState = provider === "password"
         ? (profileData.hasPassword !== undefined ? profileData.hasPassword : true)
         : (profileData.hasPassword !== undefined ? profileData.hasPassword : storedHasPassword !== undefined ? storedHasPassword : false);

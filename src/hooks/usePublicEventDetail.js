@@ -3,6 +3,17 @@ import { apiFetch } from "@/config/api";
 
 const FALLBACK_IMAGE = "https://via.placeholder.com/1200x600?text=Event";
 const SPONSOR_PLACEHOLDER = "https://via.placeholder.com/200x200?text=Sponsor";
+const hasHtmlTag = (value) =>
+  typeof value === "string" && /<\/?[a-z][\s\S]*>/i.test(value);
+const hasEscapedHtmlTag = (value) =>
+  typeof value === "string" && /&lt;\/?[a-z][\s\S]*&gt;/i.test(value);
+const decodeHtmlEntities = (value) => {
+  if (typeof value !== "string" || !value.includes("&")) return value;
+  if (typeof document === "undefined") return value;
+  const textarea = document.createElement("textarea");
+  textarea.innerHTML = value;
+  return textarea.value;
+};
 
 function buildAdvisoryItems(raw) {
   if (!raw) return [];
@@ -60,6 +71,42 @@ function formatAdvisory(raw) {
 }
 
 function normalizeCoreEvent(data) {
+  const rawTc = data.TC || null;
+  const rawTermsContent = rawTc?.content || data.termsHtml || "";
+  const rawTermsText = rawTc?.terms || data.terms || "";
+  const decodedTermsContent = decodeHtmlEntities(rawTermsContent || "");
+  const decodedTermsText = decodeHtmlEntities(rawTermsText || "");
+  const termsHtml = decodedTermsContent
+    ? (hasHtmlTag(decodedTermsContent) || hasEscapedHtmlTag(rawTermsContent) ? decodedTermsContent : "")
+    : (hasHtmlTag(decodedTermsText) || hasEscapedHtmlTag(rawTermsText) ? decodedTermsText : "");
+  const termsText = termsHtml ? "" : (typeof rawTermsText === "string" ? rawTermsText : "");
+  const termsAndConditions = Array.isArray(data?.termsAndConditions)
+    ? data.termsAndConditions.map((t) => {
+        if (!t || typeof t !== "object") return t;
+        const content = decodeHtmlEntities(t.content || "");
+        const terms = decodeHtmlEntities(t.terms || "");
+
+        if (content && (hasHtmlTag(content) || hasEscapedHtmlTag(t.content))) {
+          return { ...t, content };
+        }
+        if (terms && (hasHtmlTag(terms) || hasEscapedHtmlTag(t.terms))) {
+          return { ...t, content: terms };
+        }
+        return { ...t };
+      })
+    : rawTc
+      ? [
+          {
+            ...rawTc,
+            content:
+              decodeHtmlEntities(rawTc.content || "") ||
+              ((hasHtmlTag(decodeHtmlEntities(rawTc.terms || "")) || hasEscapedHtmlTag(rawTc.terms))
+                ? decodeHtmlEntities(rawTc.terms)
+                : ""),
+          },
+        ]
+      : [];
+
   const advisoryItems = buildAdvisoryItems(data.advisory?.warnings || data.advisory || data.advisories);
 
   return {
@@ -112,10 +159,10 @@ function normalizeCoreEvent(data) {
     reviews: 0,
     advisory: formatAdvisory(data.advisory?.warnings || data.advisory || data.advisories),
     advisoryItems,
-    terms: data.TC?.terms || data.terms || "",
-    termsHtml: data.TC?.content || data.termsHtml || "",
+    terms: termsText,
+    termsHtml,
     termsUpdated: data.TC?.lastUpdated || data.termsUpdated || "",
-    termsAndConditions: data.TC ? [data.TC] : [],
+    termsAndConditions,
     reviewsList: [],
     stats: {},
     artists: [],
