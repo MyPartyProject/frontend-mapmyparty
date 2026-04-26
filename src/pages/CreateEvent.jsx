@@ -35,7 +35,12 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { updateEventStep1, updateEventStep2, uploadFlyerImage, deleteFlyerImage, uploadGalleryImages, deleteGalleryImage, generateEventId, createTicket, deleteTicket, createVenue, updateVenue, createArtist, updateEventStep6, uploadArtistImage, createEventStep1, persistFlyerUrl, uploadDraftImage, persistGalleryUrls, deleteDraftCloudinaryImage } from "@/services/eventService";
 import { apiFetch } from "@/config/api";
-import { TEMPLATE_CONFIGS, DETAIL_TEMPLATE_CONFIGS, getTemplateConfig, mapTemplateId, mapTemplateNameToId } from "@/config/templates";
+import {
+  DEFAULT_EVENT_DETAIL_TEMPLATE,
+  getAvailableEventDetailTemplates,
+  getEventDetailTemplateOption,
+  normalizeEventDetailTemplateId,
+} from "@/config/eventDetailTemplates";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
@@ -84,7 +89,7 @@ const CreateEvent = () => {
   const [createdArtistIndices, setCreatedArtistIndices] = useState([]); // Track created artists
   const [currentEventType, setCurrentEventType] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState("Classic"); // Default template (using name)
+  const [selectedTemplate, setSelectedTemplate] = useState(DEFAULT_EVENT_DETAIL_TEMPLATE);
   const today = new Date();
   const [startCalendarOpen, setStartCalendarOpen] = useState(false);
   const [endCalendarOpen, setEndCalendarOpen] = useState(false);
@@ -765,10 +770,9 @@ const CreateEvent = () => {
           : ticketPrice
       );
 
-      if (eventToEdit.template) {
-        const templateName = mapTemplateId(eventToEdit.template);
-        setSelectedTemplate(templateName);
-      }
+      setSelectedTemplate(
+        normalizeEventDetailTemplateId(eventToEdit.detailTemplate || eventToEdit.template)
+      );
 
       const firstVenue = Array.isArray(eventToEdit.venues) && eventToEdit.venues.length > 0
         ? eventToEdit.venues[0]
@@ -1240,10 +1244,13 @@ const CreateEvent = () => {
     { number: 5, title: "Sponsor" },
     { number: 6, title: "Add Artist" },
     { number: 7, title: "Additional Info" },
-    { number: 8, title: "Review & Publish" },
+    { number: 8, title: "Template" },
+    { number: 9, title: "Review & Publish" },
   ];
 
   const progress = (currentStep / steps.length) * 100;
+  const detailTemplateOptions = getAvailableEventDetailTemplates();
+  const selectedTemplateOption = getEventDetailTemplateOption(selectedTemplate);
   const basicDetailsFilled = Boolean(eventTitle.trim() && mainCategory && selectedCategories.length > 0);
   const isSectionBusy = isSubmitting || uploadingCover || uploadingGallery || showLoading;
   const canJumpBetweenSections = isEditMode && !isSectionBusy;
@@ -2170,7 +2177,32 @@ const CreateEvent = () => {
       return;
     }
 
-  if (currentStep < steps.length) {
+    if (currentStep === 8) {
+      if (!backendEventId) {
+        toast.error("Event ID not found. Please complete all previous steps.");
+        return;
+      }
+
+      try {
+        setIsSubmitting(true);
+        setLoadingMessage("Saving template selection...");
+        setShowLoading(true);
+        await updateEventStep6(backendEventId, {
+          detailTemplate: normalizeEventDetailTemplateId(selectedTemplate),
+        });
+        moveToNextStep();
+      } catch (error) {
+        console.error("Error saving template selection:", error);
+        toast.error(error.message || "Failed to save template selection. Please try again.");
+        return;
+      } finally {
+        setIsSubmitting(false);
+        setShowLoading(false);
+      }
+      return;
+    }
+
+    if (currentStep < steps.length) {
       moveToNextStep();
     }
   };
@@ -2793,6 +2825,7 @@ const CreateEvent = () => {
         advisory: advisoryJson,
         questions: questionsJson,
         organizerNote: organizerNote,
+        detailTemplate: normalizeEventDetailTemplateId(selectedTemplate),
         publishStatus: isDraft ? "DRAFT" : "PUBLISHED",
       };
 
@@ -2828,6 +2861,7 @@ const CreateEvent = () => {
           flyerImageUrl: coverImage,
           image: coverImage, // Alias for compatibility
           galleryImages: galleryImages,
+          detailTemplate: normalizeEventDetailTemplateId(selectedTemplate),
           ticketsSold: 0,
           totalTickets: savedTickets.reduce((sum, t) => sum + (t.available || 0), 0),
           revenue: 0,
@@ -4327,8 +4361,75 @@ const CreateEvent = () => {
                 );
               })()}
 
-              {/* Step 8: Review & Publish */}
-              {currentStep === 8 && (() => {
+              {/* Step 8: Template */}
+              {currentStep === 8 && (
+                <div className="space-y-5 bg-[#0a0a0a]/80 p-4 rounded-xl border border-gray-800">
+                  <div className="space-y-2">
+                    <p className="text-xs uppercase tracking-[0.14em] text-white/60">Event Page Template</p>
+                    <h3 className="text-2xl font-semibold text-white">Choose attendee event detail experience</h3>
+                    <p className="max-w-2xl text-sm text-gray-400">
+                      The current event detail UI is the default template. Pick another template only when you want a different attendee experience for this event.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-3">
+                    {detailTemplateOptions.map((template) => {
+                      const isSelected = selectedTemplate === template.id;
+                      return (
+                        <button
+                          key={template.id}
+                          type="button"
+                          onClick={() => setSelectedTemplate(template.id)}
+                          className={`group overflow-hidden rounded-2xl border text-left transition ${
+                            isSelected
+                              ? "border-[#D60024] bg-[#D60024]/10 shadow-[0_0_0_1px_rgba(214,0,36,0.35)]"
+                              : "border-gray-800 bg-[#0c0c0c] hover:border-gray-600"
+                          }`}
+                          disabled={isSectionBusy}
+                        >
+                          <div className="aspect-[4/3] border-b border-white/10 bg-[#111] p-4">
+                            <div className={`h-full rounded-xl border ${isSelected ? "border-[#D60024]/60" : "border-gray-700"} bg-[#050505] p-3`}>
+                              <div className="mb-3 h-16 rounded-lg bg-gradient-to-br from-gray-700 via-gray-900 to-black" />
+                              <div className="space-y-2">
+                                <div className={`h-2.5 rounded-full ${isSelected ? "bg-[#D60024]" : "bg-gray-600"}`} />
+                                <div className="h-2 rounded-full bg-gray-700 w-4/5" />
+                                <div className="grid grid-cols-2 gap-2 pt-2">
+                                  <div className="h-10 rounded-md bg-gray-800" />
+                                  <div className="h-10 rounded-md bg-gray-800" />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-3 p-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <h4 className="text-base font-semibold text-white">{template.displayName}</h4>
+                                  {template.isDefault && (
+                                    <Badge className="bg-gray-800 text-gray-200 border-gray-700">Default</Badge>
+                                  )}
+                                </div>
+                                <p className="mt-1 text-xs text-gray-500">{template.shortName}</p>
+                              </div>
+                              <span className={`flex h-6 w-6 items-center justify-center rounded-full border ${
+                                isSelected ? "border-[#D60024] bg-[#D60024] text-white" : "border-gray-700 text-transparent"
+                              }`}>
+                                <Check className="h-4 w-4" />
+                              </span>
+                            </div>
+                            <p className="text-sm leading-6 text-gray-400">{template.description}</p>
+                            <p className="text-xs text-gray-500">{template.tone}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 9: Review & Publish */}
+              {currentStep === 9 && (() => {
                 const statusBadge = (filled) => (
                   <Badge className={filled ? 'bg-[#D60024]/20 text-white border-[#D60024]/40' : 'bg-[#0a0a0a] text-gray-400 border-gray-700'}>
                     {filled ? 'Filled' : 'Missing'}
@@ -4391,6 +4492,7 @@ const CreateEvent = () => {
                   { label: 'Sponsors', value: normalizeSponsors(sponsors).length ? `${normalizeSponsors(sponsors).length} added` : '' },
                   { label: 'Artists', value: artists.filter((a) => a.name.trim()).length ? `${artists.filter((a) => a.name.trim()).length} added` : '' },
                   { label: 'Location', value: fullAddress || [city, state].filter(Boolean).join(', ') || 'Location pending' },
+                  { label: 'Template', value: selectedTemplateOption?.displayName || 'Classic' },
                 ];
 
                 return (
@@ -4601,7 +4703,7 @@ const CreateEvent = () => {
                 </Button>
 
                 <div className="flex items-center gap-3">
-                  {isEditMode && currentStep < 8 && (
+                  {isEditMode && currentStep < steps.length && (
                     <Button
                       variant="outline"
                       onClick={saveCurrentSection}
@@ -4612,7 +4714,7 @@ const CreateEvent = () => {
                     </Button>
                   )}
 
-                  {currentStep < 8 ? (
+                  {currentStep < steps.length ? (
                     <Button
                       onClick={() => nextStep()}
                       disabled={isSectionBusy}

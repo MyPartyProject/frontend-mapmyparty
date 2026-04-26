@@ -395,6 +395,9 @@ export async function createEventStep1(eventData) {
   if (eventData.eventType) {
     jsonData.type = eventData.eventType;
   }
+  if (eventData.detailTemplate) {
+    jsonData.detailTemplate = eventData.detailTemplate;
+  }
 
   console.log("📤 Sending as JSON:", jsonData);
 
@@ -1031,6 +1034,10 @@ export async function updateEventStep6(eventId, updateData) {
   // Only add organizerNote if it has content
   if (updateData.organizerNote && updateData.organizerNote.trim() !== "") {
     payload.organizerNote = updateData.organizerNote.trim();
+  }
+
+  if (updateData.detailTemplate) {
+    payload.detailTemplate = updateData.detailTemplate;
   }
 
   // Sponsors data (allow empty array to clear)

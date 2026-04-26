@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import {
   ChevronLeft, ChevronDown, ChevronRight, Calendar, MapPin, Clock, Users, Share2, Heart,
   Ticket, Star, TrendingUp, Mail, Phone, Globe, Instagram,
-  Facebook, Twitter, Plus, Minus, X, Check, Info, Image as ImageIcon,
+  Facebook, Twitter, Plus, Minus, X, Check, Info,
   Navigation, Building, User, BookOpen, Medal, Loader2, ShieldCheck,
   AlertTriangle, Megaphone
 } from "lucide-react";
@@ -19,6 +19,8 @@ import { apiFetch, buildUrl } from "@/config/api";
 import usePublicEventDetail from "@/hooks/usePublicEventDetail";
 import { fetchSession, resetSessionCache, isAuthenticated as isAuthedSync } from "@/utils/auth";
 import BillingDetailsModal from "@/components/BillingDetailsModal";
+import GalleryModal from "@/components/event-detail/GalleryModal";
+import { resolveEventDetailTemplate } from "@/components/EventDetailTemplates/registry";
 import logoSvg from "@/assets/MMP logo.svg";
 // import PromoterDashboardHeader from "@/components/PromoterDashboardHeader";
 
@@ -43,6 +45,8 @@ const EventDetailNew = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { event, loading, error } = usePublicEventDetail(organizerSlug, eventSlug);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState("about");
   const [autoRotatePausedUntil, setAutoRotatePausedUntil] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
@@ -63,6 +67,7 @@ const EventDetailNew = () => {
   const [aboutExpanded, setAboutExpanded] = useState(false);
   const [aboutCanExpand, setAboutCanExpand] = useState(false);
   const aboutRef = useRef(null);
+  const galleryTrackRef = useRef(null);
   const [organizerNoteExpanded, setOrganizerNoteExpanded] = useState(false);
   const [organizerNoteCanExpand, setOrganizerNoteCanExpand] = useState(true);
   const galleryImages = useMemo(
@@ -151,6 +156,7 @@ const EventDetailNew = () => {
       `
       @keyframes tabFadeSlide {0%{opacity:0;transform:translateY(10px);}100%{opacity:1;transform:translateY(0);}}
       @keyframes sponsorMarquee {0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+      @keyframes galleryReveal {0%{opacity:0;transform:translateY(14px) scale(.98);}100%{opacity:1;transform:translateY(0) scale(1);}}
       `,
     []
   );
@@ -178,7 +184,7 @@ const EventDetailNew = () => {
     if (decodedTermsHtml && (hasHtmlTag(decodedTermsHtml) || hasEscapedHtmlTag(event?.termsHtml))) {
       return (
         <div
-          className="prose prose-invert max-w-none text-gray-400 prose-p:my-1 prose-li:my-0.5 prose-ol:list-decimal prose-ul:list-disc prose-headings:text-white text-[11px] leading-4"
+          className="prose prose-invert max-w-none text-gray-400 prose-p:my-1 prose-li:my-0.5 prose-ol:list-decimal prose-ul:list-disc prose-headings:text-white prose-headings:text-xs text-[10px] leading-[1.45]"
           dangerouslySetInnerHTML={{ __html: decodedTermsHtml }}
         />
       );
@@ -188,7 +194,7 @@ const EventDetailNew = () => {
     if (hasHtmlTag(decodedTerms) || hasEscapedHtmlTag(event?.terms)) {
       return (
         <div
-          className="prose prose-invert max-w-none text-gray-400 prose-p:my-1 prose-li:my-0.5 prose-ol:list-decimal prose-ul:list-disc prose-headings:text-white text-[11px] leading-4"
+          className="prose prose-invert max-w-none text-gray-400 prose-p:my-1 prose-li:my-0.5 prose-ol:list-decimal prose-ul:list-disc prose-headings:text-white prose-headings:text-xs text-[10px] leading-[1.45]"
           dangerouslySetInnerHTML={{ __html: decodedTerms }}
         />
       );
@@ -201,7 +207,7 @@ const EventDetailNew = () => {
 
     if (termsLines?.length) {
       return (
-        <ul className="space-y-1 pl-4 list-disc text-gray-400 text-[11px] leading-4">
+        <ul className="space-y-1 pl-4 list-disc text-gray-400 text-[10px] leading-[1.45]">
           {termsLines.map((line, idx) => (
             <li key={`term-line-${idx}`}>{line}</li>
           ))}
@@ -209,7 +215,7 @@ const EventDetailNew = () => {
       );
     }
 
-    return <p className="text-gray-500 text-[11px]">No terms provided.</p>;
+    return <p className="text-gray-500 text-[10px]">No terms provided.</p>;
   };
 
   const renderFaqTc = () => (
@@ -314,9 +320,11 @@ const EventDetailNew = () => {
     [hasSponsors, sponsorsSorted]
   );
   const showSponsorStrip = useMemo(
-    () => hasSponsors && sponsorsSorted.length > 1,
+    () => hasSponsors && sponsorsSorted.length > 0,
     [hasSponsors, sponsorsSorted.length]
   );
+  const shouldAnimateSponsorStrip = sponsorsSorted.length > 3;
+  const sponsorStripItems = shouldAnimateSponsorStrip ? [...sponsorsSorted, ...sponsorsSorted] : sponsorsSorted;
 
   const getArtistImage = (artist) =>
     artist.image || artist.photo || artist.avatar || artist.profileImage || FALLBACK_IMAGE;
@@ -332,6 +340,61 @@ const EventDetailNew = () => {
     const nextIndex = (selectedImageIndex + 1) % galleryImages.length;
     setSelectedImage(galleryImages[nextIndex]);
   };
+
+  const openGalleryModal = (index) => {
+    if (!galleryImages[index]) return;
+    setCurrentImageIndex(index);
+    setIsGalleryModalOpen(true);
+  };
+
+  const getGalleryTileClass = (index, totalImages) => {
+    if (totalImages === 1) return "col-span-8 row-span-6";
+    if (totalImages === 2) return index === 0 ? "col-span-5 row-span-6" : "col-span-4 row-span-6";
+
+    const tilePattern = [
+      "col-span-4 row-span-6",
+      "col-span-3 row-span-3",
+      "col-span-3 row-span-3",
+      "col-span-5 row-span-4",
+      "col-span-5 row-span-2",
+      "col-span-3 row-span-6",
+      "col-span-4 row-span-2",
+      "col-span-4 row-span-4",
+    ];
+    const orphanFullHeightPattern = {
+      1: "col-span-3 row-span-6",
+      3: "col-span-5 row-span-6",
+      6: "col-span-4 row-span-6",
+    };
+    const patternIndex = index % tilePattern.length;
+
+    if (index === totalImages - 1 && orphanFullHeightPattern[patternIndex]) {
+      return orphanFullHeightPattern[patternIndex];
+    }
+
+    return tilePattern[patternIndex];
+  };
+
+  const scrollGallery = (direction) => {
+    const track = galleryTrackRef.current;
+    if (!track) return;
+    const distance = Math.max(320, Math.round(track.clientWidth * 0.78));
+    track.scrollBy({
+      left: direction === "next" ? distance : -distance,
+      behavior: "smooth",
+    });
+  };
+
+  useEffect(() => {
+    if (!isGalleryModalOpen) return;
+    if (galleryImages.length === 0) {
+      setIsGalleryModalOpen(false);
+      return;
+    }
+    if (currentImageIndex >= galleryImages.length) {
+      setCurrentImageIndex(galleryImages.length - 1);
+    }
+  }, [currentImageIndex, galleryImages.length, isGalleryModalOpen]);
 
   // Resume booking after Google OAuth redirect
   useEffect(() => {
@@ -631,6 +694,121 @@ const EventDetailNew = () => {
     }
   };
 
+  const detailTemplateConfig = useMemo(
+    () => resolveEventDetailTemplate(event?.detailTemplate),
+    [event?.detailTemplate]
+  );
+  const SelectedDetailTemplate = detailTemplateConfig.component;
+  const isClassicDetailTemplate = detailTemplateConfig.isClassicCurrent || !SelectedDetailTemplate;
+
+  const renderTemplateTicketPanel = (variant = "dark") => {
+    if (!event) return null;
+
+    const isPaper = variant === "paper";
+    const isGlass = variant === "glass";
+    const panelClass = isPaper
+      ? "rounded-lg border border-[#171410]/15 bg-white/70 p-5 text-[#171410] shadow-sm"
+      : isGlass
+        ? "rounded-lg border border-white/15 bg-[#090b0f]/[0.72] p-5 text-white shadow-2xl backdrop-blur-xl"
+        : "rounded-xl border border-gray-700/50 bg-gray-950 p-4 text-white";
+    const mutedText = isPaper ? "text-[#6e6256]" : "text-white/55";
+    const ticketCardClass = isPaper
+      ? "rounded-lg border border-[#171410]/12 bg-[#f7f3eb] p-4"
+      : "rounded-lg border border-white/10 bg-white/[0.04] p-4";
+    const controlClass = isPaper
+      ? "flex h-8 w-8 items-center justify-center rounded-full border border-[#171410]/20 text-[#171410] transition hover:bg-[#171410]/5 disabled:cursor-not-allowed disabled:opacity-40"
+      : "flex h-8 w-8 items-center justify-center rounded-full border border-white/20 text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40";
+
+    return (
+      <div id="ticket-section" className={panelClass}>
+        <h2 className="mb-4 flex items-center gap-2 text-2xl font-bold">
+          <Ticket className="h-5 w-5 text-red-600" />
+          Select Tickets
+        </h2>
+
+        <div className="space-y-3">
+          {event.tickets.map((ticket) => {
+            const cap = getTicketCap(ticket);
+            const qty = ticketQuantities[ticket.id] || 0;
+
+            return (
+              <div key={ticket.id} className={`${ticketCardClass} ${ticket.available === 0 ? "opacity-60" : ""}`}>
+                <div className="mb-2 flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="font-bold">{ticket.name}</h3>
+                    {ticket.description && <p className={`mt-1 text-xs ${mutedText}`}>{ticket.description}</p>}
+                  </div>
+                  <span className="whitespace-nowrap text-lg font-black text-red-600">{formatCurrency(ticket.price)}</span>
+                </div>
+
+                <div className="flex items-center justify-between gap-4">
+                  <div className={`text-xs ${mutedText}`}>
+                    <p>{ticket.available} available</p>
+                    {Number.isFinite(cap) && cap < Infinity && <p>Max {cap} per user</p>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleQuantityChange(ticket.id, -1)}
+                      disabled={!qty || isSalesClosed || ticket.available === 0}
+                      className={controlClass}
+                      aria-label={`Decrease ${ticket.name} quantity`}
+                    >
+                      <Minus className="h-3.5 w-3.5" />
+                    </button>
+                    <span className="w-8 text-center text-lg font-bold">{qty}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleQuantityChange(ticket.id, 1)}
+                      disabled={isSalesClosed || ticket.available === 0 || qty >= cap}
+                      className={controlClass}
+                      aria-label={`Increase ${ticket.name} quantity`}
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className={`mt-4 flex items-center justify-between border-t pt-4 text-sm ${isPaper ? "border-[#171410]/12" : "border-white/10"}`}>
+          <span className={mutedText}>Tickets</span>
+          <span className="font-bold">{totalTickets}</span>
+        </div>
+        <div className={`mt-2 flex items-center justify-between text-sm ${mutedText}`}>
+          <span>Total</span>
+          <span className="font-semibold">{formatCurrency(totalAmount)}</span>
+        </div>
+
+        <Button
+          onClick={handleBookNow}
+          disabled={totalTickets === 0 || isSalesClosed || isSoldOut}
+          className="mt-4 w-full rounded-lg bg-red-600 py-5 font-semibold text-white hover:bg-red-700"
+        >
+          {bookingDisabledReason || "Book Now"}
+        </Button>
+        <p className={`mt-3 text-center text-xs ${mutedText}`}>
+          {bookingDisabledReason ? "Booking unavailable" : "Secure payment. Instant confirmation."}
+        </p>
+      </div>
+    );
+  };
+
+  const detailTemplateProps = {
+    event,
+    galleryImages,
+    primarySponsor,
+    secondarySponsors,
+    renderTicketPanel: renderTemplateTicketPanel,
+    renderFaqTcBlock,
+    formatDate,
+    formatTime,
+    onShare: handleShare,
+    onOpenImage: setSelectedImage,
+  };
+
   if (loading) {
     return (
       <div className="event-detail-theme min-h-screen bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] flex items-center justify-center">
@@ -651,6 +829,158 @@ const EventDetailNew = () => {
             Browse Events
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  if (!isClassicDetailTemplate) {
+    return (
+      <div className="event-detail-theme min-h-screen text-white bg-gray-950">
+        <style>{pageCss}</style>
+        <SelectedDetailTemplate {...detailTemplateProps} />
+
+        {selectedImage && (
+          <div
+            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+            onClick={() => setSelectedImage(null)}
+          >
+            <Button
+              variant="ghost"
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-4 right-4 text-white hover:bg-white/10"
+            >
+              <X className="h-6 w-6" />
+            </Button>
+            {galleryImages.length > 1 && (
+              <>
+                <Button
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    showPreviousImage();
+                  }}
+                  className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 text-white hover:bg-white/10 rounded-full h-12 w-12 p-0"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="h-7 w-7" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    showNextImage();
+                  }}
+                  className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 text-white hover:bg-white/10 rounded-full h-12 w-12 p-0"
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="h-7 w-7" />
+                </Button>
+              </>
+            )}
+            <img
+              src={selectedImage}
+              alt="Gallery"
+              className="max-w-full max-h-full object-contain rounded-xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        )}
+
+        <Dialog open={authModalOpen} onOpenChange={setAuthModalOpen}>
+          <DialogContent className="border-gray-800 bg-gray-900 text-white max-w-2xl">
+            <DialogHeader className="space-y-2">
+              <DialogTitle className="text-2xl flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-green-600" />
+                Sign in to book instantly
+              </DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Secure checkout with email or Google. We'll auto-apply your details to the ticket.
+              </DialogDescription>
+            </DialogHeader>
+
+            <Tabs value={authMode} onValueChange={setAuthMode} className="mt-2">
+              <TabsList className="grid grid-cols-2 bg-gray-800">
+                <TabsTrigger value="login">Login</TabsTrigger>
+                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="login" className="mt-4 space-y-4">
+                <form className="space-y-4" onSubmit={handleInlineLogin}>
+                  <div className="space-y-2">
+                    <Label htmlFor="template-inline-email">Email</Label>
+                    <Input
+                      id="template-inline-email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={loginForm.email}
+                      onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="template-inline-password">Password</Label>
+                    <Input
+                      id="template-inline-password"
+                      type="password"
+                      placeholder="Password"
+                      value={loginForm.password}
+                      onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full py-5 bg-red-600 hover:bg-red-700" disabled={authLoading}>
+                    {authLoading ? "Signing you in..." : "Login & Book"}
+                  </Button>
+                </form>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-gray-700 text-white bg-gray-800 hover:bg-gray-700"
+                  onClick={handleGoogleLogin}
+                >
+                  Sign in with Google
+                </Button>
+              </TabsContent>
+
+              <TabsContent value="signup" className="mt-4 space-y-4">
+                <form className="space-y-4" onSubmit={handleInlineSignup}>
+                  <Input
+                    placeholder="Your name"
+                    value={signupForm.name}
+                    onChange={(e) => setSignupForm({ ...signupForm, name: e.target.value })}
+                  />
+                  <Input
+                    type="email"
+                    placeholder="you@example.com"
+                    value={signupForm.email}
+                    onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })}
+                  />
+                  <Input
+                    type="tel"
+                    placeholder="10-15 digits"
+                    value={signupForm.phone}
+                    onChange={(e) => setSignupForm({ ...signupForm, phone: e.target.value })}
+                  />
+                  <Input
+                    type="password"
+                    placeholder="Create a password"
+                    value={signupForm.password}
+                    onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
+                  />
+                  <Button type="submit" className="w-full py-5 bg-green-600 hover:bg-green-700" disabled={authLoading}>
+                    {authLoading ? "Creating your account..." : "Sign Up & Book"}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
+          </DialogContent>
+        </Dialog>
+
+        <BillingDetailsModal
+          isOpen={billingModalOpen}
+          onClose={() => setBillingModalOpen(false)}
+          onSubmit={handleBillingSubmit}
+          isLoading={bookingLoading}
+          user={sessionUser}
+        />
       </div>
     );
   }
@@ -797,15 +1127,25 @@ const EventDetailNew = () => {
           
 
           {/* Marquee Container */}
-          <div className="relative max-w-7xl mx-auto px-6 lg:px-12">
+            <div className="relative w-full px-6 lg:px-12">
             {/* Left fade gradient */}
-            <div className="absolute left-6 lg:left-12 top-0 bottom-0 w-16 lg:w-24 bg-gradient-to-r from-gray-950 to-transparent z-10 pointer-events-none" />
+            {shouldAnimateSponsorStrip && (
+              <div className="absolute left-6 lg:left-12 top-0 bottom-0 w-16 lg:w-24 bg-gradient-to-r from-gray-950 to-transparent z-10 pointer-events-none" />
+            )}
             {/* Right fade gradient */}
-            <div className="absolute right-6 lg:right-12 top-0 bottom-0 w-16 lg:w-24 bg-gradient-to-l from-gray-950 to-transparent z-10 pointer-events-none" />
+            {shouldAnimateSponsorStrip && (
+              <div className="absolute right-6 lg:right-12 top-0 bottom-0 w-16 lg:w-24 bg-gradient-to-l from-gray-950 to-transparent z-10 pointer-events-none" />
+            )}
 
             <div className="relative overflow-hidden rounded-2xl border border-gray-800/50 bg-gray-900/30 backdrop-blur-sm">
-              <div className="flex items-center gap-6 py-2 min-w-max animate-[sponsorMarquee_25s_linear_infinite] hover:[animation-play-state:paused]">
-                {[...sponsorsSorted, ...sponsorsSorted].map((s, idx) => (
+              <div
+                className={`flex items-center gap-6 py-2 ${
+                  shouldAnimateSponsorStrip
+                    ? "min-w-max animate-[sponsorMarquee_25s_linear_infinite] hover:[animation-play-state:paused]"
+                    : "w-full justify-center flex-wrap"
+                }`}
+              >
+                {sponsorStripItems.map((s, idx) => (
                   <a
                     key={`${s.id || s.name || "sponsor"}-${idx}`}
                     href={s.website || "#"}
@@ -1051,114 +1391,65 @@ const EventDetailNew = () => {
             <div className="h-px bg-gray-700 my-6"></div>
 
             {/* Gallery Section */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-bold text-white">Event Gallery</h2>
-              </div>
-              <div 
-                className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide"
-                style={{ 
-                  scrollbarWidth: 'none', 
-                  msOverflowStyle: 'none',
-                  WebkitOverflowScrolling: 'touch'
-                }}
-              >
-                {/* First Column - 2 stacked images */}
-                <div className="flex flex-col gap-3 flex-shrink-0">
-                  {event.gallery[0] && (
-                    <div
-                      onClick={() => setSelectedImage(event.gallery[0])}
-                      className="relative w-40 h-28 md:w-52 md:h-36 rounded-xl overflow-hidden cursor-pointer group flex-shrink-0"
-                    >
-                      <img
-                        src={event.gallery[0]}
-                        alt="Gallery 1"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  )}
-                  {event.gallery[1] && (
-                    <div
-                      onClick={() => setSelectedImage(event.gallery[1])}
-                      className="relative w-40 h-28 md:w-52 md:h-36 rounded-xl overflow-hidden cursor-pointer group flex-shrink-0"
-                    >
-                      <img
-                        src={event.gallery[1]}
-                        alt="Gallery 2"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  )}
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-2xl font-bold text-white">Event Gallery</h2>
+                  <p className="text-xs text-gray-500 mt-1">Swipe or use arrows to explore every moment</p>
                 </div>
-
-                {/* Second Column - 2 stacked images */}
-                <div className="flex flex-col gap-3 flex-shrink-0">
-                  {event.gallery[2] && (
-                    <div
-                      onClick={() => setSelectedImage(event.gallery[2])}
-                      className="relative w-40 h-28 md:w-52 md:h-36 rounded-xl overflow-hidden cursor-pointer group flex-shrink-0"
+                {galleryImages.length > 1 && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => scrollGallery("prev")}
+                      className="h-9 w-9 rounded-full border border-gray-700 bg-gray-900/80 text-white flex items-center justify-center hover:border-red-600 hover:bg-red-600/10 transition"
+                      aria-label="Previous gallery images"
                     >
-                      <img
-                        src={event.gallery[2]}
-                        alt="Gallery 3"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  )}
-                  {event.gallery[3] && (
-                    <div
-                      onClick={() => setSelectedImage(event.gallery[3])}
-                      className="relative w-40 h-28 md:w-52 md:h-36 rounded-xl overflow-hidden cursor-pointer group flex-shrink-0"
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => scrollGallery("next")}
+                      className="h-9 w-9 rounded-full border border-gray-700 bg-gray-900/80 text-white flex items-center justify-center hover:border-red-600 hover:bg-red-600/10 transition"
+                      aria-label="Next gallery images"
                     >
-                      <img
-                        src={event.gallery[3]}
-                        alt="Gallery 4"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Third Column - 1 tall image */}
-                {event.gallery[4] && (
-                  <div
-                    onClick={() => setSelectedImage(event.gallery[4])}
-                    className="relative w-48 h-58 md:w-64 md:h-74 rounded-xl overflow-hidden cursor-pointer group flex-shrink-0"
-                    style={{ height: 'calc(2 * 9rem + 0.75rem)' }}
-                  >
-                    <img
-                      src={event.gallery[4]}
-                      alt="Gallery 5"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <ImageIcon className="h-8 w-8 text-white" />
-                    </div>
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
                   </div>
                 )}
+              </div>
 
-                {/* Additional images - horizontal scroll items */}
-                {event.gallery.slice(5).map((image, index) => (
-                  <div
-                    key={index + 5}
-                    onClick={() => setSelectedImage(image)}
-                    className="relative w-48 h-58 md:w-64 md:h-74 rounded-xl overflow-hidden cursor-pointer group flex-shrink-0"
-                    style={{ height: 'calc(2 * 9rem + 0.75rem)' }}
+              <div
+                ref={galleryTrackRef}
+                className="group/gallery relative grid h-[320px] grid-flow-col-dense grid-rows-6 auto-cols-[58px] overflow-x-auto rounded-2xl border border-gray-800/80 bg-gray-950/70 scroll-smooth snap-x snap-mandatory scrollbar-hide md:h-[460px] md:auto-cols-[86px]"
+                style={{
+                  scrollbarWidth: "none",
+                  msOverflowStyle: "none",
+                  WebkitOverflowScrolling: "touch",
+                }}
+              >
+                {galleryImages.map((image, index) => {
+                  const tileClass = getGalleryTileClass(index, galleryImages.length);
+                  return (
+                  <button
+                    key={`${image}-${index}`}
+                    type="button"
+                    onClick={() => openGalleryModal(index)}
+                    className={`relative snap-start overflow-hidden bg-gray-900/70 transition duration-500 hover:z-10 hover:ring-2 hover:ring-red-600/70 ${tileClass}`}
+                    style={{
+                      animation: "galleryReveal 560ms ease both",
+                      animationDelay: `${Math.min(index, 7) * 70}ms`,
+                    }}
                   >
                     <img
                       src={image}
-                      alt={`Gallery ${index + 6}`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      alt={`Gallery ${index + 1}`}
+                      className="h-full w-full object-cover transition duration-700 hover:scale-110"
                     />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <ImageIcon className="h-8 w-8 text-white" />
-                    </div>
-                  </div>
-                ))}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/10 opacity-0 transition duration-300 hover:opacity-100" />
+                  </button>
+                  );
+                })}
               </div>
               <style>{`
                 .scrollbar-hide::-webkit-scrollbar {
@@ -1331,14 +1622,17 @@ const EventDetailNew = () => {
                     />
                   </button>
                   {faqOpen && (
-                    <div className="border-t border-gray-800 divide-y divide-gray-800/20">
+                    <div className="border-t border-gray-800 p-4 space-y-3">
                       {normalizedFaqs.map((qa, idx) => (
-                        <div key={`faq-${idx}`} className="px-5 py-2">
-                          <p className="text-white font-semibold text-base mb-1">{qa.question}</p>
+                        <div
+                          key={`faq-${idx}`}
+                          className="rounded-xl border border-gray-800/80 bg-gray-900/35 px-4 py-3 transition hover:border-gray-700 hover:bg-gray-900/55"
+                        >
+                          <p className="text-white font-semibold text-sm mb-1.5">{qa.question}</p>
                           {qa.answer ? (
-                            <p className="text-gray-400 text-sm leading-relaxed">{qa.answer}</p>
+                            <p className="text-gray-400 text-xs leading-relaxed">{qa.answer}</p>
                           ) : (
-                            <p className="text-gray-500 text-xs">No answer provided.</p>
+                            <p className="text-gray-500 text-[11px]">No answer provided.</p>
                           )}
                         </div>
                       ))}
@@ -1366,14 +1660,14 @@ const EventDetailNew = () => {
                         <div key={`term-${idx}`} className="mb-2 last:mb-0">
                           {getTermHtml(t) ? (
                             <div
-                              className="text-gray-400 text-[11px] leading-4 space-y-1"
+                              className="text-gray-400 text-[10px] leading-[1.45] space-y-1"
                               dangerouslySetInnerHTML={{ __html: getTermHtml(t) }}
                             />
                           ) : (
                             renderTermsContent()
                           )}
                           {t.lastUpdated && (
-                            <p className="text-xs text-gray-500 mt-2">Last updated: {new Date(t.lastUpdated).toLocaleDateString()}</p>
+                            <p className="text-[10px] text-gray-500 mt-2">Last updated: {new Date(t.lastUpdated).toLocaleDateString()}</p>
                           )}
                         </div>
                       ))
@@ -1611,61 +1905,13 @@ const EventDetailNew = () => {
         </div>
       </div>
 
-      {/* Image Lightbox */}
-      {selectedImage && (
-        <div
-          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
-          onClick={() => setSelectedImage(null)}
-        >
-          <Button
-            variant="ghost"
-            onClick={() => setSelectedImage(null)}
-            className="absolute top-4 right-4 text-white hover:bg-white/10"
-          >
-            <X className="h-6 w-6" />
-          </Button>
-          {galleryImages.length > 1 && (
-            <>
-              <Button
-                variant="ghost"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  showPreviousImage();
-                }}
-                className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 text-white hover:bg-white/10 rounded-full h-12 w-12 p-0"
-                aria-label="Previous image"
-              >
-                <ChevronLeft className="h-7 w-7" />
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  showNextImage();
-                }}
-                className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 text-white hover:bg-white/10 rounded-full h-12 w-12 p-0"
-                aria-label="Next image"
-              >
-                <ChevronRight className="h-7 w-7" />
-              </Button>
-            </>
-          )}
-          <img
-            src={selectedImage}
-            alt="Gallery"
-            className="max-w-full max-h-full object-contain rounded-xl"
-            onClick={(e) => e.stopPropagation()}
-          />
-          {galleryImages.length > 1 && selectedImageIndex !== -1 && (
-            <div
-              className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-4 py-2 text-sm text-white/80"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {selectedImageIndex + 1} / {galleryImages.length}
-            </div>
-          )}
-        </div>
-      )}
+      <GalleryModal
+        images={galleryImages}
+        isOpen={isGalleryModalOpen}
+        currentIndex={currentImageIndex}
+        onClose={() => setIsGalleryModalOpen(false)}
+        onChangeIndex={setCurrentImageIndex}
+      />
 
       {/* Auth Modal */}
       <Dialog open={authModalOpen} onOpenChange={setAuthModalOpen}>

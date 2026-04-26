@@ -169,6 +169,7 @@ function normalizeCoreEvent(data) {
     type: data.type,
     publishStatus: data.publishStatus,
     eventStatus: data.eventStatus,
+    detailTemplate: data.detailTemplate || data.template || "classic",
     organizerNote: data.organizerNote,
     subCategory: data.subCategory,
     categorySlug: data.categorySlug,
