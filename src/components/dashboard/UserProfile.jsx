@@ -361,7 +361,7 @@ export default function UserProfile() {
       <div className="w-full h-full flex items-center justify-center min-h-[60vh]">
         <div className="text-center max-w-sm space-y-4">
           <p className="text-sm text-red-400">{error}</p>
-          <Button onClick={() => window.location.reload()} className="bg-[#D60024] hover:bg-[#b8001f] text-white text-sm">
+          <Button onClick={() => window.location.reload()} className="text-sm">
             Try Again
           </Button>
         </div>
@@ -438,7 +438,7 @@ export default function UserProfile() {
                       </Avatar>
                       <div className="flex gap-2 flex-1">
                         <Button variant="outline" type="button" onClick={() => setPendingAvatar(null)} className="flex-1 h-8 border-white/[0.08] text-white/60 text-xs" disabled={avatarUploading}>Cancel</Button>
-                        <Button type="button" onClick={() => handleAvatarSave(pendingAvatar)} className="flex-1 h-8 bg-[#D60024] hover:bg-[#b8001f] text-white text-xs" disabled={avatarUploading}>
+                        <Button type="button" onClick={() => handleAvatarSave(pendingAvatar)} className="flex-1 h-8 text-xs" disabled={avatarUploading}>
                           {avatarUploading ? "Saving..." : "Save"}
                         </Button>
                       </div>
@@ -461,7 +461,7 @@ export default function UserProfile() {
                       <canvas ref={canvasRef} className="hidden" />
                       <div className="flex gap-2 justify-end">
                         <Button variant="outline" type="button" onClick={() => { stopCameraStream(); setCameraDialogOpen(false); }} className="border-white/[0.08] text-white/60 text-xs">Cancel</Button>
-                        <Button type="button" onClick={captureFromCamera} className="bg-[#D60024] hover:bg-[#b8001f] text-white text-xs" disabled={avatarUploading}>Capture</Button>
+                        <Button type="button" onClick={captureFromCamera} className="text-xs" disabled={avatarUploading}>Capture</Button>
                       </div>
                     </>
                   ) : (
@@ -469,7 +469,7 @@ export default function UserProfile() {
                       <img src={capturedPhoto} alt="Captured" className="w-full rounded-lg border border-white/[0.06] object-contain max-h-72" />
                       <div className="flex gap-2 justify-end">
                         <Button variant="outline" type="button" onClick={startCamera} className="border-white/[0.08] text-white/60 text-xs" disabled={avatarUploading}>Retake</Button>
-                        <Button type="button" onClick={() => handleAvatarSave(capturedPhoto)} className="bg-[#D60024] hover:bg-[#b8001f] text-white text-xs" disabled={avatarUploading}>
+                        <Button type="button" onClick={() => handleAvatarSave(capturedPhoto)} className="text-xs" disabled={avatarUploading}>
                           {avatarUploading ? "Saving..." : "Save Photo"}
                         </Button>
                       </div>
@@ -617,7 +617,7 @@ export default function UserProfile() {
               </div>
             )}
 
-            <Button type="submit" className="w-full bg-[#D60024] hover:bg-[#b8001f] text-white text-sm font-medium h-9" disabled={isSaving}>
+            <Button type="submit" className="w-full text-sm font-medium h-9" disabled={isSaving}>
               {isSaving ? "Saving..." : "Save Changes"}
             </Button>
           </form>

@@ -28,6 +28,11 @@ export default {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
         },
+        primaryCTA: {
+          DEFAULT: "hsl(var(--primary) / <alpha-value>)",
+          hover: "hsl(var(--primary-cta-hover) / <alpha-value>)",
+          active: "hsl(var(--primary-cta-active) / <alpha-value>)",
+        },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",

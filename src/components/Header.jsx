@@ -235,7 +235,7 @@ const Header = ({
               <Button variant="ghost" onClick={handleAuthClick} className="text-white hover:text-white border border-[rgba(255,255,255,0.18)] hover:bg-[rgba(255,255,255,0.08)] rounded-full px-4">
                 Login
               </Button>
-              <Button variant="default" onClick={handleAuthClick} className="bg-[#D60024] text-white hover:opacity-90 rounded-full px-5 shadow-[0_12px_35px_-18px_rgba(0,0,0,0.7)]">
+              <Button variant="default" onClick={handleAuthClick} className="rounded-full px-5 shadow-[0_12px_35px_-18px_rgba(0,0,0,0.7)]">
                 Sign Up
               </Button>
             </>

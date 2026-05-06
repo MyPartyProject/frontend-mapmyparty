@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import {
   ChevronLeft, ChevronDown, ChevronRight, Calendar, MapPin, Clock, Users, Share2, Heart,
   Ticket, Star, TrendingUp, Mail, Phone, Globe, Instagram,
-  Facebook, Twitter, Plus, Minus, X, Check, Info, Image as ImageIcon,
+  Facebook, Twitter, Plus, Minus, X, Check, Info,
   Navigation, Building, User, BookOpen, Medal, Loader2, ShieldCheck,
   AlertTriangle, Megaphone
 } from "lucide-react";
@@ -35,6 +35,91 @@ const decodeHtmlEntities = (value) => {
   const textarea = document.createElement("textarea");
   textarea.innerHTML = value;
   return textarea.value;
+};
+
+const galleryMosaicLayouts = {
+  1: [
+    { mobile: [4, 4], desktop: [5, 4] },
+  ],
+  2: [
+    { mobile: [3, 4], desktop: [4, 4] },
+    { mobile: [3, 4], desktop: [4, 4] },
+  ],
+  3: [
+    { mobile: [3, 4], desktop: [4, 4] },
+    { mobile: [3, 2], desktop: [3, 2] },
+    { mobile: [3, 2], desktop: [3, 2] },
+  ],
+  4: [
+    { mobile: [3, 4], desktop: [4, 4] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [3, 4], desktop: [4, 4] },
+  ],
+  5: [
+    { mobile: [3, 4], desktop: [4, 4] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [2, 2], desktop: [3, 2] },
+  ],
+  6: [
+    { mobile: [3, 4], desktop: [4, 4] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [3, 4], desktop: [4, 4] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [2, 2], desktop: [3, 2] },
+  ],
+  7: [
+    { mobile: [3, 4], desktop: [4, 4] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [3, 4], desktop: [4, 4] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [3, 4], desktop: [4, 4] },
+  ],
+  8: [
+    { mobile: [3, 4], desktop: [4, 4] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [3, 4], desktop: [4, 4] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [2, 2], desktop: [3, 2] },
+  ],
+  9: [
+    { mobile: [3, 4], desktop: [4, 4] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [3, 4], desktop: [4, 4] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [3, 4], desktop: [4, 4] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [2, 2], desktop: [3, 2] },
+  ],
+  10: [
+    { mobile: [3, 4], desktop: [4, 4] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [3, 4], desktop: [4, 4] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [3, 4], desktop: [4, 4] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [2, 2], desktop: [3, 2] },
+    { mobile: [3, 4], desktop: [4, 4] },
+  ],
+};
+
+const fallbackGalleryMosaicLayout = galleryMosaicLayouts[10];
+
+const getGalleryMosaicTile = (index, count) => {
+  const layout = galleryMosaicLayouts[Math.min(count, 10)] || fallbackGalleryMosaicLayout;
+  return layout[index] || fallbackGalleryMosaicLayout[index % fallbackGalleryMosaicLayout.length];
 };
 
 const EventDetailNew = () => {
@@ -65,6 +150,11 @@ const EventDetailNew = () => {
   const aboutRef = useRef(null);
   const [organizerNoteExpanded, setOrganizerNoteExpanded] = useState(false);
   const [organizerNoteCanExpand, setOrganizerNoteCanExpand] = useState(true);
+  const galleryScrollerRef = useRef(null);
+  const [galleryScrollState, setGalleryScrollState] = useState({
+    canScrollLeft: false,
+    canScrollRight: false,
+  });
   const galleryImages = useMemo(
     () => (Array.isArray(event?.gallery) ? event.gallery.filter(Boolean) : []),
     [event?.gallery]
@@ -178,7 +268,7 @@ const EventDetailNew = () => {
     if (decodedTermsHtml && (hasHtmlTag(decodedTermsHtml) || hasEscapedHtmlTag(event?.termsHtml))) {
       return (
         <div
-          className="prose prose-invert max-w-none text-gray-400 prose-p:my-1 prose-li:my-0.5 prose-ol:list-decimal prose-ul:list-disc prose-headings:text-white text-[11px] leading-4"
+          className="prose prose-invert max-w-none text-[10px] leading-3 text-gray-400 prose-p:my-0.5 prose-p:text-[10px] prose-p:leading-3 prose-li:my-0 prose-li:text-[10px] prose-li:leading-3 prose-ol:list-decimal prose-ul:list-disc prose-headings:text-xs prose-headings:text-white"
           dangerouslySetInnerHTML={{ __html: decodedTermsHtml }}
         />
       );
@@ -188,7 +278,7 @@ const EventDetailNew = () => {
     if (hasHtmlTag(decodedTerms) || hasEscapedHtmlTag(event?.terms)) {
       return (
         <div
-          className="prose prose-invert max-w-none text-gray-400 prose-p:my-1 prose-li:my-0.5 prose-ol:list-decimal prose-ul:list-disc prose-headings:text-white text-[11px] leading-4"
+          className="prose prose-invert max-w-none text-[10px] leading-3 text-gray-400 prose-p:my-0.5 prose-p:text-[10px] prose-p:leading-3 prose-li:my-0 prose-li:text-[10px] prose-li:leading-3 prose-ol:list-decimal prose-ul:list-disc prose-headings:text-xs prose-headings:text-white"
           dangerouslySetInnerHTML={{ __html: decodedTerms }}
         />
       );
@@ -201,7 +291,7 @@ const EventDetailNew = () => {
 
     if (termsLines?.length) {
       return (
-        <ul className="space-y-1 pl-4 list-disc text-gray-400 text-[11px] leading-4">
+        <ul className="space-y-0.5 pl-4 list-disc text-[10px] leading-3 text-gray-400">
           {termsLines.map((line, idx) => (
             <li key={`term-line-${idx}`}>{line}</li>
           ))}
@@ -209,7 +299,7 @@ const EventDetailNew = () => {
       );
     }
 
-    return <p className="text-gray-500 text-[11px]">No terms provided.</p>;
+    return <p className="text-[10px] leading-3 text-gray-500">No terms provided.</p>;
   };
 
   const renderFaqTc = () => (
@@ -229,16 +319,19 @@ const EventDetailNew = () => {
             />
           </button>
           {faqOpen && (
-            <div className="border-t border-gray-800 divide-y divide-gray-800">
+            <div className="space-y-3 border-t border-gray-800 p-4">
               {normalizedFaqs.map((qa, idx) => (
-                <div key={`faq-${idx}`} className="px-5 py-4">
+                <section
+                  key={`faq-${idx}`}
+                  className="rounded-lg border border-gray-800 bg-gray-950/40 px-4 py-3"
+                >
                   <p className="text-white font-medium text-sm mb-1">{qa.question}</p>
                   {qa.answer ? (
                     <p className="text-gray-300 text-sm leading-relaxed">{qa.answer}</p>
                   ) : (
                     <p className="text-gray-500 text-xs">No answer provided.</p>
                   )}
-                </div>
+                </section>
               ))}
             </div>
           )}
@@ -250,7 +343,7 @@ const EventDetailNew = () => {
           className="w-full flex items-center justify-between gap-2 text-left px-5 py-4 hover:bg-gray-800 transition"
           onClick={() => setTcOpen((prev) => !prev)}
         >
-          <span className="flex items-center gap-2 text-white font-medium text-base">
+          <span className="flex items-center gap-2 text-xs font-medium text-white">
             <ShieldCheck className="h-5 w-5 text-green-600" />
             Terms & Conditions
           </span>
@@ -265,15 +358,14 @@ const EventDetailNew = () => {
                 <div key={`term-${idx}`} className="mb-3 last:mb-0">
                   {getTermHtml(t) ? (
                     <div
-                      className="text-gray-300 text-sm leading-6 space-y-2"
-                      style={{ lineHeight: 1.6 }}
+                      className="space-y-1 text-[10px] leading-3 text-gray-300 [&_*]:text-[10px] [&_*]:leading-3"
                       dangerouslySetInnerHTML={{ __html: getTermHtml(t) }}
                     />
                   ) : (
                     renderTermsContent()
                   )}
                   {t.lastUpdated && (
-                    <p className="text-xs text-gray-500 mt-2">Last updated: {new Date(t.lastUpdated).toLocaleDateString()}</p>
+                    <p className="mt-2 text-[10px] leading-3 text-gray-500">Last updated: {new Date(t.lastUpdated).toLocaleDateString()}</p>
                   )}
                 </div>
               ))
@@ -313,9 +405,11 @@ const EventDetailNew = () => {
     () => (hasSponsors && sponsorsSorted.length > 1 ? sponsorsSorted.slice(1) : []),
     [hasSponsors, sponsorsSorted]
   );
-  const showSponsorStrip = useMemo(
-    () => hasSponsors && sponsorsSorted.length > 1,
-    [hasSponsors, sponsorsSorted.length]
+  const showSponsorStrip = hasSponsors;
+  const sponsorStripMoves = hasSponsors && sponsorsSorted.length > 3;
+  const sponsorStripGroups = useMemo(
+    () => (sponsorStripMoves ? [sponsorsSorted, sponsorsSorted] : [sponsorsSorted]),
+    [sponsorStripMoves, sponsorsSorted]
   );
 
   const getArtistImage = (artist) =>
@@ -332,6 +426,42 @@ const EventDetailNew = () => {
     const nextIndex = (selectedImageIndex + 1) % galleryImages.length;
     setSelectedImage(galleryImages[nextIndex]);
   };
+
+  const slideGallery = (direction) => {
+    const scroller = galleryScrollerRef.current;
+    if (!scroller) return;
+
+    scroller.scrollBy({
+      left: direction * Math.max(scroller.clientWidth * 0.75, 240),
+      behavior: "smooth",
+    });
+  };
+
+  useEffect(() => {
+    const scroller = galleryScrollerRef.current;
+    if (!scroller) {
+      setGalleryScrollState({ canScrollLeft: false, canScrollRight: false });
+      return undefined;
+    }
+
+    const updateScrollState = () => {
+      const maxScrollLeft = scroller.scrollWidth - scroller.clientWidth;
+
+      setGalleryScrollState({
+        canScrollLeft: scroller.scrollLeft > 4,
+        canScrollRight: maxScrollLeft > 4 && scroller.scrollLeft < maxScrollLeft - 4,
+      });
+    };
+
+    updateScrollState();
+    scroller.addEventListener("scroll", updateScrollState, { passive: true });
+    window.addEventListener("resize", updateScrollState);
+
+    return () => {
+      scroller.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, [galleryImages.length]);
 
   // Resume booking after Google OAuth redirect
   useEffect(() => {
@@ -647,7 +777,7 @@ const EventDetailNew = () => {
       <div className="event-detail-theme min-h-screen bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-white mb-4">Event Not Found</h2>
-          <Button onClick={() => navigate("/browse-events")} className="bg-gradient-to-r from-[#D60024] to-[#ff4d67]">
+          <Button onClick={() => navigate("/browse-events")}>
             Browse Events
           </Button>
         </div>
@@ -772,7 +902,7 @@ const EventDetailNew = () => {
                         ticketSection.scrollIntoView({ behavior: 'smooth' });
                       }
                     }}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-base py-2 rounded-lg transition-all mt-4"
+                    className="w-full bg-primaryCTA hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-primary-foreground font-bold text-base py-2 rounded-lg transition-all mt-4"
                     size="lg"
                   >
                     {isSoldOut ? 'SOLD OUT' : isSalesClosed ? 'Sales Closed' : 'Book Now'}
@@ -797,46 +927,59 @@ const EventDetailNew = () => {
           
 
           {/* Marquee Container */}
-          <div className="relative max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="relative w-full">
             {/* Left fade gradient */}
-            <div className="absolute left-6 lg:left-12 top-0 bottom-0 w-16 lg:w-24 bg-gradient-to-r from-gray-950 to-transparent z-10 pointer-events-none" />
+            {sponsorStripMoves && (
+              <div className="absolute left-0 top-0 bottom-0 w-16 lg:w-24 bg-gradient-to-r from-gray-950 to-transparent z-10 pointer-events-none" />
+            )}
             {/* Right fade gradient */}
-            <div className="absolute right-6 lg:right-12 top-0 bottom-0 w-16 lg:w-24 bg-gradient-to-l from-gray-950 to-transparent z-10 pointer-events-none" />
+            {sponsorStripMoves && (
+              <div className="absolute right-0 top-0 bottom-0 w-16 lg:w-24 bg-gradient-to-l from-gray-950 to-transparent z-10 pointer-events-none" />
+            )}
 
-            <div className="relative overflow-hidden rounded-2xl border border-gray-800/50 bg-gray-900/30 backdrop-blur-sm">
-              <div className="flex items-center gap-6 py-2 min-w-max animate-[sponsorMarquee_25s_linear_infinite] hover:[animation-play-state:paused]">
-                {[...sponsorsSorted, ...sponsorsSorted].map((s, idx) => (
-                  <a
-                    key={`${s.id || s.name || "sponsor"}-${idx}`}
-                    href={s.website || "#"}
-                    target={s.website ? "_blank" : undefined}
-                    rel={s.website ? "noopener noreferrer" : undefined}
-                    className="group flex items-center gap-4 px-4 py-2 rounded-xl transition-all duration-300 hover:bg-white/5"
+            <div className="relative overflow-hidden border-y border-gray-800/50 bg-gray-900/30 backdrop-blur-sm">
+              <div
+                className={`flex ${sponsorStripMoves ? "w-max animate-[sponsorMarquee_25s_linear_infinite] hover:[animation-play-state:paused]" : "w-full"}`}
+              >
+                {sponsorStripGroups.map((sponsorGroup, groupIdx) => (
+                  <div
+                    key={`sponsor-group-${groupIdx}`}
+                    className={`flex min-w-full shrink-0 items-center gap-6 px-6 py-2 lg:px-12 ${sponsorStripMoves ? "" : "justify-start md:justify-center"}`}
                   >
-                    {/* Logo Container */}
-                    <div className="relative">
-                      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-red-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
-                      <div className="relative h-14 w-14 rounded-xl bg-gray-800/80 border border-gray-700/50 flex items-center justify-center overflow-hidden shadow-lg group-hover:border-gray-600/50 group-hover:shadow-xl group-hover:shadow-red-600/10 transition-all duration-300">
-                        <img
-                          src={s.logo || SPONSOR_PLACEHOLDER}
-                          alt={s.name || "Sponsor"}
-                          className="h-10 w-10 object-contain filter brightness-100 group-hover:brightness-110 transition-all duration-300 group-hover:scale-105"
-                        />
-                      </div>
-                    </div>
+                    {sponsorGroup.map((s, idx) => (
+                      <a
+                        key={`${s.id || s.name || "sponsor"}-${groupIdx}-${idx}`}
+                        href={s.website || "#"}
+                        target={s.website ? "_blank" : undefined}
+                        rel={s.website ? "noopener noreferrer" : undefined}
+                        className="group flex items-center gap-4 rounded-xl px-4 py-2 transition-all duration-300 hover:bg-white/5"
+                      >
+                        {/* Logo Container */}
+                        <div className="relative">
+                          <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-red-600/20 to-transparent opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-100" />
+                          <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border border-gray-700/50 bg-gray-800/80 shadow-lg transition-all duration-300 group-hover:border-gray-600/50 group-hover:shadow-xl group-hover:shadow-red-600/10">
+                            <img
+                              src={s.logo || SPONSOR_PLACEHOLDER}
+                              alt={s.name || "Sponsor"}
+                              className="h-10 w-10 object-contain brightness-100 transition-all duration-300 group-hover:scale-105 group-hover:brightness-110"
+                            />
+                          </div>
+                        </div>
 
-                    {/* Sponsor Info */}
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold whitespace-nowrap text-gray-300 group-hover:text-white transition-colors duration-300">
-                        {s.name || "Sponsor"}
-                      </span>
-                      {s.isPrimary && (
-                        <span className="text-[10px] uppercase tracking-wider text-red-500/80 font-medium">
-                          Presenting Partner
-                        </span>
-                      )}
-                    </div>
-                  </a>
+                        {/* Sponsor Info */}
+                        <div className="flex flex-col">
+                          <span className="whitespace-nowrap text-sm font-semibold text-gray-300 transition-colors duration-300 group-hover:text-white">
+                            {s.name || "Sponsor"}
+                          </span>
+                          {s.isPrimary && (
+                            <span className="text-[10px] font-medium uppercase tracking-wider text-red-500/80">
+                              Presenting Partner
+                            </span>
+                          )}
+                        </div>
+                      </a>
+                    ))}
+                  </div>
                 ))}
               </div>
             </div>
@@ -1052,117 +1195,114 @@ const EventDetailNew = () => {
 
             {/* Gallery Section */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between gap-3">
                 <h2 className="text-2xl font-bold text-white">Event Gallery</h2>
-              </div>
-              <div 
-                className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide"
-                style={{ 
-                  scrollbarWidth: 'none', 
-                  msOverflowStyle: 'none',
-                  WebkitOverflowScrolling: 'touch'
-                }}
-              >
-                {/* First Column - 2 stacked images */}
-                <div className="flex flex-col gap-3 flex-shrink-0">
-                  {event.gallery[0] && (
-                    <div
-                      onClick={() => setSelectedImage(event.gallery[0])}
-                      className="relative w-40 h-28 md:w-52 md:h-36 rounded-xl overflow-hidden cursor-pointer group flex-shrink-0"
+                {galleryImages.length > 1 && (
+                  <div className="flex items-center gap-1 rounded-full border border-gray-700/80 bg-gray-900/80 p-1 shadow-lg shadow-black/20 backdrop-blur">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => slideGallery(-1)}
+                      disabled={!galleryScrollState.canScrollLeft}
+                      className="h-8 w-8 rounded-full text-gray-300 hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-35"
+                      aria-label="Scroll gallery left"
                     >
-                      <img
-                        src={event.gallery[0]}
-                        alt="Gallery 1"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  )}
-                  {event.gallery[1] && (
-                    <div
-                      onClick={() => setSelectedImage(event.gallery[1])}
-                      className="relative w-40 h-28 md:w-52 md:h-36 rounded-xl overflow-hidden cursor-pointer group flex-shrink-0"
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => slideGallery(1)}
+                      disabled={!galleryScrollState.canScrollRight}
+                      className="h-8 w-8 rounded-full text-gray-300 hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-35"
+                      aria-label="Scroll gallery right"
                     >
-                      <img
-                        src={event.gallery[1]}
-                        alt="Gallery 2"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Second Column - 2 stacked images */}
-                <div className="flex flex-col gap-3 flex-shrink-0">
-                  {event.gallery[2] && (
-                    <div
-                      onClick={() => setSelectedImage(event.gallery[2])}
-                      className="relative w-40 h-28 md:w-52 md:h-36 rounded-xl overflow-hidden cursor-pointer group flex-shrink-0"
-                    >
-                      <img
-                        src={event.gallery[2]}
-                        alt="Gallery 3"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  )}
-                  {event.gallery[3] && (
-                    <div
-                      onClick={() => setSelectedImage(event.gallery[3])}
-                      className="relative w-40 h-28 md:w-52 md:h-36 rounded-xl overflow-hidden cursor-pointer group flex-shrink-0"
-                    >
-                      <img
-                        src={event.gallery[3]}
-                        alt="Gallery 4"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Third Column - 1 tall image */}
-                {event.gallery[4] && (
-                  <div
-                    onClick={() => setSelectedImage(event.gallery[4])}
-                    className="relative w-48 h-58 md:w-64 md:h-74 rounded-xl overflow-hidden cursor-pointer group flex-shrink-0"
-                    style={{ height: 'calc(2 * 9rem + 0.75rem)' }}
-                  >
-                    <img
-                      src={event.gallery[4]}
-                      alt="Gallery 5"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <ImageIcon className="h-8 w-8 text-white" />
-                    </div>
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
                   </div>
                 )}
+              </div>
+              <div className="relative">
+                <div
+                  ref={galleryScrollerRef}
+                  className="event-gallery-mosaic rounded-xl bg-gray-950 p-1"
+                >
+                  {galleryImages.map((image, index) => {
+                    const tile = getGalleryMosaicTile(index, galleryImages.length);
 
-                {/* Additional images - horizontal scroll items */}
-                {event.gallery.slice(5).map((image, index) => (
-                  <div
-                    key={index + 5}
-                    onClick={() => setSelectedImage(image)}
-                    className="relative w-48 h-58 md:w-64 md:h-74 rounded-xl overflow-hidden cursor-pointer group flex-shrink-0"
-                    style={{ height: 'calc(2 * 9rem + 0.75rem)' }}
-                  >
-                    <img
-                      src={image}
-                      alt={`Gallery ${index + 6}`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <ImageIcon className="h-8 w-8 text-white" />
-                    </div>
-                  </div>
-                ))}
+                    return (
+                      <button
+                        key={`${image}-${index}`}
+                        type="button"
+                        onClick={() => setSelectedImage(image)}
+                        className="event-gallery-mosaic__tile relative block min-w-0 overflow-hidden rounded-md bg-gray-900 p-0 text-left group"
+                        style={{
+                          "--tile-col": tile.mobile[0],
+                          "--tile-row": tile.mobile[1],
+                          "--tile-col-md": tile.desktop[0],
+                          "--tile-row-md": tile.desktop[1],
+                        }}
+                      >
+                        <img
+                          src={image}
+                          alt={`Gallery ${index + 1}`}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                        />
+                        <div className="absolute inset-0 bg-black/20 opacity-0 transition-opacity group-hover:opacity-100" />
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               <style>{`
-                .scrollbar-hide::-webkit-scrollbar {
-                  display: none;
+                .event-gallery-mosaic {
+                  display: grid;
+                  grid-template-rows: repeat(4, clamp(4.5rem, 18vw, 5.75rem));
+                  grid-auto-columns: clamp(4.75rem, 19vw, 6rem);
+                  grid-auto-flow: column dense;
+                  gap: 0.25rem;
+                  overflow-x: auto;
+                  overflow-y: hidden;
+                  overscroll-behavior-x: contain;
+                  scroll-behavior: smooth;
+                  scroll-padding-inline: 0.25rem;
+                  scroll-snap-type: x proximity;
+                  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+                  scrollbar-width: thin;
+                }
+
+                .event-gallery-mosaic__tile {
+                  grid-column: span var(--tile-col);
+                  grid-row: span var(--tile-row);
+                  scroll-snap-align: start;
+                }
+
+                .event-gallery-mosaic::-webkit-scrollbar {
+                  height: 0.375rem;
+                }
+
+                .event-gallery-mosaic::-webkit-scrollbar-track {
+                  background: transparent;
+                }
+
+                .event-gallery-mosaic::-webkit-scrollbar-thumb {
+                  background: rgba(255, 255, 255, 0.28);
+                  border-radius: 999px;
+                }
+
+                @media (min-width: 768px) {
+                  .event-gallery-mosaic {
+                    grid-template-rows: repeat(4, clamp(5rem, 7.5vw, 6.5rem));
+                    grid-auto-columns: clamp(5.25rem, 7vw, 7rem);
+                    gap: 0.375rem;
+                  }
+
+                  .event-gallery-mosaic__tile {
+                    grid-column: span var(--tile-col-md);
+                    grid-row: span var(--tile-row-md);
+                  }
                 }
               `}</style>
             </div>
@@ -1331,16 +1471,19 @@ const EventDetailNew = () => {
                     />
                   </button>
                   {faqOpen && (
-                    <div className="border-t border-gray-800 divide-y divide-gray-800/20">
+                    <div className="space-y-3 border-t border-gray-800 p-4">
                       {normalizedFaqs.map((qa, idx) => (
-                        <div key={`faq-${idx}`} className="px-5 py-2">
+                        <section
+                          key={`faq-${idx}`}
+                          className="rounded-lg border border-gray-700/50 bg-gray-900/40 px-4 py-3"
+                        >
                           <p className="text-white font-semibold text-base mb-1">{qa.question}</p>
                           {qa.answer ? (
                             <p className="text-gray-400 text-sm leading-relaxed">{qa.answer}</p>
                           ) : (
                             <p className="text-gray-500 text-xs">No answer provided.</p>
                           )}
-                        </div>
+                        </section>
                       ))}
                     </div>
                   )}
@@ -1352,7 +1495,7 @@ const EventDetailNew = () => {
                   className="w-full flex items-center justify-between gap-2 text-left px-5 py-4 transition"
                   onClick={() => setTcOpen((prev) => !prev)}
                 >
-                  <span className="text-white font-semibold text-lg">
+                  <span className="text-xs font-semibold text-white">
                     Terms & Conditions
                   </span>
                   <ChevronDown
@@ -1366,14 +1509,14 @@ const EventDetailNew = () => {
                         <div key={`term-${idx}`} className="mb-2 last:mb-0">
                           {getTermHtml(t) ? (
                             <div
-                              className="text-gray-400 text-[11px] leading-4 space-y-1"
+                              className="space-y-1 text-[10px] leading-3 text-gray-400 [&_*]:text-[10px] [&_*]:leading-3"
                               dangerouslySetInnerHTML={{ __html: getTermHtml(t) }}
                             />
                           ) : (
                             renderTermsContent()
                           )}
                           {t.lastUpdated && (
-                            <p className="text-xs text-gray-500 mt-2">Last updated: {new Date(t.lastUpdated).toLocaleDateString()}</p>
+                            <p className="mt-2 text-[10px] leading-3 text-gray-500">Last updated: {new Date(t.lastUpdated).toLocaleDateString()}</p>
                           )}
                         </div>
                       ))
@@ -1565,7 +1708,7 @@ const EventDetailNew = () => {
                 <Button
                   onClick={handleBookNow}
                   disabled={totalTickets === 0 || isSalesClosed || isSoldOut}
-                  className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold transition-all text-sm py-4 rounded-lg"
+                  className="w-full bg-primaryCTA hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-primary-foreground font-semibold transition-all text-sm py-4 rounded-lg"
                 >
                   <Ticket className="h-4 w-4 mr-2" />
                   {bookingDisabledReason || "Book Now"}
@@ -1716,7 +1859,7 @@ const EventDetailNew = () => {
                     Forgot password?
                   </Link>
                 </div>
-                <Button type="submit" className="w-full py-5 bg-red-600 hover:bg-red-700" disabled={authLoading}>
+                <Button type="submit" className="w-full py-5" disabled={authLoading}>
                   {authLoading ? (
                     <span className="flex items-center justify-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -1804,7 +1947,7 @@ const EventDetailNew = () => {
                     onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
                   />
                 </div>
-                <Button type="submit" className="w-full py-5 bg-green-600 hover:bg-green-700" disabled={authLoading}>
+                <Button type="submit" className="w-full py-5" disabled={authLoading}>
                   {authLoading ? (
                     <span className="flex items-center justify-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />

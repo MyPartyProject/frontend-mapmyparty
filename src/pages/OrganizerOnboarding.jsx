@@ -304,7 +304,7 @@ const OrganizerOnboarding = () => {
                     className="bg-[#070b14] border-white/15 text-white min-h-[70px]"
                   />
                 </div>
-                <Button type="submit" disabled={savingProfile} className="w-full bg-red-600 hover:bg-red-700 text-white">
+                <Button type="submit" disabled={savingProfile} className="w-full">
                   {savingProfile ? (
                     <span className="inline-flex items-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -371,7 +371,7 @@ const OrganizerOnboarding = () => {
                     required
                   />
                 </div>
-                <Button type="submit" disabled={savingBank} className="w-full bg-red-600 hover:bg-red-700 text-white">
+                <Button type="submit" disabled={savingBank} className="w-full">
                   {savingBank ? (
                     <span className="inline-flex items-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />

@@ -457,7 +457,7 @@ const FoodBeverages = () => {
                               />
                               <button
                                 onClick={() => handleReceive(item.id)}
-                                className="px-3 py-2 rounded-lg bg-emerald-500/20 border border-emerald-400/30 text-emerald-100 hover:bg-emerald-500/25 transition text-sm flex items-center gap-2"
+                                className="px-3 py-2 rounded-lg bg-primaryCTA border border-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active transition text-sm flex items-center gap-2"
                               >
                                 <PackageCheck className="w-4 h-4" /> Record sale
                               </button>
@@ -505,7 +505,7 @@ const FoodBeverages = () => {
                     <button
                       type="submit"
                       disabled={!form.name.trim()}
-                      className="w-full px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-400/30 text-emerald-100 hover:bg-emerald-500/25 transition text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-500/20"
+                      className="w-full px-4 py-2 rounded-lg bg-primaryCTA border border-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active transition text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primaryCTA"
                     >
                       <Plus className="w-4 h-4" /> Add item
                     </button>

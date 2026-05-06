@@ -152,7 +152,7 @@ const BookingSuccess = () => {
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Button
                     onClick={() => navigate("/dashboard/bookings")}
-                    className="bg-red-600 text-white hover:bg-red-700 text-sm"
+                    className="bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-sm"
                   >
                     View My Bookings
                   </Button>
@@ -276,7 +276,7 @@ const BookingSuccess = () => {
               <div className="grid gap-3 sm:grid-cols-2">
                 <Button
                   onClick={handleDownloadTickets}
-                  className="w-full bg-red-600 text-white hover:bg-red-700 text-sm"
+                  className="w-full bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-sm"
                 >
                   <Download className="mr-2 h-4 w-4" />
                   Download Tickets

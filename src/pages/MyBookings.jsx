@@ -488,7 +488,7 @@ const MyBookings = ({
             <h3 className="text-sm font-semibold text-white mb-1">No bookings yet</h3>
             <p className="text-xs text-white/40 mb-4">Start exploring and book your first event.</p>
             <Link to={browseEventsPath}>
-              <Button className="bg-[#D60024] hover:bg-[#b8001f] text-white text-sm h-9 px-4">
+              <Button className="text-sm h-9 px-4">
                 Browse Events <ChevronRight className="ml-1 h-3.5 w-3.5" />
               </Button>
             </Link>
@@ -573,7 +573,7 @@ const MyBookings = ({
 
                     {/* Actions */}
                     <div className="flex lg:flex-col gap-2 flex-shrink-0">
-                      <Button size="sm" className="flex-1 lg:flex-none h-8 bg-[#D60024] hover:bg-[#b8001f] text-white text-xs font-medium px-3" onClick={() => fetchBookingTickets(booking)}>
+                      <Button size="sm" className="flex-1 lg:flex-none h-8 text-xs font-medium px-3" onClick={() => fetchBookingTickets(booking)}>
                         <Eye className="h-3 w-3 mr-1.5" /> View Tickets
                       </Button>
                       <Button
@@ -684,7 +684,7 @@ const MyBookings = ({
           </div>
           <DialogFooter className="pt-2 gap-2">
             <Button variant="outline" className="border-white/[0.08] text-white/60 hover:bg-white/[0.05] text-xs" onClick={handleCloseReview} disabled={isSubmittingReview}>Cancel</Button>
-            <Button className="bg-[#D60024] hover:bg-[#b8001f] text-white text-xs" onClick={handleSubmitReview} disabled={isSubmittingReview || reviewRating === 0}>
+            <Button className="text-xs" onClick={handleSubmitReview} disabled={isSubmittingReview || reviewRating === 0}>
               {isSubmittingReview ? "Submitting..." : selectedBookingForReview?.review ? "Update" : "Submit"}
             </Button>
           </DialogFooter>

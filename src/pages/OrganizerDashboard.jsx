@@ -700,7 +700,7 @@ const OrganizerProfileContent = ({ user }) => {
                     <button
                       type="button"
                       onClick={captureOwnerPhoto}
-                      className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition"
+                      className="px-4 py-2 rounded-lg bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active transition"
                     >
                       Capture
                     </button>
@@ -723,7 +723,7 @@ const OrganizerProfileContent = ({ user }) => {
                         handleOwnerAvatarApply(ownerCapturedPhoto);
                         closeOwnerCamera();
                       }}
-                      className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition"
+                      className="px-4 py-2 rounded-lg bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active transition"
                     >
                       Save photo
                     </button>

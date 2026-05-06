@@ -810,7 +810,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
             </p>
             <Button
               onClick={clearAllFilters}
-              className="h-9 bg-[#D60024] px-4 text-sm text-white hover:bg-[#b8001f]"
+              className="h-9 bg-primaryCTA px-4 text-sm text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active"
             >
               Clear Filters
             </Button>

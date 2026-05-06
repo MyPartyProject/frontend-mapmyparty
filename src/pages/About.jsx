@@ -57,7 +57,7 @@ const About = () => {
                 gigs to city-wide festivals, we connect organizers and guests with tools that feel delightful and fast.
               </p>
               <div className="flex flex-wrap gap-3">
-                <Button className="bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white hover:from-purple-400 hover:to-fuchsia-400">
+                <Button>
                   Browse Events
                 </Button>
                 <Button variant="outline" className="border-white/30 text-white hover:bg-white hover:text-slate-900">
@@ -115,7 +115,7 @@ const About = () => {
                 the first click to the final encore.
               </p>
               <div className="flex flex-wrap gap-3">
-                <Button className="bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white hover:from-fuchsia-400 hover:to-pink-400">
+                <Button>
                   Get Started
                 </Button>
                 <Button variant="outline" className="border-white/30 text-white hover:bg-white hover:text-slate-900">

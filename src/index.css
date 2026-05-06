@@ -4,7 +4,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Crimson Glass design tokens (only allowed colors) */
+/* Dark organizer design tokens */
 @layer base {
   :root {
     /* Premium party theme: Midnight Plum (#48285D), Royal Mulberry (#772256), Antique Gold (#C99774) */
@@ -19,6 +19,11 @@
 
     --primary: 276 40% 26%; /* #48285D */
     --primary-foreground: 274 26% 95%;
+    --color-primary-cta: hsl(var(--primary)); /* #48285D */
+    --primary-cta-hover: 276 40% 32%;
+    --primary-cta-active: 276 40% 21%;
+    --color-primary-cta-hover: hsl(var(--primary-cta-hover));
+    --color-primary-cta-active: hsl(var(--primary-cta-active));
 
     --secondary: 323 56% 30%; /* #772256 */
     --secondary-foreground: 274 26% 95%;
@@ -43,6 +48,16 @@
 
     --shadow-elegant: 0 18px 60px -24px rgba(0,0,0,0.65);
     --shadow-card: 0 14px 40px -20px rgba(0,0,0,0.7);
+    --shadow-accent: 0 18px 42px -24px rgba(124,58,237,0.7);
+
+    --color-bg-primary: hsl(var(--background));
+    --color-card-bg: hsl(var(--card));
+    --color-accent-primary: #7c3aed;
+    --color-accent-secondary: #a855f7;
+    --color-text-primary: hsl(var(--foreground));
+    --color-text-muted: hsl(var(--muted-foreground));
+    --gradient-primary: linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary));
+    --gradient-surface: linear-gradient(180deg, hsl(var(--background)), hsl(var(--card)), hsl(var(--background)));
 
     --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
@@ -65,6 +80,11 @@
     --popover-foreground: 274 26% 95%;
     --primary: 276 40% 26%;
     --primary-foreground: 274 26% 95%;
+    --color-primary-cta: hsl(var(--primary));
+    --primary-cta-hover: 276 40% 32%;
+    --primary-cta-active: 276 40% 21%;
+    --color-primary-cta-hover: hsl(var(--primary-cta-hover));
+    --color-primary-cta-active: hsl(var(--primary-cta-active));
     --secondary: 323 56% 30%;
     --secondary-foreground: 274 26% 95%;
     --accent: 25 44% 62%;
@@ -82,10 +102,29 @@
     --sidebar-accent-foreground: 274 26% 95%;
     --sidebar-border: 276 40% 26%;
     --sidebar-ring: 25 44% 62%;
+    --shadow-accent: 0 18px 42px -24px rgba(124,58,237,0.7);
+    --color-bg-primary: hsl(var(--background));
+    --color-card-bg: hsl(var(--card));
+    --color-accent-primary: #7c3aed;
+    --color-accent-secondary: #a855f7;
+    --color-text-primary: hsl(var(--foreground));
+    --color-text-muted: hsl(var(--muted-foreground));
+    --gradient-primary: linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary));
+    --gradient-surface: linear-gradient(180deg, hsl(var(--background)), hsl(var(--card)), hsl(var(--background)));
   }
 }
 
 @layer components {
+  .theme-gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .theme-card {
+    background-color: hsl(var(--card) / 0.72);
+    border-color: hsl(var(--border) / 0.52);
+    box-shadow: var(--shadow-card);
+  }
+
   .create-event-shell .create-event-card {
     transition: all 0.2s ease;
   }
@@ -115,8 +154,8 @@
   .create-event-shell input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):focus-visible,
   .create-event-shell textarea:focus-visible,
   .create-event-shell button[role="combobox"]:focus-visible {
-    border-color: #ef4444;
-    box-shadow: 0 0 0 1px #ef4444;
+    border-color: var(--color-accent-primary);
+    box-shadow: 0 0 0 1px var(--color-accent-primary);
     outline: none;
   }
 

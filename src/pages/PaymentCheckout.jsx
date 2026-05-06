@@ -251,7 +251,7 @@ const PaymentCheckout = () => {
                   onClick={() => setSelectedMethod(label.toUpperCase())}
                   className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition ${
                     selectedMethod === label.toUpperCase()
-                      ? "border-[#D60024] bg-[#D60024]/10"
+                      ? "border-primaryCTA bg-primaryCTA/10"
                       : "border-white/10 bg-white/5 hover:border-white/30 hover:bg-white/10"
                   }`}
                 >
@@ -317,13 +317,13 @@ const PaymentCheckout = () => {
 
               <div className="flex justify-between items-center text-base font-semibold">
                 <span>Total Amount</span>
-                <span className="text-[#D60024]">{formatCurrency(totalsSafe.total || 0)}</span>
+                <span className="text-primaryCTA">{formatCurrency(totalsSafe.total || 0)}</span>
               </div>
 
               <Button
                 onClick={handlePayment}
                 disabled={isProcessing || !selectedMethod}
-                className="w-full bg-gradient-to-r from-[#D60024] to-[#ff4d67] text-white font-semibold py-5 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active font-semibold py-5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (
                   <>
@@ -414,7 +414,7 @@ const PaymentCheckout = () => {
                 type="button"
                 onClick={handleMockGatewayConfirm}
                 disabled={isProcessing}
-                className="bg-red-600 text-white hover:bg-red-700 text-sm"
+                className="bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-sm"
               >
                 {isProcessing ? (
                   <>

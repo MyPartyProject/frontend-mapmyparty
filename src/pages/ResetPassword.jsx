@@ -104,7 +104,7 @@ const ResetPassword = () => {
                 <p className="text-sm text-gray-300">
                   Request a fresh password reset email from the login page and use the newest link.
                 </p>
-                <Button asChild className="w-full bg-red-600 hover:bg-red-700 text-white">
+                <Button asChild className="w-full">
                   <Link to="/auth">Go to Login</Link>
                 </Button>
               </div>
@@ -180,7 +180,7 @@ const ResetPassword = () => {
 
                 <Button
                   type="submit"
-                  className="w-full bg-red-600 hover:bg-red-700 text-white h-10 text-sm font-medium"
+                  className="w-full h-10 text-sm font-medium"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (

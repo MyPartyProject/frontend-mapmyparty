@@ -178,7 +178,7 @@ const Dashboard = () => {
           <p className="text-sm text-white/40 mt-1">Discover events, manage your tickets, and explore what's next.</p>
         </div>
         <Link to="/dashboard/browse-events">
-          <Button className="bg-[#D60024] hover:bg-[#b8001f] text-white text-sm font-medium h-9 px-4">
+          <Button className="text-sm font-medium h-9 px-4">
             Explore Events
             <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
@@ -209,7 +209,7 @@ const Dashboard = () => {
                 </div>
               </div>
               <Link to={`/events/${nextEvent.organizer.slug}/${nextEvent.slug}`}>
-                <Button className="bg-[#D60024] hover:bg-[#b8001f] text-white text-sm font-medium h-9 px-5">
+                <Button className="text-sm font-medium h-9 px-5">
                   View Details
                 </Button>
               </Link>
@@ -239,7 +239,7 @@ const Dashboard = () => {
             <Calendar className="h-10 w-10 text-white/15 mx-auto mb-3" />
             <p className="text-sm text-white/50 mb-4">No upcoming events right now</p>
             <Link to="/dashboard/browse-events">
-              <Button className="bg-[#D60024] hover:bg-[#b8001f] text-white text-sm h-9 px-4">Browse Events</Button>
+              <Button className="text-sm h-9 px-4">Browse Events</Button>
             </Link>
           </div>
         ) : (

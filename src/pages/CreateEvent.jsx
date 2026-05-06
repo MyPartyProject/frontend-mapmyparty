@@ -4128,7 +4128,6 @@ const CreateEvent = () => {
                                     <Button
                                       type="button"
                                       variant="accent"
-                                      className="bg-[#D60024] text-white hover:bg-[#ff1a3c]"
                                       onClick={() => {
                                         const trimmed = newCustomAdvisory.trim();
                                         if (!trimmed) return;
@@ -4195,7 +4194,6 @@ const CreateEvent = () => {
                                   <Button
                                     type="button"
                                     variant="accent"
-                                    className="bg-[#D60024] text-white hover:bg-[#ff1a3c]"
                                     onClick={() => setAdvisoryDialogOpen(false)}
                                   >
                                     Done
@@ -4616,7 +4614,7 @@ const CreateEvent = () => {
                     <Button
                       onClick={() => nextStep()}
                       disabled={isSectionBusy}
-                      className="h-11 rounded-[10px] bg-[#ef4444] px-5 font-medium text-white hover:bg-[#dc2626]"
+                      className="h-11 rounded-[10px] px-5 font-medium"
                     >
                       {isSectionBusy ? "Saving..." : "Next"}
                       <ArrowRight className="w-4 h-4 ml-2" />
@@ -4626,7 +4624,7 @@ const CreateEvent = () => {
                       variant="accent"
                       onClick={() => handleSubmit(publishState)}
                       disabled={isSectionBusy}
-                      className="h-11 rounded-[10px] bg-[#ef4444] px-5 font-medium text-white hover:bg-[#dc2626]"
+                      className="h-11 rounded-[10px] px-5 font-medium"
                     >
                       {isSectionBusy
                         ? "Updating..."

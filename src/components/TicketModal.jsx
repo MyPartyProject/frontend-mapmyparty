@@ -129,7 +129,7 @@ const TicketModal = ({ isOpen, onClose, ticket }) => {
           {/* Actions */}
           <div className="grid grid-cols-2 gap-3">
             <Button 
-              className="bg-gradient-to-r from-[#D60024] to-[#ff4d67] text-white font-semibold hover:shadow-[0_10px_25px_-10px_rgba(214,0,36,0.4)]"
+              className="bg-primaryCTA text-primary-foreground font-semibold hover:bg-primaryCTA-hover active:bg-primaryCTA-active"
               onClick={handleDownload}
             >
               <Download className="w-4 h-4 mr-2" />

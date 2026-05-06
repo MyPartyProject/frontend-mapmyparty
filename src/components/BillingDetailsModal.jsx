@@ -255,7 +255,7 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
             <Button
               type="submit"
               disabled={isLoading}
-              className="flex-1 bg-gradient-to-r from-[#D60024] to-[#ff4d67] hover:from-[#b5001e] hover:to-[#e6445d] text-white"
+              className="flex-1 bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active"
             >
               {isLoading ? (
                 <>

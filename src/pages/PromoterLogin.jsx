@@ -116,7 +116,7 @@ const PromoterLogin = () => {
               </div>
               <Button
                 type="submit"
-                className="w-full bg-red-600 hover:bg-red-700 text-white h-10 text-sm font-medium mt-1"
+                className="w-full h-10 text-sm font-medium mt-1"
                 disabled={isLoading}
               >
                 {isLoading ? (

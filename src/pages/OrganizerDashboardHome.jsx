@@ -110,7 +110,7 @@ const OrganizerDashboardHome = ({ user, handleLogout, setActiveTab, activeTab })
           <div className="flex items-center gap-3 flex-wrap">
             <Link
               to="/organizer/select-event-type"
-              className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition"
+              className="px-4 py-2 rounded-lg bg-primaryCTA text-primary-foreground text-sm font-semibold hover:bg-primaryCTA-hover active:bg-primaryCTA-active transition"
             >
               + Create Event
             </Link>
@@ -125,16 +125,32 @@ const OrganizerDashboardHome = ({ user, handleLogout, setActiveTab, activeTab })
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {kpis.map((item) => (
-            <div key={item.label} className="bg-card border border-border rounded-xl p-4 shadow-[var(--shadow-card)]">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{item.label}</p>
-                  <p className="text-2xl font-semibold mt-2">{item.value}</p>
-                  <p className="text-[11px] text-muted-foreground mt-1">{item.hint}</p>
-                </div>
-                <div className="p-2 rounded-lg bg-primary/15 border border-primary/20">
+            <div
+              key={item.label}
+              className="min-h-[8.75rem] bg-card border border-border rounded-xl p-4 shadow-[var(--shadow-card)] flex flex-col justify-between gap-3"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <p className="min-w-0 text-xs uppercase tracking-wide text-muted-foreground truncate">
+                  {item.label}
+                </p>
+                <div className="shrink-0 p-2 rounded-lg bg-primary/15 border border-primary/20">
                   <item.icon className="w-5 h-5 text-accent" />
                 </div>
+              </div>
+
+              <div className="min-h-[2.75rem] min-w-0 flex items-center">
+                <p
+                  className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[clamp(1.5rem,2vw,2.2rem)] leading-none font-semibold tabular-nums"
+                  title={item.value}
+                >
+                  {item.value}
+                </p>
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-[11px] text-muted-foreground truncate" title={item.hint}>
+                  {item.hint}
+                </p>
               </div>
             </div>
           ))}

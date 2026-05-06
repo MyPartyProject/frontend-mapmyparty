@@ -157,7 +157,7 @@ const HostEvents = () => {
 
               <div className="flex flex-wrap gap-3">
                 <Link to="/auth">
-                  <Button className="bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white hover:from-purple-400 hover:to-fuchsia-400">
+                  <Button>
                     Start Hosting
                   </Button>
                 </Link>
@@ -326,7 +326,7 @@ const HostEvents = () => {
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link to="/auth">
-                <Button className="bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white hover:from-fuchsia-400 hover:to-pink-400">
+                <Button>
                   Get Started for Free
                 </Button>
               </Link>

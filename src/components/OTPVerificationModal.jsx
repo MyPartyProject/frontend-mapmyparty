@@ -166,21 +166,21 @@ const OTPVerificationModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md rounded-2xl">
-        <DialogHeader className="text-center space-y-3">
-          <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-            <Mail className="w-8 h-8 text-primary" />
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-[360px] max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-xl p-4 sm:max-w-sm sm:p-5">
+        <DialogHeader className="text-center space-y-2">
+          <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <Mail className="w-6 h-6 text-primary" />
           </div>
-          <DialogTitle className="text-2xl font-bold">{title}</DialogTitle>
-          <DialogDescription className="text-base">
+          <DialogTitle className="text-xl font-bold leading-tight">{title}</DialogTitle>
+          <DialogDescription className="text-sm leading-relaxed">
             {descriptionPrefix}
-            <span className="block font-semibold text-foreground mt-1">{email}</span>
+            <span className="block font-semibold text-foreground mt-1 break-words">{email}</span>
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-4 py-2">
           {/* OTP Input */}
-          <div className="flex flex-col items-center space-y-4">
+          <div className="flex flex-col items-center space-y-3">
             <InputOTP
               maxLength={6}
               value={otp}
@@ -189,33 +189,34 @@ const OTPVerificationModal = ({
                 setError("");
               }}
               disabled={isVerifying || isExpired}
+              containerClassName="gap-1.5 sm:gap-2"
             >
               <InputOTPGroup>
-                <InputOTPSlot index={0} className="w-12 h-14 text-xl font-bold" />
-                <InputOTPSlot index={1} className="w-12 h-14 text-xl font-bold" />
-                <InputOTPSlot index={2} className="w-12 h-14 text-xl font-bold" />
+                <InputOTPSlot index={0} className="w-9 h-11 text-lg font-bold sm:w-10 sm:h-12" />
+                <InputOTPSlot index={1} className="w-9 h-11 text-lg font-bold sm:w-10 sm:h-12" />
+                <InputOTPSlot index={2} className="w-9 h-11 text-lg font-bold sm:w-10 sm:h-12" />
               </InputOTPGroup>
-              <InputOTPSeparator />
+              <InputOTPSeparator className="w-4 shrink-0 [&_svg]:w-4 [&_svg]:h-4" />
               <InputOTPGroup>
-                <InputOTPSlot index={3} className="w-12 h-14 text-xl font-bold" />
-                <InputOTPSlot index={4} className="w-12 h-14 text-xl font-bold" />
-                <InputOTPSlot index={5} className="w-12 h-14 text-xl font-bold" />
+                <InputOTPSlot index={3} className="w-9 h-11 text-lg font-bold sm:w-10 sm:h-12" />
+                <InputOTPSlot index={4} className="w-9 h-11 text-lg font-bold sm:w-10 sm:h-12" />
+                <InputOTPSlot index={5} className="w-9 h-11 text-lg font-bold sm:w-10 sm:h-12" />
               </InputOTPGroup>
             </InputOTP>
 
             {/* Error message */}
             {error && (
-              <div className="flex items-center gap-2 text-destructive text-sm">
-                <AlertCircle className="w-4 h-4" />
-                <span>{error}</span>
+              <div className="flex max-w-full items-center justify-center gap-2 text-center text-destructive text-sm">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span className="break-words">{error}</span>
               </div>
             )}
 
             {/* Expiry Timer */}
-            <div className={`text-sm ${isExpired ? "text-destructive" : "text-muted-foreground"}`}>
+            <div className={`text-center text-sm ${isExpired ? "text-destructive" : "text-muted-foreground"}`}>
               {isExpired ? (
-                <span className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" />
+                <span className="flex items-center justify-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
                   Code expired. Please request a new one.
                 </span>
               ) : (
@@ -227,34 +228,34 @@ const OTPVerificationModal = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             <Button
               onClick={handleVerify}
               disabled={otp.length !== 6 || isVerifying || isExpired}
-              className="w-full h-12 text-base font-semibold"
+              className="w-full h-10 text-sm font-semibold"
               variant="accent"
             >
               {isVerifying ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   {verifyingLabel}
                 </>
               ) : (
                 <>
-                  <CheckCircle2 className="mr-2 h-5 w-5" />
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
                   {submitLabel}
                 </>
               )}
             </Button>
 
-            <div className="flex items-center justify-center">
+            <div className="flex flex-wrap items-center justify-center gap-x-1 gap-y-1 text-center">
               <span className="text-sm text-muted-foreground">Didn't receive the code?</span>
               <Button
                 variant="link"
                 size="sm"
                 onClick={handleResend}
                 disabled={isResending || (resendCooldown > 0 && !isExpired)}
-                className="text-primary font-semibold"
+                className="h-auto px-1 py-0 text-primary font-semibold"
               >
                 {isResending ? (
                   <>

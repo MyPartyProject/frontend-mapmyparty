@@ -537,7 +537,7 @@ const LandingPage = () => {
                     size="sm"
                     onClick={handleSearchSubmit}
                     disabled={searchLoading || searchQuery.trim().length < 2}
-                    className="w-full bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white hover:from-fuchsia-400 hover:to-pink-400 lg:w-auto"
+                    className="w-full lg:w-auto"
                   >
                     {searchLoading ? "Searching..." : "Search"}
                   </Button>
@@ -734,7 +734,7 @@ const LandingPage = () => {
                   <p className="mt-2 text-sm text-slate-300/80">{featuredVibe.description}</p>
                 </div>
                 <Link to={buildBrowseEventsPath(featuredVibe.filters)}>
-                  <Button variant="accent" className="bg-amber-400 text-slate-900 hover:bg-amber-300">
+                  <Button variant="accent">
                     Explore live concerts
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -782,7 +782,7 @@ const LandingPage = () => {
                     <p className="text-slate-300/80">{section.description}</p>
                   </div>
                   <Link to={buildBrowseEventsPath(section.filters)}>
-                    <Button variant="accent" className="bg-amber-400 text-slate-900 hover:bg-amber-300">
+                    <Button variant="accent">
                       Browse all
                     </Button>
                   </Link>

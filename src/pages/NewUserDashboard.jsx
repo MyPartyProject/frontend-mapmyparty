@@ -504,7 +504,7 @@ const NewUserDashboard = () => {
               type="button"
               onClick={handleConfirmState}
               disabled={locationLoading || (!pendingState && !stateInput && !selectedState)}
-              className="bg-[#D60024] text-white hover:bg-[#b8001f] disabled:opacity-50"
+              className="disabled:opacity-50"
             >
               {locationLoading ? "Loading..." : "Confirm location"}
             </Button>

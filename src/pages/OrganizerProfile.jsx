@@ -100,7 +100,7 @@ const OrganizerProfile = () => {
           {!isEditing && (
             <button
               onClick={handleEdit}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-primaryCTA text-primary-foreground rounded-lg hover:bg-primaryCTA-hover active:bg-primaryCTA-active transition-colors"
             >
               <Edit2 className="w-4 h-4" />
               Edit Profile
@@ -257,7 +257,7 @@ const OrganizerProfile = () => {
                       </h4>
                       <button
                         onClick={handleEditPayment}
-                        className="flex items-center gap-2 px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                        className="flex items-center gap-2 px-3 py-1 bg-primaryCTA text-primary-foreground rounded-lg hover:bg-primaryCTA-hover active:bg-primaryCTA-active transition-colors text-sm font-medium"
                       >
                         <Edit2 className="w-4 h-4" />
                         Edit
@@ -430,7 +430,7 @@ const OrganizerProfile = () => {
                 <div className="flex gap-3 pt-4 border-t border-gray-200">
                   <button
                     onClick={handleSave}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primaryCTA text-primary-foreground rounded-lg hover:bg-primaryCTA-hover active:bg-primaryCTA-active transition-colors font-medium"
                   >
                     <Save className="w-4 h-4" />
                     Save Changes
@@ -524,7 +524,7 @@ const OrganizerProfile = () => {
             <div className="flex gap-3 p-6 border-t border-gray-200">
               <button
                 onClick={handleSavePayment}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primaryCTA text-primary-foreground rounded-lg hover:bg-primaryCTA-hover active:bg-primaryCTA-active transition-colors font-medium"
               >
                 <Save className="w-4 h-4" />
                 Save

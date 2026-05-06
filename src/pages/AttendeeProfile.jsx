@@ -83,7 +83,7 @@ export default function AttendeeProfile() {
         <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-8 text-center">
           <AlertCircle className="h-8 w-8 text-red-300 mx-auto mb-3" />
           <p className="text-sm text-red-200 mb-4">{error || "Profile not found"}</p>
-          <Button onClick={fetchProfile} className="bg-[#D60024] hover:bg-[#b8001f] text-white">
+          <Button onClick={fetchProfile}>
             Retry
           </Button>
         </div>

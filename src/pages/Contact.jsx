@@ -52,7 +52,7 @@ const Contact = () => {
               Whether you're hosting, attending, or partnering, our concierge support team responds fast and with care.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Button className="bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white hover:from-purple-400 hover:to-fuchsia-400">
+              <Button>
                 Chat with us
               </Button>
               <Button variant="outline" className="border-white/30 text-white hover:bg-white hover:text-slate-900">
@@ -145,7 +145,7 @@ const Contact = () => {
                     className="border-white/15 bg-slate-950/40 text-white"
                   />
                 </div>
-                <Button className="w-full gap-2 bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white hover:from-fuchsia-400 hover:to-pink-400 md:w-auto">
+                <Button className="w-full gap-2 md:w-auto">
                   <Send className="h-4 w-4" />
                   Send Message
                 </Button>
