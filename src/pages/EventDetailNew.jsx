@@ -744,7 +744,7 @@ const EventDetailNew = () => {
       timestamp: Date.now(),
     }));
     const redirect = encodeURIComponent(window.location.href);
-    const googleAuthUrl = buildUrl(`auth/google?redirect=${redirect}`);
+    const googleAuthUrl = buildUrl(`/api/auth/google?redirect=${redirect}`);
     window.location.href = googleAuthUrl;
   };
 

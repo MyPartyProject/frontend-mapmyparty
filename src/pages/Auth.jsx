@@ -208,7 +208,7 @@ const Auth = () => {
       sessionStorage.removeItem("postAuthRedirect");
     }
 
-    window.location.href = buildUrl("auth/google");
+    window.location.href = buildUrl("/api/auth/google");
   };
 
   const handleOtpVerificationSuccess = async () => {

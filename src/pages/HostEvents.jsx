@@ -5,14 +5,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/Header";
 import {
   BarChart3,
-  CalendarPlus2,
-  CreditCard,
+  CalendarDays,
+  Eye,
+  Kanban,
+  LineChart,
+  PencilLine,
   QrCode,
+  Rocket,
   Save,
+  ScanLine,
   ShieldCheck,
   Sparkles,
   Ticket,
-  Users,
+  UserCheck,
+  Wallet,
 } from "lucide-react";
 
 const highlights = [
@@ -32,32 +38,38 @@ const features = [
   {
     title: "Guided event builder",
     desc: "Create events step by step with full control over categories, media, scheduling, venue setup, and publish state.",
-    icon: CalendarPlus2,
+    icon: CalendarDays,
+    visual: "builder",
   },
   {
     title: "Flexible editing",
     desc: "Jump directly to any section while editing and save only that section without being forced through the entire flow again.",
-    icon: Save,
+    icon: PencilLine,
+    visual: "editing",
   },
   {
     title: "Ticketing and event content",
     desc: "Manage ticket types, sponsors, artists, advisories, attendee questions, and organizer notes in one workflow.",
     icon: Ticket,
+    visual: "ticketing",
   },
   {
     title: "Live reception tools",
     desc: "Run live event operations with QR-based and manual check-ins plus real-time visibility into ticket movement.",
-    icon: QrCode,
+    icon: ScanLine,
+    visual: "reception",
   },
   {
     title: "Attendee visibility",
     desc: "Review bookings, payment status, check-in progress, and export attendee data when your operations team needs it.",
-    icon: Users,
+    icon: UserCheck,
+    visual: "attendees",
   },
   {
     title: "Analytics, refunds, and payouts",
     desc: "Track revenue, top events, ticket performance, refund status, payout views, and organizer-side operational reporting.",
-    icon: CreditCard,
+    icon: Wallet,
+    visual: "analytics",
   },
 ];
 
@@ -83,7 +95,7 @@ const capabilityGroups = [
   {
     title: "Setup and publishing",
     desc: "Launch with a structured workspace for organizer onboarding, draft management, and publishing control.",
-    icon: ShieldCheck,
+    icon: Rocket,
     points: [
       "Organizer onboarding with profile and bank setup",
       "Draft saving, section-wise editing, review, and publishing",
@@ -93,7 +105,7 @@ const capabilityGroups = [
   {
     title: "Event management",
     desc: "Keep event content, pricing, and team-facing details organized without leaving the same workflow.",
-    icon: Ticket,
+    icon: Kanban,
     points: [
       "Multiple ticket types with pricing and event-specific configuration",
       "Sponsors, artists, advisories, attendee questions, and organizer notes",
@@ -103,7 +115,7 @@ const capabilityGroups = [
   {
     title: "Operations and reporting",
     desc: "Handle live operations and post-event reporting from a single organizer-ready command center.",
-    icon: BarChart3,
+    icon: LineChart,
     points: [
       "Live event monitoring, reception desk tools, and QR/manual check-in flows",
       "Attendee management with payment visibility, check-in status, and CSV export",
@@ -120,6 +132,97 @@ const cardClass =
   "host-events__card h-full rounded-2xl border border-white/10 bg-white/[0.055] shadow-[0_24px_80px_-42px_rgba(0,0,0,0.85)] backdrop-blur transition-all duration-300 hover:-translate-y-1.5 hover:border-amber-300/35 hover:bg-white/[0.075] hover:shadow-[0_30px_90px_-38px_rgba(201,151,116,0.35)]";
 const ctaButtonClass =
   "transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_14px_34px_-18px_rgba(249,168,212,0.85)] active:scale-[0.98]";
+
+const FeatureAccent = ({ type }) => {
+  if (type === "builder") {
+    return (
+      <div className="flex items-center gap-2">
+        {[1, 2, 3].map((step) => (
+          <div key={step} className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full border border-amber-200/20 bg-amber-200/10 text-[10px] font-semibold text-amber-100">
+              {step}
+            </span>
+            {step < 3 && <span className="h-px w-5 bg-white/15" />}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === "editing") {
+    return (
+      <div className="relative h-16 w-24">
+        <span className="absolute left-0 top-2 h-10 w-16 rounded-xl border border-white/10 bg-white/[0.08]" />
+        <span className="absolute bottom-0 right-0 h-10 w-16 rounded-xl border border-amber-200/20 bg-amber-200/10" />
+        <span className="absolute left-5 top-7 h-2 w-12 rounded-full bg-pink-200/35" />
+      </div>
+    );
+  }
+
+  if (type === "ticketing") {
+    return (
+      <div className="grid gap-2">
+        <span className="relative h-8 w-24 rounded-xl border border-pink-200/20 bg-pink-200/10">
+          <span className="absolute -left-1 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-slate-950" />
+          <span className="absolute -right-1 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-slate-950" />
+        </span>
+        <span className="relative ml-4 h-8 w-20 rounded-xl border border-amber-200/20 bg-amber-200/10">
+          <span className="absolute -left-1 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-slate-950" />
+          <span className="absolute -right-1 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-slate-950" />
+        </span>
+      </div>
+    );
+  }
+
+  if (type === "reception") {
+    return (
+      <div className="relative h-16 w-20">
+        <span className="absolute left-0 top-0 h-5 w-5 rounded-tl-lg border-l border-t border-amber-100/60" />
+        <span className="absolute right-0 top-0 h-5 w-5 rounded-tr-lg border-r border-t border-amber-100/60" />
+        <span className="absolute bottom-0 left-0 h-5 w-5 rounded-bl-lg border-b border-l border-amber-100/60" />
+        <span className="absolute bottom-0 right-0 h-5 w-5 rounded-br-lg border-b border-r border-amber-100/60" />
+        <span className="absolute left-3 top-1/2 h-px w-14 bg-pink-200/60 shadow-[0_0_14px_rgba(249,168,212,0.7)]" />
+      </div>
+    );
+  }
+
+  if (type === "attendees") {
+    return (
+      <div className="flex items-center gap-2">
+        <div className="flex -space-x-2">
+          {[0, 1, 2].map((item) => (
+            <span key={item} className="h-8 w-8 rounded-full border border-white/15 bg-white/10" />
+          ))}
+        </div>
+        <Eye className="h-8 w-8 text-amber-100/70" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative h-16 w-24">
+      <span className="absolute bottom-1 left-1 h-10 w-10 rounded-full border border-amber-200/25 bg-amber-200/10" />
+      <span className="absolute right-2 top-1 h-8 w-8 rounded-full border border-pink-200/25 bg-pink-200/10" />
+      <span className="absolute bottom-4 left-8 h-px w-12 -rotate-12 bg-amber-100/55 shadow-[0_0_14px_rgba(201,151,116,0.65)]" />
+    </div>
+  );
+};
+
+const FeatureVisual = ({ type, icon: Icon }) => {
+  return (
+    <div className="host-events__feature-visual group relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/45 p-4 transition-all duration-300">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_18%,rgba(249,168,212,0.18),transparent_34%),radial-gradient(circle_at_78%_78%,rgba(201,151,116,0.14),transparent_34%)] opacity-70 transition-opacity duration-300 group-hover:opacity-100" />
+      <div className="relative flex items-center justify-between gap-4">
+        <div className="host-events__feature-icon flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.14] to-white/5 text-pink-100 shadow-[0_18px_44px_-24px_rgba(249,168,212,0.8)] transition-all duration-300 group-hover:-translate-y-0.5 group-hover:border-amber-300/35 group-hover:text-amber-100 group-hover:shadow-[0_20px_54px_-20px_rgba(201,151,116,0.75)]">
+          <Icon className="h-7 w-7" />
+        </div>
+        <div className="flex min-h-16 flex-1 items-center justify-end">
+          <FeatureAccent type={type} />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const HostEvents = () => {
   return (
@@ -251,27 +354,10 @@ const HostEvents = () => {
           </div>
 
           <div className="host-events__stagger grid items-stretch gap-5 md:grid-cols-2 lg:gap-6 xl:grid-cols-3">
-            {features.map(({ title, desc, icon: Icon }, index) => (
+            {features.map(({ title, desc, icon: Icon, visual }, index) => (
               <Card key={title} className={cardClass} style={{ "--stagger": index }}>
                 <CardContent className="flex h-full flex-col gap-5 p-6">
-                  <div className={`${subtlePanelClass} p-4`}>
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 text-pink-200">
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold tracking-[0.18em] text-slate-200/70">
-                        0{index + 1}
-                      </span>
-                    </div>
-                    <div className="mt-4 space-y-2">
-                      <div className="h-2 rounded-full bg-white/10" />
-                      <div className="h-2 w-4/5 rounded-full bg-white/5" />
-                      <div className="flex gap-2 pt-2">
-                        <div className="h-8 w-8 rounded-lg bg-white/10" />
-                        <div className="h-8 flex-1 rounded-lg bg-white/5" />
-                      </div>
-                    </div>
-                  </div>
+                  <FeatureVisual type={visual} icon={Icon} index={index} />
 
                   <div className="space-y-3">
                     <h3 className="host-events__card-title font-semibold text-white">{title}</h3>
