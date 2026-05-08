@@ -1,5 +1,5 @@
 const rawEnvBase = import.meta.env.VITE_API_BASE_URL;
-const hostedDefault = "http://localhost:9090/api";
+const hostedDefault = "https://mapmyparty.com/api";
 
 export const API_BASE_URL = (rawEnvBase || hostedDefault).replace(/\/+$/, "");
 
