@@ -27,6 +27,12 @@ const EMPTY_SIGNUP_FORM = {
   password: "",
 };
 
+const AUTH_ERROR_MESSAGES = {
+  google_auth_failed: "Google authentication failed. Please try again.",
+  rate_limit: "Too many authentication attempts. Please wait a few minutes.",
+  security_error: "Security verification failed. Please try again.",
+};
+
 const normalizeUserType = (value) => {
   if (value === "user" || value === "organizer") {
     return value;
@@ -70,6 +76,23 @@ const Auth = () => {
       selectedType ? `/auth?mode=login&type=${selectedType}` : "/auth?mode=login",
       { replace: true }
     );
+  }, [navigate, searchParams]);
+
+  useEffect(() => {
+    const errorCode = searchParams.get("error");
+    if (!errorCode) {
+      return;
+    }
+
+    toast.error(AUTH_ERROR_MESSAGES[errorCode] || "Authentication failed. Please try again.");
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("error");
+    nextParams.delete("message");
+    nextParams.set("mode", "login");
+
+    const nextQuery = nextParams.toString();
+    navigate(nextQuery ? `/auth?${nextQuery}` : "/auth?mode=login", { replace: true });
   }, [navigate, searchParams]);
 
   const getDashboardPath = (type) =>

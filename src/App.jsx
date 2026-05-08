@@ -107,6 +107,7 @@ const App = () => {
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/auth/google/callback" element={<GoogleCallback />} />
+                <Route path="/organizer/dashboard/auth/google/callback" element={<GoogleCallback />} />
                 <Route path="/promoter/login" element={<PromoterLogin />} />
               </Route>
               

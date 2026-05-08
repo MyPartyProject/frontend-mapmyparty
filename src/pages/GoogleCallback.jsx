@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -9,7 +9,6 @@ const GoogleCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { login: contextLogin } = useAuth();
-  const [isProcessing, setIsProcessing] = useState(true);
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -75,13 +74,11 @@ const GoogleCallback = () => {
         console.error("Google OAuth callback error:", err);
         toast.error(err?.message || "Google authentication failed");
         navigate("/auth", { replace: true });
-      } finally {
-        setIsProcessing(false);
       }
     };
 
     handleCallback();
-  }, [navigate, searchParams]);
+  }, [contextLogin, navigate, searchParams]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-primary-glow">
