@@ -135,7 +135,7 @@ const PaymentCheckout = () => {
     setIsProcessing(true);
 
     try {
-      const initResponse = await apiFetch("payments/checkout/init", {
+      const initResponse = await apiFetch("/api/payments/checkout/init", {
         method: "POST",
         body: JSON.stringify({
           bookingId: bookingData.bookingId,
@@ -165,7 +165,7 @@ const PaymentCheckout = () => {
         theme: checkout.theme,
         handler: async (razorpayResponse) => {
           try {
-            const verifyResponse = await apiFetch("payments/checkout/verify", {
+            const verifyResponse = await apiFetch("/api/payments/checkout/verify", {
               method: "POST",
               body: JSON.stringify({
                 bookingId: checkout.bookingId,
