@@ -5,14 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   ArrowLeft,
   Calendar,
   Clock,
@@ -28,6 +20,7 @@ import {
 } from "lucide-react";
 import { apiFetch } from "@/config/api";
 import { toast } from "sonner";
+import { loadRazorpayScript } from "@/utils/loadRazorpayScript";
 
 const paymentMethods = [
   { label: "UPI", icon: Smartphone, accent: "from-emerald-500/80 to-teal-500/60" },
@@ -45,8 +38,6 @@ const PaymentCheckout = () => {
   const [storedCheckout, setStoredCheckout] = useState(null);
   const [checkoutReady, setCheckoutReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [mockGatewayOpen, setMockGatewayOpen] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState(null);
 
   useEffect(() => {
     const routeState = location.state;
@@ -131,68 +122,92 @@ const PaymentCheckout = () => {
     };
   }, [totalsSafe.gst, totalsSafe.gstType, totalsSafe.igst]);
 
-  const gatewayPreview = useMemo(() => {
-    if (!bookingData?.bookingId) return null;
-
-    return {
-      merchant: "MapMyParty Sandbox",
-      bookingId: bookingData.bookingId,
-      orderId: `ORD-${String(bookingData.bookingId).slice(0, 8).toUpperCase()}`,
-      gatewayReference: `PG-${String(Date.now()).slice(-8)}`,
-      method: selectedMethod || "TEST",
-      amount: bookingData?.totals?.grandTotal ?? 0,
-      customerName: bookingData?.userDetails?.name || "Guest User",
-      customerEmail: bookingData?.userDetails?.email || "guest@mapmyparty.test",
-      customerPhone: bookingData?.userDetails?.phone || "N/A",
-    };
-  }, [bookingData, selectedMethod]);
-
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (!bookingData?.bookingId) {
       toast.error("Booking ID not found");
       return;
     }
 
-    if (!selectedMethod) {
-      toast.error("Select a payment method");
-      return;
-    }
-
-    setMockGatewayOpen(true);
-  };
-
-  const handleMockGatewayConfirm = async () => {
-    if (!bookingData?.bookingId) {
-      toast.error("Booking ID not found");
+    if (isProcessing) {
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 900));
-
-      const response = await apiFetch("/api/payment/test/process", {
+      const initResponse = await apiFetch("payments/checkout/init", {
         method: "POST",
         body: JSON.stringify({
           bookingId: bookingData.bookingId,
-          paymentMethod: selectedMethod || "TEST",
         }),
       });
 
-      if (response?.success) {
-        toast.success("Payment successful!");
-        sessionStorage.removeItem("pendingCheckout");
-        setMockGatewayOpen(false);
-        navigate(`/booking-success?bookingId=${bookingData.bookingId}`);
-        return;
+      const checkout = initResponse?.data;
+      if (!initResponse?.success || !checkout?.key || !checkout?.orderId || !checkout?.paymentId) {
+        throw new Error(initResponse?.errorMessage || "Unable to initialize payment");
       }
 
-      toast.error(response?.errorMessage || "Payment failed");
+      await loadRazorpayScript();
+
+      if (!window.Razorpay) {
+        throw new Error("Razorpay Checkout is unavailable");
+      }
+
+      const razorpay = new window.Razorpay({
+        key: checkout.key,
+        amount: checkout.amount,
+        currency: checkout.currency,
+        name: checkout.name,
+        description: checkout.description,
+        order_id: checkout.orderId,
+        prefill: checkout.prefill,
+        notes: checkout.notes,
+        theme: checkout.theme,
+        handler: async (razorpayResponse) => {
+          try {
+            const verifyResponse = await apiFetch("payments/checkout/verify", {
+              method: "POST",
+              body: JSON.stringify({
+                bookingId: checkout.bookingId,
+                paymentId: checkout.paymentId,
+                razorpay_order_id: razorpayResponse.razorpay_order_id,
+                razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+                razorpay_signature: razorpayResponse.razorpay_signature,
+              }),
+            });
+
+            if (!verifyResponse?.success) {
+              throw new Error(verifyResponse?.errorMessage || "Payment verification failed");
+            }
+
+            toast.success("Payment successful!");
+            sessionStorage.removeItem("pendingCheckout");
+            navigate(`/booking-success?bookingId=${checkout.bookingId}`);
+          } catch (error) {
+            console.error("Payment verification error:", error);
+            toast.error(error?.message || "Payment verification failed. Please contact support if money was debited.");
+          } finally {
+            setIsProcessing(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setIsProcessing(false);
+            toast.info("Payment was not completed. You can retry until this booking expires.");
+          },
+        },
+      });
+
+      razorpay.on("payment.failed", (response) => {
+        setIsProcessing(false);
+        const message = response?.error?.description || response?.error?.reason || "Payment failed. Please try again.";
+        toast.error(message);
+      });
+
+      razorpay.open();
     } catch (error) {
       console.error("Payment error:", error);
       toast.error(error?.message || "Payment failed. Please try again.");
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -242,27 +257,20 @@ const PaymentCheckout = () => {
         <div className="grid lg:grid-cols-[1.4fr,1fr] gap-6">
           <Card className="bg-white/[0.04] border-white/10">
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">Payment options</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">Accepted payment options</CardTitle>
             </CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-3">
               {paymentMethods.map(({ label, icon: Icon, accent }) => (
                 <div
                   key={label}
-                  onClick={() => setSelectedMethod(label.toUpperCase())}
-                  className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition ${
-                    selectedMethod === label.toUpperCase()
-                      ? "border-primaryCTA bg-primaryCTA/10"
-                      : "border-white/10 bg-white/5 hover:border-white/30 hover:bg-white/10"
-                  }`}
+                  className="flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5"
                 >
                   <div className={`h-11 w-11 rounded-xl bg-gradient-to-br ${accent} flex items-center justify-center text-white`}>
                     <Icon className="h-5 w-5" />
                   </div>
                   <div>
                     <p className="font-semibold text-white">{label}</p>
-                    <p className="text-xs text-white/60">
-                      {selectedMethod === label.toUpperCase() ? "Selected" : `Continue to pay with ${label}`}
-                    </p>
+                    <p className="text-xs text-white/60">Available inside Razorpay Checkout</p>
                   </div>
                 </div>
               ))}
@@ -322,7 +330,7 @@ const PaymentCheckout = () => {
 
               <Button
                 onClick={handlePayment}
-                disabled={isProcessing || !selectedMethod}
+                disabled={isProcessing}
                 className="w-full bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active font-semibold py-5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (
@@ -330,105 +338,22 @@ const PaymentCheckout = () => {
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Processing Payment...
                   </>
-                ) : !selectedMethod ? (
-                  "Select a payment method"
                 ) : (
-                  "Open Mock Gateway"
+                  "Pay securely with Razorpay"
                 )}
               </Button>
               <p className="text-xs text-center text-white/60">
                 {isProcessing
-                  ? "Please wait while we process your payment..."
-                  : "You'll be taken through a mocked payment gateway before confirmation."}
+                  ? "Please wait while Razorpay Checkout opens or verifies your payment..."
+                  : "Your booking is confirmed only after secure server-side payment verification."}
               </p>
               <p className="text-xs text-center text-amber-300/80 bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 mt-2">
-                Test Mode: This is a simulated payment flow for booking validation only. No actual charges will be made.
+                Razorpay Test Mode: use Razorpay test credentials and test payment methods until production keys are enabled.
               </p>
             </CardContent>
           </Card>
         </div>
       </div>
-
-      <Dialog open={mockGatewayOpen} onOpenChange={setMockGatewayOpen}>
-        <DialogContent className="w-[calc(100vw-1rem)] max-w-md max-h-[calc(100vh-1rem)] overflow-y-auto border-gray-800 bg-gray-900 text-white p-0">
-          <div className="space-y-4 p-4 sm:p-5">
-            <DialogHeader className="space-y-2">
-              <DialogTitle className="flex items-center gap-2 text-lg font-bold">
-                <ShieldCheck className="h-5 w-5 text-red-600" />
-                Mock Payment Gateway
-              </DialogTitle>
-              <DialogDescription className="text-sm text-gray-400">
-                Sandbox preview for the current booking. No real transaction will be processed.
-              </DialogDescription>
-            </DialogHeader>
-
-            {gatewayPreview && (
-              <div className="space-y-3">
-                <div className="space-y-3 rounded-xl border border-gray-700/50 bg-transparent p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500">Merchant</p>
-                      <p className="text-sm font-semibold text-white">{gatewayPreview.merchant}</p>
-                    </div>
-                    <Badge className="border border-red-600/25 bg-red-600/10 text-red-300 text-[10px] px-2 py-0.5">
-                      Sandbox
-                    </Badge>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
-                    <div className="space-y-0.5">
-                      <p className="text-[10px] uppercase tracking-[0.14em] text-gray-500">Booking ID</p>
-                      <p className="break-all font-medium text-white">{gatewayPreview.bookingId}</p>
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="text-[10px] uppercase tracking-[0.14em] text-gray-500">Method</p>
-                      <p className="font-medium text-white">{gatewayPreview.method}</p>
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="text-[10px] uppercase tracking-[0.14em] text-gray-500">Amount</p>
-                      <p className="font-medium text-red-600">{formatCurrency(gatewayPreview.amount)}</p>
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="text-[10px] uppercase tracking-[0.14em] text-gray-500">Status</p>
-                      <p className="font-medium text-white">Test only</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-gray-700/50 bg-gray-800/30 p-3 text-xs leading-5 text-gray-400">
-                  This simulates the final gateway step only. On confirm, the app will call the test payment endpoint and complete the booking.
-                </div>
-              </div>
-            )}
-
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button
-                type="button"
-                variant="outline"
-                className="border-gray-700 text-white bg-gray-800 hover:bg-gray-700 text-sm"
-                onClick={() => setMockGatewayOpen(false)}
-                disabled={isProcessing}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                onClick={handleMockGatewayConfirm}
-                disabled={isProcessing}
-                className="bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-sm"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Authorizing...
-                  </>
-                ) : (
-                  "Authorize Test Payment"
-                )}
-              </Button>
-            </DialogFooter>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
