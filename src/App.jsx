@@ -51,6 +51,7 @@ import Policies from "./pages/Policies";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsConditions from "./pages/TermsConditions";
 import CookiePolicy from "./pages/CookiePolicy";
+import RefundPolicy from "./pages/RefundPolicy";
 import Footer from "./components/Footer";
 import { AuthProvider } from "./contexts/AuthContext";
 import OrganizerOnboarding from "./pages/OrganizerOnboarding";
@@ -104,6 +105,7 @@ const App = () => {
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/terms-conditions" element={<TermsConditions />} />
                 <Route path="/cookie-policy" element={<CookiePolicy />} />
+                <Route path="/refund-policy" element={<RefundPolicy />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/auth/google/callback" element={<GoogleCallback />} />

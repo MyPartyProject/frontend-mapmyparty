@@ -61,6 +61,9 @@ const Footer = () => {
                 <Link to="/cookie-policy" className="block hover:text-white transition-colors">
                   Cookie Policy
                 </Link>
+                <Link to="/refund-policy" className="block hover:text-white transition-colors">
+                  Refund Policy
+                </Link>
               </div>
             </div>
 
