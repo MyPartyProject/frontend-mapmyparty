@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Building2, CreditCard, Loader2 } from "lucide-react";
+import { Building2, CreditCard, ImagePlus, Loader2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/config/api";
@@ -8,6 +8,12 @@ import {
   clearOrganizerOnboardingCache,
   fetchOrganizerOnboardingStatus,
 } from "@/services/organizerOnboardingService";
+import {
+  deleteOrganizerLogoUpload,
+  ORGANIZER_LOGO_HELP_TEXT,
+  uploadOrganizerLogo,
+  validateOrganizerLogoFile,
+} from "@/services/organizerLogoService";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +28,7 @@ const buildProfileDefaults = (user, profile = null) => ({
   state: profile?.state || "",
   address: profile?.address || "",
   gstNumber: profile?.gstNumber || "",
+  logo: profile?.logo || "",
 });
 
 const buildBankDefaults = (bank = null) => ({
@@ -44,6 +51,9 @@ const OrganizerOnboarding = () => {
 
   const [profileForm, setProfileForm] = useState(() => buildProfileDefaults(user));
   const [bankForm, setBankForm] = useState(() => buildBankDefaults());
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState("");
+  const logoInputRef = useRef(null);
 
   const currentStep = useMemo(() => {
     if (!status) return "profile";
@@ -83,8 +93,45 @@ const OrganizerOnboarding = () => {
     refreshStatus(true);
   }, [refreshStatus]);
 
+  useEffect(() => {
+    return () => {
+      if (logoPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(logoPreview);
+      }
+    };
+  }, [logoPreview]);
+
   const onProfileInputChange = (field, value) => {
     setProfileForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleLogoSelection = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      await validateOrganizerLogoFile(file);
+      const nextPreview = URL.createObjectURL(file);
+      setLogoFile(file);
+      setLogoPreview(nextPreview);
+      setProfileForm((prev) => ({ ...prev, logo: "" }));
+    } catch (error) {
+      if (logoInputRef.current) {
+        logoInputRef.current.value = "";
+      }
+      setLogoFile(null);
+      setLogoPreview("");
+      toast.error(error?.message || "Choose a valid organizer logo.");
+    }
+  };
+
+  const clearLogoSelection = () => {
+    setLogoFile(null);
+    setLogoPreview("");
+    setProfileForm((prev) => ({ ...prev, logo: "" }));
+    if (logoInputRef.current) {
+      logoInputRef.current.value = "";
+    }
   };
 
   const onBankInputChange = (field, value) => {
@@ -113,11 +160,46 @@ const OrganizerOnboarding = () => {
 
     setSavingProfile(true);
     try {
-      await apiFetch("organizer/me/profile", {
+      const createResponse = await apiFetch("organizer/me/profile", {
         method: "POST",
         body: JSON.stringify(payload),
       });
-      toast.success("Organizer profile created");
+
+      const createdOrganizer = createResponse?.data || createResponse || {};
+
+      if (logoFile && createdOrganizer?.id) {
+        let uploadedLogoPublicId = null;
+        try {
+          const logoUpload = await uploadOrganizerLogo(createdOrganizer.id, logoFile);
+          uploadedLogoPublicId = logoUpload.publicId;
+
+          await apiFetch("organizer/me/profile", {
+            method: "PATCH",
+            body: JSON.stringify({ logo: logoUpload.url }),
+          });
+
+          clearLogoSelection();
+          toast.success("Organizer profile created with logo");
+        } catch (logoError) {
+          if (uploadedLogoPublicId) {
+            await deleteOrganizerLogoUpload(uploadedLogoPublicId).catch(() => {});
+          }
+          clearLogoSelection();
+          toast.error(
+            `Organizer profile created, but logo upload failed: ${
+              logoError?.message || "Please add it later from profile settings."
+            }`
+          );
+        }
+      } else {
+        if (logoFile) {
+          clearLogoSelection();
+          toast.error("Organizer profile created, but logo upload failed. Please add it later from profile settings.");
+        } else {
+          toast.success("Organizer profile created");
+        }
+      }
+
       clearOrganizerOnboardingCache();
       await refreshStatus(true);
     } catch (error) {
@@ -173,6 +255,8 @@ const OrganizerOnboarding = () => {
       setSavingBank(false);
     }
   };
+
+  const selectedLogoPreview = logoPreview || profileForm.logo;
 
   if (loadingStatus) {
     return (
@@ -246,6 +330,55 @@ const OrganizerOnboarding = () => {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="org-logo">Logo</Label>
+                  <div className="flex flex-col sm:flex-row gap-4 rounded-lg border border-white/10 bg-[#070b14] p-4">
+                    <div className="h-24 w-24 rounded-lg border border-white/15 bg-white/5 flex items-center justify-center overflow-hidden shrink-0">
+                      {selectedLogoPreview ? (
+                        <img
+                          src={selectedLogoPreview}
+                          alt="Organizer logo preview"
+                          className="h-full w-full object-contain p-2"
+                        />
+                      ) : (
+                        <ImagePlus className="h-8 w-8 text-white/35" />
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-3">
+                      <input
+                        ref={logoInputRef}
+                        id="org-logo"
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        className="hidden"
+                        onChange={handleLogoSelection}
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => logoInputRef.current?.click()}
+                          className="gap-2"
+                        >
+                          <Upload className="h-4 w-4" />
+                          Upload Logo
+                        </Button>
+                        {selectedLogoPreview && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={clearLogoSelection}
+                            className="gap-2 border-white/15 bg-transparent text-white hover:bg-white/10"
+                          >
+                            <X className="h-4 w-4" />
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                      <p className="text-xs text-white/55">{ORGANIZER_LOGO_HELP_TEXT}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="org-description">Description</Label>
                   <Textarea
                     id="org-description"
@@ -308,7 +441,7 @@ const OrganizerOnboarding = () => {
                   {savingProfile ? (
                     <span className="inline-flex items-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Saving profile...
+                      {logoFile ? "Saving profile and logo..." : "Saving profile..."}
                     </span>
                   ) : (
                     "Create Organizer Profile"

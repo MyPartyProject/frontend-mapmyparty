@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { toast } from "sonner";
 import { clearSessionData, resetSessionCache } from "@/utils/auth";
 import { useAuth } from "@/contexts/AuthContext";
 import { buildUrl, apiFetch } from "@/config/api";
@@ -33,6 +34,7 @@ import {
   CheckCircle2,
   Globe,
   Camera,
+  ImagePlus,
   Upload,
   CupSoda,
   Receipt,
@@ -50,6 +52,12 @@ import OrganizerPayouts from "./OrganizerPayouts";
 import EventAttendees from "./EventAttendees";
 import EventRefunds from "./EventRefunds";
 import Logo from "@/assets/MMP logo.svg";
+import {
+  deleteOrganizerLogoUpload,
+  ORGANIZER_LOGO_HELP_TEXT,
+  uploadOrganizerLogo,
+  validateOrganizerLogoFile,
+} from "@/services/organizerLogoService";
 
 // Profile Content Component
 const OrganizerProfileContent = ({ user }) => {
@@ -116,10 +124,13 @@ const OrganizerProfileContent = ({ user }) => {
   const [isBankSaving, setIsBankSaving] = useState(false);
   const [isBankLoading, setIsBankLoading] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState("");
 
   const ownerVideoRef = useRef(null);
   const ownerCanvasRef = useRef(null);
   const ownerFileInputRef = useRef(null);
+  const organizerLogoInputRef = useRef(null);
 
   useEffect(() => {
     const fresh = buildInitialData(user?.organizer || {}, user);
@@ -129,6 +140,14 @@ const OrganizerProfileContent = ({ user }) => {
     setOwner(user || {});
     setOwnerDraft(user || {});
   }, [user]);
+
+  useEffect(() => {
+    return () => {
+      if (logoPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(logoPreview);
+      }
+    };
+  }, [logoPreview]);
 
   const fetchProfileData = useCallback(async () => {
     setLoadingProfile(true);
@@ -173,10 +192,45 @@ const OrganizerProfileContent = ({ user }) => {
     setEditData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleOrganizerLogoChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      await validateOrganizerLogoFile(file);
+      setLogoFile(file);
+      setLogoPreview(URL.createObjectURL(file));
+    } catch (error) {
+      if (organizerLogoInputRef.current) {
+        organizerLogoInputRef.current.value = "";
+      }
+      setLogoFile(null);
+      setLogoPreview("");
+      toast.error(error?.message || "Choose a valid organizer logo.");
+    }
+  };
+
+  const clearOrganizerLogoSelection = () => {
+    setLogoFile(null);
+    setLogoPreview("");
+    setEditData((prev) => ({ ...prev, logo: "" }));
+    if (organizerLogoInputRef.current) {
+      organizerLogoInputRef.current.value = "";
+    }
+  };
+
   const handleSave = async () => {
     if (isSaving) return;
     setIsSaving(true);
+    let uploadedLogoPublicId = null;
     try {
+      let nextLogo = editData.logo;
+      if (logoFile) {
+        const logoUpload = await uploadOrganizerLogo(editData.id, logoFile);
+        nextLogo = logoUpload.url;
+        uploadedLogoPublicId = logoUpload.publicId;
+      }
+
       const allowed = {
         name: editData.name,
         description: editData.description,
@@ -195,6 +249,17 @@ const OrganizerProfileContent = ({ user }) => {
           ([, v]) => v !== undefined && v !== null && String(v).trim() !== ""
         )
       );
+
+      if (logoFile || editData.logo !== profileData.logo) {
+        payload.logo = nextLogo || null;
+      }
+
+      if (Object.keys(payload).length === 0) {
+        toast.info("No profile changes to save.");
+        setIsSaving(false);
+        return;
+      }
+
       const res = await apiFetch("organizer/me/profile", {
         method: "PATCH",
         body: JSON.stringify(payload),
@@ -204,9 +269,19 @@ const OrganizerProfileContent = ({ user }) => {
       setProfileData(normalized);
       setEditData(normalized);
       setBankDraft(normalized.bankDetails);
+      setLogoFile(null);
+      setLogoPreview("");
+      if (organizerLogoInputRef.current) {
+        organizerLogoInputRef.current.value = "";
+      }
       setIsEditing(false);
+      toast.success("Organizer profile updated");
     } catch (error) {
+      if (uploadedLogoPublicId) {
+        await deleteOrganizerLogoUpload(uploadedLogoPublicId).catch(() => {});
+      }
       console.error("Failed to save organizer profile:", error);
+      toast.error(error?.message || "Failed to save organizer profile");
     } finally {
       setIsSaving(false);
     }
@@ -215,6 +290,11 @@ const OrganizerProfileContent = ({ user }) => {
   const handleCancel = () => {
     setIsEditing(false);
     setEditData(profileData);
+    setLogoFile(null);
+    setLogoPreview("");
+    if (organizerLogoInputRef.current) {
+      organizerLogoInputRef.current.value = "";
+    }
   };
 
   const handleOpenBankPanel = async () => {
@@ -429,6 +509,8 @@ const OrganizerProfileContent = ({ user }) => {
     stopOwnerCameraStream();
     setOwnerCapturedPhoto(null);
   };
+
+  const displayedOrganizerLogo = logoPreview || editData.logo;
 
   return (
     <div className="space-y-6 text-white">
@@ -743,8 +825,8 @@ const OrganizerProfileContent = ({ user }) => {
           <div className="relative flex flex-col gap-6">
             <div className="flex items-center gap-5 flex-wrap">
               <div className="w-20 h-20 rounded-2xl bg-white/5 flex items-center justify-center text-white font-bold text-3xl shadow-inner border border-white/10 overflow-hidden">
-                {editData.logo ? (
-                  <img src={editData.logo} alt={editData.name} className="w-full h-full object-cover" />
+                {displayedOrganizerLogo ? (
+                  <img src={displayedOrganizerLogo} alt={editData.name} className="w-full h-full object-contain p-2" />
                 ) : (
                   (editData.name || "U").charAt(0).toUpperCase()
                 )}
@@ -978,6 +1060,53 @@ const OrganizerProfileContent = ({ user }) => {
           ) : (
             // Edit Mode
             <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row gap-4 border-b border-white/10 pb-6">
+                <div className="w-28 h-28 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+                  {displayedOrganizerLogo ? (
+                    <img
+                      src={displayedOrganizerLogo}
+                      alt="Organizer logo preview"
+                      className="w-full h-full object-contain p-3"
+                    />
+                  ) : (
+                    <ImagePlus className="w-9 h-9 text-white/35" />
+                  )}
+                </div>
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <p className="text-sm font-medium text-white/80">Organizer Logo</p>
+                    <p className="text-xs text-white/50 mt-1">{ORGANIZER_LOGO_HELP_TEXT}</p>
+                  </div>
+                  <input
+                    ref={organizerLogoInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="hidden"
+                    onChange={handleOrganizerLogoChange}
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => organizerLogoInputRef.current?.click()}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/15 text-white hover:bg-white/15 transition"
+                    >
+                      <Upload className="w-4 h-4" />
+                      Upload Logo
+                    </button>
+                    {displayedOrganizerLogo && (
+                      <button
+                        type="button"
+                        onClick={clearOrganizerLogoSelection}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+                      >
+                        <X className="w-4 h-4" />
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-white/80">Organizer Name</label>
@@ -1064,7 +1193,7 @@ const OrganizerProfileContent = ({ user }) => {
                   className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <Save className="w-4 h-4" />
-                  {isSaving ? "Saving..." : "Save Changes"}
+                  {isSaving ? (logoFile ? "Saving Logo..." : "Saving...") : "Save Changes"}
                 </button>
                 <button
                   onClick={handleCancel}
