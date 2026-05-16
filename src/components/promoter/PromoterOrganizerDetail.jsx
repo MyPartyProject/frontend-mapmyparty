@@ -42,6 +42,8 @@ import {
 } from "lucide-react";
 import { useOrganizerDetail } from "@/hooks/useOrganizerDetail";
 import {
+  manuallyRejectAdminBank,
+  manuallyVerifyAdminBank,
   updateAdminOrganizerSuspension,
   verifyAdminOrganizer,
   unverifyAdminOrganizer,
@@ -116,7 +118,12 @@ const ProfileHeader = ({
   onSuspend,
   onReactivate,
   onVerifyToggle,
+  bankReviewNote,
+  onBankReviewNoteChange,
+  onVerifyBank,
+  onRejectBank,
   isSubmittingAction,
+  isBankActionSubmitting,
   isSuspendDialogOpen,
   onSuspendDialogChange,
   isReactivateDialogOpen,
@@ -274,11 +281,71 @@ const ProfileHeader = ({
             <div className="rounded-xl border border-border/60 bg-card/80 p-4">
               <p className="text-xs text-muted-foreground">Bank verification</p>
               <p className="mt-1 font-semibold">{profile.bankDetails?.verificationStatus || "Not submitted"}</p>
+              {profile.bankDetails?.verificationMethod && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Method: {profile.bankDetails.verificationMethod}
+                </p>
+              )}
+              {profile.bankDetails?.verifiedAt && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Verified on {formatDate(profile.bankDetails.verifiedAt)}
+                </p>
+              )}
+              {profile.bankDetails?.verificationFailureReason && (
+                <p className="mt-2 text-xs text-destructive">
+                  {profile.bankDetails.verificationFailureReason}
+                </p>
+              )}
               {profile.bankDetails?.reviewNotes && (
                 <p className="mt-2 text-xs text-muted-foreground">{profile.bankDetails.reviewNotes}</p>
               )}
             </div>
           </div>
+
+          {profile.bankDetails && (
+            <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-3 animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold">Manual bank verification</p>
+                  <p className="text-xs text-muted-foreground">
+                    Promoter review uses the same backend verification action as admin review.
+                  </p>
+                </div>
+                <Badge
+                  variant={profile.bankDetails.verificationStatus === "VERIFIED" ? "default" : "outline"}
+                  className="w-fit"
+                >
+                  {profile.bankDetails.verificationStatus || "UNVERIFIED"}
+                </Badge>
+              </div>
+
+              <Textarea
+                value={bankReviewNote}
+                onChange={(event) => onBankReviewNoteChange(event.target.value)}
+                placeholder="Optional note for approval. Required when rejecting."
+                maxLength={500}
+                className="min-h-[76px]"
+              />
+
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  onClick={onVerifyBank}
+                  disabled={isBankActionSubmitting || profile.bankDetails.verificationStatus === "VERIFIED"}
+                >
+                  {isBankActionSubmitting ? "Updating..." : "Verify bank"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={onRejectBank}
+                  disabled={isBankActionSubmitting}
+                >
+                  Reject bank
+                </Button>
+              </div>
+            </div>
+          )}
 
           {profile.adminNotes && (
             <div className="rounded-xl border border-border/60 bg-card/80 p-4">
@@ -617,7 +684,9 @@ const PromoterOrganizerDetail = () => {
   const { id } = useParams();
   const { profile, stats, events, reviews, loading, errors, refresh } = useOrganizerDetail(id);
   const [suspensionReason, setSuspensionReason] = useState("");
+  const [bankReviewNote, setBankReviewNote] = useState("");
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
+  const [isBankActionSubmitting, setIsBankActionSubmitting] = useState(false);
   const [isSuspendDialogOpen, setIsSuspendDialogOpen] = useState(false);
   const [isReactivateDialogOpen, setIsReactivateDialogOpen] = useState(false);
 
@@ -669,6 +738,48 @@ const PromoterOrganizerDetail = () => {
     [isSubmittingAction, profile?.id, refresh, suspensionReason]
   );
 
+  const handleManualBankVerify = useCallback(async () => {
+    if (!profile?.bankDetails?.id || isBankActionSubmitting) return;
+
+    setIsBankActionSubmitting(true);
+    try {
+      await manuallyVerifyAdminBank(profile.bankDetails.id, {
+        reviewNotes: bankReviewNote.trim(),
+      });
+      toast.success("Bank account verified.");
+      setBankReviewNote("");
+      refresh();
+    } catch (error) {
+      toast.error(error.message || "Failed to verify bank account.");
+    } finally {
+      setIsBankActionSubmitting(false);
+    }
+  }, [bankReviewNote, isBankActionSubmitting, profile?.bankDetails?.id, refresh]);
+
+  const handleManualBankReject = useCallback(async () => {
+    if (!profile?.bankDetails?.id || isBankActionSubmitting) return;
+    const reason = bankReviewNote.trim();
+    if (!reason) {
+      toast.error("Rejection reason is required.");
+      return;
+    }
+
+    setIsBankActionSubmitting(true);
+    try {
+      await manuallyRejectAdminBank(profile.bankDetails.id, {
+        reason,
+        reviewNotes: reason,
+      });
+      toast.success("Bank account rejected.");
+      setBankReviewNote("");
+      refresh();
+    } catch (error) {
+      toast.error(error.message || "Failed to reject bank account.");
+    } finally {
+      setIsBankActionSubmitting(false);
+    }
+  }, [bankReviewNote, isBankActionSubmitting, profile?.bankDetails?.id, refresh]);
+
   return (
     <div className="space-y-6">
       {/* Back link */}
@@ -690,7 +801,12 @@ const PromoterOrganizerDetail = () => {
           onSuspend={() => handleOrganizerSuspension(true)}
           onReactivate={() => handleOrganizerSuspension(false)}
           onVerifyToggle={handleVerifyToggle}
+          bankReviewNote={bankReviewNote}
+          onBankReviewNoteChange={setBankReviewNote}
+          onVerifyBank={handleManualBankVerify}
+          onRejectBank={handleManualBankReject}
           isSubmittingAction={isSubmittingAction}
+          isBankActionSubmitting={isBankActionSubmitting}
           isSuspendDialogOpen={isSuspendDialogOpen}
           onSuspendDialogChange={setIsSuspendDialogOpen}
           isReactivateDialogOpen={isReactivateDialogOpen}

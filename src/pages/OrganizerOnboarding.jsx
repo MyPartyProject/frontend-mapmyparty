@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Building2, CreditCard, ImagePlus, Loader2, Upload, X } from "lucide-react";
+import { BadgeCheck, Building2, CreditCard, ImagePlus, Loader2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/config/api";
@@ -36,6 +36,7 @@ const buildBankDefaults = (bank = null) => ({
   accountNumber: bank?.accountNumber || "",
   ifscCode: bank?.ifscCode || "",
   bankName: bank?.bankName || "",
+  branchName: bank?.branchName || "",
 });
 
 const OrganizerOnboarding = () => {
@@ -48,17 +49,20 @@ const OrganizerOnboarding = () => {
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingBank, setSavingBank] = useState(false);
+  const [requestingVerification, setRequestingVerification] = useState(false);
 
   const [profileForm, setProfileForm] = useState(() => buildProfileDefaults(user));
   const [bankForm, setBankForm] = useState(() => buildBankDefaults());
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState("");
   const logoInputRef = useRef(null);
+  const verificationPollRef = useRef(false);
 
   const currentStep = useMemo(() => {
     if (!status) return "profile";
     if (!status.hasOrganizerProfile) return "profile";
     if (!status.hasBankDetails) return "bank";
+    if (!status.isBankVerified) return "verify";
     return "complete";
   }, [status]);
 
@@ -77,7 +81,7 @@ const OrganizerOnboarding = () => {
         setProfileForm(buildProfileDefaults(user, nextStatus.organizerProfile));
         setBankForm(buildBankDefaults(nextStatus.bankDetails));
 
-        if (nextStatus.completed) {
+        if (nextStatus.completed && nextStatus.isBankVerified) {
           await finishOnboarding();
         }
       } catch (error) {
@@ -92,6 +96,96 @@ const OrganizerOnboarding = () => {
   useEffect(() => {
     refreshStatus(true);
   }, [refreshStatus]);
+
+  const applyVerificationStatus = useCallback(
+    async (payload = {}) => {
+      const data = payload?.data || payload || {};
+      const nextBankDetails = data.bankDetails || {};
+      const nextVerificationStatus =
+        data.bankVerificationStatus ||
+        nextBankDetails.verificationStatus ||
+        status?.bankVerificationStatus ||
+        null;
+      const nextIsBankVerified = Boolean(
+        data.isBankVerified ?? nextVerificationStatus === "VERIFIED"
+      );
+
+      setStatus((current) => {
+        if (!current) return current;
+        return {
+          ...current,
+          bankDetails: current.bankDetails
+            ? { ...current.bankDetails, ...nextBankDetails }
+            : nextBankDetails,
+          isBankVerified: nextIsBankVerified,
+          bankVerificationStatus: nextVerificationStatus,
+          bankVerificationRequired:
+            data.bankVerificationRequired ?? (current.hasBankDetails && !nextIsBankVerified),
+          financialReadiness:
+            data.financialReadiness ||
+            (nextIsBankVerified ? "READY" : "BANK_VERIFICATION_REQUIRED"),
+        };
+      });
+
+      if (Object.keys(nextBankDetails).length > 0) {
+        setBankForm(buildBankDefaults(nextBankDetails));
+      }
+
+      if (nextVerificationStatus === "VERIFIED") {
+        toast.success("Bank verification completed successfully");
+        clearOrganizerOnboardingCache();
+        await refreshStatus(true);
+      } else if (
+        nextVerificationStatus === "FAILED" &&
+        status?.bankVerificationStatus !== "FAILED"
+      ) {
+        toast.error(nextBankDetails.verificationFailureReason || "Bank verification failed");
+        clearOrganizerOnboardingCache();
+      }
+    },
+    [refreshStatus, status?.bankVerificationStatus]
+  );
+
+  useEffect(() => {
+    if (currentStep !== "verify" || !status?.hasBankDetails || status?.isBankVerified) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const pollVerificationStatus = async () => {
+      if (verificationPollRef.current || cancelled) return;
+      verificationPollRef.current = true;
+      try {
+        const response = await apiFetch("organizer/me/bank-details/verification/status", {
+          method: "GET",
+        });
+        if (!cancelled) {
+          await applyVerificationStatus(response);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          toast.error(error?.message || "Failed to refresh bank verification status");
+        }
+      } finally {
+        verificationPollRef.current = false;
+      }
+    };
+
+    const intervalId = window.setInterval(pollVerificationStatus, 10000);
+    pollVerificationStatus();
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [
+    applyVerificationStatus,
+    currentStep,
+    status?.bankVerificationStatus,
+    status?.hasBankDetails,
+    status?.isBankVerified,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -222,7 +316,8 @@ const OrganizerOnboarding = () => {
       !bankForm.accountHolder.trim() ||
       !bankForm.accountNumber.trim() ||
       !bankForm.ifscCode.trim() ||
-      !bankForm.bankName.trim()
+      !bankForm.bankName.trim() ||
+      !bankForm.branchName.trim()
     ) {
       toast.error("All bank detail fields are required");
       return;
@@ -233,6 +328,7 @@ const OrganizerOnboarding = () => {
       accountNumber: bankForm.accountNumber.trim(),
       ifscCode: bankForm.ifscCode.trim().toUpperCase(),
       bankName: bankForm.bankName.trim(),
+      branchName: bankForm.branchName.trim(),
     };
 
     setSavingBank(true);
@@ -253,6 +349,23 @@ const OrganizerOnboarding = () => {
       toast.error(error?.message || "Failed to save bank details");
     } finally {
       setSavingBank(false);
+    }
+  };
+
+  const handleRequestBankVerification = async () => {
+    if (requestingVerification) return;
+    setRequestingVerification(true);
+    try {
+      const response = await apiFetch("organizer/me/bank-details/verification/request", {
+        method: "POST",
+      });
+      toast.success(response?.message || "Bank verification requested");
+      clearOrganizerOnboardingCache();
+      await applyVerificationStatus(response);
+    } catch (error) {
+      toast.error(error?.message || "Failed to request bank verification");
+    } finally {
+      setRequestingVerification(false);
     }
   };
 
@@ -296,7 +409,11 @@ const OrganizerOnboarding = () => {
           </div>
           <div
             className={`rounded-xl border p-3 ${
-              status?.hasBankDetails ? "border-emerald-400/40 bg-emerald-500/10" : "border-white/10 bg-white/5"
+              status?.isBankVerified
+                ? "border-emerald-400/40 bg-emerald-500/10"
+                : status?.hasBankDetails
+                  ? "border-amber-400/40 bg-amber-500/10"
+                  : "border-white/10 bg-white/5"
             }`}
           >
             <div className="flex items-center gap-2 text-sm font-medium">
@@ -304,7 +421,7 @@ const OrganizerOnboarding = () => {
               Bank Details
             </div>
             <p className="text-xs text-white/60 mt-1">
-              {status?.hasBankDetails ? "Completed" : "Required"}
+              {status?.isBankVerified ? "Verified" : status?.hasBankDetails ? "Verification required" : "Required"}
             </p>
           </div>
         </div>
@@ -504,6 +621,16 @@ const OrganizerOnboarding = () => {
                     required
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bank-branch-name">Branch Name</Label>
+                  <Input
+                    id="bank-branch-name"
+                    value={bankForm.branchName}
+                    onChange={(e) => onBankInputChange("branchName", e.target.value)}
+                    className="bg-[#070b14] border-white/15 text-white"
+                    required
+                  />
+                </div>
                 <Button type="submit" disabled={savingBank} className="w-full">
                   {savingBank ? (
                     <span className="inline-flex items-center gap-2">
@@ -515,6 +642,56 @@ const OrganizerOnboarding = () => {
                   )}
                 </Button>
               </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {currentStep === "verify" && (
+          <Card className="bg-[#0b101d] border-white/10 text-white animate-in fade-in-0 slide-in-from-bottom-3 duration-500">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BadgeCheck className="h-5 w-5 text-amber-300" />
+                Verify Bank Account
+              </CardTitle>
+              <CardDescription className="text-white/60">
+                Your bank details are saved. Verification keeps payout releases protected.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-white/45">Current status</p>
+                <p className="mt-2 text-lg font-semibold">{status?.bankVerificationStatus || "UNVERIFIED"}</p>
+                {status?.bankDetails?.verificationFailureReason && (
+                  <p className="mt-2 text-sm text-red-300">{status.bankDetails.verificationFailureReason}</p>
+                )}
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  type="button"
+                  onClick={handleRequestBankVerification}
+                  disabled={requestingVerification || status?.bankVerificationStatus === "VERIFICATION_IN_PROGRESS"}
+                  className="flex-1"
+                >
+                  {requestingVerification ? (
+                    <span className="inline-flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Requesting...
+                    </span>
+                  ) : status?.bankVerificationStatus === "VERIFICATION_IN_PROGRESS" ? (
+                    "Verification In Progress"
+                  ) : (
+                    "Verify Bank Account"
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={finishOnboarding}
+                  className="border-white/15 bg-transparent text-white hover:bg-white/10"
+                >
+                  Continue to Dashboard
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}

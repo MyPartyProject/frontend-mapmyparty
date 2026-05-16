@@ -110,6 +110,22 @@ export async function updateAdminBankReview(id, payload) {
   return response.data;
 }
 
+export async function manuallyVerifyAdminBank(id, payload = {}) {
+  const response = await apiFetch(`admin/bank-details/${id}/verify-manually`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return response.data;
+}
+
+export async function manuallyRejectAdminBank(id, payload = {}) {
+  const response = await apiFetch(`admin/bank-details/${id}/reject-manually`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return response.data;
+}
+
 export async function fetchAdminRefunds(params = {}) {
   const query = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {

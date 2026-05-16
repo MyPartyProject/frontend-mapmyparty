@@ -153,6 +153,7 @@ const PayoutDetail = ({ payoutId, onBack }) => {
             <div className="space-y-1 text-sm">
               <p className="text-white">{bankDetails.accountHolder}</p>
               <p className="text-white/60">{bankDetails.bankName}</p>
+              <p className="text-white/40 text-xs">Branch: {bankDetails.branchName}</p>
               <p className="text-white/40 text-xs">
                 A/C: ****{bankDetails.accountNumber?.slice(-4)}
               </p>

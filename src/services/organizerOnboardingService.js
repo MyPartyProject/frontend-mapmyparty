@@ -14,7 +14,8 @@ const hasBankDetailsData = (bankDetails) =>
       bankDetails?.accountHolder ||
       bankDetails?.accountNumber ||
       bankDetails?.ifscCode ||
-      bankDetails?.bankName
+      bankDetails?.bankName ||
+      bankDetails?.branchName
   );
 
 const normalizeStatus = (payload = {}) => {
@@ -24,10 +25,16 @@ const normalizeStatus = (payload = {}) => {
     payload?.hasOrganizerProfile ?? organizerProfile?.id
   );
   const hasBankDetails = Boolean(payload?.hasBankDetails ?? hasBankDetailsData(bankDetails));
+  const isBankVerified = Boolean(payload?.isBankVerified ?? bankDetails?.verificationStatus === "VERIFIED");
+  const bankVerificationStatus = payload?.bankVerificationStatus || bankDetails?.verificationStatus || null;
 
   return {
     hasOrganizerProfile,
     hasBankDetails,
+    isBankVerified,
+    bankVerificationStatus,
+    bankVerificationRequired: Boolean(payload?.bankVerificationRequired ?? (hasBankDetails && !isBankVerified)),
+    financialReadiness: payload?.financialReadiness || (isBankVerified ? "READY" : "BANK_VERIFICATION_REQUIRED"),
     completed: Boolean(payload?.completed ?? (hasOrganizerProfile && hasBankDetails)),
     nextStep:
       payload?.nextStep ||
@@ -72,12 +79,17 @@ export async function fetchOrganizerOnboardingStatus({ forceRefresh = false, use
     const hasOrganizerProfile = Boolean(session?.hasOrganizerProfile ?? organizerProfile?.id);
     const bankDetails = session?.bankDetails || null;
     const hasBankDetails = Boolean(session?.hasBankDetails ?? hasBankDetailsData(bankDetails));
+    const isBankVerified = Boolean(session?.isBankVerified ?? bankDetails?.verificationStatus === "VERIFIED");
 
     return normalizeStatus({
       organizer: organizerProfile,
       hasOrganizerProfile,
       bankDetails,
       hasBankDetails,
+      isBankVerified,
+      bankVerificationStatus: session?.bankVerificationStatus || bankDetails?.verificationStatus || null,
+      bankVerificationRequired: session?.bankVerificationRequired ?? (hasBankDetails && !isBankVerified),
+      financialReadiness: session?.onboarding?.financialReadiness,
       completed: hasOrganizerProfile && hasBankDetails,
       nextStep: hasOrganizerProfile
         ? (hasBankDetails ? "COMPLETE" : "ADD_BANK_DETAILS")

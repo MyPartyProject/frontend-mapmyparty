@@ -97,9 +97,15 @@ const OrganizerProfileContent = ({ user }) => {
       accountNumber: payload?.bankDetails?.accountNumber || "",
       ifscCode: payload?.bankDetails?.ifscCode || "",
       bankName: payload?.bankDetails?.bankName || "",
+      branchName: payload?.bankDetails?.branchName || "",
       providerName: payload?.bankDetails?.providerName || "",
       verificationStatus: payload?.bankDetails?.verificationStatus || "",
       verificationTxnId: payload?.bankDetails?.verificationTxnId || "",
+      verificationMethod: payload?.bankDetails?.verificationMethod || "",
+      verifiedAt: payload?.bankDetails?.verifiedAt || "",
+      verificationFailureReason: payload?.bankDetails?.verificationFailureReason || "",
+      lastVerificationRequestedAt: payload?.bankDetails?.lastVerificationRequestedAt || "",
+      reviewNotes: payload?.bankDetails?.reviewNotes || "",
       createdAt: payload?.bankDetails?.createdAt || "",
       updatedAt: payload?.bankDetails?.updatedAt || "",
     },
@@ -122,6 +128,7 @@ const OrganizerProfileContent = ({ user }) => {
   const [bankExists, setBankExists] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isBankSaving, setIsBankSaving] = useState(false);
+  const [isBankVerifying, setIsBankVerifying] = useState(false);
   const [isBankLoading, setIsBankLoading] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [logoFile, setLogoFile] = useState(null);
@@ -131,6 +138,7 @@ const OrganizerProfileContent = ({ user }) => {
   const ownerCanvasRef = useRef(null);
   const ownerFileInputRef = useRef(null);
   const organizerLogoInputRef = useRef(null);
+  const bankVerificationPollRef = useRef(false);
 
   useEffect(() => {
     const fresh = buildInitialData(user?.organizer || {}, user);
@@ -323,6 +331,12 @@ const OrganizerProfileContent = ({ user }) => {
     setBankDraft((prev) => ({ ...prev, [field]: value }));
   };
 
+  const mergeBankDetailsState = useCallback((data = {}) => {
+    setBankDraft((prev) => ({ ...prev, ...data }));
+    setProfileData((prev) => ({ ...prev, bankDetails: { ...prev.bankDetails, ...data } }));
+    setEditData((prev) => ({ ...prev, bankDetails: { ...prev.bankDetails, ...data } }));
+  }, []);
+
   const handleSaveBank = async () => {
     if (isBankSaving) return;
     setIsBankSaving(true);
@@ -332,6 +346,7 @@ const OrganizerProfileContent = ({ user }) => {
         accountNumber: bankDraft.accountNumber,
         ifscCode: bankDraft.ifscCode,
         bankName: bankDraft.bankName,
+        branchName: bankDraft.branchName,
       };
       const res = await apiFetch("organizer/me/bank-details", {
         method: bankExists ? "PATCH" : "POST",
@@ -339,9 +354,8 @@ const OrganizerProfileContent = ({ user }) => {
       });
       const data = res?.data || res || {};
       setBankExists(true);
-      setBankDraft((prev) => ({ ...prev, ...data }));
-      setProfileData((prev) => ({ ...prev, bankDetails: { ...prev.bankDetails, ...data } }));
-      setEditData((prev) => ({ ...prev, bankDetails: { ...prev.bankDetails, ...data } }));
+      mergeBankDetailsState(data);
+      resetSessionCache();
       setIsBankEditing(false);
       setIsBankPanelOpen(false);
     } catch (error) {
@@ -351,11 +365,76 @@ const OrganizerProfileContent = ({ user }) => {
     }
   };
 
+  const handleRequestBankVerification = async () => {
+    if (isBankVerifying) return;
+    setIsBankVerifying(true);
+    try {
+      const res = await apiFetch("organizer/me/bank-details/verification/request", {
+        method: "POST",
+      });
+      const data = res?.data?.bankDetails || res?.data || res || {};
+      mergeBankDetailsState(data);
+      resetSessionCache();
+      toast.success(res?.message || "Bank verification requested");
+    } catch (error) {
+      toast.error(error?.message || "Failed to request bank verification");
+    } finally {
+      setIsBankVerifying(false);
+    }
+  };
+
   const handleCancelBank = () => {
     setBankDraft(profileData.bankDetails);
     setIsBankEditing(false);
     setIsBankPanelOpen(false);
   };
+
+  useEffect(() => {
+    if (!isBankPanelOpen || !bankExists || bankDraft.verificationStatus === "VERIFIED") {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const pollBankVerificationStatus = async () => {
+      if (bankVerificationPollRef.current || cancelled) return;
+      bankVerificationPollRef.current = true;
+
+      try {
+        const res = await apiFetch("organizer/me/bank-details/verification/status", {
+          method: "GET",
+        });
+        const payload = res?.data || res || {};
+        const data = payload.bankDetails || payload;
+        const nextStatus = payload.bankVerificationStatus || data.verificationStatus;
+
+        if (data?.id) {
+          mergeBankDetailsState(data);
+          resetSessionCache();
+        }
+
+        if (nextStatus === "VERIFIED" && bankDraft.verificationStatus !== "VERIFIED") {
+          toast.success("Bank verification completed successfully");
+        } else if (nextStatus === "FAILED" && bankDraft.verificationStatus !== "FAILED") {
+          toast.error(data.verificationFailureReason || "Bank verification failed");
+        }
+      } catch (error) {
+        if (!cancelled) {
+          toast.error(error?.message || "Failed to refresh bank verification status");
+        }
+      } finally {
+        bankVerificationPollRef.current = false;
+      }
+    };
+
+    const intervalId = window.setInterval(pollBankVerificationStatus, 10000);
+    pollBankVerificationStatus();
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [bankDraft.verificationStatus, bankExists, isBankPanelOpen, mergeBankDetailsState]);
 
   useEffect(() => {
     if (!isOwnerCameraOpen) {
@@ -1246,6 +1325,42 @@ const OrganizerProfileContent = ({ user }) => {
                 </div>
               )}
 
+              {bankExists && bankDraft.verificationStatus !== "VERIFIED" && (
+                <div className="rounded-xl border border-amber-400/25 bg-amber-500/10 px-4 py-3 space-y-3 animate-in fade-in-0 slide-in-from-right-2 duration-300">
+                  <div>
+                    <p className="text-sm font-medium text-amber-200">Bank verification required</p>
+                    <p className="text-xs text-white/55 mt-0.5">
+                      Payouts stay locked until this account is verified.
+                    </p>
+                    {bankDraft.verificationFailureReason && (
+                      <p className="text-xs text-red-300 mt-2">{bankDraft.verificationFailureReason}</p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRequestBankVerification}
+                    disabled={isBankVerifying || bankDraft.verificationStatus === "VERIFICATION_IN_PROGRESS"}
+                    className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-amber-300 text-black text-sm font-semibold hover:bg-amber-200 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    {isBankVerifying
+                      ? "Requesting..."
+                      : bankDraft.verificationStatus === "VERIFICATION_IN_PROGRESS"
+                        ? "Verification In Progress"
+                        : "Verify Now"}
+                  </button>
+                </div>
+              )}
+
+              {bankExists && bankDraft.verificationStatus === "VERIFIED" && (
+                <div className="rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 animate-in fade-in-0 slide-in-from-right-2 duration-300">
+                  <p className="text-sm font-medium text-emerald-200">Bank account verified</p>
+                  <p className="text-xs text-white/55 mt-0.5">
+                    {bankDraft.verifiedAt ? `Verified on ${formatDate(bankDraft.verifiedAt)}` : "Ready for payout operations"}
+                  </p>
+                </div>
+              )}
+
               {/* Prompt when no bank details */}
               {!bankExists && (
                 <div className="rounded-xl border border-accent/20 bg-accent/10 px-4 py-3 flex items-start gap-3">
@@ -1268,6 +1383,7 @@ const OrganizerProfileContent = ({ user }) => {
                   {[
                     { key: "accountHolder", label: "Account Holder" },
                     { key: "bankName", label: "Bank Name" },
+                    { key: "branchName", label: "Branch Name" },
                     { key: "accountNumber", label: "Account Number" },
                     { key: "ifscCode", label: "IFSC Code" },
                   ].map((field) => (

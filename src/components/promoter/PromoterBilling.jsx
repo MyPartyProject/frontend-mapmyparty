@@ -7,15 +7,17 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   AlertCircle,
   Building2,
+  CheckCircle2,
   Loader,
   RefreshCw,
   Search,
   ShieldCheck,
   WalletCards,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAdminBankDetails } from "@/hooks/useAdminBankDetails";
-import { updateAdminBankReview } from "@/services/adminService";
+import { manuallyRejectAdminBank, manuallyVerifyAdminBank } from "@/services/adminService";
 
 const statusOptions = ["ALL", "UNVERIFIED", "VERIFICATION_IN_PROGRESS", "VERIFIED", "FAILED"];
 
@@ -34,23 +36,38 @@ const PromoterBilling = () => {
     [items]
   );
 
-  const handleReviewUpdate = async (bankId) => {
-    const draft = reviewDrafts[bankId];
-    if (!draft?.verificationStatus) {
-      toast.error("Choose a bank verification status.");
+  const handleManualVerify = async (bankId) => {
+    setUpdatingId(bankId);
+    try {
+      await manuallyVerifyAdminBank(bankId, {
+        reviewNotes: reviewDrafts[bankId]?.reviewNotes || "",
+      });
+      toast.success("Bank account verified.");
+      refresh();
+    } catch (updateError) {
+      toast.error(updateError.message || "Failed to verify bank account.");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleManualReject = async (bankId) => {
+    const note = reviewDrafts[bankId]?.reviewNotes?.trim();
+    if (!note) {
+      toast.error("Add a review note before rejecting.");
       return;
     }
 
     setUpdatingId(bankId);
     try {
-      await updateAdminBankReview(bankId, {
-        verificationStatus: draft.verificationStatus,
-        reviewNotes: draft.reviewNotes || "",
+      await manuallyRejectAdminBank(bankId, {
+        reason: note,
+        reviewNotes: note,
       });
-      toast.success("Bank review updated.");
+      toast.success("Bank account rejected.");
       refresh();
     } catch (updateError) {
-      toast.error(updateError.message || "Failed to update bank review.");
+      toast.error(updateError.message || "Failed to reject bank account.");
     } finally {
       setUpdatingId(null);
     }
@@ -150,10 +167,14 @@ const PromoterBilling = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid gap-3 md:grid-cols-4">
+                  <div className="grid gap-3 md:grid-cols-5">
                     <div className="rounded-xl border border-border/60 bg-card/80 p-3">
                       <p className="text-xs text-muted-foreground flex items-center gap-2"><WalletCards className="h-4 w-4" /> Bank</p>
                       <p className="font-semibold">{bank.bankName}</p>
+                    </div>
+                    <div className="rounded-xl border border-border/60 bg-card/80 p-3">
+                      <p className="text-xs text-muted-foreground">Branch</p>
+                      <p className="font-semibold">{bank.branchName}</p>
                     </div>
                     <div className="rounded-xl border border-border/60 bg-card/80 p-3">
                       <p className="text-xs text-muted-foreground">Account holder</p>
@@ -169,28 +190,9 @@ const PromoterBilling = () => {
                     </div>
                   </div>
 
-                  <div className="grid gap-3 md:grid-cols-[220px_1fr_auto]">
-                    <select
-                      className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                      value={reviewDrafts[bank.id]?.verificationStatus || bank.verificationStatus}
-                      onChange={(event) =>
-                        setReviewDrafts((current) => ({
-                          ...current,
-                          [bank.id]: {
-                            ...current[bank.id],
-                            verificationStatus: event.target.value,
-                          },
-                        }))
-                      }
-                    >
-                      {["UNVERIFIED", "VERIFICATION_IN_PROGRESS", "VERIFIED", "FAILED"].map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="grid gap-3 md:grid-cols-[1fr_auto]">
                     <Textarea
-                      placeholder="Review notes"
+                      placeholder="Review notes or rejection reason"
                       value={reviewDrafts[bank.id]?.reviewNotes ?? bank.reviewNotes ?? ""}
                       onChange={(event) =>
                         setReviewDrafts((current) => ({
@@ -202,10 +204,44 @@ const PromoterBilling = () => {
                         }))
                       }
                     />
-                    <Button onClick={() => handleReviewUpdate(bank.id)} disabled={updatingId === bank.id}>
-                      {updatingId === bank.id ? "Saving..." : "Update"}
-                    </Button>
+                    <div className="flex flex-wrap gap-2 md:flex-col">
+                      <Button
+                        onClick={() => handleManualVerify(bank.id)}
+                        disabled={updatingId === bank.id || bank.verificationStatus === "VERIFIED"}
+                        className="gap-2"
+                      >
+                        {updatingId === bank.id ? <Loader className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                        Verify
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleManualReject(bank.id)}
+                        disabled={updatingId === bank.id}
+                        className="gap-2"
+                      >
+                        <XCircle className="h-4 w-4" />
+                        Reject
+                      </Button>
+                    </div>
                   </div>
+                  {(bank.verificationMethod || bank.verifiedAt || bank.verificationFailureReason) && (
+                    <div className="grid gap-3 md:grid-cols-3">
+                      <div className="rounded-xl border border-border/60 bg-card/80 p-3">
+                        <p className="text-xs text-muted-foreground">Method</p>
+                        <p className="font-semibold">{bank.verificationMethod || "Not recorded"}</p>
+                      </div>
+                      <div className="rounded-xl border border-border/60 bg-card/80 p-3">
+                        <p className="text-xs text-muted-foreground">Verified at</p>
+                        <p className="font-semibold">
+                          {bank.verifiedAt ? new Date(bank.verifiedAt).toLocaleDateString("en-IN") : "Not verified"}
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-border/60 bg-card/80 p-3">
+                        <p className="text-xs text-muted-foreground">Failure reason</p>
+                        <p className="font-semibold">{bank.verificationFailureReason || "None"}</p>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))
