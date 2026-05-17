@@ -231,7 +231,7 @@ const MyBookings = ({
 
     setDownloadingInvoiceId(booking.id);
     try {
-      const url = buildUrl(`booking/${booking.id}/invoice`);
+      const url = buildUrl(`/api/booking/${booking.id}/invoice`);
       const response = await fetch(url, {
         credentials: "include",
       });

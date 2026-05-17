@@ -107,7 +107,7 @@ const BookingSuccess = () => {
   const handleDownloadTickets = () => {
     try {
       toast.info("Preparing your tickets...");
-      window.open(buildUrl(`booking/${bookingId}/ticket/download`), "_blank", "noopener,noreferrer");
+      window.open(buildUrl(`/api/booking/${bookingId}/ticket/download`), "_blank", "noopener,noreferrer");
       toast.success("Ticket download started");
     } catch (err) {
       toast.error("Failed to download tickets");

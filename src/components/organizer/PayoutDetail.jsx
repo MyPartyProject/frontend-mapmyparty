@@ -66,7 +66,7 @@ const PayoutDetail = ({ payoutId, onBack }) => {
   const handleDownloadInvoice = async () => {
     setDownloading(true);
     try {
-      const url = buildUrl(`organizer/me/payouts/${payoutId}/invoice`);
+      const url = buildUrl(`/api/organizer/me/payouts/${payoutId}/invoice`);
       const response = await fetch(url, {
         credentials: "include",
       });

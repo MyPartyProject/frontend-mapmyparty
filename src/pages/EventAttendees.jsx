@@ -60,7 +60,7 @@ const EventAttendees = () => {
   const handleDownloadCSV = async () => {
     setDownloading(true);
     try {
-      const url = buildUrl(`booking/event/${eventId}/attendees/download`);
+      const url = buildUrl(`/api/booking/event/${eventId}/attendees/download`);
       const response = await fetch(url, { credentials: "include" });
       if (!response.ok) throw new Error("Download failed");
       const blob = await response.blob();

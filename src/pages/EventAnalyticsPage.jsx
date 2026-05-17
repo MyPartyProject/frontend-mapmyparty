@@ -305,7 +305,7 @@ const EventAnalyticsPage = () => {
     if (downloading) return;
     setDownloading(true);
     try {
-      const url = buildUrl(`organizer/${organizerId}/events/${eventId}/analytics/export`);
+      const url = buildUrl(`/api/organizer/${organizerId}/events/${eventId}/analytics/export`);
       const res = await fetch(url, { credentials: "include" });
       if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
