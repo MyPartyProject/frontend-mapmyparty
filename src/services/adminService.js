@@ -64,6 +64,17 @@ export async function reviewModerationEvent(eventId, payload) {
   return response.data;
 }
 
+export async function fetchAdminEvents(params = {}) {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== null && value !== undefined && value !== "") {
+      query.append(key, value);
+    }
+  });
+  const response = await apiFetch(`admin/events${query.toString() ? `?${query.toString()}` : ""}`);
+  return response.data;
+}
+
 export async function fetchAdminPayouts(params = {}) {
   const query = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
@@ -78,6 +89,42 @@ export async function fetchAdminPayouts(params = {}) {
 export async function createAdminPayout(payload) {
   const response = await apiFetch("admin/payouts", {
     method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return response.data;
+}
+
+export async function fetchAdminPayoutDetail(payoutId) {
+  const response = await apiFetch(`admin/payouts/${payoutId}`);
+  return response.data;
+}
+
+export async function calculateEventPayout(eventId) {
+  const response = await apiFetch(`admin/events/${eventId}/payouts/calculate`, {
+    method: "POST",
+  });
+  return response.data;
+}
+
+export async function createEventPayout(eventId, payload = {}) {
+  const response = await apiFetch(`admin/events/${eventId}/payouts`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return response.data;
+}
+
+export async function approveEventPayout(payoutId, payload = {}) {
+  const response = await apiFetch(`admin/payouts/${payoutId}/approve`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+  return response.data;
+}
+
+export async function holdEventPayout(payoutId, payload = {}) {
+  const response = await apiFetch(`admin/payouts/${payoutId}/hold`, {
+    method: "PATCH",
     body: JSON.stringify(payload),
   });
   return response.data;

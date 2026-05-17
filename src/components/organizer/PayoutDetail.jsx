@@ -12,10 +12,33 @@ import {
 } from "lucide-react";
 
 const statusColors = {
+  REVIEW_REQUIRED: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+  APPROVED: "bg-blue-500/20 text-blue-400 border-blue-500/30",
   PENDING: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
   PROCESSING: "bg-blue-500/20 text-blue-400 border-blue-500/30",
   COMPLETED: "bg-green-500/20 text-green-400 border-green-500/30",
   FAILED: "bg-red-500/20 text-red-400 border-red-500/30",
+  RETRY_PENDING: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+  RECONCILED: "bg-green-500/20 text-green-400 border-green-500/30",
+  CANCELLED: "bg-red-500/20 text-red-400 border-red-500/30",
+};
+
+const formatStatus = (value) =>
+  String(value || "UNKNOWN")
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+
+const formatAmount = (value) => Number(value || 0).toFixed(2);
+
+const getPayoutAmount = (payout, summary) => {
+  const isEventPayout = Boolean(summary || payout?.eventId || payout?.event);
+  const snapshotAmount = Number(summary?.netPayoutAmount ?? payout?.netPayoutAmount);
+  if (isEventPayout && Number.isFinite(snapshotAmount) && snapshotAmount > 0) {
+    return snapshotAmount;
+  }
+  return Number(payout?.amount || 0);
 };
 
 const PayoutDetail = ({ payoutId, onBack }) => {
@@ -83,7 +106,8 @@ const PayoutDetail = ({ payoutId, onBack }) => {
     );
   }
 
-  const { payout, bankDetails, organizer, eventBreakdowns } = data;
+  const { payout, bankDetails, organizer, event, summary, eventBreakdowns } = data;
+  const payoutAmount = getPayoutAmount(payout, summary);
 
   return (
     <div className="space-y-6">
@@ -98,7 +122,9 @@ const PayoutDetail = ({ payoutId, onBack }) => {
           </button>
           <div>
             <h1 className="text-2xl font-bold text-white">Payout Detail</h1>
-            <p className="text-xs text-white/40 mt-0.5 font-mono">{payout.id}</p>
+            <p className="text-xs text-white/40 mt-0.5 font-mono">
+              {payout.invoiceNumber || payout.publicId || payout.id}
+            </p>
           </div>
         </div>
         <button
@@ -116,7 +142,7 @@ const PayoutDetail = ({ payoutId, onBack }) => {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Payout Info */}
         <div className="bg-white/5 border border-white/10 rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
@@ -124,10 +150,10 @@ const PayoutDetail = ({ payoutId, onBack }) => {
             <h3 className="text-sm font-semibold text-white/70">Payout</h3>
           </div>
           <div className="text-2xl font-bold text-white mb-2">
-            Rs. {payout.amount?.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+            Rs. {payoutAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
           </div>
           <Badge className={`${statusColors[payout.status] || ""} border text-xs`}>
-            {payout.status}
+            {formatStatus(payout.status)}
           </Badge>
           <div className="mt-3 text-xs text-white/40 flex items-center gap-1">
             <Calendar className="w-3 h-3" />
@@ -141,6 +167,24 @@ const PayoutDetail = ({ payoutId, onBack }) => {
           {payout.failureReason && (
             <p className="mt-2 text-xs text-red-400">{payout.failureReason}</p>
           )}
+          {payout.blockedReason && (
+            <p className="mt-2 text-xs text-yellow-400">{payout.blockedReason}</p>
+          )}
+        </div>
+
+        {/* Event Info */}
+        <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Calendar className="w-4 h-4 text-primary" />
+            <h3 className="text-sm font-semibold text-white/70">Event</h3>
+          </div>
+          <div className="space-y-1 text-sm">
+            <p className="text-white">{event?.title || "Organizer payout"}</p>
+            {event?.type && <p className="text-white/60">{formatStatus(event.type)}</p>}
+            {payout.invoiceNumber && (
+              <p className="text-white/40 text-xs">Invoice: {payout.invoiceNumber}</p>
+            )}
+          </div>
         </div>
 
         {/* Bank Info */}
@@ -180,10 +224,37 @@ const PayoutDetail = ({ payoutId, onBack }) => {
         </div>
       </div>
 
+      {summary && (
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <p className="text-xs text-white/40">Gross sales</p>
+            <p className="mt-1 font-semibold text-white">Rs. {formatAmount(summary.grossTicketSales)}</p>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <p className="text-xs text-white/40">Refunds/reserve</p>
+            <p className="mt-1 font-semibold text-white">
+              Rs. {formatAmount((summary.refundAmount || 0) + (summary.refundReserveAmount || 0))}
+            </p>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <p className="text-xs text-white/40">Platform fee</p>
+            <p className="mt-1 font-semibold text-white">Rs. {formatAmount(summary.platformFeeAmount)}</p>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <p className="text-xs text-white/40">{summary.gstType || "GST"}</p>
+            <p className="mt-1 font-semibold text-white">Rs. {formatAmount(summary.gstTotal)}</p>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <p className="text-xs text-white/40">Net payable</p>
+            <p className="mt-1 font-semibold text-primary">Rs. {formatAmount(summary.netPayoutAmount)}</p>
+          </div>
+        </div>
+      )}
+
       {/* Breakdown Table */}
       <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-white/10">
-          <h2 className="text-lg font-semibold text-white">Payment Breakdown</h2>
+          <h2 className="text-lg font-semibold text-white">Settlement Breakdown</h2>
         </div>
         {eventBreakdowns && eventBreakdowns.length > 0 ? (
           <div className="overflow-x-auto">
@@ -193,8 +264,11 @@ const PayoutDetail = ({ payoutId, onBack }) => {
                   <th className="px-6 py-3">Ticket</th>
                   <th className="px-6 py-3">Price</th>
                   <th className="px-6 py-3">Qty</th>
-                  <th className="px-6 py-3">GST</th>
+                  <th className="px-6 py-3">Gross</th>
+                  <th className="px-6 py-3">Refunds</th>
+                  <th className="px-6 py-3">Net Sales</th>
                   <th className="px-6 py-3">Platform Fee</th>
+                  <th className="px-6 py-3">GST</th>
                   <th className="px-6 py-3">Net Payout</th>
                 </tr>
               </thead>
@@ -203,7 +277,7 @@ const PayoutDetail = ({ payoutId, onBack }) => {
                   <React.Fragment key={evt.eventId}>
                     <tr className="bg-white/[0.02]">
                       <td
-                        colSpan={6}
+                        colSpan={9}
                         className="px-6 py-3 text-sm font-semibold text-white/80"
                       >
                         {evt.eventTitle}
@@ -215,28 +289,37 @@ const PayoutDetail = ({ payoutId, onBack }) => {
                           {tb.ticketName}
                         </td>
                         <td className="px-6 py-3 text-sm text-white/60">
-                          Rs. {tb.ticketPrice?.toFixed(2)}
+                          Rs. {formatAmount(tb.ticketPrice)}
                         </td>
                         <td className="px-6 py-3 text-sm text-white/60">
                           {tb.quantity}
                         </td>
                         <td className="px-6 py-3 text-sm text-white/60">
-                          Rs. {tb.gstAmount?.toFixed(2)}
+                          Rs. {formatAmount(tb.ticketSubtotal)}
                         </td>
                         <td className="px-6 py-3 text-sm text-white/60">
-                          Rs. {tb.platformFee?.toFixed(2)}
+                          Rs. {((tb.refundAmount || 0) + (tb.refundReserveAmount || 0)).toFixed(2)}
+                        </td>
+                        <td className="px-6 py-3 text-sm text-white/60">
+                          Rs. {formatAmount(tb.netSales)}
+                        </td>
+                        <td className="px-6 py-3 text-sm text-white/60">
+                          Rs. {formatAmount(tb.platformFee)}
+                        </td>
+                        <td className="px-6 py-3 text-sm text-white/60">
+                          Rs. {formatAmount(tb.gstAmount)}
                         </td>
                         <td className="px-6 py-3 text-sm font-medium text-white">
-                          Rs. {tb.totalPayout?.toFixed(2)}
+                          Rs. {formatAmount(tb.totalPayout)}
                         </td>
                       </tr>
                     ))}
                     <tr className="border-t border-white/10">
-                      <td colSpan={5} className="px-6 py-2 text-sm text-white/50 text-right">
+                      <td colSpan={8} className="px-6 py-2 text-sm text-white/50 text-right">
                         Subtotal:
                       </td>
                       <td className="px-6 py-2 text-sm font-semibold text-white">
-                        Rs. {evt.totals.netPayout?.toFixed(2)}
+                        Rs. {formatAmount(evt.totals.netPayout)}
                       </td>
                     </tr>
                   </React.Fragment>
@@ -244,11 +327,11 @@ const PayoutDetail = ({ payoutId, onBack }) => {
               </tbody>
               <tfoot>
                 <tr className="border-t-2 border-white/20">
-                  <td colSpan={5} className="px-6 py-4 text-right font-bold text-white">
+                  <td colSpan={8} className="px-6 py-4 text-right font-bold text-white">
                     Total Payout:
                   </td>
                   <td className="px-6 py-4 font-bold text-white text-lg">
-                    Rs. {payout.amount?.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    Rs. {payoutAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                   </td>
                 </tr>
               </tfoot>

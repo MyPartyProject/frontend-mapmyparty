@@ -584,150 +584,185 @@ const PromoterDashboard = () => {
     return () => { document.body.style.overflow = ""; };
   }, [mobileSidebarOpen]);
 
-  const sidebarContent = (isMobile = false) => (
-    <div className="flex h-full min-h-0 flex-col gap-4">
-      <div className="rounded-2xl border border-sidebar-border/60 bg-sidebar/80 p-3 shadow-[var(--shadow-card)]">
-        <div className="flex items-center justify-between gap-3">
-          <button
-            onClick={() => { navigate("/promoter/overview"); if (isMobile) setMobileSidebarOpen(false); }}
-            className="flex items-center gap-3 text-left"
-          >
-            <img src={Logo} alt="MapMyParty" className="h-10 w-10" />
-            {(isMobile || sidebarOpen) && (
-              <div>
-                <p className="text-xs text-foreground/60">MapMyParty</p>
-                <p className="text-sm font-semibold tracking-[0.06em]">MapMyParty</p>
-              </div>
-            )}
-          </button>
-          {isMobile ? (
-            <button
-              onClick={() => setMobileSidebarOpen(false)}
-              className="p-2 rounded-lg hover:bg-sidebar-accent text-foreground/80"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          ) : (
-            <button
-              onClick={() => setSidebarOpen((v) => !v)}
-              className="p-2 rounded-lg hover:bg-sidebar-accent text-foreground/80"
-            >
-              {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          )}
-        </div>
-      </div>
+  const sidebarContent = (isMobile = false) => {
+    const expanded = isMobile || sidebarOpen;
 
-      <nav className="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-sidebar-border/60 bg-sidebar/70 p-2 shadow-[var(--shadow-card)]">
-        <div className="space-y-1 pr-1">
-        {navItems.map(({ label, to, icon: Icon }) => (
-          <NavLink
-            key={label}
-            to={to}
-            onClick={() => { if (isMobile) setMobileSidebarOpen(false); }}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-xl transition ${
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-foreground"
-                  : "hover:bg-sidebar-accent/60 text-sidebar-foreground/80"
-              }`
-            }
-          >
-            <Icon className="w-4 h-4" />
-            {(isMobile || sidebarOpen) && <span className="text-sm font-medium">{label}</span>}
-          </NavLink>
-        ))}
-        </div>
-      </nav>
+    return (
+      <div className={`flex h-full min-h-0 flex-col ${expanded ? "" : "items-center"}`}>
+        <div className={`shrink-0 border-b border-sidebar-border/45 pb-4 ${expanded ? "w-full px-2" : "w-full px-1"}`}>
+          <div className={expanded ? "flex h-12 items-center justify-between gap-3" : "flex flex-col items-center gap-2"}>
+            <button
+              onClick={() => { navigate("/promoter/overview"); if (isMobile) setMobileSidebarOpen(false); }}
+              className={`group flex min-w-0 items-center rounded-xl text-left transition-all duration-200 ease-out hover:bg-sidebar-accent/35 active:scale-[0.98] ${
+                expanded ? "h-12 flex-1 gap-3 px-2" : "h-11 w-11 justify-center"
+              }`}
+              aria-label="Go to promoter overview"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-sidebar-border/45 bg-sidebar/80 transition-all duration-200 ease-out group-hover:border-sidebar-accent/60 group-hover:scale-[1.03]">
+                <img src={Logo} alt="MapMyParty" className="h-8 w-8" />
+              </span>
+              {expanded && (
+                <div className="min-w-0 transition-all duration-200 ease-out">
+                  <p className="text-[11px] leading-4 text-foreground/55">Promoter</p>
+                  <p className="truncate text-sm font-semibold leading-5 tracking-[0.05em] text-foreground">MapMyParty</p>
+                </div>
+              )}
+            </button>
 
-      <div className="shrink-0 pt-1">
-        <div
-          ref={footerMenuRef}
-          className="relative rounded-2xl border border-sidebar-border/60 bg-sidebar/80 p-2 shadow-[var(--shadow-card)]"
-        >
-          <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-            <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary-foreground font-semibold border border-primary/30">
-              {(user.name || "P").charAt(0).toUpperCase()}
-            </div>
-            {(isMobile || sidebarOpen) && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">{user.name || "Promoter"}</p>
-                <p className="text-xs text-foreground/60 truncate">{user.email || "promoter@mapmyparty"}</p>
-              </div>
-            )}
-            {!isMobile && (isMobile || sidebarOpen) && (
+            {isMobile ? (
               <button
-                onClick={() => setFooterMenuOpen((v) => !v)}
-                className="rounded-lg p-1.5 text-foreground/70 transition hover:bg-sidebar-accent/60"
-                aria-label="Toggle account menu"
+                onClick={() => setMobileSidebarOpen(false)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-foreground/75 transition-all duration-200 ease-out hover:bg-sidebar-accent/55 hover:text-foreground active:scale-95"
+                aria-label="Close sidebar"
               >
-                <ChevronDown
-                  className={`w-4 h-4 transition-transform ${
-                    footerMenuOpen ? "rotate-180" : ""
-                  }`}
-                />
+                <X className="h-5 w-5" />
+              </button>
+            ) : (
+              <button
+                onClick={() => setSidebarOpen((v) => !v)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-foreground/75 transition-all duration-200 ease-out hover:bg-sidebar-accent/55 hover:text-foreground active:scale-95"
+                aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+              >
+                {sidebarOpen ? <ChevronLeft className="h-5 w-5 transition-transform duration-200" /> : <Menu className="h-5 w-5 transition-transform duration-200" />}
               </button>
             )}
           </div>
+        </div>
 
-          {isMobile ? (
-            <div className="space-y-2 pt-2">
-              <button
-                onClick={() => {
-                  setMobileSidebarOpen(false);
-                  navigate("/promoter/profile");
-                }}
-                className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-sidebar-accent/40 border border-sidebar-border/60 text-foreground hover:bg-sidebar-accent transition"
+        <nav className={`min-h-0 flex-1 overflow-y-auto py-4 [scrollbar-width:thin] [scrollbar-color:hsl(var(--sidebar-border))_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-sidebar-border/70 [&::-webkit-scrollbar-track]:bg-transparent ${
+          expanded ? "w-full px-2 pr-3" : "w-full px-1 pr-2"
+        }`}>
+          <div className={expanded ? "space-y-1.5" : "flex flex-col items-center gap-2"}>
+            {navItems.map(({ label, to, icon: Icon }) => (
+              <NavLink
+                key={label}
+                to={to}
+                title={!expanded ? label : undefined}
+                onClick={() => { if (isMobile) setMobileSidebarOpen(false); }}
+                className={({ isActive }) =>
+                  `group relative flex items-center rounded-xl border text-sm transition-all duration-200 ease-out ${
+                    expanded ? "h-11 w-full gap-3 px-3" : "h-11 w-11 justify-center"
+                  } ${
+                    isActive
+                      ? "border-sidebar-accent/40 bg-sidebar-accent/38 text-sidebar-foreground shadow-[inset_0_0_0_1px_hsl(var(--sidebar-accent)/0.14)]"
+                      : "border-transparent text-sidebar-foreground/75 hover:border-sidebar-border/55 hover:bg-sidebar-accent/28 hover:text-sidebar-foreground"
+                  }`
+                }
               >
-                <User className="w-4 h-4" />
-                <span>My Profile</span>
-              </button>
-              <button
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-destructive/15 border border-destructive/30 text-destructive-foreground hover:bg-destructive/25 transition disabled:opacity-60"
-              >
-                {isLoggingOut ? (
-                  <span className="h-4 w-4 border-2 border-destructive/60 border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <LogOut className="w-4 h-4" />
+                {({ isActive }) => (
+                  <>
+                    {expanded && (
+                      <span
+                        className={`absolute left-1 top-1/2 h-6 w-1 -translate-y-1/2 rounded-full bg-primary transition-all duration-200 ease-out ${
+                          isActive ? "opacity-100 scale-y-100" : "opacity-0 scale-y-50"
+                        }`}
+                      />
+                    )}
+                    <span
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all duration-200 ease-out ${
+                        isActive
+                          ? "bg-primary/16 text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.12)]"
+                          : "text-sidebar-foreground/75 group-hover:bg-sidebar-accent/42 group-hover:text-sidebar-foreground group-hover:scale-105"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    {expanded && <span className="min-w-0 truncate font-medium transition-all duration-200 ease-out">{label}</span>}
+                  </>
                 )}
-                <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
-              </button>
+              </NavLink>
+            ))}
+          </div>
+        </nav>
+
+        <div className={`shrink-0 border-t border-sidebar-border/45 pt-4 ${expanded ? "w-full px-2" : "w-full px-1"}`}>
+          <div ref={footerMenuRef} className="relative">
+            <div
+              className={`flex items-center rounded-2xl border border-sidebar-border/55 bg-sidebar/75 transition-all duration-200 ease-out ${
+                expanded ? "gap-3 p-2" : "mx-auto h-11 w-11 justify-center p-0"
+              }`}
+              title={!expanded ? user.name || "Promoter" : undefined}
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/30 bg-primary/20 font-semibold text-primary-foreground">
+                {(user.name || "P").charAt(0).toUpperCase()}
+              </div>
+              {expanded && (
+                <>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold leading-5 text-foreground">{user.name || "Promoter"}</p>
+                    <p className="truncate text-xs leading-4 text-foreground/60">{user.email || "promoter@mapmyparty"}</p>
+                  </div>
+                  {!isMobile && (
+                    <button
+                      onClick={() => setFooterMenuOpen((v) => !v)}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-foreground/70 transition-all duration-200 ease-out hover:bg-sidebar-accent/55 hover:text-foreground active:scale-95"
+                      aria-label="Toggle account menu"
+                    >
+                      <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${footerMenuOpen ? "rotate-180" : ""}`} />
+                    </button>
+                  )}
+                </>
+              )}
             </div>
-          ) : footerMenuOpen ? (
-            <div className="absolute bottom-[calc(100%+10px)] left-0 right-0 z-20">
-              <div className="rounded-xl border border-sidebar-border/60 bg-sidebar/95 backdrop-blur-md shadow-[var(--shadow-card)] p-2 space-y-2">
+
+            {isMobile ? (
+              <div className="space-y-2 pt-3">
                 <button
                   onClick={() => {
-                    setFooterMenuOpen(false);
-                    if (isMobile) setMobileSidebarOpen(false);
+                    setMobileSidebarOpen(false);
                     navigate("/promoter/profile");
                   }}
-                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-sidebar-accent/40 border border-sidebar-border/60 text-foreground hover:bg-sidebar-accent transition"
+                  className="flex h-10 w-full items-center gap-2 rounded-xl border border-sidebar-border/60 bg-sidebar-accent/35 px-3 text-sm text-foreground transition-all duration-200 hover:bg-sidebar-accent/65"
                 >
-                  <User className="w-4 h-4" />
-                  {(isMobile || sidebarOpen) && <span>My Profile</span>}
+                  <User className="h-4 w-4" />
+                  <span>My Profile</span>
                 </button>
                 <button
                   onClick={handleLogout}
                   disabled={isLoggingOut}
-                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-destructive/15 border border-destructive/30 text-destructive-foreground hover:bg-destructive/25 transition disabled:opacity-60"
+                  className="flex h-10 w-full items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/15 px-3 text-sm text-destructive-foreground transition-all duration-200 hover:bg-destructive/25 disabled:opacity-60"
                 >
                   {isLoggingOut ? (
-                    <span className="h-4 w-4 border-2 border-destructive/60 border-t-transparent rounded-full animate-spin" />
+                    <span className="h-4 w-4 rounded-full border-2 border-destructive/60 border-t-transparent animate-spin" />
                   ) : (
-                    <LogOut className="w-4 h-4" />
+                    <LogOut className="h-4 w-4" />
                   )}
-                  {(isMobile || sidebarOpen) && <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>}
+                  <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
                 </button>
               </div>
-            </div>
-          ) : null}
+            ) : footerMenuOpen && expanded ? (
+              <div className="absolute bottom-[calc(100%+10px)] left-0 right-0 z-20">
+                <div className="space-y-2 rounded-2xl border border-sidebar-border/60 bg-sidebar/95 p-2 shadow-[var(--shadow-card)] backdrop-blur-md">
+                  <button
+                    onClick={() => {
+                      setFooterMenuOpen(false);
+                      navigate("/promoter/profile");
+                    }}
+                    className="flex h-10 w-full items-center gap-2 rounded-xl border border-sidebar-border/60 bg-sidebar-accent/35 px-3 text-sm text-foreground transition-all duration-200 hover:bg-sidebar-accent/65"
+                  >
+                    <User className="h-4 w-4" />
+                    <span>My Profile</span>
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="flex h-10 w-full items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/15 px-3 text-sm text-destructive-foreground transition-all duration-200 hover:bg-destructive/25 disabled:opacity-60"
+                  >
+                    {isLoggingOut ? (
+                      <span className="h-4 w-4 rounded-full border-2 border-destructive/60 border-t-transparent animate-spin" />
+                    ) : (
+                      <LogOut className="h-4 w-4" />
+                    )}
+                    <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="promoter-theme dashboard-theme min-h-screen bg-background text-foreground flex">
@@ -741,7 +776,7 @@ const PromoterDashboard = () => {
 
       {/* Mobile Sidebar Drawer */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-sidebar border-r border-sidebar-border/60 px-3 py-5 transition-transform duration-300 lg:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-sidebar border-r border-sidebar-border/60 px-3 py-4 transition-transform duration-300 ease-out lg:hidden ${
           mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -750,7 +785,7 @@ const PromoterDashboard = () => {
 
       {/* Desktop Sidebar */}
       <aside
-        className={`hidden lg:flex ${sidebarOpen ? "w-64" : "w-20"} bg-sidebar border-r border-sidebar-border/60 px-3 py-5 sticky top-0 h-screen transition-all duration-300`}
+        className={`hidden lg:flex ${sidebarOpen ? "w-64" : "w-20"} bg-sidebar border-r border-sidebar-border/60 px-3 py-4 sticky top-0 h-screen transition-[width] duration-300 ease-out`}
       >
         {sidebarContent(false)}
       </aside>
@@ -781,9 +816,6 @@ const PromoterDashboard = () => {
               <Button variant="outline" size="icon" className="border-border/60 relative text-foreground/80 hover:bg-muted">
                 <Bell className="w-4 h-4" />
                 <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-accent" />
-              </Button>
-              <Button className="hidden sm:inline-flex bg-primary text-primary-foreground hover:bg-primary/90 border-none shadow-[var(--shadow-card)]">
-                New Broadcast
               </Button>
             </div>
           </div>

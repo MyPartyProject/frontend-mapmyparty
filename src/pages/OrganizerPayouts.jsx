@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { apiFetch, buildUrl } from "@/config/api";
+import { apiFetch } from "@/config/api";
 import { Badge } from "@/components/ui/badge";
 import {
   ChevronLeft,
@@ -12,10 +12,31 @@ import {
 import PayoutDetail from "@/components/organizer/PayoutDetail";
 
 const statusColors = {
+  REVIEW_REQUIRED: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+  APPROVED: "bg-blue-500/20 text-blue-400 border-blue-500/30",
   PENDING: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
   PROCESSING: "bg-blue-500/20 text-blue-400 border-blue-500/30",
   COMPLETED: "bg-green-500/20 text-green-400 border-green-500/30",
   FAILED: "bg-red-500/20 text-red-400 border-red-500/30",
+  RETRY_PENDING: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+  RECONCILED: "bg-green-500/20 text-green-400 border-green-500/30",
+  CANCELLED: "bg-red-500/20 text-red-400 border-red-500/30",
+};
+
+const formatStatus = (value) =>
+  String(value || "UNKNOWN")
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+
+const getPayoutAmount = (payout) => {
+  const isEventPayout = Boolean(payout?.eventId || payout?.event);
+  const snapshotAmount = Number(payout?.netPayoutAmount);
+  if (isEventPayout && Number.isFinite(snapshotAmount) && snapshotAmount > 0) {
+    return snapshotAmount;
+  }
+  return Number(payout?.amount || 0);
 };
 
 const OrganizerPayouts = () => {
@@ -80,10 +101,15 @@ const OrganizerPayouts = () => {
             className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
           >
             <option value="">All Statuses</option>
+            <option value="REVIEW_REQUIRED">Review Required</option>
+            <option value="APPROVED">Approved</option>
             <option value="PENDING">Pending</option>
             <option value="PROCESSING">Processing</option>
             <option value="COMPLETED">Completed</option>
             <option value="FAILED">Failed</option>
+            <option value="RETRY_PENDING">Retry Pending</option>
+            <option value="RECONCILED">Reconciled</option>
+            <option value="CANCELLED">Cancelled</option>
           </select>
         </div>
       </div>
@@ -106,10 +132,11 @@ const OrganizerPayouts = () => {
               <thead>
                 <tr className="border-b border-white/10 text-left text-xs text-white/50 uppercase tracking-wider">
                   <th className="px-6 py-4">Date</th>
+                  <th className="px-6 py-4">Event</th>
                   <th className="px-6 py-4">Amount</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4">Bank</th>
-                  <th className="px-6 py-4">Remarks</th>
+                  <th className="px-6 py-4">Notes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -135,14 +162,24 @@ const OrganizerPayouts = () => {
                             })}
                       </div>
                     </td>
+                    <td className="px-6 py-4 text-sm text-white/70">
+                      <div>
+                        <div className="max-w-[220px] truncate font-medium">
+                          {payout.event?.title || "Organizer payout"}
+                        </div>
+                        <div className="text-xs text-white/40">
+                          {payout.invoiceNumber || payout.publicId || payout.id.slice(0, 8)}
+                        </div>
+                      </div>
+                    </td>
                     <td className="px-6 py-4 text-sm font-semibold text-white">
-                      Rs. {payout.amount?.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      Rs. {getPayoutAmount(payout).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                     </td>
                     <td className="px-6 py-4">
                       <Badge
                         className={`${statusColors[payout.status] || ""} border text-xs`}
                       >
-                        {payout.status}
+                        {formatStatus(payout.status)}
                       </Badge>
                     </td>
                     <td className="px-6 py-4 text-sm text-white/60">
@@ -154,11 +191,11 @@ const OrganizerPayouts = () => {
                           </div>
                         </div>
                       ) : (
-                        "—"
+                        "-"
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm text-white/50 max-w-[200px] truncate">
-                      {payout.remarks || "—"}
+                      {payout.failureReason || payout.blockedReason || payout.remarks || "-"}
                     </td>
                   </tr>
                 ))}
