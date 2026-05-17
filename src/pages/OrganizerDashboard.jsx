@@ -1101,40 +1101,6 @@ const OrganizerProfileContent = ({ user }) => {
                 </div>
               </div>
 
-              {/* Bank Summary */}
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${bankExists ? "bg-emerald-500/20 border-emerald-400/40" : "bg-amber-500/10 border-amber-400/30"}`}>
-                    <CreditCard className={`w-5 h-5 ${bankExists ? "text-emerald-100" : "text-amber-300"}`} />
-                  </div>
-                  <div>
-                    {bankExists ? (
-                      <>
-                        <p className="text-xs uppercase tracking-wide text-white/50">Payout Provider</p>
-                        <p className="text-base font-semibold text-white">
-                          {editData.bankDetails.providerName} • {editData.bankDetails.verificationStatus}
-                        </p>
-                        <p className="text-xs text-white/60">Txn ID: {editData.bankDetails.verificationTxnId}</p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-xs uppercase tracking-wide text-white/50">Bank Account</p>
-                        <p className="text-base font-semibold text-amber-300">Not added yet</p>
-                        <p className="text-xs text-white/50">Add bank details to receive payouts</p>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-white/60 hidden md:inline">Manage payouts</span>
-                  <button
-                    onClick={handleOpenBankPanel}
-                    className="px-3 py-2 text-sm rounded-lg bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition"
-                  >
-                    {bankExists ? "View Bank" : "Add Bank"}
-                  </button>
-                </div>
-              </div>
             </div>
           ) : (
             // Edit Mode
