@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600;700&family=League+Gothic&family=League+Spartan:wght@400;500;600;700&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,6 +6,9 @@
 @layer base {
   :root {
     /* Premium party theme: Midnight Plum (#48285D), Royal Mulberry (#772256), Antique Gold (#C99774) */
+    --font-body: "Josefin Sans", sans-serif;
+    --font-heading: "Amiko", sans-serif;
+
     --background: 275 31% 6%; /* #0F0A13 */
     --foreground: 274 26% 95%; /* #F2EEF5 */
 
@@ -190,28 +191,32 @@
   }
 
   .host-events-page .host-events__hero-title {
+    font-family: var(--font-heading);
     max-width: 11.5em;
     font-size: clamp(2.4rem, 4vw + 0.65rem, 4.15rem);
-    line-height: 1.04;
-    letter-spacing: 0.01em;
+    line-height: 1.08;
+    letter-spacing: 0;
   }
 
   .host-events-page .host-events__section-title {
+    font-family: var(--font-heading);
     font-size: clamp(2rem, 2.25vw + 1rem, 3.25rem);
-    line-height: 1.08;
-    letter-spacing: 0.01em;
+    line-height: 1.12;
+    letter-spacing: 0;
   }
 
   .host-events-page .host-events__panel-title {
+    font-family: var(--font-heading);
     font-size: clamp(1.45rem, 1.15vw + 1rem, 2rem);
-    line-height: 1.14;
-    letter-spacing: 0.01em;
+    line-height: 1.18;
+    letter-spacing: 0;
   }
 
   .host-events-page .host-events__card-title {
+    font-family: var(--font-heading);
     font-size: clamp(1.15rem, 0.35vw + 1rem, 1.35rem);
     line-height: 1.22;
-    letter-spacing: 0.005em;
+    letter-spacing: 0;
   }
 
   .host-events-page .host-events__lead {
@@ -292,30 +297,30 @@
   }
 
   html {
-    font-family: "Josefin Sans", sans-serif;
+    font-family: var(--font-body);
     font-size: clamp(16px, 0.45vw + 14px, 19px);
   }
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: "Josefin Sans", sans-serif;
+    font-family: var(--font-body);
     font-size: 1.1rem;
     line-height: 1.65;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: "Josefin Sans", sans-serif;
-    letter-spacing: 0.015em;
-    word-spacing: 0.02em;
-    line-height: 1.06;
-    font-weight: 400 !important;
+    font-family: var(--font-heading);
+    letter-spacing: 0;
+    word-spacing: 0;
+    line-height: 1.12;
+    font-weight: 600;
     font-kerning: normal;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
   }
 
   h1, h2 {
-    letter-spacing: 0.02em;
+    line-height: 1.08;
   }
 
   h1 {
@@ -347,13 +352,76 @@
   input,
   textarea,
   select {
-    font-family: "Josefin Sans", sans-serif;
+    font-family: var(--font-body);
   }
 
   .highlight-text {
-    font-family: "Josefin Sans", sans-serif;
-    letter-spacing: 0.02em;
-    line-height: 1.06;
+    font-family: var(--font-heading);
+    letter-spacing: 0;
+    line-height: 1.1;
+    font-kerning: normal;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+@layer components {
+  .heading-xl {
+    font-family: var(--font-heading);
+    font-size: clamp(2.75rem, 3vw + 1.35rem, 4.75rem);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: 0;
+    font-kerning: normal;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  .heading-lg {
+    font-family: var(--font-heading);
+    font-size: clamp(2.25rem, 2.1vw + 1.2rem, 3.5rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: 0;
+    font-kerning: normal;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  .heading-md {
+    font-family: var(--font-heading);
+    font-size: clamp(1.5rem, 1vw + 1.05rem, 2.25rem);
+    font-weight: 600;
+    line-height: 1.16;
+    letter-spacing: 0;
+    font-kerning: normal;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  .heading-sm {
+    font-family: var(--font-heading);
+    font-size: clamp(1rem, 0.35vw + 0.95rem, 1.25rem);
+    font-weight: 600;
+    line-height: 1.24;
+    letter-spacing: 0;
+    font-kerning: normal;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  .section-title,
+  .card-title,
+  .dashboard-heading,
+  .modal-title,
+  .navbar-heading,
+  .invoice-heading,
+  .hero-heading,
+  .page-heading,
+  .panel-title,
+  .toast-title {
+    font-family: var(--font-heading);
+    letter-spacing: 0;
     font-kerning: normal;
     font-synthesis: none;
     text-rendering: optimizeLegibility;

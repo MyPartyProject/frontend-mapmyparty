@@ -75,6 +75,8 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
+        heading: ['"Amiko"', 'sans-serif'],
+        body: ['"Josefin Sans"', 'sans-serif'],
         'league-gothic': ['"Josefin Sans"', 'sans-serif'],
       },
       keyframes: {

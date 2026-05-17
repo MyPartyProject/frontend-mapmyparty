@@ -51,7 +51,7 @@ DrawerFooter.displayName = "DrawerFooter";
 const DrawerTitle = forwardRef(({ className, ...props }, ref) => (
   <DrawerPrimitive.Title
     ref={ref}
-    className={cn("text-lg font-semibold leading-none tracking-tight", className)}
+    className={cn("font-heading text-lg font-semibold leading-tight tracking-normal", className)}
     {...props}
   />
 ));
