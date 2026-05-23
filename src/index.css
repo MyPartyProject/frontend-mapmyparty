@@ -132,7 +132,7 @@
 
   .create-event-shell label {
     margin-bottom: 6px;
-    color: #d4d4d4;
+    color: hsl(var(--foreground));
     font-size: 13px;
     font-weight: 500;
   }
@@ -140,10 +140,10 @@
   .create-event-shell input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
   .create-event-shell textarea,
   .create-event-shell button[role="combobox"] {
-    border-color: #262626;
-    background: #0f0f0f;
+    border-color: hsl(var(--input));
+    background: hsl(var(--background) / 0.6);
     border-radius: 10px;
-    color: #ffffff;
+    color: hsl(var(--foreground));
     font-size: 14px;
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   }
@@ -155,8 +155,8 @@
   .create-event-shell input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):focus-visible,
   .create-event-shell textarea:focus-visible,
   .create-event-shell button[role="combobox"]:focus-visible {
-    border-color: var(--color-accent-primary);
-    box-shadow: 0 0 0 1px var(--color-accent-primary);
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 1px hsl(var(--ring));
     outline: none;
   }
 
@@ -167,18 +167,18 @@
   .create-event-shell textarea:-webkit-autofill,
   .create-event-shell textarea:-webkit-autofill:hover,
   .create-event-shell textarea:-webkit-autofill:focus {
-    -webkit-text-fill-color: #ffffff;
-    caret-color: #ffffff;
-    -webkit-box-shadow: 0 0 0 1000px #0f0f0f inset;
-    box-shadow: 0 0 0 1000px #0f0f0f inset;
+    -webkit-text-fill-color: hsl(var(--foreground));
+    caret-color: hsl(var(--foreground));
+    -webkit-box-shadow: 0 0 0 1000px hsl(var(--background)) inset;
+    box-shadow: 0 0 0 1000px hsl(var(--background)) inset;
     transition: background-color 9999s ease-in-out 0s;
-    border-color: #262626;
+    border-color: hsl(var(--input));
   }
 
   .create-event-shell .ql-toolbar,
   .create-event-shell .ql-container {
-    border-color: #262626 !important;
-    background: #0f0f0f;
+    border-color: hsl(var(--border) / 0.6) !important;
+    background: hsl(var(--background) / 0.6);
   }
 
   .host-events-page {

@@ -1,227 +1,109 @@
-# Website Color Theme Documentation
+# MapMyParty Color Theme Guide
 
-## Source of truth
+Use this file before starting any new UI implementation. The current product theme is a dark premium party theme built around Midnight Plum, Royal Mulberry, and Antique Gold.
 
-This theme documentation is based on the promoter dashboard UI, which is the reference implementation for the product theme.
+## Source Of Truth
 
-Primary references:
+- Theme tokens: `src/index.css`
+- Tailwind token mapping: `tailwind.config.ts`
+- Button variants: `src/components/ui/button.jsx`
 
-- [src/index.css](C:\Users\COBUY\Desktop\project\frontend-mapmyparty\src\index.css)
-- [src/pages/PromoterDashboard.jsx](C:\Users\COBUY\Desktop\project\frontend-mapmyparty\src\pages\PromoterDashboard.jsx)
-- [src/components/promoter/PromoterOverview.jsx](C:\Users\COBUY\Desktop\project\frontend-mapmyparty\src\components\promoter\PromoterOverview.jsx)
+When possible, use tokens and shared components instead of hardcoded hex classes.
 
-## Theme identity
+## Theme Identity
 
-Theme name: `Crimson Glass`
+- Base mood: dark, premium, event-night UI
+- Main brand color: Midnight Plum
+- Supporting brand color: Royal Mulberry
+- Highlight color: Antique Gold
+- Surfaces: dark plum cards and glassy panels
+- Red usage: only for destructive, error, or urgent status states
 
-Visual direction:
+## Core Palette
 
-- Dark premium base
-- Plum and mulberry primary surfaces
-- Antique gold accent
-- Frosted glass cards and overlays
-- Soft text contrast instead of pure white everywhere
+| Role | Token / class | HSL | Hex | Use |
+| --- | --- | --- | --- | --- |
+| Page background | `--background`, `bg-background` | `275 31% 6%` | `#0F0A13` | Main app/page shell |
+| Main text | `--foreground`, `text-foreground` | `274 26% 95%` | `#F2EEF5` | Primary readable text |
+| Card surface | `--card`, `bg-card` | `274 31% 10%` | `#1B1222` | Panels, cards, modal bodies |
+| Primary / CTA | `--primary`, `bg-primaryCTA` | `276 40% 26%` | `#48285D` | Main action buttons and selected states |
+| Primary hover | `--primary-cta-hover`, `hover:bg-primaryCTA-hover` | `276 40% 32%` | `#583172` | Hover state for primary CTAs |
+| Primary active | `--primary-cta-active`, `active:bg-primaryCTA-active` | `276 40% 21%` | `#3A204B` | Pressed state for primary CTAs |
+| Secondary brand | `--secondary`, `bg-secondary` | `323 56% 30%` | `#772256` | Secondary emphasis, tabs, active menu surfaces |
+| Muted surface | `--muted`, `bg-muted` | `275 20% 18%` | `#2F2537` | Soft inactive backgrounds |
+| Muted text | `--muted-foreground`, `text-muted-foreground` | `270 16% 73%` | `#B9AEC4` | Helper text, descriptions, metadata |
+| Accent / ring | `--accent`, `bg-accent`, `ring-ring` | `25 44% 62%` | `#C99774` | Premium highlight, focus ring, small badges |
+| Border / input | `--border`, `--input`, `border-border` | `276 40% 26%` | `#48285D` | Lines, dividers, field borders |
+| Destructive | `--destructive`, `bg-destructive` | `0 100% 60%` | `#FF3333` | Delete, cancel, error only |
+| Success | `--success` | `155 100% 60%` | `#33FFAA` | Success status only |
 
-## Core palette
+## Button Colors
 
-These values are defined in `src/index.css` as the main design tokens.
+Use the shared `Button` component first.
 
-### Base colors
+| Button role | Preferred usage | Color behavior |
+| --- | --- | --- |
+| Primary action | `<Button>` or `variant="primaryCTA"` | `bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active` |
+| Accent action | `variant="accent"` | Same primary CTA colors, stronger weight/shadow |
+| Secondary action | `variant="secondary"` | `bg-secondary text-secondary-foreground hover:bg-secondary/80` |
+| Outline action | `variant="outline"` | `border-input bg-background hover:bg-accent hover:text-accent-foreground` |
+| Ghost action | `variant="ghost"` | Transparent base, accent hover. Use for nav/icon/low-priority controls |
+| Destructive action | `variant="destructive"` | Use only for delete, remove, cancel, reject, or danger states |
 
-- Background: `#0F0A13`
-- Foreground: `#F2EEF5`
-- Card: `#1B1222`
-- Card foreground: `#F2EEF5`
-- Popover: `#1B1222`
-- Popover foreground: `#F2EEF5`
+Do not create new primary button colors per page. If a button is the main action, it should resolve to the primary CTA token set.
 
-### Brand colors
+## Lines, Borders, And Dividers
 
-- Primary: `#48285D`
-  Use for primary buttons, active states, strong branded surfaces.
+Default line color:
 
-- Secondary: `#772256`
-  Use for secondary emphasis, strong highlights, tinted action surfaces.
+- Use `border-border`, `border-border/60`, or `border-border/40`.
+- Use `border-input` for form fields.
+- Use `ring-ring` or `focus-visible:ring-ring` for focus states.
 
-- Accent: `#C99774`
-  Use for badges, highlights, focus rings, important small accents.
+Card and panel lines:
 
-### Supporting colors
+- Standard cards: `bg-card border-border/50`
+- Glass panels: `bg-card/70 border-border/40 backdrop-blur`
+- Existing helper: `theme-card`
 
-- Muted: dark plum-muted surface from token `--muted`
-- Muted foreground: `#B9AEC4`
-- Border: same family as primary, token `--border`
-- Input: same family as primary, token `--input`
-- Ring: antique gold, token `--ring`
+Avoid:
 
-### Functional colors
+- Raw `border-gray-*` for new themed product UI
+- Random red borders except semantic error/destructive states
+- Pure white borders above low-opacity values like `border-white/10`
 
-- Destructive: token `--destructive`
-- Success: token `--success`
+## Surface Rules
 
-Do not replace the brand palette with random blue, green, or pure white CTA colors unless the state is explicitly semantic.
+- Page shell: `bg-background text-foreground`
+- Card/panel: `bg-card text-card-foreground border-border/50`
+- Muted blocks: `bg-muted/50 text-muted-foreground`
+- Popovers/modals: `bg-popover text-popover-foreground border-border`
+- Sidebar: `bg-sidebar text-sidebar-foreground border-sidebar-border`
 
-## Typography
+Use opacity for depth instead of introducing new colors:
 
-Typography is also part of the theme.
+- Strong panel: `bg-card`
+- Soft panel: `bg-card/80`
+- Glass panel: `bg-card/60 backdrop-blur`
+- Divider: `border-border/40`
 
-### Font families
+## Gradients And Highlights
 
-- Primary UI font: `Josefin Sans`
-- Display/supporting font available: `League Gothic`
-- Additional support font available: `League Spartan`
+The theme has a controlled violet gradient token:
 
-### Typography rules
+- `theme-gradient-primary`
+- `--gradient-primary`
+- `--color-accent-primary: #7c3aed`
+- `--color-accent-secondary: #a855f7`
 
-- Default body text uses `Josefin Sans`
-- Headings also use `Josefin Sans`
-- Use muted text for secondary descriptions instead of lowering clarity too much
-- Avoid black text on white surfaces in themed dashboards and product shells
+Use this only for special branded highlights, small visual emphasis, or existing page sections that already use it. Do not use it as the default page background or for every card.
 
-## Token usage
-
-Use theme tokens instead of hardcoded colors whenever possible.
-
-Recommended classes:
-
-- `bg-background`
-- `text-foreground`
-- `bg-card`
-- `text-card-foreground`
-- `border-border`
-- `bg-primary`
-- `text-primary-foreground`
-- `bg-secondary`
-- `text-secondary-foreground`
-- `bg-accent`
-- `text-accent-foreground`
-- `text-muted-foreground`
-
-## Reference component patterns
-
-These are the patterns used by the promoter dashboard and should be reused across the product.
-
-### App shell
-
-- Root shell: `bg-background text-foreground`
-- Sidebar: `bg-sidebar border-sidebar-border/60`
-- Sticky top bar: `bg-card/70 backdrop-blur border-border/60`
-
-### Cards
-
-Preferred dashboard card treatment:
-
-- `bg-white/5 border-white/10`
-- Backed by theme overrides inside `.dashboard-theme`
-- This resolves visually to card-toned glass, not literal white blocks
-
-### Buttons
-
-Primary button:
-
-- `bg-primary text-primary-foreground hover:bg-primary/90`
-
-Secondary/emphasis button:
-
-- `bg-secondary text-secondary-foreground hover:bg-secondary/80`
-
-Outline button:
-
-- `border-border/60 text-foreground/80 hover:bg-muted`
-
-Accent-only usage:
-
-- Use for indicators, chips, focus rings, and selective highlights
-- Do not overuse accent as full-page background
-
-### Text hierarchy
-
-- Main text: `text-foreground`
-- Secondary text: `text-muted-foreground`
-- Tertiary text: lower-opacity muted variants only where necessary
-- Avoid pure white plus hardcoded gray combinations if token versions exist
-
-### Borders
-
-- Prefer `border-border` or `border-border/60`
-- For glass cards, use `border-white/10` only when inside a themed scope that remaps it correctly
-
-## Themed scopes in the codebase
-
-The project currently uses theme scopes to normalize legacy classes.
-
-Important scopes:
-
-- `.promoter-theme`
-- `.dashboard-theme`
-- `.app-theme`
-- `.organizer-dashboard-theme`
-- `.event-detail-theme`
-
-When updating an older page with many hardcoded colors, it is acceptable to use a scoped theme wrapper first, then gradually migrate classes to token-based styling.
-
-## Implementation rules
-
-### Do
-
-- Use `bg-background` for page shells
-- Use `bg-card` or glass-card patterns for panels
-- Use `text-foreground` and `text-muted-foreground` for text hierarchy
-- Use `bg-primary` for primary CTAs
-- Use `bg-secondary` only for alternate emphasis, not as the default everywhere
-- Use `bg-accent` sparingly for premium highlights
-- Reuse `shadow-[var(--shadow-card)]` and `shadow-[var(--shadow-elegant)]` where appropriate
-
-### Do not
-
-- Do not use plain white CTA buttons in themed product pages
-- Do not use bright random blues, purples, or reds outside the token set
-- Do not create light-theme organizer/promoter/product pages unless explicitly requested
-- Do not hardcode `bg-white text-zinc-900` for core actions
-- Do not introduce competing gradients unrelated to the theme palette
-
-## Quick mapping guide
-
-If you see old UI colors, migrate them like this:
-
-- `bg-white` button -> `bg-primary text-primary-foreground`
-- `text-zinc-900` on CTA -> `text-primary-foreground`
-- `bg-red-600` brand action -> `bg-secondary`
-- `hover:bg-red-700` -> `hover:bg-secondary/80` or `hover:bg-primary/90` depending on role
-- `bg-gray-900` surface -> `bg-card` or themed `bg-background`
-- `text-gray-400` secondary text -> `text-muted-foreground`
-- `border-gray-700/800` -> `border-border`
-
-## Example usage
-
-```jsx
-<div className="promoter-theme dashboard-theme min-h-screen bg-background text-foreground">
-  <div className="border-b border-border/60 bg-card/70 backdrop-blur">
-    <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-      Primary Action
-    </Button>
-  </div>
-
-  <Card className="bg-white/5 border-white/10">
-    <CardHeader>
-      <CardTitle>Dashboard Overview</CardTitle>
-      <CardDescription className="text-white/70">
-        High-level summary aligned with the product theme.
-      </CardDescription>
-    </CardHeader>
-  </Card>
-</div>
-```
-
-## Enforcement note
-
-For all new UI work, the promoter dashboard should be treated as the canonical style reference for:
-
-- color palette
-- text colors
-- card treatment
-- top bar treatment
-- sidebar treatment
-- primary and outline button styling
-
-If a new page does not visually feel consistent with `/promoter/overview`, it is not aligned with the design system and should be corrected before completion.
+## New UI Checklist
+
+- Use `bg-background`, `bg-card`, `text-foreground`, and `text-muted-foreground`.
+- Use `Button` variants instead of page-specific CTA colors.
+- Use `bg-primaryCTA` for the main action.
+- Use `border-border` and opacity modifiers for all lines.
+- Keep Antique Gold accents small and intentional.
+- Keep red only for destructive/error states.
+- Do not introduce unrelated blue, green, orange, or pure white action colors.

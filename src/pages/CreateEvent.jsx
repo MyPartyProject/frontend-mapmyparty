@@ -24,7 +24,31 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Check, Calendar as CalendarIcon, Clock, Globe, Upload, X, ChevronLeft, Plus, Ticket, Users, Table2, UsersRound, Loader2, Smile } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Calendar as CalendarIcon,
+  ClipboardCheck,
+  Clock,
+  ExternalLink,
+  FileText,
+  Globe,
+  Image as ImageIcon,
+  Loader2,
+  MapPin,
+  NotebookText,
+  Plus,
+  Smile,
+  Sparkles,
+  Ticket,
+  Users,
+  Table2,
+  UsersRound,
+  Upload,
+  X,
+  ChevronLeft,
+} from "lucide-react";
 import Header from "@/components/Header";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { toast } from "sonner";
@@ -39,6 +63,23 @@ import { TEMPLATE_CONFIGS, DETAIL_TEMPLATE_CONFIGS, getTemplateConfig, mapTempla
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
+
+const DEFAULT_ARTIST_GENDER = "MALE";
+const ARTIST_GENDER_VALUES = ["MALE", "FEMALE", "OTHER"];
+
+const normalizeArtistGender = (gender) => {
+  const normalized = (gender || "").toUpperCase();
+  return ARTIST_GENDER_VALUES.includes(normalized) ? normalized : DEFAULT_ARTIST_GENDER;
+};
+
+const createEmptyArtist = () => ({
+  name: "",
+  photo: "",
+  image: "",
+  instagram: "",
+  spotify: "",
+  gender: DEFAULT_ARTIST_GENDER,
+});
 
 const CreateEvent = () => {
   const navigate = useNavigate();
@@ -173,13 +214,13 @@ const CreateEvent = () => {
     };
 
     const itemBase =
-      "w-full text-left px-3 py-2 rounded-xl border border-gray-700 bg-[#0a0a0a] text-gray-400 hover:border-[#D60024]/50 hover:text-white transition";
-    const itemActive = "border-[#D60024] bg-[#D60024]/10 text-white";
+      "w-full text-left px-3 py-2 rounded-lg border border-border/50 bg-background/60 text-muted-foreground hover:border-ring hover:text-foreground transition";
+    const itemActive = "border-ring bg-accent/10 text-foreground";
 
     return (
-      <div className="grid grid-cols-3 gap-2 p-2 bg-[#0a0a0a] rounded-xl border border-gray-700 w-[280px]">
+      <div className="grid grid-cols-3 gap-2 p-2 bg-popover rounded-xl border border-border w-[280px] shadow-[var(--shadow-card)]">
         <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.08em] text-white/60">Hour</p>
+          <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">Hour</p>
           <div className="max-h-40 overflow-y-auto pr-1 space-y-1">
             {hourOptions.map((h) => (
               <button
@@ -194,7 +235,7 @@ const CreateEvent = () => {
           </div>
         </div>
         <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.08em] text-white/60">Minute</p>
+          <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">Minute</p>
           <div className="max-h-48 overflow-y-auto pr-1 space-y-2">
             {minuteOptions.map((m) => (
               <button
@@ -209,7 +250,7 @@ const CreateEvent = () => {
           </div>
         </div>
         <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.08em] text-white/60">AM/PM</p>
+          <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">AM/PM</p>
           <div className="space-y-2">
             {["AM", "PM"].map((ap) => (
               <button
@@ -344,7 +385,7 @@ const CreateEvent = () => {
     endTime: "",
   });
   const [ticketPrice, setTicketPrice] = useState("49");
-  const [artists, setArtists] = useState([{ name: "", photo: "", image: "", instagram: "", spotify: "", gender: "PREFER_NOT_TO_SAY" }]);
+  const [artists, setArtists] = useState([createEmptyArtist()]);
   const initialAdvisoryState = {
     smokingAllowed: false,
     drinkingAllowed: false,
@@ -396,21 +437,21 @@ const CreateEvent = () => {
     }
   }, [currentStep]);
 
-  // Theme matching EventDetailNew - black/dark with red accent
+  // Match the organizer dashboard surface tokens.
   const pageTheme = {
-    background: "bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510]",
-    card: "bg-[#0a0a0a]/80",
-    border: "#1f1f1f",
-    accent: "#D60024",
-    text: "text-white",
-    muted: "text-gray-400",
-    glow: "0 14px 32px rgba(0, 0, 0, 0.28)",
+    background: "bg-background",
+    card: "bg-card",
+    border: "hsl(var(--border))",
+    accent: "hsl(var(--accent))",
+    text: "text-foreground",
+    muted: "text-muted-foreground",
+    glow: "var(--shadow-card)",
   };
 
   const fieldClass =
-    "h-12 bg-[#0f0f0f] border border-[#262626] rounded-[10px] px-[14px] text-sm text-white placeholder:text-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[#ef4444] focus-visible:shadow-[0_0_0_1px_#ef4444] transition-[border,box-shadow,background] duration-200";
-  const cardBase = "create-event-card border border-[#1f1f1f] bg-[#0c0c0c] rounded-2xl transition-all duration-200 hover:border-[#2a2a2a]";
-  const selectMenuClass = "bg-[#0f0f0f] text-white border border-[#262626] rounded-[10px]";
+    "h-12 border border-input bg-background/60 rounded-[10px] px-[14px] text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0 focus-visible:border-ring transition-[border,box-shadow,background] duration-200";
+  const cardBase = "create-event-card border border-border bg-card rounded-xl shadow-[var(--shadow-card)] transition-all duration-200 hover:border-border/80";
+  const selectMenuClass = "bg-popover text-popover-foreground border border-border rounded-[10px] shadow-[var(--shadow-card)]";
 
   const ensureBackendEventId = async () => {
     if (backendEventId) return backendEventId;
@@ -836,14 +877,14 @@ const CreateEvent = () => {
             photo: a.photo || a.image || "",
             instagram: a.instagram || a.instagramLink || "",
             spotify: a.spotify || a.spotifyLink || "",
-            gender: a.gender || "PREFER_NOT_TO_SAY",
+            gender: normalizeArtistGender(a.gender),
           }))
         : [];
 
       setArtists(
         normalizedArtists.length
           ? normalizedArtists
-          : [{ name: "", photo: "", instagram: "", spotify: "", gender: "PREFER_NOT_TO_SAY" }]
+          : [createEmptyArtist()]
       );
       if (normalizedArtists.length) {
         setCreatedArtistIndices(normalizedArtists.map((_, idx) => idx));
@@ -974,7 +1015,7 @@ const CreateEvent = () => {
             photo: a.photo || a.image || "",
             instagram: a.instagram || a.instagramLink || "",
             spotify: a.spotify || a.spotifyLink || "",
-            gender: a.gender || "PREFER_NOT_TO_SAY",
+            gender: normalizeArtistGender(a.gender),
           }));
           setArtists(normalizedCached);
           setCreatedArtistIndices(normalizedCached.map((_, idx) => idx));
@@ -1003,13 +1044,13 @@ const CreateEvent = () => {
           photo: a.photo || a.image || "",
           instagram: a.instagram || a.instagramLink || "",
           spotify: a.spotify || a.spotifyLink || "",
-          gender: a.gender || "PREFER_NOT_TO_SAY",
+          gender: normalizeArtistGender(a.gender),
         }));
 
         setArtists(
           normalized.length
             ? normalized
-            : [{ name: "", photo: "", instagram: "", spotify: "", gender: "PREFER_NOT_TO_SAY" }]
+            : [createEmptyArtist()]
         );
         if (normalized.length) {
           setCreatedArtistIndices(normalized.map((_, idx) => idx));
@@ -2014,6 +2055,7 @@ const CreateEvent = () => {
           .filter(artist => artist.name.trim() !== "")
           .map(artist => ({
             ...artist,
+            gender: normalizeArtistGender(artist.gender),
             image: artist.photo || artist.image || "",
             eventId: backendEventId,
           }));
@@ -2064,7 +2106,7 @@ const CreateEvent = () => {
         // Persist artists to event record (including updated images/links)
         const persistPayload = validArtists.map((artist) => ({
           name: artist.name,
-          gender: artist.gender,
+          gender: normalizeArtistGender(artist.gender),
           image: artist.image || artist.photo || null,
           instagramLink: artist.instagram || artist.instagramLink || null,
           spotifyLink: artist.spotify || artist.spotifyLink || null,
@@ -2576,7 +2618,7 @@ const CreateEvent = () => {
           photo: image,
           instagramLink: (a.instagram || a.instagramLink || "").trim(),
           spotifyLink: (a.spotify || a.spotifyLink || "").trim(),
-          gender: a.gender || "PREFER_NOT_TO_SAY",
+          gender: normalizeArtistGender(a.gender),
         };
       })
       .filter((a) => a.name || a.instagramLink || a.spotifyLink || a.image);
@@ -2872,20 +2914,465 @@ const CreateEvent = () => {
     }
   };
 
+  const renderReviewStep = () => {
+    const normalizedSponsors = normalizeSponsors(sponsors);
+    const normalizedArtists = normalizeArtists(artists);
+    const activeArtists = normalizedArtists.filter((artist) => artist.name);
+    const locationLine = fullAddress || [city, state, postalCode].filter(Boolean).join(", ");
+    const scheduleStart = startDate ? `${formatDateValue(startDate)}${startTime ? `, ${formatTimeDisplay(startTime)}` : ""}` : "";
+    const scheduleEnd = endDate ? `${formatDateValue(endDate)}${endTime ? `, ${formatTimeDisplay(endTime)}` : ""}` : "";
+    const totalCapacity = savedTickets.reduce(
+      (sum, ticket) => sum + (Number(ticket.quantity ?? ticket.available) || 0),
+      0
+    );
+    const totalSold = savedTickets.reduce((sum, ticket) => sum + (Number(ticket.soldQty) || 0), 0);
+    const advisoryEntries =
+      customAdvisories.length > 0
+        ? customAdvisories
+        : Object.entries(advisory || {})
+            .filter(([, val]) => val)
+            .map(([key]) => key.replace(/([A-Z])/g, " $1").trim());
+
+    const questionsEntries = customQuestions.map((q, i) => ({
+      title: q.question,
+      answer: q.answer,
+      index: i + 1,
+    }));
+
+    const formatTicketPrice = (price) => {
+      const numericPrice = Number(price) || 0;
+      if (numericPrice === 0) return "Free";
+      return `INR ${new Intl.NumberFormat("en-IN").format(numericPrice)}`;
+    };
+
+    const sectionBase =
+      "rounded-xl border border-border/50 bg-card p-4 shadow-[var(--shadow-card)] transition-all duration-200 hover:border-border sm:p-5 animate-in fade-in-0 slide-in-from-bottom-2";
+    const nestedPanel = "rounded-lg border border-border/40 bg-background/40 p-4";
+    const mutedPanel = "rounded-lg border border-border/30 bg-muted/20 p-3";
+    const sectionStatus = (complete) => (
+      <Badge
+        className={
+          complete
+            ? "border-accent/40 bg-accent/10 text-foreground"
+            : "border-border/50 bg-muted/30 text-muted-foreground"
+        }
+      >
+        {complete ? "Ready" : "Needs review"}
+      </Badge>
+    );
+
+    const ValueItem = ({ label, value, className = "" }) => (
+      <div className={`min-w-0 ${className}`}>
+        <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+        <p
+          className={`mt-1 break-words text-sm font-semibold leading-relaxed ${
+            value ? "text-foreground" : "text-muted-foreground"
+          }`}
+        >
+          {value || "Not provided"}
+        </p>
+      </div>
+    );
+
+    const ReviewSection = ({ icon: Icon, title, description, complete, children, className = "" }) => (
+      <section className={`${sectionBase} ${className}`}>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex min-w-0 gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/25 bg-primary/15">
+              <Icon className="h-5 w-5 text-accent" />
+            </span>
+            <div className="min-w-0">
+              <h3 className="text-base font-semibold text-foreground">{title}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{description}</p>
+            </div>
+          </div>
+          <div className="shrink-0">{sectionStatus(complete)}</div>
+        </div>
+        {children}
+      </section>
+    );
+
+    const readinessItems = [
+      {
+        label: "Overview",
+        complete: Boolean(eventTitle && mainCategory && selectedCategories[0] && coverImage),
+      },
+      {
+        label: "Schedule",
+        complete: Boolean(startDate && startTime && endDate && endTime && venueName),
+      },
+      {
+        label: "Tickets",
+        complete: savedTickets.length > 0,
+      },
+      {
+        label: "Attendee Info",
+        complete: Boolean(
+          termsAndConditions?.trim() ||
+            advisoryEntries.length > 0 ||
+            questionsEntries.length > 0 ||
+            organizerNote?.trim()
+        ),
+      },
+    ];
+
+    return (
+      <div className="space-y-5">
+        <div className="rounded-xl border border-border/50 bg-background/40 p-4 sm:p-5 animate-in fade-in-0 slide-in-from-bottom-2">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Final Checkpoint</p>
+              <h2 className="mt-2 text-2xl font-bold text-foreground">Review before publishing</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                Scan each grouped section, confirm missing items, then use the single action area below to save a draft or publish.
+              </p>
+            </div>
+            <div className="rounded-lg border border-border/50 bg-card px-4 py-3">
+              <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Current state</p>
+              <p className="mt-1 text-sm font-semibold text-foreground">
+                {publishState === "PUBLISHED" ? "Published" : "Draft"}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {readinessItems.map((item) => (
+              <div key={item.label} className="rounded-lg border border-border/40 bg-card/80 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="truncate text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    {item.label}
+                  </p>
+                  <span
+                    className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+                      item.complete ? "bg-accent" : "bg-muted-foreground/40"
+                    }`}
+                  />
+                </div>
+                <p className="mt-2 text-sm font-semibold text-foreground">
+                  {item.complete ? "Ready" : "Needs review"}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
+          <ReviewSection
+            icon={ClipboardCheck}
+            title="Event Overview"
+            description="Core event identity, category, cover, and public summary."
+            complete={Boolean(eventTitle && mainCategory && selectedCategories[0] && coverImage)}
+          >
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+              <div className={`${nestedPanel} grid gap-4 sm:grid-cols-2`}>
+                <ValueItem label="Event title" value={eventTitle} className="sm:col-span-2" />
+                <ValueItem label="Category" value={mainCategory} />
+                <ValueItem label="Subcategory" value={selectedCategories[0]} />
+                <ValueItem label="Publish state" value={publishState === "PUBLISHED" ? "Published" : "Draft"} />
+                <ValueItem label="Event type" value={selectedEventTypeCategory || selectedEventType} />
+                <ValueItem label="Description" value={eventDescription} className="sm:col-span-2" />
+              </div>
+              <div className="overflow-hidden rounded-lg border border-border/40 bg-background/40">
+                {coverImage ? (
+                  <img src={coverImage} alt="Event cover preview" className="h-full min-h-[180px] w-full object-cover" />
+                ) : (
+                  <div className="flex min-h-[180px] flex-col items-center justify-center gap-2 p-4 text-center text-muted-foreground">
+                    <ImageIcon className="h-6 w-6" />
+                    <p className="text-sm">Cover image missing</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </ReviewSection>
+
+          <ReviewSection
+            icon={MapPin}
+            title="Schedule & Venue"
+            description="Timing and location details attendees will rely on."
+            complete={Boolean(startDate && startTime && endDate && endTime && venueName)}
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className={nestedPanel}>
+                <div className="flex items-start gap-3">
+                  <CalendarIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  <ValueItem label="Start" value={scheduleStart} />
+                </div>
+              </div>
+              <div className={nestedPanel}>
+                <div className="flex items-start gap-3">
+                  <Clock className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  <ValueItem label="End" value={scheduleEnd} />
+                </div>
+              </div>
+              <ValueItem label="Venue" value={venueName} className={`${nestedPanel} sm:col-span-2`} />
+              <div className={`${nestedPanel} grid gap-4 sm:col-span-2 sm:grid-cols-2`}>
+                <ValueItem label="City" value={city} />
+                <ValueItem label="State" value={state} />
+                <ValueItem label="Country" value={country} />
+                <ValueItem label="Postal code" value={postalCode} />
+                <ValueItem label="Location" value={locationLine || "Location pending"} className="sm:col-span-2" />
+              </div>
+            </div>
+          </ReviewSection>
+        </div>
+
+        <ReviewSection
+          icon={Ticket}
+          title="Tickets & Pricing"
+          description="Ticket names, prices, capacity, and availability."
+          complete={savedTickets.length > 0}
+        >
+          {savedTickets.length ? (
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className={mutedPanel}>
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Ticket types</p>
+                  <p className="mt-1 text-lg font-semibold text-foreground">{savedTickets.length}</p>
+                </div>
+                <div className={mutedPanel}>
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Capacity</p>
+                  <p className="mt-1 text-lg font-semibold text-foreground">{totalCapacity || "Not set"}</p>
+                </div>
+                <div className={mutedPanel}>
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Sold</p>
+                  <p className="mt-1 text-lg font-semibold text-foreground">{totalSold}</p>
+                </div>
+              </div>
+              <div className="overflow-hidden rounded-lg border border-border/40">
+                <div className="hidden grid-cols-[1.5fr_1fr_1fr_1fr] gap-4 border-b border-border/40 bg-muted/30 px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground md:grid">
+                  <span>Ticket</span>
+                  <span>Price</span>
+                  <span>Capacity</span>
+                  <span>Availability</span>
+                </div>
+                <div className="divide-y divide-border/40">
+                  {savedTickets.map((ticket, index) => (
+                    <div key={`${ticket.ticketName}-${index}`} className="grid gap-3 px-4 py-4 md:grid-cols-[1.5fr_1fr_1fr_1fr] md:items-center">
+                      <div>
+                        <p className="font-semibold text-foreground">{ticket.ticketName || `Ticket ${index + 1}`}</p>
+                        <p className="text-xs text-muted-foreground">{ticket.ticketEntryType || ticket.ticketCategory || "Ticket"}</p>
+                      </div>
+                      <p className="text-sm font-semibold text-foreground">{formatTicketPrice(ticket.price)}</p>
+                      <p className="text-sm text-muted-foreground">{ticket.quantity || ticket.available || "Not set"}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {Number(ticket.available ?? ticket.quantity) || 0} available
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className={nestedPanel}>
+              <p className="text-sm text-muted-foreground">No tickets added.</p>
+            </div>
+          )}
+        </ReviewSection>
+
+        <div className="grid gap-5 lg:grid-cols-2">
+          <ReviewSection
+            icon={Users}
+            title="Artists & Sponsors"
+            description="People and partners attached to the event."
+            complete={activeArtists.length > 0 || normalizedSponsors.length > 0}
+          >
+            <div className="grid gap-4 xl:grid-cols-2">
+              <div className={nestedPanel}>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Artists</p>
+                {activeArtists.length ? (
+                  <div className="space-y-3">
+                    {activeArtists.map((artist, index) => (
+                      <div key={`${artist.name}-${index}`} className="flex gap-3 rounded-lg border border-border/30 bg-card/70 p-3">
+                        <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-border/40 bg-muted/30">
+                          {artist.image ? (
+                            <img src={artist.image} alt={`${artist.name} preview`} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                              <Users className="h-4 w-4" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-foreground">{artist.name}</p>
+                          <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                            {artist.instagramLink && <span className="truncate">{artist.instagramLink}</span>}
+                            {artist.spotifyLink && <span className="truncate">{artist.spotifyLink}</span>}
+                            {!artist.instagramLink && !artist.spotifyLink && <span>No profile links</span>}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No artists added.</p>
+                )}
+              </div>
+
+              <div className={nestedPanel}>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Sponsors</p>
+                {normalizedSponsors.length ? (
+                  <div className="space-y-3">
+                    {normalizedSponsors.map((sponsor, index) => (
+                      <div key={`${sponsor.name}-${index}`} className="flex items-center gap-3 rounded-lg border border-border/30 bg-card/70 p-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/40 bg-muted/30">
+                          {sponsor.logoUrl ? (
+                            <img src={sponsor.logoUrl} alt="" className="h-full w-full object-contain p-1" />
+                          ) : (
+                            <Sparkles className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-foreground">{sponsor.name || "Sponsor"}</p>
+                          <p className="text-xs text-muted-foreground">{sponsor.isPrimary ? "Primary sponsor" : "Sponsor"}</p>
+                          {sponsor.websiteUrl && (
+                            <a
+                              href={sponsor.websiteUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mt-1 inline-flex max-w-full items-center gap-1 truncate text-xs text-accent hover:text-foreground"
+                            >
+                              <ExternalLink className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{sponsor.websiteUrl}</span>
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No sponsors added.</p>
+                )}
+              </div>
+            </div>
+          </ReviewSection>
+
+          <ReviewSection
+            icon={ImageIcon}
+            title="Media & Gallery"
+            description="Cover image and supporting image previews."
+            complete={Boolean(coverImage || galleryImages.length)}
+          >
+            <div className="space-y-4">
+              <div className="overflow-hidden rounded-lg border border-border/40 bg-background/40">
+                {coverImage ? (
+                  <img src={coverImage} alt="Cover image preview" className="h-44 w-full object-cover" />
+                ) : (
+                  <div className="flex h-44 items-center justify-center text-sm text-muted-foreground">No cover image uploaded.</div>
+                )}
+              </div>
+              {galleryImages.length ? (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {galleryImages.slice(0, 6).map((img, index) => (
+                    <div key={`${img}-${index}`} className="aspect-square overflow-hidden rounded-lg border border-border/40 bg-background/40">
+                      <img src={img} alt={`Gallery preview ${index + 1}`} className="h-full w-full object-cover" />
+                    </div>
+                  ))}
+                  {galleryImages.length > 6 && (
+                    <div className="flex aspect-square items-center justify-center rounded-lg border border-border/40 bg-muted/30 text-sm font-semibold text-muted-foreground">
+                      +{galleryImages.length - 6} more
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="rounded-lg border border-border/40 bg-background/40 p-3 text-sm text-muted-foreground">
+                  No gallery images uploaded.
+                </p>
+              )}
+            </div>
+          </ReviewSection>
+        </div>
+
+        <ReviewSection
+          icon={FileText}
+          title="Attendee Information"
+          description="Policies, advisories, and attendee questions."
+          complete={Boolean(termsAndConditions?.trim() || advisoryEntries.length > 0 || questionsEntries.length > 0)}
+        >
+          <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+            <div className={nestedPanel}>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Terms</p>
+              {termsAndConditions?.trim() ? (
+                <div
+                  className="prose prose-invert prose-sm max-w-none text-sm text-foreground"
+                  dangerouslySetInnerHTML={{ __html: termsAndConditions }}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">No terms provided.</p>
+              )}
+            </div>
+
+            <div className={nestedPanel}>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Advisories</p>
+              {advisoryEntries.length ? (
+                <div className="flex flex-wrap gap-2">
+                  {advisoryEntries.map((chip, index) => (
+                    <span
+                      key={`${chip}-${index}`}
+                      className="inline-flex items-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-sm text-foreground"
+                    >
+                      {chip}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No advisories selected.</p>
+              )}
+            </div>
+
+            <div className={`${nestedPanel} lg:col-span-2`}>
+              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Custom questions</p>
+              {questionsEntries.length ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  {questionsEntries.map((question) => (
+                    <div key={question.index} className="rounded-lg border border-border/30 bg-card/70 p-3">
+                      <p className="text-sm font-semibold text-foreground">
+                        {question.index}. {question.title}
+                      </p>
+                      {question.answer ? (
+                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{question.answer}</p>
+                      ) : (
+                        <p className="mt-2 text-sm text-muted-foreground">No default answer.</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No custom questions added.</p>
+              )}
+            </div>
+          </div>
+        </ReviewSection>
+
+        <ReviewSection
+          icon={NotebookText}
+          title="Organizer Notes"
+          description="Private notes for internal organizer context."
+          complete={Boolean(organizerNote?.trim())}
+        >
+          <div className={nestedPanel}>
+            <p className={`whitespace-pre-line text-sm leading-relaxed ${organizerNote?.trim() ? "text-foreground" : "text-muted-foreground"}`}>
+              {organizerNote?.trim() || "No private notes provided."}
+            </p>
+          </div>
+        </ReviewSection>
+      </div>
+    );
+  };
+
   return (
-    <div className="create-event-shell min-h-screen flex flex-col bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] text-white">
+    <div className="create-event-shell min-h-screen flex flex-col bg-background text-foreground">
       <LoadingOverlay show={showLoading} message={loadingMessage} />
       <Header isAuthenticated userRole="organizer" />
 
-      <main className="flex-1 py-10">
-        <div className="w-full max-w-[1100px] mx-auto px-4 md:px-8 space-y-8 pb-8">
+      <main className="flex-1 py-6">
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pb-8">
           {isEditMode && isEditHydrating && (
             <Card className={`${cardBase} p-8`}>
-              <div className="flex items-center gap-3 text-white/80">
-                <Loader2 className="h-5 w-5 animate-spin text-[#D60024]" />
+              <div className="flex items-center gap-3 text-foreground">
+                <Loader2 className="h-5 w-5 animate-spin text-accent" />
                 <div>
                   <p className="text-sm font-medium">Loading event for editing...</p>
-                  <p className="text-xs text-white/50">Fetching the latest event data from the server.</p>
+                  <p className="text-xs text-muted-foreground">Fetching the latest event data from the server.</p>
                 </div>
               </div>
             </Card>
@@ -2905,20 +3392,20 @@ const CreateEvent = () => {
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
-                className="h-10 rounded-lg px-3 text-white hover:bg-[#111111]"
+                className="h-10 rounded-lg px-3 text-muted-foreground hover:bg-muted hover:text-foreground"
                 onClick={() => navigate(-1)}
               >
                 <ChevronLeft className="w-5 h-5" />
-                 <span className="text-sm text-gray-300">Back</span>
+                 <span className="text-sm">Back</span>
               </Button>
-              {/* <span className="text-sm text-gray-300">Back</span> */}
+              {/* <span className="text-sm text-muted-foreground">Back</span> */}
             </div>
             
             {backendEventId && !isEditMode && (
               <Button
                 variant="outline"
                 size="sm"
-                className="h-10 rounded-lg border-[#2a2a2a] bg-[#0f0f0f] text-white hover:bg-[#151515] hover:border-[#D60024]/40"
+                className="h-10 rounded-lg border-border bg-background text-foreground hover:bg-muted hover:text-foreground"
                 onClick={() => {
                   if (confirm("Are you sure you want to start a new event? This will discard the current draft.")) {
                     sessionStorage.removeItem('draftEventId');
@@ -2941,128 +3428,103 @@ const CreateEvent = () => {
           </div>
 
           {/* Progress Header */}
-          <Card
-            className={`border ${cardBase}`}
-            style={{ borderColor: pageTheme.border, boxShadow: pageTheme.glow }}
-          >
-            <CardContent className="p-8 space-y-8 rounded-2xl">
-              <div className="flex items-start justify-between gap-6 flex-wrap">
-                <div className="space-y-3">
-                  <p className="text-[12px] uppercase tracking-[0.12em] text-white/60">
+          <Card className={`${cardBase}`} style={{ boxShadow: pageTheme.glow }}>
+            <CardContent className="space-y-5 p-5 sm:p-6">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0 space-y-2">
+                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                     Event Builder
                   </p>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <h1 className="text-3xl md:text-[32px] font-semibold tracking-[-0.02em] text-white">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <h1 className="text-2xl font-bold tracking-normal text-foreground md:text-3xl">
                       {isEditMode ? "Update Event" : "Create New Event"}
                     </h1>
                     {selectedEventTypeCategory && (
-                      <Badge className="h-7 rounded-full border-[#2a2a2a] bg-[#111111] px-3 text-[11px] uppercase tracking-[0.12em] text-white/80">
+                      <Badge className="h-7 rounded-full border-border/60 bg-muted/40 px-3 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                         {selectedEventTypeCategory}
                       </Badge>
                     )}
                     
                     {backendEventId && !isEditMode && (
-                      <Badge className="h-7 rounded-full bg-[#ef4444]/20 text-white border-[#ef4444]/40 px-3 text-[11px] uppercase tracking-[0.12em]">
+                      <Badge className="h-7 rounded-full border-border/60 bg-secondary/30 px-3 text-[11px] uppercase tracking-[0.12em] text-foreground">
                         Draft
                       </Badge>
                     )}
                   </div>
+                  <p className="text-sm text-muted-foreground">
+                    Complete each section, review the event, then publish when everything is ready.
+                  </p>
                 </div>
-                <div className="flex items-end sm:items-center gap-4 flex-col sm:flex-row sm:flex-wrap justify-end">
-                  
-                    
-                  <div className="flex items-center gap-3">
-                   
-                    <div className="relative flex h-10 rounded-full overflow-hidden border border-[#2a2a2a] bg-[#0f0f0f] p-1">
-                      <div
-                        className="absolute top-1 left-1 h-[calc(100%-8px)] w-[calc(50%-4px)] bg-[#D60024] rounded-full transition-all duration-300 ease-out"
-                        style={{
-                          transform: publishState === "PUBLISHED" ? "translateX(100%)" : "translateX(0)",
-                        }}
-                      />
-                      {["DRAFT", "PUBLISHED"].map((state) => {
-                        const isActive = publishState === state;
-                        return (
-                          <button
-                            key={state}
-                            type="button"
-                            className={`relative z-10 text-sm font-medium px-5 py-2 transition-all duration-300 ${
-                              isActive
-                                ? "text-white"
-                                : "text-gray-400 hover:text-gray-300"
-                            }`}
-                            onClick={() => setPublishState(state)}
-                            disabled={isSectionBusy}
-                          >
-                            {state === "DRAFT" ? "Draft" : "Publish"}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 px-3 h-10 rounded-full bg-[#0f0f0f] border border-[#2a2a2a]">
-                    <div className="w-2 h-2 rounded-full bg-[#D60024] animate-pulse" />
-                    <span className="text-xs text-gray-300 whitespace-nowrap tracking-[0.08em] uppercase">
+                <div className="w-full rounded-lg border border-border/50 bg-background/40 p-3 lg:w-[280px]">
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-accent" />
+                    <span className="truncate text-xs text-muted-foreground">
                       Step {currentStep} of {steps.length} • {steps[currentStep - 1].title}
                     </span>
                   </div>
+                  <Progress value={progress} className="h-1.5 bg-muted" />
                 </div>
               </div>
 
-              {/* Circle+bar tracker */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-8 overflow-x-auto pb-1">
+              {/* Compact step tracker */}
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-8">
                   {steps.map((step, idx) => {
                     const isCurrent = step.number === currentStep;
                     const isDone = step.number < currentStep;
                     const barActive =
                       idx < currentStep - 1
-                        ? "bg-[#ef4444]"
+                        ? "bg-primaryCTA"
                         : idx === currentStep - 1
-                        ? "bg-[#2a2a2a]"
-                        : "bg-[#1a1a1a]";
+                        ? "bg-border"
+                        : "bg-muted";
 
                     return (
-                      <div key={step.number} className="min-w-max flex items-center gap-4">
+                      <div key={step.number} className="min-w-0">
                         <button
                           type="button"
                           onClick={() => goToStep(step.number)}
                           disabled={!canJumpBetweenSections}
-                          className={`flex flex-col items-center gap-2 rounded-xl transition ${
-                            canJumpBetweenSections ? "cursor-pointer" : "cursor-default"
-                          }`}
+                          className={`group flex min-h-[3.625rem] w-full items-center gap-2 rounded-lg border px-3 py-2 text-left transition ${
+                            isDone
+                              ? "border-primary/50 bg-primary/15"
+                              : isCurrent
+                              ? "border-ring/70 bg-muted/50"
+                              : canJumpBetweenSections
+                              ? "border-border/40 bg-background/30 hover:border-ring/60 hover:bg-muted/40"
+                              : "border-border/30 bg-background/20"
+                          } ${canJumpBetweenSections ? "cursor-pointer" : "cursor-default"}`}
                         >
                           <div
-                            className={`w-9 h-9 rounded-full flex items-center justify-center border text-sm font-medium transition-all ${
+                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold transition-all ${
                               isDone
-                                ? "bg-[#ef4444] border-[#ef4444] text-white"
+                                ? "border-primaryCTA bg-primaryCTA text-primary-foreground"
                                 : isCurrent
-                                ? "border-[#ef4444] bg-[#111111] text-white"
+                                ? "border-ring bg-accent/10 text-foreground"
                                 : canJumpBetweenSections
-                                ? "border-[#2a2a2a] bg-[#111111] text-[#777777] hover:border-[#ef4444]/60 hover:text-white"
-                                : "border-[#2a2a2a] bg-[#111111] text-[#777777]"
+                                ? "border-border/60 bg-card text-muted-foreground group-hover:border-ring"
+                                : "border-border/50 bg-card text-muted-foreground"
                             }`}
                           >
-                            {isDone ? <Check className="w-4 h-4" /> : step.number}
+                            {isDone ? <Check className="h-3 w-3" /> : step.number}
                           </div>
                           <p
-                            className={`text-xs font-medium text-center leading-tight whitespace-nowrap ${
-                              isCurrent ? "text-white" : canJumpBetweenSections ? "text-gray-300" : "text-gray-400"
+                            className={`min-w-0 truncate text-[11px] font-semibold leading-tight ${
+                              isCurrent || isDone ? "text-foreground" : "text-muted-foreground"
                             }`}
                           >
                             {step.title}
                           </p>
                         </button>
                         {idx !== steps.length - 1 && (
-                          <div className={`h-px w-14 rounded-full ${barActive}`} />
+                          <div className={`hidden ${barActive}`} />
                         )}
                       </div>
                     );
                   })}
                 </div>
                 {isEditMode && (
-                  <p className="text-xs text-white/50">Click any section to jump directly while editing.</p>
+                  <p className="text-xs text-muted-foreground">Click any section to jump directly while editing.</p>
                 )}
               </div>
             </CardContent>
@@ -3070,15 +3532,15 @@ const CreateEvent = () => {
 
           {/* Step Content */}
           <Card className={`${cardBase} overflow-hidden`}>
-            <CardHeader className="border-b border-[#1f1f1f] bg-[#0f0f0f] px-8 py-6">
-              <CardTitle className="text-2xl text-white flex items-center gap-3">
-                <span className="inline-flex w-9 h-9 items-center justify-center rounded-full border border-[#2a2a2a] bg-[#111111] text-sm font-semibold">
+            <CardHeader className="border-b border-border/60 bg-card/95 px-5 py-4 sm:px-6">
+              <CardTitle className="flex items-center gap-3 text-xl text-foreground sm:text-2xl">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background text-sm font-semibold">
                   {currentStep}
                 </span>
                 {steps[currentStep - 1].title}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6 text-gray-200 px-8 py-8">
+            <CardContent className="space-y-6 px-5 py-6 text-foreground sm:px-6">
               {/* Step 1: Event Details + Images */}
               {currentStep === 1 && (
                 <div className="space-y-8">
@@ -3158,7 +3620,7 @@ const CreateEvent = () => {
                     <div className="space-y-3">
                       <Label htmlFor="cover-image" className="text-[13px] font-medium text-[#d4d4d4]">Cover Image *</Label>
                       <div className="space-y-4">
-                        <div className={`relative rounded-xl border border-dashed border-[#333333] bg-[#0e0e0e] p-6 text-center transition-all duration-200 ${!basicDetailsFilled ? "opacity-70" : "hover:border-[#ef4444]/60"}`}>
+                        <div className={`relative rounded-xl border border-dashed border-border/50 bg-background/40 p-6 text-center transition-all duration-200 ${!basicDetailsFilled ? "opacity-70" : "hover:border-ring/60"}`}>
                         <input
                           id="cover-image" 
                           type="file" 
@@ -3169,10 +3631,10 @@ const CreateEvent = () => {
                           ref={coverImageInputRef}
                         />
                           <div className="pointer-events-none flex flex-col items-center gap-2">
-                            <Upload className="h-5 w-5 text-gray-400" />
-                            <p className="text-sm text-gray-200">Drag and drop your cover image</p>
-                            <p className="text-sm text-gray-400">or click to upload</p>
-                            <p className="text-xs text-gray-500">Recommended size: 1920x1080</p>
+                            <Upload className="h-5 w-5 text-muted-foreground" />
+                            <p className="text-sm text-foreground">Drag and drop your cover image</p>
+                            <p className="text-sm text-muted-foreground">or click to upload</p>
+                            <p className="text-xs text-muted-foreground/80">Recommended size: 1920x1080</p>
                           </div>
                         </div>
                         {!basicDetailsFilled && (
@@ -3190,7 +3652,7 @@ const CreateEvent = () => {
                         )}
                         
                         {coverImage && !uploadingCover && (
-                          <div className="relative w-full h-44 rounded-xl overflow-hidden border border-[#262626]">
+                          <div className="relative w-full h-44 rounded-xl overflow-hidden border border-border/50">
                             <img 
                               src={coverImage} 
                               alt="Cover preview" 
@@ -3214,7 +3676,7 @@ const CreateEvent = () => {
                     <div className="space-y-3">
                       <Label htmlFor="gallery" className="text-[13px] font-medium text-[#d4d4d4]">Gallery Images (optional)</Label>
                       <div className="space-y-4">
-                        <div className={`relative rounded-xl border border-dashed border-[#333333] bg-[#0e0e0e] p-6 text-center transition-all duration-200 ${!basicDetailsFilled ? "opacity-70" : "hover:border-[#ef4444]/60"}`}>
+                        <div className={`relative rounded-xl border border-dashed border-border/50 bg-background/40 p-6 text-center transition-all duration-200 ${!basicDetailsFilled ? "opacity-70" : "hover:border-ring/60"}`}>
                         <input 
                           id="gallery" 
                           type="file" 
@@ -3225,10 +3687,10 @@ const CreateEvent = () => {
                           disabled={uploadingGallery || !basicDetailsFilled}
                         />
                           <div className="pointer-events-none flex flex-col items-center gap-2">
-                            <Upload className="h-5 w-5 text-gray-400" />
-                            <p className="text-sm text-gray-200">Drag and drop gallery images</p>
-                            <p className="text-sm text-gray-400">or click to upload</p>
-                            <p className="text-xs text-gray-500">Supported formats: JPG, PNG, WebP. Up to 10 images.</p>
+                            <Upload className="h-5 w-5 text-muted-foreground" />
+                            <p className="text-sm text-foreground">Drag and drop gallery images</p>
+                            <p className="text-sm text-muted-foreground">or click to upload</p>
+                            <p className="text-xs text-muted-foreground/80">Supported formats: JPG, PNG, WebP. Up to 10 images.</p>
                           </div>
                         </div>
                         <p className="text-xs text-muted-foreground">
@@ -3249,7 +3711,7 @@ const CreateEvent = () => {
                             style={{ gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))" }}
                           >
                             {galleryImages.map((img, index) => (
-                              <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-[#262626] group bg-[#0f0f0f]">
+                              <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-border/50 group bg-background/60">
                                 <img 
                                   src={img} 
                                   alt={`Gallery preview ${index + 1}`} 
@@ -3284,22 +3746,22 @@ const CreateEvent = () => {
               {/* Step 5: Sponsor */}
               {currentStep === 5 && (
                 <div className="space-y-6">
-                  <div className="flex flex-col gap-4 rounded-xl border border-[#1f1f1f] bg-[#0f0f0f] p-5">
+                  <div className="flex flex-col gap-4 rounded-xl border border-border/50 bg-background/60 p-5">
                     <div className="flex items-center justify-between gap-3">
                       <div className="space-y-1">
-                        <p className="text-sm font-semibold text-white">Is this event sponsored?</p>
-                        <p className="text-xs text-white/70">
+                        <p className="text-sm font-semibold text-foreground">Is this event sponsored?</p>
+                        <p className="text-xs text-muted-foreground">
                           Toggle “Yes” to add sponsor details required by the backend (name required; optional logo URL, website).
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-xs uppercase tracking-[0.08em] text-white/60">No</span>
+                        <span className="text-xs uppercase tracking-[0.08em] text-muted-foreground">No</span>
                         <Switch checked={isSponsored} onCheckedChange={setIsSponsored} />
-                        <span className="text-xs uppercase tracking-[0.08em] text-white/60">Yes</span>
+                        <span className="text-xs uppercase tracking-[0.08em] text-muted-foreground">Yes</span>
                       </div>
                     </div>
                     {!isSponsored && (
-                      <div className="text-xs text-white/60">
+                      <div className="text-xs text-muted-foreground">
                         Sponsors are disabled. Click “Next” to continue or toggle “Yes” to add sponsor information.
                       </div>
                     )}
@@ -3311,7 +3773,7 @@ const CreateEvent = () => {
                         <p className="text-sm text-muted-foreground">
                           Add sponsor details to highlight partners on your event page.
                         </p>
-                        <p className="text-xs text-white/60">
+                        <p className="text-xs text-muted-foreground">
                           Required: Sponsor name. Optional: logo, website URL. When multiple sponsors exist, mark one as primary.
                         </p>
                       </div>
@@ -3320,7 +3782,7 @@ const CreateEvent = () => {
                         variant="outline"
                         size="sm"
                         onClick={addSponsorRow}
-                        className="h-10 rounded-lg border-[#2a2a2a] bg-[#0f0f0f] px-4 text-white hover:border-[#ef4444]/60 hover:bg-[#151515]"
+                        className="h-10 rounded-lg border-border bg-background/60 px-4 text-foreground hover:border-ring/60 hover:bg-muted"
                       >
                         <Plus className="w-4 h-4 mr-2" />
                         Add Sponsor
@@ -3336,7 +3798,7 @@ const CreateEvent = () => {
                             <div className="flex items-start justify-between">
                               <div>
                                 <p className="text-sm text-muted-foreground">Sponsor {index + 1}</p>
-                                <h5 className="font-semibold text-white">Brand details</h5>
+                                <h5 className="font-semibold text-foreground">Brand details</h5>
                               </div>
                               {sponsors.length > 1 && (
                                 <Button
@@ -3344,7 +3806,7 @@ const CreateEvent = () => {
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => removeSponsorRow(index)}
-                                  className="text-white hover:text-white"
+                                  className="text-foreground hover:text-foreground"
                                 >
                                   <X className="w-4 h-4" />
                                 </Button>
@@ -3362,7 +3824,7 @@ const CreateEvent = () => {
                                 />
                               </div>
                               <div className="space-y-2.5">
-                                <Label className="text-[13px] font-medium text-[#d4d4d4]">Website URL</Label>
+                                <Label className="text-[13px] font-medium text-[#d4d4d4]">Website URL (Optional)</Label>
                                 <Input
                                   type="url"
                                   placeholder="https://brandco.example.com"
@@ -3377,7 +3839,7 @@ const CreateEvent = () => {
                               <div className="space-y-2.5">
                                 <Label className="text-[13px] font-medium text-[#d4d4d4]">Logo</Label>
                                 <div className="space-y-3">
-                                  <div className="relative rounded-xl border border-dashed border-[#333333] bg-[#0e0e0e] px-4 py-5 text-center transition-all duration-200 hover:border-[#ef4444]/60">
+                                  <div className="relative rounded-xl border border-dashed border-border/50 bg-background/40 px-4 py-5 text-center transition-all duration-200 hover:border-ring/60">
                                   <input
                                     type="file"
                                     accept="image/*"
@@ -3385,9 +3847,9 @@ const CreateEvent = () => {
                                     className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                                   />
                                     <div className="pointer-events-none flex flex-col items-center gap-2">
-                                      <Upload className="h-4 w-4 text-gray-400" />
-                                      <p className="text-sm text-gray-300">Upload sponsor logo</p>
-                                      <p className="text-xs text-gray-500">PNG / SVG preferred</p>
+                                      <Upload className="h-4 w-4 text-muted-foreground" />
+                                      <p className="text-sm text-muted-foreground">Upload sponsor logo</p>
+                                      <p className="text-xs text-muted-foreground/80">PNG / SVG preferred</p>
                                     </div>
                                   </div>
                                   <p className="text-xs text-muted-foreground">PNG / SVG with transparent background preferred</p>
@@ -3398,7 +3860,7 @@ const CreateEvent = () => {
                                     </div>
                                   )}
                                   {sponsor.logoUrl && (
-                                    <div className="relative w-28 h-28 rounded-lg overflow-hidden border border-gray-700 bg-[#0a0a0a] flex items-center justify-center">
+                                    <div className="relative w-28 h-28 rounded-lg overflow-hidden border border-border/50 bg-background/40 flex items-center justify-center">
                                       <img
                                         src={sponsor.logoUrl}
                                         alt={`${sponsor.name || "Sponsor"} logo`}
@@ -3426,12 +3888,12 @@ const CreateEvent = () => {
                                       onCheckedChange={() => setPrimarySponsor(index)}
                                     />
                                     <div>
-                                      <p className="text-sm text-white">Mark as primary sponsor</p>
-                                      <p className="text-xs text-white/60">Required when multiple sponsors exist.</p>
+                                      <p className="text-sm text-foreground">Mark as primary sponsor</p>
+                                      <p className="text-xs text-muted-foreground">Required when multiple sponsors exist.</p>
                                     </div>
                                   </>
                                 ) : (
-                                  <div className="text-xs text-gray-400 bg-[#0a0a0a] px-3 py-2 rounded-lg border border-gray-700">
+                                  <div className="text-xs text-muted-foreground bg-background/40 px-3 py-2 rounded-lg border border-border/50">
                                     Single sponsor is primary by default.
                                   </div>
                                 )}
@@ -3444,7 +3906,7 @@ const CreateEvent = () => {
                   )}
 
                   {isSponsored && sponsors.length === 0 && (
-                    <div className="border border-dashed border-gray-700 rounded-xl p-4 text-sm text-gray-400 text-center">
+                    <div className="border border-dashed border-border/50 rounded-xl p-4 text-sm text-muted-foreground text-center">
                       No sponsors added yet. Click “Add Sponsor” to include partners.
                     </div>
                   )}
@@ -3463,13 +3925,13 @@ const CreateEvent = () => {
                             variant="outline"
                             className={`w-full justify-between ${fieldClass}`}
                           >
-                            <span className="flex items-center gap-2 text-white">
-                              <CalendarIcon className="w-4 h-4 text-gray-400" />
+                            <span className="flex items-center gap-2 text-foreground">
+                              <CalendarIcon className="w-4 h-4 text-muted-foreground" />
                               {startDate ? formatDateValue(startDate) : "Pick a start date"}
                             </span>
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent align="start" className="w-auto p-0 border-gray-700 bg-[#0a0a0a]">
+                        <PopoverContent align="start" className="w-auto p-0 border-border/50 bg-background/40">
                           <Calendar
                             mode="single"
                             selected={parseSafeDateOnly(startDate) || undefined}
@@ -3496,8 +3958,8 @@ const CreateEvent = () => {
                             variant="outline"
                             className={`w-full justify-between ${fieldClass}`}
                           >
-                            <span className="flex items-center gap-2 text-white">
-                              <Clock className="w-4 h-4 text-gray-400" />
+                            <span className="flex items-center gap-2 text-foreground">
+                              <Clock className="w-4 h-4 text-muted-foreground" />
                               {formatTimeDisplay(startTime)}
                             </span>
                           </Button>
@@ -3505,7 +3967,7 @@ const CreateEvent = () => {
                         <PopoverContent
                           align="start"
                           sideOffset={8}
-                          className="w-auto p-0 border-gray-700 bg-[#0a0a0a]"
+                          className="w-auto p-0 border-border/50 bg-background/40"
                         >
                           <TimePicker
                             value={startTime}
@@ -3528,13 +3990,13 @@ const CreateEvent = () => {
                             variant="outline"
                             className={`w-full justify-between ${fieldClass}`}
                           >
-                            <span className="flex items-center gap-2 text-white">
-                              <CalendarIcon className="w-4 h-4 text-gray-400" />
+                            <span className="flex items-center gap-2 text-foreground">
+                              <CalendarIcon className="w-4 h-4 text-muted-foreground" />
                               {endDate ? formatDateValue(endDate) : "Pick an end date"}
                             </span>
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent align="start" className="w-auto p-0 border-gray-700 bg-[#0a0a0a]">
+                        <PopoverContent align="start" className="w-auto p-0 border-border/50 bg-background/40">
                           <Calendar
                             mode="single"
                             selected={parseSafeDateOnly(endDate) || undefined}
@@ -3560,8 +4022,8 @@ const CreateEvent = () => {
                             variant="outline"
                             className={`w-full justify-between ${fieldClass}`}
                           >
-                            <span className="flex items-center gap-2 text-white">
-                              <Clock className="w-4 h-4 text-gray-400" />
+                            <span className="flex items-center gap-2 text-foreground">
+                              <Clock className="w-4 h-4 text-muted-foreground" />
                               {formatTimeDisplay(endTime)}
                             </span>
                           </Button>
@@ -3569,7 +4031,7 @@ const CreateEvent = () => {
                         <PopoverContent
                           align="start"
                           sideOffset={8}
-                          className="w-auto p-0 border-gray-700 bg-[#0a0a0a]"
+                          className="w-auto p-0 border-border/50 bg-background/40"
                         >
                           <TimePicker
                             value={endTime}
@@ -3588,28 +4050,28 @@ const CreateEvent = () => {
               {/* Step 3: Tickets */}
               {currentStep === 3 && (
                 <div className="space-y-8">
-                  <div className="text-sm text-gray-400">
+                  <div className="text-sm text-muted-foreground">
                     Select ticket types to add for your event
                   </div>
 
-                  <div className="p-4 rounded-xl border border-dashed border-[#333333] bg-[#0f0f0f] text-xs md:text-sm text-gray-400">
-                    Need a custom ticket? Pick <span className="font-medium text-white">Add Standard Ticket</span>, name it (e.g., <span className="font-medium text-white">Silver</span>) and set any price. You can add multiple categories.
+                  <div className="p-4 rounded-xl border border-dashed border-border/50 bg-background/60 text-xs md:text-sm text-muted-foreground">
+                    Need a custom ticket? Pick <span className="font-medium text-foreground">Add Standard Ticket</span>, name it (e.g., <span className="font-medium text-foreground">Silver</span>) and set any price. You can add multiple categories.
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-4">
                     {/* VIP Guest List Card */}
                     <Card 
-                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#ef4444]/60`}
+                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-ring/60`}
                       onClick={() => openTicketModal("vip-guest")}
                     >
                       <CardContent className="p-4 space-y-3">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-[#0a0a0a] border border-gray-700">
-                            <Users className="w-5 h-5 text-gray-400" />
+                          <div className="p-2 rounded-lg bg-background/40 border border-border/50">
+                            <Users className="w-5 h-5 text-muted-foreground" />
                           </div>
-                          <h3 className="text-base font-semibold text-white">Add VIP Guest List</h3>
+                          <h3 className="text-base font-semibold text-foreground">Add VIP Guest List</h3>
                         </div>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-muted-foreground">
                           Free entry for VIP guests with no pricing
                         </p>
                       </CardContent>
@@ -3617,17 +4079,17 @@ const CreateEvent = () => {
 
                     {/* Standard Ticket Card */}
                     <Card 
-                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#ef4444]/60`}
+                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-ring/60`}
                       onClick={() => openTicketModal("standard")}
                     >
                       <CardContent className="p-4 space-y-3">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-[#0a0a0a] border border-gray-700">
-                            <Ticket className="w-5 h-5 text-gray-400" />
+                          <div className="p-2 rounded-lg bg-background/40 border border-border/50">
+                            <Ticket className="w-5 h-5 text-muted-foreground" />
                           </div>
-                          <h3 className="text-base font-semibold text-white">Add Standard Ticket</h3>
+                          <h3 className="text-base font-semibold text-foreground">Add Standard Ticket</h3>
                         </div>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-muted-foreground">
                           Regular paid tickets with GST options
                         </p>
                       </CardContent>
@@ -3635,17 +4097,17 @@ const CreateEvent = () => {
 
                     {/* Table Ticket Card */}
                     <Card 
-                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#ef4444]/60`}
+                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-ring/60`}
                       onClick={() => openTicketModal("table")}
                     >
                       <CardContent className="p-4 space-y-3">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-[#0a0a0a] border border-gray-700">
-                            <Table2 className="w-5 h-5 text-gray-400" />
+                          <div className="p-2 rounded-lg bg-background/40 border border-border/50">
+                            <Table2 className="w-5 h-5 text-muted-foreground" />
                           </div>
-                          <h3 className="text-base font-semibold text-white">Add Table Ticket</h3>
+                          <h3 className="text-base font-semibold text-foreground">Add Table Ticket</h3>
                         </div>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-muted-foreground">
                           Reserved table booking for groups
                         </p>
                       </CardContent>
@@ -3653,17 +4115,17 @@ const CreateEvent = () => {
 
                     {/* Group Pass Card */}
                     <Card 
-                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-[#ef4444]/60`}
+                      className={`group transition-all cursor-pointer border ${cardBase} hover:border-ring/60`}
                       onClick={() => openTicketModal("group-pass")}
                     >
                       <CardContent className="p-4 space-y-3">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-[#0a0a0a] border border-gray-700">
-                            <UsersRound className="w-5 h-5 text-gray-400" />
+                          <div className="p-2 rounded-lg bg-background/40 border border-border/50">
+                            <UsersRound className="w-5 h-5 text-muted-foreground" />
                           </div>
-                          <h3 className="text-base font-semibold text-white">Add Group Pass</h3>
+                          <h3 className="text-base font-semibold text-foreground">Add Group Pass</h3>
                         </div>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-muted-foreground">
                           Discounted pass for group bookings
                         </p>
                       </CardContent>
@@ -3680,17 +4142,17 @@ const CreateEvent = () => {
                             <CardContent className="p-4">
                               <div className="flex justify-between items-start">
                                 <div>
-                                  <h6 className="font-semibold text-white">{ticket.ticketName}</h6>
-                                  <p className="text-sm text-gray-400">
+                                  <h6 className="font-semibold text-foreground">{ticket.ticketName}</h6>
+                                  <p className="text-sm text-muted-foreground">
                                     {ticket.ticketCategory} • {ticket.ticketEntryType}
                                   </p>
                                   {ticket.ticketAddress && (
-                                    <p className="text-xs text-gray-400 mt-1">
+                                    <p className="text-xs text-muted-foreground mt-1">
                                       {ticket.ticketAddress}
                                     </p>
                                   )}
                                   {ticket.price !== "0" && (
-                                    <p className="text-sm font-semibold mt-1 text-[#D60024]">₹{ticket.price}</p>
+                                    <p className="text-sm font-semibold mt-1 text-accent">₹{ticket.price}</p>
                                   )}
                                 </div>
                                 
@@ -3702,7 +4164,7 @@ const CreateEvent = () => {
                                     handleDeleteTicket(ticket, index);
                                   }}
                                   disabled={showLoading}
-                                  className="text-gray-400 hover:text-white"
+                                  className="text-muted-foreground hover:text-foreground"
                                 >
                                   {showLoading ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -3723,15 +4185,15 @@ const CreateEvent = () => {
               {/* Step 4: Venue & Location */}
               {currentStep === 4 && (
                 <div className="space-y-6">
-                  <div className="rounded-2xl border border-[#1f1f1f] bg-[#0f0f0f] p-6">
+                  <div className="rounded-2xl border border-border/50 bg-background/60 p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <p className="text-xs uppercase tracking-[0.12em] text-white/60">Venue</p>
-                        <h3 className="text-base font-semibold text-white">Location Details</h3>
+                        <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Venue</p>
+                        <h3 className="text-base font-semibold text-foreground">Location Details</h3>
                       </div>
                       <div className="flex gap-2 text-[11px]">
-                        <span className="px-3 py-1 rounded-full bg-[#0a0a0a] text-gray-400 border border-gray-700">Manual entry</span>
-                        <span className="px-3 py-1 rounded-full bg-[#0a0a0a] text-gray-400 border border-gray-700">Required fields *</span>
+                        <span className="px-3 py-1 rounded-full bg-background/40 text-muted-foreground border border-border/50">Manual entry</span>
+                        <span className="px-3 py-1 rounded-full bg-background/40 text-muted-foreground border border-border/50">Required fields *</span>
                       </div>
                     </div>
 
@@ -3827,7 +4289,7 @@ const CreateEvent = () => {
                           rows={3}
                           className={`${fieldClass} min-h-[120px] py-3`}
                         />
-                        <p className="text-xs text-white/60">Provide extra directions if needed. This won’t block submission.</p>
+                        <p className="text-xs text-muted-foreground">Provide extra directions if needed. This won’t block submission.</p>
                       </div>
                     </div>
                   </div>
@@ -3843,8 +4305,8 @@ const CreateEvent = () => {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="h-10 rounded-lg border-[#2a2a2a] bg-[#0f0f0f] px-4 text-white hover:border-[#ef4444]/60 hover:bg-[#151515]"
-                      onClick={() => setArtists([...artists, { name: "", photo: "", image: "", instagram: "", spotify: "", gender: "PREFER_NOT_TO_SAY" }])}
+                      className="h-10 rounded-lg border-border bg-background/60 px-4 text-foreground hover:border-ring/60 hover:bg-muted"
+                      onClick={() => setArtists([...artists, createEmptyArtist()])}
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Add Artist
@@ -3889,7 +4351,7 @@ const CreateEvent = () => {
                         <div className="space-y-2.5">
                           <Label htmlFor={`artist-gender-${index}`} className="text-[13px] font-medium text-[#d4d4d4]">Gender</Label>
                           <Select 
-                            value={artist.gender || "PREFER_NOT_TO_SAY"} 
+                            value={normalizeArtistGender(artist.gender)}
                             onValueChange={(value) => {
                               const newArtists = [...artists];
                               newArtists[index].gender = value;
@@ -3912,7 +4374,7 @@ const CreateEvent = () => {
                         <div className="space-y-2.5">
                           <Label htmlFor={`artist-photo-${index}`} className="text-[13px] font-medium text-[#d4d4d4]">Artist Photo *</Label>
                           <div className="space-y-3">
-                            <div className="relative rounded-xl border border-dashed border-[#333333] bg-[#0e0e0e] px-4 py-5 text-center transition-all duration-200 hover:border-[#ef4444]/60">
+                            <div className="relative rounded-xl border border-dashed border-border/50 bg-background/40 px-4 py-5 text-center transition-all duration-200 hover:border-ring/60">
                             <input
                               id={`artist-photo-${index}`}
                               type="file"
@@ -3921,13 +4383,13 @@ const CreateEvent = () => {
                               className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                             />
                               <div className="pointer-events-none flex flex-col items-center gap-2">
-                                <Upload className="h-4 w-4 text-gray-400" />
-                                <p className="text-sm text-gray-300">Upload artist photo</p>
-                                <p className="text-xs text-gray-500">JPG/PNG/WebP</p>
+                                <Upload className="h-4 w-4 text-muted-foreground" />
+                                <p className="text-sm text-muted-foreground">Upload artist photo</p>
+                                <p className="text-xs text-muted-foreground/80">JPG/PNG/WebP</p>
                               </div>
                             </div>
                             {artist.photo && (
-                              <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-[#262626]">
+                              <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-border/50">
                                 <img 
                                   src={artist.photo} 
                                   alt={`${artist.name} preview`} 
@@ -4015,19 +4477,19 @@ const CreateEvent = () => {
                   <div className="space-y-5">
                     <Card className={`${cardBase}`}>
                       <CardHeader className="pb-2">
-                        <p className="text-xs uppercase tracking-[0.2em] text-white/50">Step 7</p>
-                        <CardTitle className="text-xl text-white">Additional Info</CardTitle>
-                        <p className="text-sm text-white/70">Set policies, advisories, and helpful notes for attendees.</p>
+                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Step 7</p>
+                        <CardTitle className="text-xl text-foreground">Additional Info</CardTitle>
+                        <p className="text-sm text-muted-foreground">Set policies, advisories, and helpful notes for attendees.</p>
                       </CardHeader>
                       <CardContent className="space-y-6">
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
                             <div className="space-y-1">
-                              <Label htmlFor="terms" className="text-white">Terms & Conditions</Label>
-                              <p className="text-xs text-white/60">Describe entry rules, refunds, or other policies.</p>
+                              <Label htmlFor="terms" className="text-foreground">Terms & Conditions</Label>
+                              <p className="text-xs text-muted-foreground">Describe entry rules, refunds, or other policies.</p>
                             </div>
                           </div>
-                          <div className="rounded-2xl border border-gray-700 bg-[#0a0a0a] p-3">
+                          <div className="rounded-2xl border border-border/50 bg-background/40 p-3">
                             <ReactQuill
                               theme="snow"
                               value={termsAndConditions}
@@ -4039,7 +4501,7 @@ const CreateEvent = () => {
                                 border: "1px solid rgba(255,255,255,0.14)",
                                 color: "#e5e7eb",
                               }}
-                              className="text-white"
+                              className="text-foreground"
                               modules={{
                                 toolbar: [
                                   ['bold', 'italic', 'underline'],
@@ -4056,14 +4518,14 @@ const CreateEvent = () => {
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <div className="space-y-1">
-                              <Label className="text-white">Advisories</Label>
-                              <p className="text-xs text-white/60">Pick multiple advisories and add your own.</p>
+                              <Label className="text-foreground">Advisories</Label>
+                              <p className="text-xs text-muted-foreground">Pick multiple advisories and add your own.</p>
                             </div>
                             <div className="flex items-center gap-2">
                               <Button
                                 type="button"
                                 variant="outline"
-                                className="h-10 rounded-lg border-[#2a2a2a] bg-[#0f0f0f] text-white hover:border-[#ef4444]/60 hover:bg-[#151515]"
+                                className="h-10 rounded-lg border-border bg-background/60 text-foreground hover:border-ring/60 hover:bg-muted"
                                 onClick={() => setAdvisoryDialogOpen(true)}
                               >
                                 {hasSelections ? `${selectedBuiltIns.length + customAdvisories.length} selected` : "Open advisory picker"}
@@ -4072,11 +4534,11 @@ const CreateEvent = () => {
                           </div>
 
                           <Dialog open={advisoryDialogOpen} onOpenChange={setAdvisoryDialogOpen}>
-                            <DialogContent className="max-w-4xl border-gray-800 bg-gray-950 text-white max-h-[90vh] overflow-hidden p-0">
+                            <DialogContent className="max-w-4xl border-border/40 bg-popover text-foreground max-h-[90vh] overflow-hidden p-0">
                             <div className="p-5 overflow-y-auto max-h-[70vh] space-y-4">
                               <DialogHeader>
                                 <DialogTitle className="text-2xl">Choose advisories</DialogTitle>
-                                <DialogDescription className="text-white/70">
+                                <DialogDescription className="text-muted-foreground">
                                   Turn on as many as you need, or add a custom advisory.
                                 </DialogDescription>
                               </DialogHeader>
@@ -4091,8 +4553,8 @@ const CreateEvent = () => {
                                         type="button"
                                         className={`flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition ${
                                           active
-                                            ? "border-[#D60024] bg-[#D60024]/10 text-white"
-                                            : "border-gray-700 bg-[#0a0a0a] text-gray-400 hover:border-[#D60024]/50 hover:bg-[#0a0a0a]"
+                                            ? "border-ring bg-accent/10 text-foreground"
+                                            : "border-border/50 bg-background/40 text-muted-foreground hover:border-ring/60 hover:bg-muted/40"
                                         }`}
                                         onClick={() => setAdvisory({ ...advisory, [item.id]: !active })}
                                       >
@@ -4106,8 +4568,8 @@ const CreateEvent = () => {
                                   })}
                                 </div>
 
-                                <div className="border-t border-gray-700 pt-4 space-y-3">
-                                  <p className="text-sm font-semibold text-white">Custom advisory</p>
+                                <div className="border-t border-border/50 pt-4 space-y-3">
+                                  <p className="text-sm font-semibold text-foreground">Custom advisory</p>
                                   <div className="flex flex-col sm:flex-row gap-3">
                                     <div className="flex-1 flex gap-2">
                                       <Input
@@ -4119,7 +4581,7 @@ const CreateEvent = () => {
                                       <Button
                                         type="button"
                                         variant="outline"
-                                        className="h-12 w-12 rounded-[10px] border-[#2a2a2a] bg-[#0f0f0f] text-white hover:border-[#ef4444]/60 hover:bg-[#151515]"
+                                        className="h-12 w-12 rounded-[10px] border-border bg-background/60 text-foreground hover:border-ring/60 hover:bg-muted"
                                         onClick={() => setShowEmojiPicker((prev) => !prev)}
                                       >
                                         <Smile className="w-4 h-4" />
@@ -4141,14 +4603,14 @@ const CreateEvent = () => {
                                   </div>
 
                                   {showEmojiPicker && (
-                                    <div className="rounded-xl border border-gray-700 bg-[#0a0a0a] p-3 space-y-2 max-h-60 overflow-y-auto">
-                                      <p className="text-xs uppercase tracking-wider text-gray-500">Emoji</p>
+                                    <div className="rounded-xl border border-border/50 bg-background/40 p-3 space-y-2 max-h-60 overflow-y-auto">
+                                      <p className="text-xs uppercase tracking-wider text-muted-foreground/80">Emoji</p>
                                       <div className="grid grid-cols-8 gap-2 text-lg">
                                         {emojiPalette.map((emoji, idx) => (
                                           <button
                                             key={`emoji-${idx}`}
                                             type="button"
-                                            className="h-9 w-9 rounded-lg border border-gray-700 bg-[#0a0a0a] hover:border-[#D60024]/50 hover:bg-[#0a0a0a] transition"
+                                            className="h-9 w-9 rounded-lg border border-border/50 bg-background/40 hover:border-ring/60 hover:bg-muted/40 transition"
                                             onClick={() => setNewCustomAdvisory((prev) => `${prev}${emoji}`)}
                                           >
                                             {emoji}
@@ -4164,11 +4626,11 @@ const CreateEvent = () => {
                                         <button
                                           key={`custom-dialog-${idx}`}
                                           type="button"
-                                          className="group flex items-center gap-2 rounded-full border border-gray-700 bg-[#0a0a0a] px-3 py-1 text-sm text-gray-400 hover:border-[#D60024]/50 hover:bg-[#0a0a0a]"
+                                          className="group flex items-center gap-2 rounded-full border border-border/50 bg-background/40 px-3 py-1 text-sm text-muted-foreground hover:border-ring/60 hover:bg-muted/40"
                                           onClick={() => setCustomAdvisories(customAdvisories.filter((_, i) => i !== idx))}
                                         >
                                           ✨ {item}
-                                          <X className="w-3 h-3 text-white/70 group-hover:text-white" />
+                                          <X className="w-3 h-3 text-muted-foreground group-hover:text-foreground" />
                                         </button>
                                       ))}
                                     </div>
@@ -4177,7 +4639,7 @@ const CreateEvent = () => {
                               </div>
 
                               <DialogFooter className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                                <p className="text-sm text-white/70">
+                                <p className="text-sm text-muted-foreground">
                                   {hasSelections
                                     ? `${selectedBuiltIns.length + customAdvisories.length} selected`
                                     : "No advisories selected yet"}
@@ -4186,7 +4648,7 @@ const CreateEvent = () => {
                                   <Button
                                     type="button"
                                     variant="ghost"
-                                    className="text-white/80 hover:text-white"
+                                    className="text-foreground hover:text-foreground"
                                     onClick={() => setAdvisoryDialogOpen(false)}
                                   >
                                     Close
@@ -4209,27 +4671,27 @@ const CreateEvent = () => {
                                 <button
                                   key={item.id}
                                   type="button"
-                                  className="group flex items-center gap-2 rounded-full border border-gray-700 bg-[#0a0a0a] px-3 py-1 text-sm text-gray-400 hover:border-[#D60024]/50 hover:bg-[#0a0a0a]"
+                                  className="group flex items-center gap-2 rounded-full border border-border/50 bg-background/40 px-3 py-1 text-sm text-muted-foreground hover:border-ring/60 hover:bg-muted/40"
                                   onClick={() => setAdvisory({ ...advisory, [item.id]: false })}
                                 >
                                   {item.label}
-                                  <X className="w-3 h-3 text-white/70 group-hover:text-white" />
+                                  <X className="w-3 h-3 text-muted-foreground group-hover:text-foreground" />
                                 </button>
                               ))}
                               {customAdvisories.map((item, idx) => (
                                 <button
                                   key={`custom-${idx}`}
                                   type="button"
-                                  className="group flex items-center gap-2 rounded-full border border-gray-700 bg-[#0a0a0a] px-3 py-1 text-sm text-gray-400 hover:border-[#D60024]/50 hover:bg-[#0a0a0a]"
+                                  className="group flex items-center gap-2 rounded-full border border-border/50 bg-background/40 px-3 py-1 text-sm text-muted-foreground hover:border-ring/60 hover:bg-muted/40"
                                   onClick={() => setCustomAdvisories(customAdvisories.filter((_, i) => i !== idx))}
                                 >
                                   ✨ {item}
-                                  <X className="w-3 h-3 text-white/70 group-hover:text-white" />
+                                  <X className="w-3 h-3 text-muted-foreground group-hover:text-foreground" />
                                 </button>
                               ))}
                             </div>
                           ) : (
-                            <div className="text-sm text-gray-500 border border-dashed border-gray-700 rounded-lg px-3 py-2 bg-[#0a0a0a]/80">
+                            <div className="text-sm text-muted-foreground/80 border border-dashed border-border/50 rounded-lg px-3 py-2 bg-background/40">
                               No advisories selected yet. Use "Open advisory picker" to add them.
                             </div>
                           )}
@@ -4238,13 +4700,13 @@ const CreateEvent = () => {
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <div className="space-y-1">
-                              <Label className="text-white">Custom Questions for Attendees</Label>
-                              <p className="text-xs text-white/60">Collect details like dietary needs or preferences.</p>
+                              <Label className="text-foreground">Custom Questions for Attendees</Label>
+                              <p className="text-xs text-muted-foreground">Collect details like dietary needs or preferences.</p>
                             </div>
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-10 rounded-lg border-[#2a2a2a] text-white bg-[#0f0f0f] hover:bg-[#151515] hover:border-[#ef4444]/60"
+                              className="h-10 rounded-lg border-border text-foreground bg-background/60 hover:bg-muted hover:border-ring/60"
                               onClick={() => {
                                 if (newQuestion.trim()) {
                                   setCustomQuestions([...customQuestions, { question: newQuestion, answer: newAnswer }]);
@@ -4280,17 +4742,17 @@ const CreateEvent = () => {
                           {customQuestions.length > 0 ? (
                             <div className="space-y-3">
                               {customQuestions.map((q, index) => (
-                                <Card key={index} className="border border-gray-800 bg-[#0a0a0a]/80">
+                                <Card key={index} className="border border-border/40 bg-background/40">
                                   <CardContent className="pt-4">
                                     <div className="flex justify-between items-start gap-2">
                                       <div className="flex-1 space-y-1">
-                                        <p className="font-medium text-sm text-white">Q: {q.question}</p>
-                                        {q.answer && <p className="text-sm text-gray-400">A: {q.answer}</p>}
+                                        <p className="font-medium text-sm text-foreground">Q: {q.question}</p>
+                                        {q.answer && <p className="text-sm text-muted-foreground">A: {q.answer}</p>}
                                       </div>
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="text-gray-400 hover:text-white"
+                                        className="text-muted-foreground hover:text-foreground"
                                         onClick={() => {
                                           setCustomQuestions(customQuestions.filter((_, i) => i !== index));
                                           toast.success('Question removed');
@@ -4304,12 +4766,12 @@ const CreateEvent = () => {
                               ))}
                             </div>
                           ) : (
-                            <p className="text-sm text-gray-400">No questions added yet.</p>
+                            <p className="text-sm text-muted-foreground">No questions added yet.</p>
                           )}
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="notes" className="text-white">Organizer Notes (Private)</Label>
+                          <Label htmlFor="notes" className="text-foreground">Organizer Notes (Private)</Label>
                           <Textarea
                             id="notes"
                             placeholder="Add any internal notes..."
@@ -4326,285 +4788,29 @@ const CreateEvent = () => {
               })()}
 
               {/* Step 8: Review & Publish */}
-              {currentStep === 8 && (() => {
-                const statusBadge = (filled) => (
-                  <Badge className={filled ? 'bg-[#D60024]/20 text-white border-[#D60024]/40' : 'bg-[#0a0a0a] text-gray-400 border-gray-700'}>
-                    {filled ? 'Filled' : 'Missing'}
-                  </Badge>
-                );
+              {currentStep === 8 && renderReviewStep()}
 
-                const advisoryEntries =
-                  customAdvisories.length > 0
-                    ? customAdvisories
-                    : Object.entries(advisory || {})
-                        .filter(([, val]) => val)
-                        .map(([key]) => key.replace(/([A-Z])/g, ' $1').trim());
-
-                const questionsEntries = customQuestions.map((q, i) => ({
-                  title: q.question,
-                  answer: q.answer,
-                  index: i + 1,
-                }));
-
-                const additionalInfoCards = [
-                  {
-                    title: 'Terms & Conditions',
-                    filled: Boolean(termsAndConditions?.trim()),
-                    content: termsAndConditions?.trim() || 'Not provided',
-                    isHtml: true,
-                  },
-                  {
-                    title: 'Advisories',
-                    filled: Object.values(advisory || {}).some(Boolean) || customAdvisories.length > 0,
-                    content: advisoryEntries,
-                    type: 'advisory-list',
-                    isHtml: false,
-                  },
-                  {
-                    title: 'Custom Questions for Attendees',
-                    filled: customQuestions.length > 0,
-                    content: questionsEntries,
-                    type: 'questions-list',
-                    isHtml: false,
-                  },
-                  {
-                    title: 'Organizer Notes (Private)',
-                    filled: Boolean(organizerNote?.trim()),
-                    content: organizerNote?.trim() || 'Not provided',
-                    isHtml: false,
-                  },
-                ];
-
-                const summaryItems = [
-                  { label: 'Event Title', value: eventTitle },
-                  { label: 'Category', value: mainCategory },
-                  { label: 'Subcategory', value: selectedCategories[0] },
-                  { label: 'Cover Image', value: coverImage ? 'Uploaded' : '' },
-                  { label: 'Start', value: startDate ? `${formatDateValue(startDate)} ${formatTimeDisplay(startTime)}` : '' },
-                  { label: 'End', value: endDate ? `${formatDateValue(endDate)} ${formatTimeDisplay(endTime)}` : '' },
-                  { label: 'Venue', value: venueName },
-                  { label: 'City', value: city },
-                  { label: 'State', value: state },
-                  { label: 'Tickets', value: savedTickets.length ? `${savedTickets.length} added` : '' },
-                  { label: 'Sponsors', value: normalizeSponsors(sponsors).length ? `${normalizeSponsors(sponsors).length} added` : '' },
-                  { label: 'Artists', value: artists.filter((a) => a.name.trim()).length ? `${artists.filter((a) => a.name.trim()).length} added` : '' },
-                  { label: 'Location', value: fullAddress || [city, state].filter(Boolean).join(', ') || 'Location pending' },
-                ];
-
-                return (
-                  <div className="space-y-4 bg-[#0a0a0a]/80 p-4 rounded-xl border border-gray-800">
-                    {/* <div className="p-4 rounded-xl border border-white/10 bg-white/5 flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(74,222,128,0.7)]" />
-                        <h3 className="text-lg font-semibold">Review before publishing</h3>
-                      </div>
-                      <p className="text-sm text-white/70">Check what’s filled and what’s missing. You can go back to edit anything.</p>
-                    </div> */}
-
-                    <div className="flex flex-wrap items-center gap-3 border border-gray-800 bg-[#0a0a0a]/80 rounded-xl p-4">
-                      <div className="space-y-1">
-                        <p className="text-xs uppercase tracking-[0.12em] text-white/60">Publish State</p>
-                        <p className="text-sm text-white/80">Choose whether to keep this as Draft or Publish it now.</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {["DRAFT", "PUBLISHED"].map((state) => {
-                          const isActive = publishState === state;
-                          return (
-                            <Button
-                              key={state}
-                              type="button"
-                              variant={isActive ? "accent" : "outline"}
-                              className={`px-4 ${isActive ? "bg-gray-700 text-white" : "border-gray-600 text-white hover:bg-gray-800"}`}
-                              onClick={() => setPublishState(state)}
-                              disabled={isSectionBusy}
-                            >
-                              {state === "DRAFT" ? "Save as Draft" : "Publish"}
-                            </Button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-2">
-                      {summaryItems.map((item, idx) => (
-                        <Card key={idx} className={`border ${cardBase}`} style={{ borderColor: pageTheme.border }}>
-                          <CardContent className="p-4 flex items-center justify-between">
-                            <div>
-                              <p className="text-xs text-white/60">{item.label}</p>
-                              <p className={`text-sm font-semibold ${item.value ? 'text-white' : 'text-white/50'}`}>
-                                {item.value || 'Not provided'}
-                              </p>
-                            </div>
-                            {statusBadge(Boolean(item.value))}
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <Card className={`border ${cardBase}`} style={{ borderColor: pageTheme.border }}>
-                        <CardHeader>
-                          <CardTitle className="text-base">Tickets</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                          {savedTickets.length ? (
-                            savedTickets.map((t, i) => (
-                              <div key={i} className="flex justify-between text-sm">
-                                <span>{t.ticketName}</span>
-                                <span className="text-white/80">{t.price === '0' ? 'Free' : `₹${t.price}`}</span>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-sm text-white/60">No tickets added</p>
-                          )}
-                        </CardContent>
-                      </Card>
-
-                      <Card className={`border ${cardBase}`} style={{ borderColor: pageTheme.border }}>
-                        <CardHeader>
-                          <CardTitle className="text-base">Sponsors</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                          {normalizeSponsors(sponsors).length ? (
-                            normalizeSponsors(sponsors).map((s, i) => (
-                              <div key={i} className="flex items-center justify-between text-sm">
-                                <div className="space-y-0.5">
-                                  <p className="font-semibold">{s.name || s.company}</p>
-                                  <p className="text-xs text-white/60">{s.tier || 'Sponsor'}</p>
-                                </div>
-                                {s.logo && <img src={s.logo} alt="" className="w-10 h-10 object-contain rounded border border-gray-700 bg-[#0a0a0a]" />}
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-sm text-white/60">No sponsors added</p>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <Card className={`border ${cardBase}`} style={{ borderColor: pageTheme.border }}>
-                        <CardHeader>
-                          <CardTitle className="text-base">Venue</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2 text-sm text-white/80">
-                          <p>{venueName || 'Not provided'}</p>
-                          <p className="text-white/60">{fullAddress || [city, state, postalCode].filter(Boolean).join(', ') || 'Location pending'}</p>
-                        </CardContent>
-                      </Card>
-
-                      <Card className={`border ${cardBase}`} style={{ borderColor: pageTheme.border }}>
-                        <CardHeader>
-                          <CardTitle className="text-base">Artists</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2 text-sm">
-                          {artists.filter((a) => a.name.trim()).length ? (
-                            artists
-                              .filter((a) => a.name.trim())
-                              .map((a, i) => (
-                                <div key={i} className="flex justify-between items-center">
-                                  <span className="font-semibold">{a.name}</span>
-                                  {a.instagram && <span className="text-xs text-white/60">{a.instagram}</span>}
-                                </div>
-                              ))
-                          ) : (
-                            <p className="text-sm text-white/60">No artists added</p>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    <Card className={`border ${cardBase}`} style={{ borderColor: pageTheme.border }}>
-                      <CardHeader>
-                        <CardTitle className="text-base">Gallery</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {galleryImages.length ? (
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            {galleryImages.slice(0, 4).map((img, i) => (
-                              <div key={i} className="aspect-square rounded-lg overflow-hidden border border-gray-700">
-                                <img src={img} alt={`Gallery ${i}`} className="w-full h-full object-cover" />
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-white/60">No gallery images uploaded</p>
-                        )}
-                      </CardContent>
-                    </Card>
-
-                    <Card className={`border ${cardBase}`} style={{ borderColor: pageTheme.border }}>
-                      <CardHeader>
-                        <CardTitle className="text-base">Additional Info</CardTitle>
-                        <p className="text-xs text-white/60">What attendees see and internal notes</p>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        {additionalInfoCards.map((info, i) => (
-                          <div key={i} className="flex gap-3 border border-gray-800 rounded-lg p-3 bg-[#0a0a0a]/80 hover:border-gray-700 transition">
-                            <div className="flex-1 space-y-1">
-                              <p className="text-[11px] uppercase tracking-[0.12em] text-white/60">{info.title}</p>
-                              {info.filled ? (
-                                info.type === 'advisory-list' ? (
-                                  <div className="flex flex-wrap gap-2">
-                                    {info.content.map((chip, idx) => (
-                                      <span
-                                        key={idx}
-                                        className="inline-flex items-center gap-1 rounded-full border border-[#D60024]/30 bg-[#D60024]/10 px-3 py-1 text-sm text-white"
-                                      >
-                                        {chip}
-                                      </span>
-                                    ))}
-                                  </div>
-                                ) : info.type === 'questions-list' ? (
-                                  <ol className="list-decimal list-inside space-y-1 text-sm text-white">
-                                    {info.content.map((q) => (
-                                      <li key={q.index} className="pl-1">
-                                        <span className="font-semibold">{q.title}</span>
-                                        {q.answer ? <span className="text-white/70"> — {q.answer}</span> : null}
-                                      </li>
-                                    ))}
-                                  </ol>
-                                ) : info.isHtml ? (
-                                  <div
-                                    className="text-sm text-white prose prose-invert prose-sm max-w-none"
-                                    dangerouslySetInnerHTML={{ __html: info.content }}
-                                  />
-                                ) : (
-                                  <p className="text-sm whitespace-pre-line text-white">{info.content}</p>
-                                )
-                              ) : (
-                                <p className="text-sm text-white/50 italic">Not provided</p>
-                              )}
-                            </div>
-                            <div className="self-start">{statusBadge(info.filled)}</div>
-                          </div>
-                        ))}
-                      </CardContent>
-                    </Card>
-                  </div>
-                );
-              })()}
             </CardContent>
 
-            <div className="sticky bottom-4 z-20 mt-8 border-t border-[#1f1f1f] bg-[#0c0c0c]/95 backdrop-blur px-8 py-5">
-              <div className="flex items-center justify-between gap-3">
+            <div className="sticky bottom-4 z-20 mt-6 border-t border-border/60 bg-card/95 px-5 py-4 backdrop-blur sm:px-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <Button
                   variant="outline"
                   onClick={prevStep}
                   disabled={currentStep === 1 || isSectionBusy}
-                  className="h-11 rounded-[10px] border-[#2a2a2a] bg-transparent px-5 text-white hover:bg-[#151515]"
+                  className="h-11 rounded-[10px] border-border bg-background px-5 text-foreground hover:bg-muted hover:text-foreground"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Previous
                 </Button>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
                   {isEditMode && currentStep < 8 && (
                     <Button
                       variant="outline"
                       onClick={saveCurrentSection}
                       disabled={isSectionBusy}
-                      className="h-11 rounded-[10px] border-[#2a2a2a] bg-transparent px-5 text-white hover:bg-[#151515]"
+                      className="h-11 rounded-[10px] border-border bg-background px-5 text-foreground hover:bg-muted hover:text-foreground"
                     >
                       {isSectionBusy ? "Saving..." : "Save Section"}
                     </Button>
@@ -4620,18 +4826,24 @@ const CreateEvent = () => {
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   ) : (
-                    <Button
-                      variant="accent"
-                      onClick={() => handleSubmit(publishState)}
-                      disabled={isSectionBusy}
-                      className="h-11 rounded-[10px] px-5 font-medium"
-                    >
-                      {isSectionBusy
-                        ? "Updating..."
-                        : publishState === "PUBLISHED"
-                          ? (isEditMode ? "Update & Publish" : "Publish Event")
-                          : (isEditMode ? "Update as Draft" : "Save as Draft")}
-                    </Button>
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleSubmit("DRAFT")}
+                        disabled={isSectionBusy}
+                        className="h-11 rounded-[10px] border-border bg-background px-5 text-foreground hover:bg-muted hover:text-foreground"
+                      >
+                        {isSectionBusy ? "Saving..." : isEditMode ? "Update Draft" : "Save Draft"}
+                      </Button>
+                      <Button
+                        variant="accent"
+                        onClick={() => handleSubmit("PUBLISHED")}
+                        disabled={isSectionBusy}
+                        className="h-11 rounded-[10px] px-5 font-semibold"
+                      >
+                        {isSectionBusy ? "Publishing..." : isEditMode ? "Update & Publish" : "Publish Event"}
+                      </Button>
+                    </>
                   )}
                 </div>
               </div>
