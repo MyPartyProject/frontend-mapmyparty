@@ -122,6 +122,24 @@ const PaymentCheckout = () => {
     };
   }, [totalsSafe.gst, totalsSafe.gstType, totalsSafe.igst]);
 
+  const cancelCheckoutAttempt = async ({ checkout, reason, errorPayload }) => {
+    const cancelResponse = await apiFetch("/api/payments/checkout/cancel", {
+      method: "POST",
+      body: JSON.stringify({
+        bookingId: checkout.bookingId,
+        paymentId: checkout.paymentId,
+        reason,
+        razorpay_order_id: checkout.orderId,
+        razorpay_payment_id: errorPayload?.metadata?.payment_id,
+        error: errorPayload || undefined,
+      }),
+    });
+
+    if (!cancelResponse?.success) {
+      throw new Error(cancelResponse?.errorMessage || "Unable to cancel the booking attempt");
+    }
+  };
+
   const handlePayment = async () => {
     if (!bookingData?.bookingId) {
       toast.error("Booking ID not found");
@@ -153,6 +171,31 @@ const PaymentCheckout = () => {
         throw new Error("Razorpay Checkout is unavailable");
       }
 
+      let checkoutFinished = false;
+
+      const releaseCheckout = async ({ reason, message, errorPayload }) => {
+        if (checkoutFinished) {
+          return;
+        }
+
+        checkoutFinished = true;
+        try {
+          await cancelCheckoutAttempt({ checkout, reason, errorPayload });
+          sessionStorage.removeItem("pendingCheckout");
+          if (reason === "checkout_failed") {
+            toast.error(message);
+          } else {
+            toast.info(message);
+          }
+          navigate(`/events/${organizerSlug}/${eventSlug}`);
+        } catch (error) {
+          console.error("Checkout cancellation error:", error);
+          toast.error(error?.message || "Payment was not completed. Please contact support if the hold does not clear.");
+        } finally {
+          setIsProcessing(false);
+        }
+      };
+
       const razorpay = new window.Razorpay({
         key: checkout.key,
         amount: checkout.amount,
@@ -164,6 +207,7 @@ const PaymentCheckout = () => {
         notes: checkout.notes,
         theme: checkout.theme,
         handler: async (razorpayResponse) => {
+          checkoutFinished = true;
           try {
             const verifyResponse = await apiFetch("/api/payments/checkout/verify", {
               method: "POST",
@@ -192,16 +236,21 @@ const PaymentCheckout = () => {
         },
         modal: {
           ondismiss: () => {
-            setIsProcessing(false);
-            toast.info("Payment was not completed. You can retry until this booking expires.");
+            releaseCheckout({
+              reason: "checkout_cancelled",
+              message: "Payment cancelled. Your tickets have been released.",
+            });
           },
         },
       });
 
       razorpay.on("payment.failed", (response) => {
-        setIsProcessing(false);
         const message = response?.error?.description || response?.error?.reason || "Payment failed. Please try again.";
-        toast.error(message);
+        releaseCheckout({
+          reason: "checkout_failed",
+          message,
+          errorPayload: response?.error || null,
+        });
       });
 
       razorpay.open();

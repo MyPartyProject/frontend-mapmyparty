@@ -161,6 +161,49 @@ const MyBookings = ({
     return booking?.status === "confirmed" && booking?.paymentStatus === "success";
   }, []);
 
+  const getBookingStatusMeta = (status) => {
+    switch (status) {
+      case "confirmed":
+        return {
+          label: "Confirmed",
+          className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+        };
+      case "cancelled":
+      case "failed":
+      case "expired":
+        return {
+          label: status.charAt(0).toUpperCase() + status.slice(1),
+          className: "bg-red-500/10 text-red-300 border-red-500/20",
+        };
+      default:
+        return {
+          label: "Pending",
+          className: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+        };
+    }
+  };
+
+  const getPaymentStatusMeta = (status) => {
+    if (status === "success") {
+      return {
+        label: "Success",
+        className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+      };
+    }
+
+    if (status === "failed" || status === "refunded") {
+      return {
+        label: status.charAt(0).toUpperCase() + status.slice(1),
+        className: "bg-red-500/10 text-red-300 border-red-500/20",
+      };
+    }
+
+    return {
+      label: status ? status.charAt(0).toUpperCase() + status.slice(1) : "Payment",
+      className: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+    };
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return "Date TBA";
     const d = new Date(dateString);
@@ -511,19 +554,11 @@ const MyBookings = ({
                     <span>{formatBookingDate(booking.bookingDate)}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge className={`text-[10px] px-2 py-0.5 border ${
-                      booking.status === 'confirmed'
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                        : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                    }`}>
-                      {booking.status === 'confirmed' ? 'Confirmed' : 'Pending'}
+                    <Badge className={`text-[10px] px-2 py-0.5 border ${getBookingStatusMeta(booking.status).className}`}>
+                      {getBookingStatusMeta(booking.status).label}
                     </Badge>
-                    <Badge className={`text-[10px] px-2 py-0.5 border ${
-                      booking.paymentStatus === 'success'
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                        : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                    }`}>
-                      {booking.paymentStatus ? booking.paymentStatus.charAt(0).toUpperCase() + booking.paymentStatus.slice(1) : 'Payment'}
+                    <Badge className={`text-[10px] px-2 py-0.5 border ${getPaymentStatusMeta(booking.paymentStatus).className}`}>
+                      {getPaymentStatusMeta(booking.paymentStatus).label}
                     </Badge>
                   </div>
                 </div>

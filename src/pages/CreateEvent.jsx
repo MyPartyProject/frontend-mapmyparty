@@ -73,6 +73,7 @@ const normalizeArtistGender = (gender) => {
 };
 
 const createEmptyArtist = () => ({
+  clientId: `artist-${Date.now()}-${Math.random().toString(36).slice(2)}`,
   name: "",
   photo: "",
   image: "",
@@ -80,6 +81,34 @@ const createEmptyArtist = () => ({
   spotify: "",
   gender: DEFAULT_ARTIST_GENDER,
 });
+
+const normalizeArtistIdentityPart = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^@/, "")
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .replace(/\/+$/, "");
+
+const getArtistIdentity = (artist) => {
+  const stableId = artist?.id || artist?._id || artist?.artistId;
+  if (stableId) return `id:${stableId}`;
+
+  const name = normalizeArtistIdentityPart(artist?.name);
+  const instagram = normalizeArtistIdentityPart(artist?.instagram || artist?.instagramLink);
+  const spotify = normalizeArtistIdentityPart(artist?.spotify || artist?.spotifyLink);
+  const image = normalizeArtistIdentityPart(artist?.photo || artist?.image);
+
+  return `profile:${name}|${instagram}|${spotify}|${image}`;
+};
+
+const getArtistRenderKey = (artist) => {
+  const stableId = artist?.id || artist?._id || artist?.artistId;
+  if (stableId) return `id:${stableId}`;
+  if (artist?.clientId) return `client:${artist.clientId}`;
+  return getArtistIdentity(artist);
+};
 
 const CreateEvent = () => {
   const navigate = useNavigate();
@@ -122,7 +151,7 @@ const CreateEvent = () => {
   const [venueId, setVenueId] = useState(null); // Store venue ID if it exists
   const [venueCreated, setVenueCreated] = useState(false); // Track if venue was created
   const [originalVenueData, setOriginalVenueData] = useState(null); // Store original venue data for change detection
-  const [createdArtistIndices, setCreatedArtistIndices] = useState([]); // Track created artists
+  const [createdArtistIndices, setCreatedArtistIndices] = useState([]); // Track created artist identities
   const [currentEventType, setCurrentEventType] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("Classic"); // Default template (using name)
@@ -871,15 +900,9 @@ const CreateEvent = () => {
         setCurrentEventType(eventToEdit.type);
       }
 
-      const normalizedArtists = Array.isArray(eventToEdit.artists)
-        ? eventToEdit.artists.map((a) => ({
-            name: a.name || "",
-            photo: a.photo || a.image || "",
-            instagram: a.instagram || a.instagramLink || "",
-            spotify: a.spotify || a.spotifyLink || "",
-            gender: normalizeArtistGender(a.gender),
-          }))
-        : [];
+      const normalizedArtists = normalizeArtists(
+        Array.isArray(eventToEdit.artists) ? eventToEdit.artists : []
+      );
 
       setArtists(
         normalizedArtists.length
@@ -887,7 +910,7 @@ const CreateEvent = () => {
           : [createEmptyArtist()]
       );
       if (normalizedArtists.length) {
-        setCreatedArtistIndices(normalizedArtists.map((_, idx) => idx));
+        setCreatedArtistIndices(normalizedArtists.map(getArtistIdentity));
         artistsLoadedRef.current = true;
         setOriginalArtists(normalizedArtists);
       } else {
@@ -1010,15 +1033,9 @@ const CreateEvent = () => {
         const cached = eventCacheRef.current;
         const artistDataCached = Array.isArray(cached?.artists) ? cached.artists : [];
         if (artistDataCached.length) {
-          const normalizedCached = artistDataCached.map((a) => ({
-            name: a.name || "",
-            photo: a.photo || a.image || "",
-            instagram: a.instagram || a.instagramLink || "",
-            spotify: a.spotify || a.spotifyLink || "",
-            gender: normalizeArtistGender(a.gender),
-          }));
+          const normalizedCached = normalizeArtists(artistDataCached);
           setArtists(normalizedCached);
-          setCreatedArtistIndices(normalizedCached.map((_, idx) => idx));
+          setCreatedArtistIndices(normalizedCached.map(getArtistIdentity));
           setOriginalArtists(normalizedCached);
           artistsLoadedRef.current = true;
           return;
@@ -1039,13 +1056,7 @@ const CreateEvent = () => {
         const eventData = response.data?.event || response.data || response.event || response;
         eventCacheRef.current = eventData;
         const artistData = Array.isArray(eventData?.artists) ? eventData.artists : [];
-        const normalized = artistData.map((a) => ({
-          name: a.name || "",
-          photo: a.photo || a.image || "",
-          instagram: a.instagram || a.instagramLink || "",
-          spotify: a.spotify || a.spotifyLink || "",
-          gender: normalizeArtistGender(a.gender),
-        }));
+        const normalized = normalizeArtists(artistData);
 
         setArtists(
           normalized.length
@@ -1053,7 +1064,7 @@ const CreateEvent = () => {
             : [createEmptyArtist()]
         );
         if (normalized.length) {
-          setCreatedArtistIndices(normalized.map((_, idx) => idx));
+          setCreatedArtistIndices(normalized.map(getArtistIdentity));
           setOriginalArtists(normalized);
         }
         artistsLoadedRef.current = true;
@@ -2051,7 +2062,7 @@ const CreateEvent = () => {
         }
         
         // Filter out empty artists
-        const validArtists = artists
+        const validArtists = normalizedCurrentArtists
           .filter(artist => artist.name.trim() !== "")
           .map(artist => ({
             ...artist,
@@ -2076,8 +2087,10 @@ const CreateEvent = () => {
         for (let i = 0; i < validArtists.length; i++) {
           const artist = validArtists[i];
           
+          const artistIdentity = getArtistIdentity(artist);
+
           // Only create artists that haven't been created before
-          if (!createdArtistIndices.includes(i)) {
+          if (!createdArtistIndices.includes(artistIdentity)) {
             console.log(`🎤 Creating artist ${i + 1}:`, artist);
             
             const artistPayload = {
@@ -2097,7 +2110,9 @@ const CreateEvent = () => {
             artistResponses.push(response);
             
             // Mark this artist as created
-            setCreatedArtistIndices(prev => [...prev, i]);
+            setCreatedArtistIndices(prev => (
+              prev.includes(artistIdentity) ? prev : [...prev, artistIdentity]
+            ));
           } else {
             console.log(`⏭️ Skipping artist ${i + 1} (already created)`);
           }
@@ -2119,6 +2134,7 @@ const CreateEvent = () => {
         }
 
         console.log("Step 6 API Response:", artistResponses);
+        setOriginalArtists(normalizedCurrentArtists);
         if (!advance) {
           toast.success("Artist details processed.");
         }
@@ -2608,20 +2624,35 @@ const CreateEvent = () => {
     return mapped;
   };
 
-  const normalizeArtists = (list) =>
-    (list || [])
+  const normalizeArtists = (list) => {
+    const seen = new Set();
+
+    return (list || [])
       .map((a) => {
         const image = (a.photo || a.image || "").trim();
+        const instagramLink = (a.instagram || a.instagramLink || "").trim();
+        const spotifyLink = (a.spotify || a.spotifyLink || "").trim();
         return {
+          id: a.id || a._id || a.artistId || "",
+          clientId: a.clientId || "",
           name: (a.name || "").trim(),
           image,
           photo: image,
-          instagramLink: (a.instagram || a.instagramLink || "").trim(),
-          spotifyLink: (a.spotify || a.spotifyLink || "").trim(),
+          instagram: instagramLink,
+          instagramLink,
+          spotify: spotifyLink,
+          spotifyLink,
           gender: normalizeArtistGender(a.gender),
         };
       })
-      .filter((a) => a.name || a.instagramLink || a.spotifyLink || a.image);
+      .filter((a) => a.name || a.instagramLink || a.spotifyLink || a.image)
+      .filter((a) => {
+        const identity = getArtistIdentity(a);
+        if (seen.has(identity)) return false;
+        seen.add(identity);
+        return true;
+      });
+  };
 
   const sponsorsChanged = (normalizedList = null) => {
     const filtered = normalizedList ?? normalizeSponsors(sponsors);
@@ -2961,11 +2992,11 @@ const CreateEvent = () => {
       </Badge>
     );
 
-    const ValueItem = ({ label, value, className = "" }) => (
+    const ValueItem = ({ label, value, className = "", valueClassName = "" }) => (
       <div className={`min-w-0 ${className}`}>
         <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
         <p
-          className={`mt-1 break-words text-sm font-semibold leading-relaxed ${
+          className={`mt-1 break-words text-sm font-semibold leading-relaxed ${valueClassName} ${
             value ? "text-foreground" : "text-muted-foreground"
           }`}
         >
@@ -3056,27 +3087,44 @@ const CreateEvent = () => {
           </div>
         </div>
 
-        <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
+        <div className="space-y-5">
           <ReviewSection
             icon={ClipboardCheck}
             title="Event Overview"
             description="Core event identity, category, cover, and public summary."
             complete={Boolean(eventTitle && mainCategory && selectedCategories[0] && coverImage)}
           >
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
-              <div className={`${nestedPanel} grid gap-4 sm:grid-cols-2`}>
-                <ValueItem label="Event title" value={eventTitle} className="sm:col-span-2" />
-                <ValueItem label="Category" value={mainCategory} />
-                <ValueItem label="Subcategory" value={selectedCategories[0]} />
-                <ValueItem label="Publish state" value={publishState === "PUBLISHED" ? "Published" : "Draft"} />
-                <ValueItem label="Event type" value={selectedEventTypeCategory || selectedEventType} />
-                <ValueItem label="Description" value={eventDescription} className="sm:col-span-2" />
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px] xl:items-start">
+              <div className={`${nestedPanel} space-y-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-border/70 hover:bg-background/55`}>
+                <ValueItem
+                  label="Event title"
+                  value={eventTitle}
+                  valueClassName="text-base leading-snug"
+                />
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <ValueItem label="Category" value={mainCategory} />
+                  <ValueItem label="Subcategory" value={selectedCategories[0]} />
+                  <ValueItem label="Publish state" value={publishState === "PUBLISHED" ? "Published" : "Draft"} />
+                  <ValueItem label="Event type" value={selectedEventTypeCategory || selectedEventType} />
+                </div>
+
+                <ValueItem
+                  label="Description"
+                  value={eventDescription}
+                  valueClassName="max-w-3xl text-[13px] font-medium leading-6"
+                />
               </div>
-              <div className="overflow-hidden rounded-lg border border-border/40 bg-background/40">
+
+              <div className="overflow-hidden rounded-lg border border-border/40 bg-background/40 transition-all duration-300 hover:-translate-y-0.5 hover:border-border/70 hover:shadow-[0_18px_40px_rgba(0,0,0,0.22)]">
                 {coverImage ? (
-                  <img src={coverImage} alt="Event cover preview" className="h-full min-h-[180px] w-full object-cover" />
+                  <img
+                    src={coverImage}
+                    alt="Event cover preview"
+                    className="h-48 w-full object-cover transition-transform duration-500 hover:scale-[1.03] xl:h-full xl:min-h-[260px]"
+                  />
                 ) : (
-                  <div className="flex min-h-[180px] flex-col items-center justify-center gap-2 p-4 text-center text-muted-foreground">
+                  <div className="flex h-48 flex-col items-center justify-center gap-2 p-4 text-center text-muted-foreground xl:min-h-[260px]">
                     <ImageIcon className="h-6 w-6" />
                     <p className="text-sm">Cover image missing</p>
                   </div>
@@ -3091,85 +3139,96 @@ const CreateEvent = () => {
             description="Timing and location details attendees will rely on."
             complete={Boolean(startDate && startTime && endDate && endTime && venueName)}
           >
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className={nestedPanel}>
-                <div className="flex items-start gap-3">
-                  <CalendarIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                  <ValueItem label="Start" value={scheduleStart} />
+            <div className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className={`${nestedPanel} transition-all duration-200 hover:-translate-y-0.5 hover:border-border/70 hover:bg-background/55`}>
+                  <div className="flex items-start gap-3">
+                    <CalendarIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                    <ValueItem label="Start" value={scheduleStart} />
+                  </div>
+                </div>
+                <div className={`${nestedPanel} transition-all duration-200 hover:-translate-y-0.5 hover:border-border/70 hover:bg-background/55`}>
+                  <div className="flex items-start gap-3">
+                    <Clock className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                    <ValueItem label="End" value={scheduleEnd} />
+                  </div>
                 </div>
               </div>
-              <div className={nestedPanel}>
-                <div className="flex items-start gap-3">
-                  <Clock className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                  <ValueItem label="End" value={scheduleEnd} />
+
+              <div className={`${nestedPanel} space-y-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-border/70 hover:bg-background/55`}>
+                <ValueItem label="Venue" value={venueName} />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <ValueItem label="City" value={city} />
+                  <ValueItem label="State" value={state} />
+                  <ValueItem label="Country" value={country} />
+                  <ValueItem label="Postal code" value={postalCode} />
                 </div>
               </div>
-              <ValueItem label="Venue" value={venueName} className={`${nestedPanel} sm:col-span-2`} />
-              <div className={`${nestedPanel} grid gap-4 sm:col-span-2 sm:grid-cols-2`}>
-                <ValueItem label="City" value={city} />
-                <ValueItem label="State" value={state} />
-                <ValueItem label="Country" value={country} />
-                <ValueItem label="Postal code" value={postalCode} />
-                <ValueItem label="Location" value={locationLine || "Location pending"} className="sm:col-span-2" />
+
+              <div className={`${nestedPanel} transition-all duration-200 hover:-translate-y-0.5 hover:border-border/70 hover:bg-background/55`}>
+                <div className="flex items-start gap-3">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  <ValueItem label="Location" value={locationLine || "Location pending"} valueClassName="font-medium" />
+                </div>
               </div>
             </div>
           </ReviewSection>
         </div>
 
-        <ReviewSection
-          icon={Ticket}
-          title="Tickets & Pricing"
-          description="Ticket names, prices, capacity, and availability."
-          complete={savedTickets.length > 0}
-        >
-          {savedTickets.length ? (
-            <div className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className={mutedPanel}>
-                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Ticket types</p>
-                  <p className="mt-1 text-lg font-semibold text-foreground">{savedTickets.length}</p>
+        <div className="space-y-5">
+          <ReviewSection
+            icon={Ticket}
+            title="Tickets & Pricing"
+            description="Ticket names, prices, capacity, and availability."
+            complete={savedTickets.length > 0}
+          >
+            {savedTickets.length ? (
+              <div className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className={mutedPanel}>
+                    <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Ticket types</p>
+                    <p className="mt-1 text-lg font-semibold text-foreground">{savedTickets.length}</p>
+                  </div>
+                  <div className={mutedPanel}>
+                    <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Capacity</p>
+                    <p className="mt-1 text-lg font-semibold text-foreground">{totalCapacity || "Not set"}</p>
+                  </div>
+                  <div className={mutedPanel}>
+                    <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Sold</p>
+                    <p className="mt-1 text-lg font-semibold text-foreground">{totalSold}</p>
+                  </div>
                 </div>
-                <div className={mutedPanel}>
-                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Capacity</p>
-                  <p className="mt-1 text-lg font-semibold text-foreground">{totalCapacity || "Not set"}</p>
-                </div>
-                <div className={mutedPanel}>
-                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Sold</p>
-                  <p className="mt-1 text-lg font-semibold text-foreground">{totalSold}</p>
-                </div>
-              </div>
-              <div className="overflow-hidden rounded-lg border border-border/40">
-                <div className="hidden grid-cols-[1.5fr_1fr_1fr_1fr] gap-4 border-b border-border/40 bg-muted/30 px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground md:grid">
-                  <span>Ticket</span>
-                  <span>Price</span>
-                  <span>Capacity</span>
-                  <span>Availability</span>
-                </div>
-                <div className="divide-y divide-border/40">
-                  {savedTickets.map((ticket, index) => (
-                    <div key={`${ticket.ticketName}-${index}`} className="grid gap-3 px-4 py-4 md:grid-cols-[1.5fr_1fr_1fr_1fr] md:items-center">
-                      <div>
-                        <p className="font-semibold text-foreground">{ticket.ticketName || `Ticket ${index + 1}`}</p>
-                        <p className="text-xs text-muted-foreground">{ticket.ticketEntryType || ticket.ticketCategory || "Ticket"}</p>
+                <div className="overflow-hidden rounded-lg border border-border/40">
+                  <div className="hidden grid-cols-[1.5fr_1fr_1fr_1fr] gap-4 border-b border-border/40 bg-muted/30 px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground md:grid">
+                    <span>Ticket</span>
+                    <span>Price</span>
+                    <span>Capacity</span>
+                    <span>Availability</span>
+                  </div>
+                  <div className="divide-y divide-border/40">
+                    {savedTickets.map((ticket, index) => (
+                      <div key={`${ticket.ticketName}-${index}`} className="grid gap-3 px-4 py-4 md:grid-cols-[1.5fr_1fr_1fr_1fr] md:items-center">
+                        <div>
+                          <p className="font-semibold text-foreground">{ticket.ticketName || `Ticket ${index + 1}`}</p>
+                          <p className="text-xs text-muted-foreground">{ticket.ticketEntryType || ticket.ticketCategory || "Ticket"}</p>
+                        </div>
+                        <p className="text-sm font-semibold text-foreground">{formatTicketPrice(ticket.price)}</p>
+                        <p className="text-sm text-muted-foreground">{ticket.quantity || ticket.available || "Not set"}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {Number(ticket.available ?? ticket.quantity) || 0} available
+                        </p>
                       </div>
-                      <p className="text-sm font-semibold text-foreground">{formatTicketPrice(ticket.price)}</p>
-                      <p className="text-sm text-muted-foreground">{ticket.quantity || ticket.available || "Not set"}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {Number(ticket.available ?? ticket.quantity) || 0} available
-                      </p>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className={nestedPanel}>
-              <p className="text-sm text-muted-foreground">No tickets added.</p>
-            </div>
-          )}
-        </ReviewSection>
+            ) : (
+              <div className={nestedPanel}>
+                <p className="text-sm text-muted-foreground">No tickets added.</p>
+              </div>
+            )}
+          </ReviewSection>
 
-        <div className="grid gap-5 lg:grid-cols-2">
           <ReviewSection
             icon={Users}
             title="Artists & Sponsors"
@@ -3181,8 +3240,8 @@ const CreateEvent = () => {
                 <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Artists</p>
                 {activeArtists.length ? (
                   <div className="space-y-3">
-                    {activeArtists.map((artist, index) => (
-                      <div key={`${artist.name}-${index}`} className="flex gap-3 rounded-lg border border-border/30 bg-card/70 p-3">
+                    {activeArtists.map((artist) => (
+                      <div key={getArtistRenderKey(artist)} className="flex gap-3 rounded-lg border border-border/30 bg-card/70 p-3">
                         <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-border/40 bg-muted/30">
                           {artist.image ? (
                             <img src={artist.image} alt={`${artist.name} preview`} className="h-full w-full object-cover" />
@@ -3245,42 +3304,42 @@ const CreateEvent = () => {
               </div>
             </div>
           </ReviewSection>
+        </div>
 
-          <ReviewSection
-            icon={ImageIcon}
-            title="Media & Gallery"
-            description="Cover image and supporting image previews."
-            complete={Boolean(coverImage || galleryImages.length)}
-          >
-            <div className="space-y-4">
-              <div className="overflow-hidden rounded-lg border border-border/40 bg-background/40">
-                {coverImage ? (
-                  <img src={coverImage} alt="Cover image preview" className="h-44 w-full object-cover" />
-                ) : (
-                  <div className="flex h-44 items-center justify-center text-sm text-muted-foreground">No cover image uploaded.</div>
-                )}
-              </div>
-              {galleryImages.length ? (
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {galleryImages.slice(0, 6).map((img, index) => (
-                    <div key={`${img}-${index}`} className="aspect-square overflow-hidden rounded-lg border border-border/40 bg-background/40">
-                      <img src={img} alt={`Gallery preview ${index + 1}`} className="h-full w-full object-cover" />
-                    </div>
-                  ))}
-                  {galleryImages.length > 6 && (
-                    <div className="flex aspect-square items-center justify-center rounded-lg border border-border/40 bg-muted/30 text-sm font-semibold text-muted-foreground">
-                      +{galleryImages.length - 6} more
-                    </div>
-                  )}
-                </div>
+        <ReviewSection
+          icon={ImageIcon}
+          title="Media & Gallery"
+          description="Cover image and supporting image previews."
+          complete={Boolean(coverImage || galleryImages.length)}
+        >
+          <div className="space-y-4">
+            <div className="overflow-hidden rounded-lg border border-border/40 bg-background/40">
+              {coverImage ? (
+                <img src={coverImage} alt="Cover image preview" className="h-44 w-full object-cover" />
               ) : (
-                <p className="rounded-lg border border-border/40 bg-background/40 p-3 text-sm text-muted-foreground">
-                  No gallery images uploaded.
-                </p>
+                <div className="flex h-44 items-center justify-center text-sm text-muted-foreground">No cover image uploaded.</div>
               )}
             </div>
-          </ReviewSection>
-        </div>
+            {galleryImages.length ? (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {galleryImages.slice(0, 6).map((img, index) => (
+                  <div key={`${img}-${index}`} className="aspect-square overflow-hidden rounded-lg border border-border/40 bg-background/40">
+                    <img src={img} alt={`Gallery preview ${index + 1}`} className="h-full w-full object-cover" />
+                  </div>
+                ))}
+                {galleryImages.length > 6 && (
+                  <div className="flex aspect-square items-center justify-center rounded-lg border border-border/40 bg-muted/30 text-sm font-semibold text-muted-foreground">
+                    +{galleryImages.length - 6} more
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="rounded-lg border border-border/40 bg-background/40 p-3 text-sm text-muted-foreground">
+                No gallery images uploaded.
+              </p>
+            )}
+          </div>
+        </ReviewSection>
 
         <ReviewSection
           icon={FileText}
@@ -4314,7 +4373,7 @@ const CreateEvent = () => {
                   </div>
 
                   {artists.map((artist, index) => (
-                    <Card key={index} className={`${cardBase} p-5`}>
+                    <Card key={getArtistRenderKey(artist)} className={`${cardBase} p-5`}>
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <p className="text-sm text-muted-foreground">Artist {index + 1}</p>
