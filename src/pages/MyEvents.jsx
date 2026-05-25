@@ -211,67 +211,69 @@ const MyEvents = () => {
   }, [navigate]);
 
   return (
-    <div className="w-full max-w-6xl mx-auto text-foreground space-y-6">
+    <div className="w-full max-w-6xl mx-auto text-foreground space-y-5">
       <style>{`
         @keyframes card-in {
-          from { opacity: 0; transform: translateY(8px) scale(0.98); }
+          from { opacity: 0; transform: translateY(6px) scale(0.995); }
           to { opacity: 1; transform: translateY(0) scale(1); }
         }
         .animate-card-in {
-          animation: card-in 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+          animation: card-in 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
         }
       `}</style>
 
-      <section className="rounded-3xl border border-border/60 bg-card p-5 shadow-[var(--shadow-elegant)] space-y-5">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-1">Organizer Portal</p>
-            <h1 className="text-xl font-semibold tracking-tight">My Events</h1>
-            <p className="text-sm text-muted-foreground mt-1">Manage published, draft, and upcoming events from one place.</p>
+      <section className="rounded-2xl border border-border/50 bg-card/95 p-4 md:p-5 shadow-[var(--shadow-card)] space-y-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground mb-1">Organizer Portal</p>
+            <h1 className="text-2xl font-semibold leading-tight tracking-tight">My Events</h1>
+            <p className="text-[13px] leading-5 text-muted-foreground mt-1">Manage published, draft, and upcoming events from one place.</p>
           </div>
           <button
             onClick={() => navigate("/organizer/select-event-type")}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-[var(--shadow-card)]"
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-primaryCTA px-3.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-primaryCTA-hover hover:shadow-[var(--shadow-elegant)] active:translate-y-0 active:bg-primaryCTA-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-4 h-4" />
             New Event
           </button>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          {[
-            { label: "Total", value: summary.total, cls: "text-foreground" },
-            { label: "Published", value: summary.published, cls: "text-emerald-300" },
-            { label: "Drafts", value: summary.drafts, cls: "text-accent" },
-            { label: "Upcoming", value: summary.upcoming, cls: "text-accent" },
-          ].map((s) => (
-            <div
-              key={s.label}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-background/60 border border-border/60 text-xs"
-            >
-              <span className="text-muted-foreground">{s.label}</span>
-              <span className={`font-semibold ${s.cls}`}>{s.value}</span>
-            </div>
-          ))}
-        </div>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              { label: "Total", value: summary.total },
+              { label: "Published", value: summary.published },
+              { label: "Drafts", value: summary.drafts },
+              { label: "Upcoming", value: summary.upcoming },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="inline-flex h-8 min-w-[6.25rem] items-center justify-between gap-2 rounded-full border border-border/50 bg-background/55 px-3 text-[11px] leading-none transition-all duration-200 hover:border-border hover:bg-muted/40"
+              >
+                <span className="font-medium text-muted-foreground">{s.label}</span>
+                <span className="font-semibold text-foreground">{s.value}</span>
+              </div>
+            ))}
+          </div>
 
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search by title, location, category..."
-            value={searchTerm}
-            onChange={handleSearch}
-            className="w-full pl-9 pr-10 py-2.5 text-sm bg-background/60 border border-border/60 rounded-lg placeholder:text-muted-foreground text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => { setSearchTerm(""); setCurrentPage(1); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
+          <div className="relative lg:ml-auto lg:w-[24rem]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search by title, location, category..."
+              value={searchTerm}
+              onChange={handleSearch}
+              className="h-9 w-full rounded-xl border border-border/50 bg-background/55 pl-8 pr-9 text-[13px] text-foreground placeholder:text-muted-foreground/80 shadow-inner shadow-black/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring/45 focus:border-border"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => { setSearchTerm(""); setCurrentPage(1); }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
       </section>
 
@@ -294,59 +296,59 @@ const MyEvents = () => {
       {!loading && (
         <>
           {/* Event Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5">
             {paginatedEvents.map((event, i) => {
               const pub = getPublishBadge(event.publishStatus);
               const state = getStateBadge(event.eventStatus);
               return (
                 <div
                   key={event.id}
-                  className="group animate-card-in rounded-2xl bg-card border border-border/60 overflow-hidden shadow-[var(--shadow-card)] hover:border-primary/30 hover:bg-card/95 transition-all duration-200"
+                  className="group animate-card-in rounded-2xl bg-card/95 border border-border/50 overflow-hidden shadow-[var(--shadow-card)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-border hover:bg-card hover:shadow-[var(--shadow-elegant)]"
                   style={{ animationDelay: `${i * 60}ms` }}
                 >
                   {/* Image */}
-                  <div className="relative h-36 overflow-hidden">
+                  <div className="relative h-36 sm:h-40 overflow-hidden">
                     <img
                       src={event.flyerImage}
                       alt={event.title}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                      className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.025]"
                       loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/30 to-transparent" />
                     {/* Badges */}
-                    <div className="absolute top-2.5 left-2.5 flex gap-1.5">
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium ${pub.cls}`}>{pub.text}</span>
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-medium flex items-center gap-1 ${state.cls}`}>
+                    <div className="absolute top-3 left-3 flex max-w-[58%] flex-wrap items-center gap-1.5">
+                      <span className={`inline-flex h-6 items-center rounded-lg px-2.5 text-[10px] font-semibold leading-none backdrop-blur-md ${pub.cls}`}>{pub.text}</span>
+                      <span className={`inline-flex h-6 items-center gap-1 rounded-lg px-2.5 text-[10px] font-semibold leading-none backdrop-blur-md ${state.cls}`}>
                         {state.dot && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />}
                         {state.text}
                       </span>
                     </div>
                     {/* Category pill on image */}
                     {event.category && (
-                      <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md text-[10px] font-medium bg-background/75 text-foreground/80 border border-border/60 backdrop-blur-sm">
+                      <span className="absolute top-3 right-3 inline-flex h-6 max-w-[38%] items-center truncate rounded-lg border border-border/50 bg-background/80 px-2.5 text-[10px] font-semibold text-foreground/85 backdrop-blur-md">
                         {event.category}
                       </span>
                     )}
                   </div>
 
                   {/* Body */}
-                  <div className="p-3.5 space-y-2.5">
+                  <div className="p-4 space-y-3">
                     {/* Title */}
-                    <h3 className="text-[13px] font-semibold leading-snug truncate" title={event.title}>
+                    <h3 className="text-sm font-semibold leading-snug text-foreground truncate" title={event.title}>
                       {event.title || "Untitled Event"}
                     </h3>
 
                     {/* Meta rows */}
-                    <div className="space-y-1.5 text-[11px] text-muted-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="w-3 h-3 flex-shrink-0 text-muted-foreground" />
+                    <div className="space-y-2 text-[11px] leading-4 text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+                        <Calendar className="w-3.5 h-3.5 flex-shrink-0 text-muted-foreground/90" />
                         <span>{formatDateShort(event.startDate, event.endDate)}</span>
-                        <span className="text-border mx-0.5">|</span>
-                        <Clock className="w-3 h-3 flex-shrink-0 text-muted-foreground" />
+                        <span className="h-3 w-px bg-border/60 mx-0.5" />
+                        <Clock className="w-3.5 h-3.5 flex-shrink-0 text-muted-foreground/90" />
                         <span>{formatTime(event.startDate, event.endDate)}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <MapPin className="w-3 h-3 flex-shrink-0 text-muted-foreground" />
+                        <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-muted-foreground/90" />
                         <span className="truncate">{event.location}</span>
                       </div>
                     </div>
@@ -354,33 +356,33 @@ const MyEvents = () => {
                     {/* Sub-category tag */}
                     {event.subCategory && (
                       <div>
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] text-muted-foreground bg-background/60 border border-border/60">
-                          <Tag className="w-2.5 h-2.5" />
-                          {event.subCategory}
+                        <span className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-border/50 bg-background/55 px-2 py-1 text-[10px] font-medium text-muted-foreground">
+                          <Tag className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">{event.subCategory}</span>
                         </span>
                       </div>
                     )}
 
                     {/* Actions */}
-                    <div className="flex items-center gap-1.5 pt-2 border-t border-border/60">
+                    <div className="flex items-center gap-1.5 pt-3 border-t border-border/50">
                       <button
                         onClick={() => event.organizer?.slug && event.slug && navigate(`/events/${event.organizer.slug}/${event.slug}`)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-primaryCTA px-2.5 text-[11px] font-semibold text-primary-foreground transition-all duration-200 hover:bg-primaryCTA-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                         title="View event"
                       >
-                        <Eye className="w-3 h-3" />
+                        <Eye className="w-3.5 h-3.5" />
                         View
                       </button>
                       <button
                         onClick={() => handleEditEvent(event)}
-                        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                         title="Edit event"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => navigate(`/organizer/events/${event.id}/attendees`)}
-                        className="p-1.5 rounded-md text-muted-foreground hover:text-accent hover:bg-primary/10 transition-colors"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-primary/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                         title="View attendees"
                       >
                         <Users className="w-3.5 h-3.5" />
@@ -398,14 +400,14 @@ const MyEvents = () => {
                             }
                           )
                         }
-                        className="p-1.5 rounded-md text-muted-foreground hover:text-accent hover:bg-secondary/15 transition-colors"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary/15 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                         title="View analytics"
                       >
                         <BarChart2 className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => navigate(`/organizer/events/${event.id}/refunds`)}
-                        className="p-1.5 rounded-md text-muted-foreground hover:text-accent hover:bg-primary/10 transition-colors"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-primary/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                         title="View refunds"
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
@@ -414,7 +416,7 @@ const MyEvents = () => {
                       {isCancellable(event) && (
                         <button
                           onClick={() => setConfirmCancel(event)}
-                          className="p-1.5 rounded-md text-white/30 hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-secondary/15 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                           title="Cancel event"
                         >
                           <Ban className="w-3.5 h-3.5" />
@@ -423,7 +425,7 @@ const MyEvents = () => {
                       {isDeletable(event) && (
                         <button
                           onClick={() => setConfirmDelete(event)}
-                          className="p-1.5 rounded-md text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                           title="Delete event"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -457,7 +459,7 @@ const MyEvents = () => {
               <p className="text-xs text-muted-foreground/80 mt-0.5 mb-4">Create your first event to get started</p>
               <button
                 onClick={() => navigate("/organizer/select-event-type")}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-primaryCTA px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primaryCTA-hover"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Create Event

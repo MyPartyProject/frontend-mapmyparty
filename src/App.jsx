@@ -87,6 +87,7 @@ const App = () => {
             <Routes>
               <Route element={<PublicShell />}>
                 <Route path="/" element={<Index />} />
+                <Route path="/landing/homepage" element={<Index />} />
                 <Route path="/my-bookings" element={<Navigate to="/dashboard/bookings" replace />} />
                 {/* <Route path="/events" element={<Events />} /> */}
                 <Route path="/browse-events" element={<BrowseEvents showPublicHeader />} />

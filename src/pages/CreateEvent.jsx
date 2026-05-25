@@ -27,6 +27,8 @@ import { Progress } from "@/components/ui/progress";
 import {
   ArrowLeft,
   ArrowRight,
+  AtSign,
+  Camera,
   Check,
   Calendar as CalendarIcon,
   ClipboardCheck,
@@ -38,10 +40,13 @@ import {
   Loader2,
   MapPin,
   NotebookText,
+  Music2,
+  Pencil,
   Plus,
   Smile,
   Sparkles,
   Ticket,
+  Trash2,
   Users,
   Table2,
   UsersRound,
@@ -57,7 +62,7 @@ import eventMusic from "@/assets/event-music.jpg";
 import TicketTypeModal from "@/components/TicketTypeModal";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { updateEventStep1, updateEventStep2, uploadFlyerImage, deleteFlyerImage, uploadGalleryImages, deleteGalleryImage, generateEventId, createTicket, deleteTicket, createVenue, updateVenue, createArtist, updateEventStep6, uploadArtistImage, createEventStep1, persistFlyerUrl, uploadDraftImage, persistGalleryUrls, deleteDraftCloudinaryImage } from "@/services/eventService";
+import { updateEventStep1, updateEventStep2, uploadFlyerImage, deleteFlyerImage, uploadGalleryImages, deleteGalleryImage, generateEventId, createTicket, deleteTicket, createVenue, updateVenue, updateEventStep6, uploadArtistImage, deleteArtist, createEventStep1, persistFlyerUrl, uploadDraftImage, persistGalleryUrls, deleteDraftCloudinaryImage } from "@/services/eventService";
 import { apiFetch } from "@/config/api";
 import { TEMPLATE_CONFIGS, DETAIL_TEMPLATE_CONFIGS, getTemplateConfig, mapTemplateId, mapTemplateNameToId } from "@/config/templates";
 import { Calendar } from "@/components/ui/calendar";
@@ -151,7 +156,7 @@ const CreateEvent = () => {
   const [venueId, setVenueId] = useState(null); // Store venue ID if it exists
   const [venueCreated, setVenueCreated] = useState(false); // Track if venue was created
   const [originalVenueData, setOriginalVenueData] = useState(null); // Store original venue data for change detection
-  const [createdArtistIndices, setCreatedArtistIndices] = useState([]); // Track created artist identities
+  const [, setCreatedArtistIndices] = useState([]); // Track saved artist identities for edit hydration
   const [currentEventType, setCurrentEventType] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("Classic"); // Default template (using name)
@@ -309,6 +314,8 @@ const CreateEvent = () => {
     setSelectedTicketType(null);
     setShowEmojiPicker(false);
     setAdvisoryDialogOpen(false);
+    setArtistDialogOpen(false);
+    setActiveArtistIndex(null);
     setStartCalendarOpen(false);
     setEndCalendarOpen(false);
     setStartTimeOpen(false);
@@ -437,6 +444,9 @@ const CreateEvent = () => {
   const [newCustomAdvisory, setNewCustomAdvisory] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [advisoryDialogOpen, setAdvisoryDialogOpen] = useState(false);
+  const [artistDialogOpen, setArtistDialogOpen] = useState(false);
+  const [activeArtistIndex, setActiveArtistIndex] = useState(null);
+  const [deletingArtistId, setDeletingArtistId] = useState(null);
   const [termsAndConditions, setTermsAndConditions] = useState("");
   const [customQuestions, setCustomQuestions] = useState([]);
   const [newQuestion, setNewQuestion] = useState("");
@@ -2047,10 +2057,16 @@ const CreateEvent = () => {
       const normalizedCurrentArtists = normalizeArtists(artists);
       const hasArtistChanges = artistsChanged(normalizedCurrentArtists);
 
-      // Call API for Step 6 - Create Artists (only new ones)
+      if (isEditMode && artistsLoadedRef.current && !hasArtistChanges) {
+        toast.info("No changes to update");
+        moveToNextStep();
+        return;
+      }
+
+      // Call API for Step 6 - replace the event artist list with the current form state
       try {
         setIsSubmitting(true);
-        setLoadingMessage("Adding artists...");
+        setLoadingMessage("Saving artist details...");
         setShowLoading(true);
         
         // Check if we have backend event ID
@@ -2071,8 +2087,7 @@ const CreateEvent = () => {
             eventId: backendEventId,
           }));
         
-        if (validArtists.length === 0) {
-          // No artists to create, just move to next step
+        if (validArtists.length === 0 && !hasArtistChanges) {
           setIsSubmitting(false);
           setShowLoading(false);
           if (!advance) {
@@ -2082,44 +2097,8 @@ const CreateEvent = () => {
           return;
         }
         
-        const artistResponses = [];
-        
-        for (let i = 0; i < validArtists.length; i++) {
-          const artist = validArtists[i];
-          
-          const artistIdentity = getArtistIdentity(artist);
-
-          // Only create artists that haven't been created before
-          if (!createdArtistIndices.includes(artistIdentity)) {
-            console.log(`🎤 Creating artist ${i + 1}:`, artist);
-            
-            const artistPayload = {
-              ...artist,
-              image: artist.image || artist.photo || null,
-              instagramLink: artist.instagram || artist.instagramLink || null,  // Map instagram to instagramLink
-              spotifyLink: artist.spotify || artist.spotifyLink || null,     // Also fix spotify for consistency
-              eventId: backendEventId,
-            };
-            
-            // Remove the old field names to avoid confusion
-            delete artistPayload.instagram;
-            delete artistPayload.spotify;
-            
-            const response = await createArtist(artistPayload);
-            
-            artistResponses.push(response);
-            
-            // Mark this artist as created
-            setCreatedArtistIndices(prev => (
-              prev.includes(artistIdentity) ? prev : [...prev, artistIdentity]
-            ));
-          } else {
-            console.log(`⏭️ Skipping artist ${i + 1} (already created)`);
-          }
-        }
-        
-        // Persist artists to event record (including updated images/links)
         const persistPayload = validArtists.map((artist) => ({
+          ...(artist.id ? { id: artist.id } : {}),
           name: artist.name,
           gender: normalizeArtistGender(artist.gender),
           image: artist.image || artist.photo || null,
@@ -2127,16 +2106,18 @@ const CreateEvent = () => {
           spotifyLink: artist.spotify || artist.spotifyLink || null,
         }));
 
-        try {
-          await updateEventStep6(backendEventId, { artists: persistPayload });
-        } catch (err) {
-          console.error("Failed to persist artists on updateEventStep6:", err);
-        }
+        const response = await updateEventStep6(backendEventId, { artists: persistPayload });
+        const updatedEvent = response?.data || response?.event || response;
+        const savedArtists = normalizeArtists(
+          Array.isArray(updatedEvent?.artists) ? updatedEvent.artists : persistPayload
+        );
 
-        console.log("Step 6 API Response:", artistResponses);
-        setOriginalArtists(normalizedCurrentArtists);
+        console.log("Step 6 API Response:", response);
+        setOriginalArtists(savedArtists);
+        setCreatedArtistIndices(savedArtists.map(getArtistIdentity));
+        setArtists(savedArtists.length ? savedArtists : [createEmptyArtist()]);
         if (!advance) {
-          toast.success("Artist details processed.");
+          toast.success("Artist details saved.");
         }
         
         // Move to next step after successful API call
@@ -2687,6 +2668,115 @@ const CreateEvent = () => {
 
   const removeSponsorRow = (index) => {
     setSponsors((prev) => (prev.length === 1 ? prev : prev.filter((_, i) => i !== index)));
+  };
+
+  const hasArtistContent = (artist = {}) =>
+    Boolean(
+      (artist.name || "").trim() ||
+      (artist.photo || artist.image || "").trim() ||
+      (artist.instagram || artist.instagramLink || "").trim() ||
+      (artist.spotify || artist.spotifyLink || "").trim()
+    );
+
+  const updateArtistField = (index, key, value) => {
+    setArtists((prev) =>
+      prev.map((artist, artistIndex) =>
+        artistIndex === index ? { ...artist, [key]: value } : artist
+      )
+    );
+  };
+
+  const openArtistEditor = (index) => {
+    setActiveArtistIndex(index);
+    setArtistDialogOpen(true);
+  };
+
+  const addArtistFromSection = () => {
+    const reusableIndex = artists.findIndex((artist) => !hasArtistContent(artist));
+
+    if (reusableIndex >= 0) {
+      openArtistEditor(reusableIndex);
+      return;
+    }
+
+    const nextIndex = artists.length;
+    setArtists((prev) => [...prev, createEmptyArtist()]);
+    openArtistEditor(nextIndex);
+  };
+
+  const applyArtistRemoval = (index, artistToRemove) => {
+    const removedIdentity = getArtistIdentity(artistToRemove);
+
+    setArtists((prev) => {
+      const nextArtists = prev.filter((_, artistIndex) => artistIndex !== index);
+      return nextArtists.length ? nextArtists : [createEmptyArtist()];
+    });
+    setOriginalArtists((prev) =>
+      prev.filter((artist) => getArtistIdentity(artist) !== removedIdentity)
+    );
+    setCreatedArtistIndices((prev) =>
+      prev.filter((identity) => identity !== removedIdentity)
+    );
+
+    if (eventCacheRef.current?.artists) {
+      eventCacheRef.current = {
+        ...eventCacheRef.current,
+        artists: eventCacheRef.current.artists.filter(
+          (artist) => getArtistIdentity(artist) !== removedIdentity
+        ),
+      };
+    }
+
+    if (activeArtistIndex === index) {
+      setArtistDialogOpen(false);
+      setActiveArtistIndex(null);
+    } else if (activeArtistIndex > index) {
+      setActiveArtistIndex((prev) => prev - 1);
+    }
+  };
+
+  const removeArtistFromSection = async (index) => {
+    const artistToRemove = artists[index];
+    if (!artistToRemove) return;
+
+    const artistId = artistToRemove.id || artistToRemove._id || artistToRemove.artistId;
+
+    if (!artistId) {
+      if (artistToRemove.publicId) {
+        try {
+          await deleteDraftCloudinaryImage(artistToRemove.publicId, "EVENT_GALLERY");
+        } catch (err) {
+          console.warn("⚠️ Failed to delete unsaved artist photo", err?.message);
+        }
+      }
+      applyArtistRemoval(index, artistToRemove);
+      toast.success("Artist removed.");
+      return;
+    }
+
+    try {
+      setDeletingArtistId(artistId);
+      setLoadingMessage("Deleting artist...");
+      setShowLoading(true);
+
+      await deleteArtist(artistId);
+      applyArtistRemoval(index, artistToRemove);
+      toast.success("Artist deleted successfully.");
+    } catch (error) {
+      console.error("Failed to delete artist:", error);
+      const errorMessage = error.message || "Failed to delete artist. Please try again.";
+
+      if (errorMessage.includes("not found") || errorMessage.includes("already deleted")) {
+        applyArtistRemoval(index, artistToRemove);
+        toast.info("Artist was already deleted, removing it from the section.");
+      } else {
+        toast.error(errorMessage);
+      }
+    } finally {
+      setDeletingArtistId(null);
+      setShowLoading(false);
+      setLoadingMessage("");
+    }
   };
 
   const handleSponsorLogoChange = async (index, file) => {
@@ -4356,155 +4446,297 @@ const CreateEvent = () => {
               )}
 
               {/* Step 6: Add Artist */}
-              {currentStep === 6 && (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <Label>Artists</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-10 rounded-lg border-border bg-background/60 px-4 text-foreground hover:border-ring/60 hover:bg-muted"
-                      onClick={() => setArtists([...artists, createEmptyArtist()])}
+              {currentStep === 6 && (() => {
+                const artistCards = artists
+                  .map((artist, index) => ({ artist, index }))
+                  .filter(({ artist }) => hasArtistContent(artist));
+                const activeArtist = activeArtistIndex !== null ? artists[activeArtistIndex] : null;
+                const activeArtistImage = activeArtist?.photo || activeArtist?.image || "";
+                const activeFieldId = activeArtistIndex ?? "artist";
+
+                return (
+                  <div className="space-y-5">
+                    <div className="flex flex-col gap-4 rounded-xl border border-border/50 bg-background/40 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Step 6</p>
+                        <h3 className="mt-2 text-2xl font-bold text-foreground">Add Artist</h3>
+                        <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+                          Build your lineup with compact artist profiles. Open a card to update the same artist details.
+                        </p>
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="group h-11 shrink-0 rounded-[10px] border-border bg-background/60 px-4 text-foreground shadow-[var(--shadow-card)] hover:border-ring/60 hover:bg-muted hover:text-foreground"
+                        onClick={addArtistFromSection}
+                      >
+                        <Plus className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-90" />
+                        Add Artist
+                      </Button>
+                    </div>
+
+                    {artistCards.length > 0 ? (
+                      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                        {artistCards.map(({ artist, index }) => {
+                          const artistImage = artist.photo || artist.image || "";
+                          const instagram = artist.instagram || artist.instagramLink || "";
+                          const spotify = artist.spotify || artist.spotifyLink || "";
+                          const artistId = artist.id || artist._id || artist.artistId || getArtistRenderKey(artist);
+                          const isDeletingArtist = deletingArtistId === artistId;
+
+                          return (
+                            <article
+                              key={getArtistRenderKey(artist)}
+                              className="group relative overflow-hidden rounded-xl border border-border/50 bg-card/75 p-3 shadow-[var(--shadow-card)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-ring/50 hover:shadow-[var(--shadow-elegant)]"
+                            >
+                              <div className="theme-gradient-primary pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-10" />
+                              <div className="relative flex min-w-0 items-center gap-3">
+                                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-border/50 bg-background/60">
+                                  {artistImage ? (
+                                    <img src={artistImage} alt={`${artist.name || "Artist"} preview`} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                                  ) : (
+                                    <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                                      <UsersRound className="h-7 w-7" />
+                                    </div>
+                                  )}
+                                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-background/80 to-transparent opacity-80" />
+                                </div>
+
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                      <p className="truncate text-sm font-semibold text-foreground">{artist.name || "New artist"}</p>
+                                      <p className="mt-1 text-xs text-muted-foreground">Artist {index + 1} - {normalizeArtistGender(artist.gender)}</p>
+                                    </div>
+                                    <div className="flex shrink-0 items-center gap-1">
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+                                        onClick={() => openArtistEditor(index)}
+                                        title="Edit artist"
+                                        aria-label={`Edit ${artist.name || `artist ${index + 1}`}`}
+                                      >
+                                        <Pencil className="h-3.5 w-3.5" />
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                        onClick={() => removeArtistFromSection(index)}
+                                        disabled={isDeletingArtist}
+                                        title="Remove artist"
+                                        aria-label={`Remove ${artist.name || `artist ${index + 1}`}`}
+                                      >
+                                        {isDeletingArtist ? (
+                                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                        ) : (
+                                          <Trash2 className="h-3.5 w-3.5" />
+                                        )}
+                                      </Button>
+                                    </div>
+                                  </div>
+
+                                  <div className="mt-3 space-y-2 text-xs text-muted-foreground">
+                                    <div className="flex min-w-0 items-center gap-2">
+                                      <AtSign className="h-3.5 w-3.5 shrink-0 text-accent" />
+                                      <span className="truncate">{instagram || "Instagram required"}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Music2 className="h-3.5 w-3.5 shrink-0 text-accent" />
+                                      <span className="truncate">{spotify ? "Spotify linked" : "Spotify not added"}</span>
+                                    </div>
+                                  </div>
+
+                                  <div className="mt-3 flex flex-wrap gap-2">
+                                    <Badge className="rounded-full border-border/50 bg-background/50 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                                      {artistImage ? "Photo ready" : "No photo"}
+                                    </Badge>
+                                    <Badge className="rounded-full border-border/50 bg-background/50 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                                      {instagram ? "Profile ready" : "Needs Instagram"}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                            </article>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-dashed border-border/60 bg-background/40 p-6 text-center shadow-[var(--shadow-card)]">
+                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-border/50 bg-card text-muted-foreground">
+                          <UsersRound className="h-5 w-5" />
+                        </div>
+                        <p className="mt-3 text-sm font-semibold text-foreground">No artists added yet</p>
+                        <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-muted-foreground">
+                          Add artists as compact profiles, then use Save Section when the lineup is ready.
+                        </p>
+                      </div>
+                    )}
+
+                    <Dialog
+                      open={artistDialogOpen && Boolean(activeArtist)}
+                      onOpenChange={(open) => {
+                        setArtistDialogOpen(open);
+                        if (!open) setActiveArtistIndex(null);
+                      }}
                     >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Artist
-                    </Button>
-                  </div>
+                      {activeArtist && (
+                        <DialogContent className="max-h-[90vh] max-w-3xl overflow-hidden border-border/50 bg-popover/95 p-0 text-foreground shadow-[var(--shadow-elegant)] backdrop-blur-xl">
+                          <div className="max-h-[86vh] overflow-y-auto">
+                            <div className="relative overflow-hidden border-b border-border/50 p-5 sm:p-6">
+                              <div className="theme-gradient-primary pointer-events-none absolute inset-0 opacity-10" />
+                              <DialogHeader className="relative">
+                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                  Artist profile
+                                </p>
+                                <DialogTitle className="mt-2 text-2xl text-foreground">
+                                  {activeArtist.name || "Add artist details"}
+                                </DialogTitle>
+                                <DialogDescription className="text-muted-foreground">
+                                  Update the artist information shown in this event lineup.
+                                </DialogDescription>
+                              </DialogHeader>
+                            </div>
 
-                  {artists.map((artist, index) => (
-                    <Card key={getArtistRenderKey(artist)} className={`${cardBase} p-5`}>
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <p className="text-sm text-muted-foreground">Artist {index + 1}</p>
-                          <h5 className="font-semibold leading-tight">Add details</h5>
-                        </div>
-                        {artists.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setArtists(artists.filter((_, i) => i !== index))}
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </div>
+                            <div className="space-y-5 p-5 sm:p-6">
+                              <div className="grid gap-4 md:grid-cols-2">
+                                <div className="space-y-2.5">
+                                  <Label htmlFor={`artist-name-${activeFieldId}`} className="text-[13px] font-medium text-foreground">Artist Name *</Label>
+                                  <Input
+                                    id={`artist-name-${activeFieldId}`}
+                                    placeholder="e.g., John Doe"
+                                    value={activeArtist.name}
+                                    className={fieldClass}
+                                    onChange={(e) => updateArtistField(activeArtistIndex, "name", e.target.value)}
+                                  />
+                                </div>
 
-                      <div className="grid gap-5 md:grid-cols-2">
-                        <div className="space-y-2.5">
-                          <Label htmlFor={`artist-name-${index}`} className="text-[13px] font-medium text-[#d4d4d4]">Artist Name *</Label>
-                          <Input
-                            id={`artist-name-${index}`}
-                            placeholder="e.g., John Doe"
-                            value={artist.name}
-                            className={fieldClass}
-                            onChange={(e) => {
-                              const newArtists = [...artists];
-                              newArtists[index].name = e.target.value;
-                              setArtists(newArtists);
-                            }}
-                          />
-                        </div>
+                                <div className="space-y-2.5">
+                                  <Label htmlFor={`artist-gender-${activeFieldId}`} className="text-[13px] font-medium text-foreground">Gender</Label>
+                                  <Select
+                                    value={normalizeArtistGender(activeArtist.gender)}
+                                    onValueChange={(value) => updateArtistField(activeArtistIndex, "gender", value)}
+                                  >
+                                    <SelectTrigger id={`artist-gender-${activeFieldId}`} className={fieldClass}>
+                                      <SelectValue placeholder="Select gender" />
+                                    </SelectTrigger>
+                                    <SelectContent className={selectMenuClass}>
+                                      <SelectItem value="MALE">Male</SelectItem>
+                                      <SelectItem value="FEMALE">Female</SelectItem>
+                                      <SelectItem value="OTHER">Other</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
 
-                        <div className="space-y-2.5">
-                          <Label htmlFor={`artist-gender-${index}`} className="text-[13px] font-medium text-[#d4d4d4]">Gender</Label>
-                          <Select 
-                            value={normalizeArtistGender(artist.gender)}
-                            onValueChange={(value) => {
-                              const newArtists = [...artists];
-                              newArtists[index].gender = value;
-                              setArtists(newArtists);
-                            }}
-                          >
-                            <SelectTrigger className={fieldClass}>
-                              <SelectValue placeholder="Select gender" />
-                            </SelectTrigger>
-                            <SelectContent className={selectMenuClass}>
-                              <SelectItem value="MALE">Male</SelectItem>
-                              <SelectItem value="FEMALE">Female</SelectItem>
-                              <SelectItem value="OTHER">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
+                              <div className="grid gap-4 md:grid-cols-2">
+                                <div className="space-y-2.5">
+                                  <Label htmlFor={`artist-instagram-${activeFieldId}`} className="text-[13px] font-medium text-foreground">Instagram *</Label>
+                                  <Input
+                                    id={`artist-instagram-${activeFieldId}`}
+                                    placeholder="@artist_handle"
+                                    value={activeArtist.instagram}
+                                    className={fieldClass}
+                                    onChange={(e) => updateArtistField(activeArtistIndex, "instagram", e.target.value)}
+                                  />
+                                  <p className="text-xs text-muted-foreground">Use full handle or profile URL</p>
+                                </div>
 
-                      <div className="grid gap-5 md:grid-cols-2">
-                        <div className="space-y-2.5">
-                          <Label htmlFor={`artist-photo-${index}`} className="text-[13px] font-medium text-[#d4d4d4]">Artist Photo *</Label>
-                          <div className="space-y-3">
-                            <div className="relative rounded-xl border border-dashed border-border/50 bg-background/40 px-4 py-5 text-center transition-all duration-200 hover:border-ring/60">
-                            <input
-                              id={`artist-photo-${index}`}
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => handleArtistPhotoChange(index, e)}
-                              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                            />
-                              <div className="pointer-events-none flex flex-col items-center gap-2">
-                                <Upload className="h-4 w-4 text-muted-foreground" />
-                                <p className="text-sm text-muted-foreground">Upload artist photo</p>
-                                <p className="text-xs text-muted-foreground/80">JPG/PNG/WebP</p>
+                                <div className="space-y-2.5">
+                                  <Label htmlFor={`artist-spotify-${activeFieldId}`} className="text-[13px] font-medium text-foreground">Spotify (Optional)</Label>
+                                  <Input
+                                    id={`artist-spotify-${activeFieldId}`}
+                                    placeholder="https://open.spotify.com/artist/..."
+                                    value={activeArtist.spotify}
+                                    className={fieldClass}
+                                    onChange={(e) => updateArtistField(activeArtistIndex, "spotify", e.target.value)}
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="rounded-xl border border-border/50 bg-background/40 p-4">
+                                <div className="mb-3 flex items-center justify-between gap-3">
+                                  <div>
+                                    <Label htmlFor={`artist-photo-${activeFieldId}`} className="text-[13px] font-medium text-foreground">Artist Photo *</Label>
+                                    <p className="mt-1 text-xs text-muted-foreground">JPG/PNG/WebP</p>
+                                  </div>
+                                  {activeArtistImage && (
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-9 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                      onClick={() => handleRemoveArtistPhoto(activeArtistIndex)}
+                                    >
+                                      <X className="mr-2 h-3.5 w-3.5" />
+                                      Remove
+                                    </Button>
+                                  )}
+                                </div>
+
+                                <div className="grid gap-4 sm:grid-cols-[12rem_1fr]">
+                                  <div className="relative aspect-square overflow-hidden rounded-xl border border-border/50 bg-card shadow-[var(--shadow-card)]">
+                                    {activeArtistImage ? (
+                                      <img src={activeArtistImage} alt={`${activeArtist.name || "Artist"} preview`} className="h-full w-full object-cover" />
+                                    ) : (
+                                      <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground">
+                                        <Camera className="h-7 w-7" />
+                                        <span className="text-xs">No photo</span>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="relative flex min-h-[12rem] items-center justify-center rounded-xl border border-dashed border-border/60 bg-card/60 p-5 text-center transition-all duration-200 hover:border-ring/60 hover:bg-muted/30">
+                                    <input
+                                      id={`artist-photo-${activeFieldId}`}
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={(e) => handleArtistPhotoChange(activeArtistIndex, e)}
+                                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                                    />
+                                    <div className="pointer-events-none flex flex-col items-center gap-2">
+                                      <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/50 bg-background/60 text-muted-foreground shadow-[var(--shadow-card)]">
+                                        <Upload className="h-5 w-5" />
+                                      </span>
+                                      <p className="text-sm font-semibold text-foreground">Upload artist photo</p>
+                                      <p className="max-w-xs text-xs leading-5 text-muted-foreground">
+                                        Choose a profile image to make this artist card easier to scan.
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                            {artist.photo && (
-                              <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-border/50">
-                                <img 
-                                  src={artist.photo} 
-                                  alt={`${artist.name} preview`} 
-                                  className="w-full h-full object-cover"
-                                />
-                                <Button
-                                  type="button"
-                                  variant="destructive"
-                                  size="icon"
-                                  className="absolute top-1 right-1 h-7 w-7"
-                                  onClick={() => handleRemoveArtistPhoto(index)}
-                                  title="Remove photo"
-                                >
-                                  <X className="w-3 h-3" />
-                                </Button>
-                              </div>
-                            )}
-                            <p className="text-xs text-muted-foreground">JPG/PNG/WebP</p>
+
+                            <DialogFooter className="border-t border-border/50 bg-card/80 px-5 py-4 sm:px-6">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="h-10 rounded-lg border-border bg-background text-foreground hover:bg-muted hover:text-foreground"
+                                onClick={() => setArtistDialogOpen(false)}
+                              >
+                                Close
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="accent"
+                                className="h-10 rounded-lg px-5"
+                                onClick={() => setArtistDialogOpen(false)}
+                              >
+                                Done
+                              </Button>
+                            </DialogFooter>
                           </div>
-                        </div>
-
-                        <div className="space-y-2.5">
-                          <Label htmlFor={`artist-instagram-${index}`} className="text-[13px] font-medium text-[#d4d4d4]">Instagram *</Label>
-                          <Input
-                            id={`artist-instagram-${index}`}
-                            placeholder="@artist_handle"
-                            value={artist.instagram}
-                            className={fieldClass}
-                            onChange={(e) => {
-                              const newArtists = [...artists];
-                              newArtists[index].instagram = e.target.value;
-                              setArtists(newArtists);
-                            }}
-                          />
-                          <p className="text-xs text-muted-foreground">Use full handle or profile URL</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2.5">
-                        <Label htmlFor={`artist-spotify-${index}`} className="text-[13px] font-medium text-[#d4d4d4]">Spotify (Optional)</Label>
-                        <Input
-                          id={`artist-spotify-${index}`}
-                          placeholder="https://open.spotify.com/artist/..."
-                          value={artist.spotify}
-                          className={fieldClass}
-                          onChange={(e) => {
-                            const newArtists = [...artists];
-                            newArtists[index].spotify = e.target.value;
-                            setArtists(newArtists);
-                          }}
-                        />
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
+                        </DialogContent>
+                      )}
+                    </Dialog>
+                  </div>
+                );
+              })()}
 
               {/* Step 7: Additional Information */}
               {currentStep === 7 && (() => {

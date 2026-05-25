@@ -983,6 +983,49 @@ export async function createArtist(artistData) {
 }
 
 /**
+ * Delete an artist
+ *
+ * API Endpoint: DELETE /api/artist/delete/:artistId
+ *
+ * @param {string} artistId - ID of the artist to delete
+ * @returns {Promise<Object>} Response confirming deletion
+ */
+export async function deleteArtist(artistId) {
+  const url = buildUrl(`/api/artist/delete/${artistId}`);
+
+  console.log("🗑️ Deleting Artist");
+  console.log("📋 Artist ID:", artistId);
+
+  if (!artistId) {
+    throw new Error("Artist ID is required");
+  }
+
+  try {
+    const response = await apiFetch(url, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log("✅ Artist deleted successfully:", response);
+    return response;
+  } catch (error) {
+    console.error("❌ Error deleting artist:", error);
+
+    if (error.message.includes("401")) {
+      throw new Error("Authentication required. Please login again.");
+    } else if (error.message.includes("404")) {
+      throw new Error("Artist not found or already deleted.");
+    } else if (error.message.includes("403")) {
+      throw new Error("You do not have permission to delete this artist.");
+    }
+
+    throw new Error(error.message || "Failed to delete artist. Please try again.");
+  }
+}
+
+/**
  * Update event - Step 6: Additional Information
  * 
  * API Endpoint: PATCH /api/event/update-event/:eventId
@@ -1036,6 +1079,11 @@ export async function updateEventStep6(eventId, updateData) {
   // Sponsors data (allow empty array to clear)
   if (updateData.sponsors !== undefined) {
     payload.sponsors = updateData.sponsors;
+  }
+
+  // Artists data (allow empty array to clear)
+  if (updateData.artists !== undefined) {
+    payload.artists = updateData.artists;
   }
 
   // Publish status (explicitly allow setting to DRAFT or PUBLISHED)
