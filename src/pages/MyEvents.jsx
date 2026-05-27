@@ -23,6 +23,7 @@ import {
 import { useOrganizerEvents } from "@/hooks/useOrganizerEvents";
 import { apiFetch } from "@/config/api";
 import { toast } from "sonner";
+import { resolveEventBannerImage } from "@/utils/eventBannerImage";
 
 const MyEvents = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -55,7 +56,7 @@ const MyEvents = () => {
         id: event.id,
         title: event.title,
         slug: event.slug,
-        flyerImage: event.flyerImage || "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800",
+        flyerImage: resolveEventBannerImage(event, "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800"),
         category: event.category,
         subCategory: event.subCategory,
         description: event.description,
@@ -199,6 +200,28 @@ const MyEvents = () => {
     return pubStatus === "DRAFT" || evtStatus === "CANCELLED";
   };
 
+  const isPublishedEvent = (event) => {
+    const pubStatus = (event.publishStatus || "").toUpperCase();
+    return pubStatus === "PUBLISHED" || pubStatus === "ACTIVE";
+  };
+
+  const getPrimaryEventAction = (event) => {
+    const organizerSlug = event.organizer?.slug;
+    if (isPublishedEvent(event) && organizerSlug && event.slug) {
+      return {
+        label: "View",
+        title: "View event",
+        path: `/events/${organizerSlug}/${event.slug}`,
+      };
+    }
+
+    return {
+      label: "Preview",
+      title: "Preview event",
+      path: `/organizer/events/${event.id}/preview`,
+    };
+  };
+
   const handleSearch = useCallback((e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
@@ -300,6 +323,7 @@ const MyEvents = () => {
             {paginatedEvents.map((event, i) => {
               const pub = getPublishBadge(event.publishStatus);
               const state = getStateBadge(event.eventStatus);
+              const primaryAction = getPrimaryEventAction(event);
               return (
                 <div
                   key={event.id}
@@ -366,12 +390,12 @@ const MyEvents = () => {
                     {/* Actions */}
                     <div className="flex items-center gap-1.5 pt-3 border-t border-border/50">
                       <button
-                        onClick={() => event.organizer?.slug && event.slug && navigate(`/events/${event.organizer.slug}/${event.slug}`)}
+                        onClick={() => navigate(primaryAction.path)}
                         className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-primaryCTA px-2.5 text-[11px] font-semibold text-primary-foreground transition-all duration-200 hover:bg-primaryCTA-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-                        title="View event"
+                        title={primaryAction.title}
                       >
                         <Eye className="w-3.5 h-3.5" />
-                        View
+                        {primaryAction.label}
                       </button>
                       <button
                         onClick={() => handleEditEvent(event)}

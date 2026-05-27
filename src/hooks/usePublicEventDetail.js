@@ -1,8 +1,25 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiFetch } from "@/config/api";
+import { resolveEventBannerImage } from "@/utils/eventBannerImage";
 
 const FALLBACK_IMAGE = "https://via.placeholder.com/1200x600?text=Event";
 const SPONSOR_PLACEHOLDER = "https://via.placeholder.com/200x200?text=Sponsor";
+const SECTION_LOADING_STATE = {
+  tickets: true,
+  venues: true,
+  artists: true,
+  gallery: true,
+  sponsors: true,
+  reviews: true,
+};
+const SECTION_IDLE_STATE = {
+  tickets: false,
+  venues: false,
+  artists: false,
+  gallery: false,
+  sponsors: false,
+  reviews: false,
+};
 const hasHtmlTag = (value) =>
   typeof value === "string" && /<\/?[a-z][\s\S]*>/i.test(value);
 const hasEscapedHtmlTag = (value) =>
@@ -71,6 +88,7 @@ function formatAdvisory(raw) {
 }
 
 function normalizeCoreEvent(data) {
+  const bannerImage = resolveEventBannerImage(data, FALLBACK_IMAGE);
   const rawTc = data.TC || null;
   const rawTermsContent = rawTc?.content || data.termsHtml || "";
   const rawTermsText = rawTc?.terms || data.terms || "";
@@ -114,7 +132,8 @@ function normalizeCoreEvent(data) {
     slug: data.slug || data.id,
     title: data.title || "Untitled Event",
     category: data.category || "EVENT",
-    image: data.flyerImage || FALLBACK_IMAGE,
+    bannerImage,
+    image: bannerImage,
     startDate: data.startDate,
     endDate: data.endDate,
     location: "Location TBA",
@@ -185,14 +204,24 @@ function normalizeCoreEvent(data) {
 
 function mergeTickets(tickets) {
   if (!Array.isArray(tickets)) return [];
-  return tickets.map((t) => ({
-    id: t.id,
-    name: t.name || "Ticket",
-    description: t.info || t.description || "",
-    price: Number(t.price) || 0,
-    available: Math.max(0, Number(t.remainingQty) || 0),
-    maxPerUser: t.maxPerUser != null ? Number(t.maxPerUser) : null,
-  }));
+  return tickets.map((t) => {
+    const remainingQty =
+      t.remainingQty != null
+        ? Number(t.remainingQty)
+        : t.totalQty != null
+          ? Number(t.totalQty) - Number(t.soldQty || 0)
+          : 0;
+    const availableQty = Number.isFinite(remainingQty) ? remainingQty : 0;
+
+    return {
+      id: t.id,
+      name: t.name || "Ticket",
+      description: t.info || t.description || "",
+      price: Number(t.price) || 0,
+      available: Math.max(0, availableQty),
+      maxPerUser: t.maxPerUser != null ? Number(t.maxPerUser) : null,
+    };
+  });
 }
 
 function mergeVenues(venues) {
@@ -213,19 +242,29 @@ function mergeVenues(venues) {
 
 function mergeGallery(gallery) {
   if (!Array.isArray(gallery) || gallery.length === 0) return [FALLBACK_IMAGE];
-  return gallery.map((img) => (typeof img === "object" ? img.url : img)).filter(Boolean);
+  const urls = gallery
+    .filter((img) => {
+      if (!img?.type) return true;
+      return String(img.type).toUpperCase() === "EVENT_GALLERY";
+    })
+    .map((img) => (typeof img === "object" ? img.url : img))
+    .filter(Boolean);
+  return urls.length ? urls : [FALLBACK_IMAGE];
 }
 
 function mergeSponsors(sponsors) {
   if (!Array.isArray(sponsors)) return [];
-  return sponsors.map((s) => ({
-    id: s.id || s.name,
-    name: s.name || "Sponsor",
-    logo: s.logoUrl || s.logo || SPONSOR_PLACEHOLDER,
-    website: s.websiteUrl || s.website || "",
-    isPrimary: !!s.isPrimary,
-    description: s.description || "",
-  }));
+  return sponsors.filter(Boolean).map((entry) => {
+    const sponsor = entry?.sponsor || entry;
+    return {
+      id: sponsor.id || entry.id || sponsor.name,
+      name: sponsor.name || "Sponsor",
+      logo: sponsor.logoUrl || sponsor.logo || SPONSOR_PLACEHOLDER,
+      website: sponsor.websiteUrl || sponsor.website || "",
+      isPrimary: !!(entry.isPrimary || sponsor.isPrimary),
+      description: sponsor.description || entry.description || "",
+    };
+  });
 }
 
 function mergeReviews(summary) {
@@ -236,18 +275,34 @@ function mergeReviews(summary) {
   };
 }
 
-export default function usePublicEventDetail(organizerSlug, eventSlug) {
+function mergeIncludedResources(data) {
+  const tickets = mergeTickets(data.tickets);
+  const gallery = mergeGallery(data.gallery || data.images);
+  const reviewCount =
+    typeof data._count?.reviews === "number"
+      ? data._count.reviews
+      : Array.isArray(data.reviews)
+        ? data.reviews.length
+        : Number(data.reviews) || 0;
+
+  return {
+    ...mergeVenues(data.venues),
+    tickets,
+    capacity: tickets.reduce((sum, t) => sum + (t.available || 0), 0),
+    artists: Array.isArray(data.artists) ? data.artists : [],
+    gallery,
+    sponsors: mergeSponsors(data.sponsors),
+    reviews: reviewCount,
+    stats: data.stats || {},
+  };
+}
+
+export default function usePublicEventDetail(organizerSlug, eventSlug, previewEventId = null) {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sectionsLoading, setSectionsLoading] = useState({
-    tickets: true,
-    venues: true,
-    artists: true,
-    gallery: true,
-    sponsors: true,
-    reviews: true,
-  });
+  const [sectionsLoading, setSectionsLoading] = useState(SECTION_LOADING_STATE);
+  const isPreviewMode = Boolean(previewEventId);
 
   const fetchSubResources = useCallback(async (eventId) => {
     const endpoints = [
@@ -307,25 +362,21 @@ export default function usePublicEventDetail(organizerSlug, eventSlug) {
   }, []);
 
   useEffect(() => {
-    if (!organizerSlug || !eventSlug) return;
+    if (isPreviewMode ? !previewEventId : (!organizerSlug || !eventSlug)) return;
 
     let cancelled = false;
 
     const fetchCore = async () => {
       setLoading(true);
       setError(null);
-      setSectionsLoading({
-        tickets: true,
-        venues: true,
-        artists: true,
-        gallery: true,
-        sponsors: true,
-        reviews: true,
-      });
+      setSectionsLoading(isPreviewMode ? SECTION_IDLE_STATE : SECTION_LOADING_STATE);
 
       try {
+        const path = isPreviewMode
+          ? `/api/event/manage/${encodeURIComponent(previewEventId)}`
+          : `/api/public/events/${encodeURIComponent(organizerSlug)}/${encodeURIComponent(eventSlug)}`;
         const res = await apiFetch(
-          `/api/public/events/${encodeURIComponent(organizerSlug)}/${encodeURIComponent(eventSlug)}`,
+          path,
           { method: "GET" }
         );
 
@@ -340,8 +391,14 @@ export default function usePublicEventDetail(organizerSlug, eventSlug) {
         }
 
         const normalized = normalizeCoreEvent(coreData);
-        setEvent(normalized);
+        setEvent(
+          isPreviewMode
+            ? { ...normalized, ...mergeIncludedResources(coreData), isOrganizerPreview: true }
+            : normalized
+        );
         setLoading(false);
+
+        if (isPreviewMode) return;
 
         // Fire sub-resource fetches in parallel
         fetchSubResources(coreData.id);
@@ -359,7 +416,7 @@ export default function usePublicEventDetail(organizerSlug, eventSlug) {
     return () => {
       cancelled = true;
     };
-  }, [organizerSlug, eventSlug, fetchSubResources]);
+  }, [organizerSlug, eventSlug, previewEventId, isPreviewMode, fetchSubResources]);
 
   return { event, loading, sectionsLoading, error };
 }

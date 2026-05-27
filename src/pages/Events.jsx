@@ -1,11 +1,11 @@
- import { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { usePublicEvents } from "@/hooks/usePublicEvents";
-import { buildUrl } from "@/config/api";
 import eventMusic from "@/assets/event-music.jpg";
 import ClassicGridTemplate from "@/components/EventsPageTemplates/ClassicGridTemplate";
 import MagazineMasonryTemplate from "@/components/EventsPageTemplates/MagazineMasonryTemplate";
 import ListTableTemplate from "@/components/EventsPageTemplates/ListTableTemplate";
+import { resolveEventBannerImage } from "@/utils/eventBannerImage";
 
 const Events = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -43,38 +43,8 @@ const Events = () => {
     return event.title || event.eventTitle || "Untitled Event";
   };
 
-  const normalizeImageUrl = (src) => {
-    if (!src || typeof src !== "string") return null;
-
-    const trimmed = src.trim().replace(/[\\,]+$/, "");
-    if (!trimmed) return null;
-
-    if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("data:")) {
-      return trimmed;
-    }
-
-    return buildUrl(trimmed);
-  };
-
   const getEventImage = (event) => {
-    if (event.images && event.images.length > 0) {
-      const galleryImage = event.images.find((img) => img.type === "EVENT_GALLERY") || event.images[0];
-      const normalizedGallery = normalizeImageUrl(galleryImage?.url || galleryImage?.imageUrl);
-      if (normalizedGallery) return normalizedGallery;
-    }
-
-    const directSources = [event.flyerImage, event.flyerImageUrl, event.image, event.coverImage];
-    for (const src of directSources) {
-      const normalized = normalizeImageUrl(src);
-      if (normalized) return normalized;
-    }
-
-    if (event.organizer?.logo) {
-      const normalizedLogo = normalizeImageUrl(event.organizer.logo);
-      if (normalizedLogo) return normalizedLogo;
-    }
-
-    return eventMusic;
+    return resolveEventBannerImage(event, eventMusic);
   };
 
   // Get event location

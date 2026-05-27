@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { apiFetch } from "@/config/api";
+import { resolveEventBannerImage } from "@/utils/eventBannerImage";
 
 const Dashboard = () => {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
@@ -40,7 +41,7 @@ const Dashboard = () => {
       time: formatTime(startDate),
       location,
       price: minPrice,
-      image: event.flyerImage || event.image || event.coverImage || event.thumbnail || "https://via.placeholder.com/600x400?text=Event",
+      image: resolveEventBannerImage(event, "https://via.placeholder.com/600x400?text=Event"),
       category: event.category || event.mainCategory || event.subCategory || "Event",
       rating: event.rating || event.averageRating || 4.5,
       attendees: event.attendees || event.analytics?.attendees || event.analytics?.totalAttendees || 0,

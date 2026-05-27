@@ -16,8 +16,9 @@ import {
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { apiFetch, buildUrl } from "@/config/api";
+import { apiFetch } from "@/config/api";
 import eventFallback from "@/assets/event-music.jpg";
+import { resolveEventBannerImage } from "@/utils/eventBannerImage";
 
 const EVENT_SECTION_CONFIG = [
   {
@@ -253,18 +254,6 @@ const EmptyState = ({ children }) => (
   </div>
 );
 
-const normalizeImageUrl = (src) => {
-  if (!src || typeof src !== "string") return null;
-
-  const trimmed = src.trim().replace(/[\\,]+$/, "");
-  if (!trimmed) return null;
-
-  if (/^(https?:)?\/\//i.test(trimmed) || trimmed.startsWith("data:") || trimmed.startsWith("/")) {
-    return trimmed;
-  }
-
-  return buildUrl(trimmed);
-};
 
 const formatDate = (value) => {
   if (!value) return "Date TBA";
@@ -333,19 +322,13 @@ const getEventHref = (event) => {
 };
 
 const mapEventToCard = (event) => {
-  const galleryImage = Array.isArray(event.images)
-    ? event.images.find((image) => image.type === "EVENT_GALLERY") || event.images[0]
-    : null;
-
   return {
     id: event.id || event._id || event.slug || event.title,
     href: getEventHref(event),
     title: event.title || "Untitled Event",
     date: formatDate(event.startDate || event.date),
     location: getEventLocation(event),
-    image:
-      normalizeImageUrl(galleryImage?.url || galleryImage?.imageUrl) ||
-      normalizeImageUrl(event.flyerImage || event.image || event.coverImage),
+    image: resolveEventBannerImage(event),
     category: event.subCategory || event.category || "Event",
     price: getEventPriceDisplay(event),
   };

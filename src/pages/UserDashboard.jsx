@@ -25,6 +25,7 @@ import QRCode from "qrcode";
 import { apiFetch } from "@/config/api";
 import { fetchSession, resetSessionCache } from "@/utils/auth";
 import { toast } from "sonner";
+import { resolveEventBannerImage } from "@/utils/eventBannerImage";
 
 const UserDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -206,7 +207,7 @@ const UserDashboard = () => {
         eventDate: date,
         eventTime: time,
         location,
-        image: event.flyerImage || eventPlaceholder,
+        image: resolveEventBannerImage(event, eventPlaceholder),
         ticketTypes: [],
         ticketTypesList,
         primaryTicketType,
@@ -229,8 +230,7 @@ const UserDashboard = () => {
   };
 
   const getEventImage = (ticket) => {
-    // Return actual image if available, otherwise null
-    return ticket?.image || ticket?.coverImage || null;
+    return ticket?.image || null;
   };
 
   const handleDownloadTicket = async (ticket) => {

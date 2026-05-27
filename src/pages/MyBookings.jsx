@@ -21,6 +21,7 @@ import { jsPDF } from "jspdf";
 import QRCode from "qrcode";
 import StarRating from "@/components/StarRating";
 import { buildCanonicalQrPayload } from "@/utils/qrPayload";
+import { resolveEventBannerImage } from "@/utils/eventBannerImage";
 
 const MyBookings = ({
   browseEventsPath = "/dashboard/browse-events",
@@ -90,7 +91,7 @@ const MyBookings = ({
             eventDate: startDate || endDate,
             eventEndDate: endDate,
             eventTime: formatTime(startDate),
-            image: evt.flyerImage || evt.image || null,
+            image: resolveEventBannerImage(evt, null),
             category: evt.category || evt.subCategory || null,
             location,
             totalPrice: Number(item.totalAmount) || 0,

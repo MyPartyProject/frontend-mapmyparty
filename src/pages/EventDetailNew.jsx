@@ -123,10 +123,11 @@ const getGalleryMosaicTile = (index, count) => {
 };
 
 const EventDetailNew = () => {
-  const { organizerSlug, eventSlug } = useParams();
+  const { organizerSlug, eventSlug, eventId } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { event, loading, error } = usePublicEventDetail(organizerSlug, eventSlug);
+  const isPreviewMode = Boolean(eventId);
+  const { event, loading, error } = usePublicEventDetail(organizerSlug, eventSlug, eventId || null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [activeTab, setActiveTab] = useState("about");
   const [autoRotatePausedUntil, setAutoRotatePausedUntil] = useState(0);
@@ -465,6 +466,7 @@ const EventDetailNew = () => {
 
   // Resume booking after Google OAuth redirect
   useEffect(() => {
+    if (isPreviewMode) return;
     if (searchParams.get('resumeBooking') !== 'true') return;
 
     const pendingRaw = sessionStorage.getItem('pendingBooking');
@@ -490,7 +492,7 @@ const EventDetailNew = () => {
       }
     };
     resumeAfterLoad();
-  }, [searchParams]);
+  }, [isPreviewMode, searchParams]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -570,10 +572,11 @@ const EventDetailNew = () => {
   }, [event?.tickets]);
 
   const bookingDisabledReason = useMemo(() => {
+    if (isPreviewMode) return "Preview only";
     if (isSalesClosed) return "Sales closed";
     if (isSoldOut) return "Sold out";
     return "";
-  }, [isSalesClosed, isSoldOut]);
+  }, [isPreviewMode, isSalesClosed, isSoldOut]);
 
   const ensureSession = async () => {
     setAuthLoading(true);
@@ -597,6 +600,11 @@ const EventDetailNew = () => {
   };
 
   const handleBookNow = async () => {
+    if (isPreviewMode) {
+      toast.info("Booking is disabled in organizer preview.");
+      return;
+    }
+
     if (totalTickets === 0) {
       toast.error("Please select at least one ticket");
       return;
@@ -616,6 +624,8 @@ const EventDetailNew = () => {
   };
 
   const handleBillingSubmit = async (billingData) => {
+    if (isPreviewMode) return;
+
     const selectedTickets = event.tickets
       .map((ticket) => ({
         ...ticket,
@@ -647,7 +657,7 @@ const EventDetailNew = () => {
           time: event.time,
           venue: event.venue,
           address: event.address,
-          banner: event.flyerImage || event.coverImage || FALLBACK_IMAGE,
+          banner: event.bannerImage || event.image || FALLBACK_IMAGE,
         },
         tickets: selectedTickets,
         bookingData: res.data,
@@ -737,6 +747,8 @@ const EventDetailNew = () => {
   };
 
   const handleGoogleLogin = () => {
+    if (isPreviewMode) return;
+
     // Save pending booking state before navigating away
     sessionStorage.setItem('pendingBooking', JSON.stringify({
       returnUrl: window.location.pathname,
@@ -777,8 +789,8 @@ const EventDetailNew = () => {
       <div className="event-detail-theme min-h-screen bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-white mb-4">Event Not Found</h2>
-          <Button onClick={() => navigate("/browse-events")}>
-            Browse Events
+          <Button onClick={() => navigate(isPreviewMode ? "/organizer/myevents" : "/browse-events")}>
+            {isPreviewMode ? "Back to My Events" : "Browse Events"}
           </Button>
         </div>
       </div>
@@ -808,6 +820,21 @@ const EventDetailNew = () => {
           </nav>
         </div>
       </header>
+
+      {isPreviewMode && (
+        <div className="sticky top-[4.5rem] z-30 border-y border-primaryCTA/25 bg-primaryCTA/15 backdrop-blur-xl">
+          <div className="mx-auto flex max-w-7xl flex-col gap-2 px-6 py-2 text-xs font-semibold text-white sm:flex-row sm:items-center sm:justify-between lg:px-12">
+            <span>Organizer preview</span>
+            <button
+              type="button"
+              onClick={() => navigate("/organizer/myevents")}
+              className="inline-flex w-fit items-center rounded-md border border-white/15 px-2.5 py-1 text-[11px] text-white/85 transition hover:border-white/30 hover:text-white"
+            >
+              Back to My Events
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Hero Section - matching reference design */}
       <div className="pt-8 pb-2">
@@ -897,15 +924,17 @@ const EventDetailNew = () => {
                   {/* Book Now Button */}
                   <Button
                     onClick={() => {
+                      if (isPreviewMode) return;
                       const ticketSection = document.getElementById('ticket-section');
                       if (ticketSection) {
                         ticketSection.scrollIntoView({ behavior: 'smooth' });
                       }
                     }}
+                    disabled={isPreviewMode}
                     className="w-full bg-primaryCTA hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-primary-foreground font-bold text-base py-2 rounded-lg transition-all mt-4"
                     size="lg"
                   >
-                    {isSoldOut ? 'SOLD OUT' : isSalesClosed ? 'Sales Closed' : 'Book Now'}
+                    {isPreviewMode ? 'Preview Only' : isSoldOut ? 'SOLD OUT' : isSalesClosed ? 'Sales Closed' : 'Book Now'}
                   </Button>
                 </CardContent>
               </Card>
@@ -1671,7 +1700,7 @@ const EventDetailNew = () => {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => handleQuantityChange(ticket.id, -1)}
-                              disabled={!qty || isSalesClosed || ticket.available === 0}
+                              disabled={!qty || isPreviewMode || isSalesClosed || ticket.available === 0}
                               className="h-7 w-7 rounded-full border border-gray-600 flex items-center justify-center text-white hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
                             >
                               <Minus className="h-3 w-3" />
@@ -1681,7 +1710,7 @@ const EventDetailNew = () => {
                             </span>
                             <button
                               onClick={() => handleQuantityChange(ticket.id, 1)}
-                              disabled={isSalesClosed || ticket.available === 0 || qty >= cap}
+                              disabled={isPreviewMode || isSalesClosed || ticket.available === 0 || qty >= cap}
                               className="h-7 w-7 rounded-full border border-gray-600 flex items-center justify-center text-white hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
                             >
                               <Plus className="h-3 w-3" />
@@ -1707,7 +1736,7 @@ const EventDetailNew = () => {
 
                 <Button
                   onClick={handleBookNow}
-                  disabled={totalTickets === 0 || isSalesClosed || isSoldOut}
+                  disabled={isPreviewMode || totalTickets === 0 || isSalesClosed || isSoldOut}
                   className="w-full bg-primaryCTA hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-primary-foreground font-semibold transition-all text-sm py-4 rounded-lg"
                 >
                   <Ticket className="h-4 w-4 mr-2" />

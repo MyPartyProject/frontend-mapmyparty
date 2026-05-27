@@ -185,6 +185,11 @@ const App = () => {
                   <OrganizerDashboard />
                 </ProtectedRoute>
               } />
+              <Route path="/organizer/events/:eventId/preview" element={
+                <ProtectedRoute requiredRole="organizer">
+                  <EventDetail />
+                </ProtectedRoute>
+              } />
               <Route path="/organizer/events/:eventId/refunds" element={
                 <ProtectedRoute requiredRole="organizer">
                   <OrganizerDashboard />

@@ -18,7 +18,7 @@ import {
 import { usePublicEvents } from "@/hooks/usePublicEvents";
 import Header from "@/components/Header";
 import { isAuthenticated as checkAuth } from "@/utils/auth";
-import { buildUrl } from "@/config/api";
+import { resolveEventBannerImage } from "@/utils/eventBannerImage";
 
 const PAGE_SIZE = 20;
 
@@ -445,19 +445,6 @@ export default function BrowseEvents({ showPublicHeader = false }) {
     pagination.totalEvents > 0 ? (pagination.page - 1) * pagination.limit + 1 : 0;
   const resultsEnd = Math.min(pagination.page * pagination.limit, pagination.totalEvents);
 
-  const normalizeImageUrl = (src) => {
-    if (!src || typeof src !== "string") return null;
-
-    const trimmed = src.trim().replace(/[\\,]+$/, "");
-    if (!trimmed) return null;
-
-    if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("data:")) {
-      return trimmed;
-    }
-
-    return buildUrl(trimmed);
-  };
-
   const formatDate = (dateString) => {
     if (!dateString) return "Date TBA";
 
@@ -483,24 +470,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
   };
 
   const getEventImage = (event) => {
-    if (Array.isArray(event.images) && event.images.length > 0) {
-      const galleryImage = event.images.find((image) => image.type === "EVENT_GALLERY") || event.images[0];
-      const normalizedGalleryImage = normalizeImageUrl(galleryImage?.url || galleryImage?.imageUrl);
-
-      if (normalizedGalleryImage) {
-        return normalizedGalleryImage;
-      }
-    }
-
-    const directSources = [event.flyerImage, event.image, event.coverImage, event.thumbnail];
-    for (const source of directSources) {
-      const normalizedImage = normalizeImageUrl(source);
-      if (normalizedImage) {
-        return normalizedImage;
-      }
-    }
-
-    return "https://via.placeholder.com/400x250?text=Event";
+    return resolveEventBannerImage(event, "https://via.placeholder.com/400x250?text=Event");
   };
 
   const getEventPriceDisplay = (event) => {
