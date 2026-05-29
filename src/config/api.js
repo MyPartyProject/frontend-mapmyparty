@@ -1,6 +1,6 @@
 const rawEnvBase = import.meta.env.VITE_API_BASE_URL;
-const hostedDefault = "https://mapmyparty.com/api";
-const localDefault = "http://localhost:9090/api";
+// const hostedDefault = "https://mapmyparty.com/api";
+// const localDefault = "http://localhost:9090/api";
 
 // AWS deployed
 // const hostedDefault = "https://api.mapmyparty.com/api";
@@ -27,45 +27,43 @@ export function buildUrl(path = "") {
   return `${API_BASE_URL}/${cleanPath}`;
 }
 
-let isRefreshing = false;
-let refreshSubscribers = [];
+let refreshPromise = null;
 let authFailureHandler = null;
-
-function subscribeToRefresh(callback) {
-  refreshSubscribers.push(callback);
-}
-
-function notifyRefreshSubscribers(success) {
-  refreshSubscribers.forEach((callback) => callback(success));
-  refreshSubscribers = [];
-}
 
 function isRefreshRequest(url) {
   return String(url).includes("/auth/refresh");
 }
 
-async function refreshAccessToken() {
-  if (isRefreshing) {
-    return new Promise((resolve) => subscribeToRefresh(resolve));
+function emitAuthEvent(name, detail = null) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(name, { detail }));
+}
+
+export async function refreshAccessToken() {
+  if (refreshPromise) {
+    return refreshPromise;
   }
 
-  isRefreshing = true;
+  refreshPromise = (async () => {
+    try {
+      const response = await fetch(buildUrl("auth/refresh"), {
+        method: "POST",
+        credentials: "include",
+      });
 
-  try {
-    const response = await fetch(buildUrl("auth/refresh"), {
-      method: "POST",
-      credentials: "include",
-    });
+      const ok = response.ok;
+      if (ok) {
+        emitAuthEvent("auth:token-refreshed");
+      }
+      return ok;
+    } catch (error) {
+      return false;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
 
-    const ok = response.ok;
-    notifyRefreshSubscribers(ok);
-    return ok;
-  } catch (error) {
-    notifyRefreshSubscribers(false);
-    return false;
-  } finally {
-    isRefreshing = false;
-  }
+  return refreshPromise;
 }
 
 function parseErrorMessage(status, errorData = {}) {
@@ -90,19 +88,22 @@ async function parseErrorBody(response) {
   }
 }
 
-function emitAuthEvent(name, detail = null) {
-  window.dispatchEvent(new CustomEvent(name, { detail }));
-}
-
 export function setAuthFailureHandler(handler) {
   authFailureHandler = typeof handler === "function" ? handler : null;
 }
 
 export async function customFetch(url, options = {}, retrying = false) {
-  const { headers = {}, body, ...otherOptions } = options;
+  const {
+    headers = {},
+    body,
+    skipAuthRefresh = false,
+    suppressAuthFailure = false,
+    ...otherOptions
+  } = options;
   const isFormData = body instanceof FormData;
 
   const response = await fetch(url, {
+    ...otherOptions,
     credentials: "include",
     headers: isFormData
       ? { ...headers }
@@ -111,20 +112,20 @@ export async function customFetch(url, options = {}, retrying = false) {
           ...headers,
         },
     body,
-    ...otherOptions,
   });
 
-  if (response.status === 401 && !retrying && !isRefreshRequest(url)) {
+  if (response.status === 401 && !retrying && !skipAuthRefresh && !isRefreshRequest(url)) {
     const refreshed = await refreshAccessToken();
     if (refreshed) {
-      emitAuthEvent("auth:token-refreshed");
       return customFetch(url, options, true);
     }
 
-    emitAuthEvent("auth:refresh-failed");
-    emitAuthEvent("auth:logout", { reason: "refresh_failed" });
-    if (authFailureHandler) {
-      authFailureHandler();
+    if (!suppressAuthFailure) {
+      emitAuthEvent("auth:refresh-failed");
+      emitAuthEvent("auth:logout", { reason: "refresh_failed" });
+      if (authFailureHandler) {
+        authFailureHandler();
+      }
     }
   }
 
@@ -153,4 +154,44 @@ export async function apiFetch(path, { headers = {}, ...options } = {}) {
     return response.json();
   }
   return response.text();
+}
+
+function getFilenameFromContentDisposition(value) {
+  if (!value) return null;
+
+  const utf8Match = /filename\*=UTF-8''([^;]+)/i.exec(value);
+  if (utf8Match?.[1]) {
+    try {
+      return decodeURIComponent(utf8Match[1].replace(/^"|"$/g, ""));
+    } catch {
+      return utf8Match[1].replace(/^"|"$/g, "");
+    }
+  }
+
+  const filenameMatch = /filename="?([^"]+)"?/i.exec(value);
+  return filenameMatch?.[1] || null;
+}
+
+export async function downloadFile(path, fallbackFileName = "download", options = {}) {
+  const url = /^https?:/i.test(path) ? path : buildUrl(path);
+  const response = await customFetch(url, {
+    method: "GET",
+    ...options,
+  });
+
+  const blob = await response.blob();
+  const fileName =
+    getFilenameFromContentDisposition(response.headers.get("content-disposition")) ||
+    fallbackFileName;
+
+  const objectUrl = window.URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = objectUrl;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.URL.revokeObjectURL(objectUrl);
+
+  return { fileName };
 }

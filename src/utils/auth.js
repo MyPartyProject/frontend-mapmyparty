@@ -1,10 +1,8 @@
-import { buildUrl } from "@/config/api";
+import { buildUrl, customFetch, refreshAccessToken } from "@/config/api";
 
 let sessionPromise = null;
 let cachedSession = null;
 let sessionCacheTime = 0;
-let isRefreshing = false;
-let refreshSubscribers = [];
 
 // Keep this short so organizer onboarding/session state refreshes quickly.
 const SESSION_CACHE_TTL = 60 * 1000;
@@ -25,15 +23,6 @@ function clearSessionStorageHints() {
   sessionStorage.removeItem("userPhone");
   sessionStorage.removeItem("authProvider");
   sessionStorage.removeItem("hasPassword");
-}
-
-function subscribeToRefresh(callback) {
-  refreshSubscribers.push(callback);
-}
-
-function notifyRefreshSubscribers(success) {
-  refreshSubscribers.forEach((callback) => callback(success));
-  refreshSubscribers = [];
 }
 
 function normalizeSessionResponse(data) {
@@ -122,69 +111,30 @@ function syncSessionStorage(session) {
 }
 
 export async function tryRefreshToken() {
-  if (isRefreshing) {
-    return new Promise((resolve) => {
-      subscribeToRefresh(resolve);
-    });
-  }
-
-  isRefreshing = true;
-
-  try {
-    const refreshRes = await fetch(buildUrl("auth/refresh"), {
-      method: "POST",
-      credentials: "include",
-    });
-
-    const success = refreshRes.ok;
-    notifyRefreshSubscribers(success);
-    return success;
-  } catch (error) {
-    console.error("Failed to refresh token:", error);
-    notifyRefreshSubscribers(false);
-    return false;
-  } finally {
-    isRefreshing = false;
-  }
+  return refreshAccessToken();
 }
 
 async function fetchSessionInternal(forceRefresh = false) {
   const endpoint = forceRefresh ? "auth/me?force=true" : "auth/me";
 
-  let res;
   try {
-    res = await fetch(buildUrl(endpoint), {
+    const res = await customFetch(buildUrl(endpoint), {
       method: "GET",
-      credentials: "include",
+      suppressAuthFailure: true,
     });
-  } catch (networkError) {
-    console.error("Network error fetching session:", networkError);
-    throw new Error("Network error: Unable to verify session");
-  }
 
-  if (res.status === 401) {
-    const refreshed = await tryRefreshToken();
-
-    if (refreshed) {
-      res = await fetch(buildUrl(endpoint), {
-        method: "GET",
-        credentials: "include",
-      });
-    } else {
+    const data = await res.json().catch(() => ({}));
+    return normalizeSessionResponse(data);
+  } catch (error) {
+    if (error?.status === 401) {
       return UNAUTHENTICATED_SESSION;
     }
+    if (error?.message?.toLowerCase().includes("failed to fetch")) {
+      console.error("Network error fetching session:", error);
+      throw new Error("Network error: Unable to verify session");
+    }
+    throw error;
   }
-
-  if (res.status === 401) {
-    return UNAUTHENTICATED_SESSION;
-  }
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch session: ${res.status}`);
-  }
-
-  const data = await res.json().catch(() => ({}));
-  return normalizeSessionResponse(data);
 }
 
 export async function fetchSession(forceRefresh = false) {

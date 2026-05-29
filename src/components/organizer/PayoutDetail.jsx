@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { apiFetch, buildUrl } from "@/config/api";
+import { apiFetch, downloadFile } from "@/config/api";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft,
@@ -66,20 +66,10 @@ const PayoutDetail = ({ payoutId, onBack }) => {
   const handleDownloadInvoice = async () => {
     setDownloading(true);
     try {
-      const url = buildUrl(`/api/organizer/me/payouts/${payoutId}/invoice`);
-      const response = await fetch(url, {
-        credentials: "include",
-      });
-      if (!response.ok) throw new Error("Download failed");
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = downloadUrl;
-      a.download = `payout-invoice-${payoutId.substring(0, 8)}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(downloadUrl);
+      await downloadFile(
+        `/api/organizer/me/payouts/${payoutId}/invoice`,
+        `payout-invoice-${payoutId.substring(0, 8)}.pdf`
+      );
     } catch (err) {
       console.error("Failed to download invoice:", err);
     } finally {

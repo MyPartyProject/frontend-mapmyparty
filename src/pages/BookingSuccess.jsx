@@ -12,7 +12,7 @@ import {
   MapPin,
   Ticket,
 } from "lucide-react";
-import { apiFetch, buildUrl } from "@/config/api";
+import { apiFetch, downloadFile } from "@/config/api";
 import { toast } from "sonner";
 
 const BookingSuccess = () => {
@@ -104,13 +104,16 @@ const BookingSuccess = () => {
     };
   }, [booking?.gstTotal, booking?.gstType]);
 
-  const handleDownloadTickets = () => {
+  const handleDownloadTickets = async () => {
     try {
       toast.info("Preparing your tickets...");
-      window.open(buildUrl(`/api/booking/${bookingId}/ticket/download`), "_blank", "noopener,noreferrer");
+      await downloadFile(
+        `/api/booking/${bookingId}/ticket/download`,
+        `tickets-${bookingIdLabel}.pdf`
+      );
       toast.success("Ticket download started");
     } catch (err) {
-      toast.error("Failed to download tickets");
+      toast.error(err?.message || "Failed to download tickets");
     }
   };
 

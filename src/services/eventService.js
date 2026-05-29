@@ -1,4 +1,4 @@
-import { buildUrl, apiFetch } from "@/config/api";
+import { buildUrl, apiFetch, customFetch } from "@/config/api";
 
 // -------- Cloudinary Signature + Upload Helpers (internal) --------
 const getAuthToken = () =>
@@ -14,9 +14,8 @@ async function getCloudinarySignature(type, entityId) {
 
   const token = getAuthToken();
   const url = buildUrl(`/api/cloudinary/sign?type=${encodeURIComponent(type)}&entityId=${encodeURIComponent(entityId)}`);
-  const res = await fetch(url, {
+  const res = await customFetch(url, {
     method: "GET",
-    credentials: "include",
     headers: token
       ? {
           Authorization: `Bearer ${token}`,
@@ -59,9 +58,8 @@ async function getCloudinarySignatureForFolder(folder) {
 
   const token = getAuthToken();
   const url = buildUrl(`/api/cloudinary/sign?folder=${encodeURIComponent(folder)}`);
-  const res = await fetch(url, {
+  const res = await customFetch(url, {
     method: "GET",
-    credentials: "include",
     headers: token
       ? {
           Authorization: `Bearer ${token}`,
@@ -171,9 +169,8 @@ async function getCloudinaryDeleteSignature(publicId) {
 
   const token = getAuthToken();
   const url = buildUrl(`/api/cloudinary/sign-delete?publicId=${encodeURIComponent(publicId)}`);
-  const res = await fetch(url, {
+  const res = await customFetch(url, {
     method: "GET",
-    credentials: "include",
     headers: token
       ? {
           Authorization: `Bearer ${token}`,

@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import VintageTicket from "@/components/VintageTicket";
-import { apiFetch, buildUrl } from "@/config/api";
+import { apiFetch, downloadFile } from "@/config/api";
 import { toast } from "sonner";
 import { jsPDF } from "jspdf";
 import QRCode from "qrcode";
@@ -275,33 +275,10 @@ const MyBookings = ({
 
     setDownloadingInvoiceId(booking.id);
     try {
-      const url = buildUrl(`/api/booking/${booking.id}/invoice`);
-      const response = await fetch(url, {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        let message = "Failed to download invoice";
-        try {
-          const errorData = await response.json();
-          message = errorData?.errorMessage || errorData?.message || message;
-        } catch (_error) {
-          // Ignore parse failures and use the fallback message.
-        }
-        throw new Error(message);
-      }
-
-      const blob = await response.blob();
-      const contentDisposition = response.headers.get("content-disposition") || "";
-      const fileNameMatch = /filename="?([^"]+)"?/i.exec(contentDisposition);
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = downloadUrl;
-      anchor.download = fileNameMatch?.[1] || `invoice-${booking.publicId || booking.id}.pdf`;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      window.URL.revokeObjectURL(downloadUrl);
+      await downloadFile(
+        `/api/booking/${booking.id}/invoice`,
+        `invoice-${booking.publicId || booking.id}.pdf`
+      );
       toast.success("Invoice download started");
     } catch (err) {
       console.error("Failed to download invoice", err);

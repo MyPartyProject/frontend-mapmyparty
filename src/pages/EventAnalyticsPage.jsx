@@ -48,7 +48,7 @@ import {
   Bar,
   Legend,
 } from "recharts";
-import { buildUrl } from "@/config/api";
+import { downloadFile } from "@/config/api";
 import { useEventAnalytics } from "@/hooks/useEventAnalytics";
 import AnalyticsProgressBar from "@/components/analytics/AnalyticsProgressBar";
 
@@ -305,16 +305,10 @@ const EventAnalyticsPage = () => {
     if (downloading) return;
     setDownloading(true);
     try {
-      const url = buildUrl(`/api/organizer/${organizerId}/events/${eventId}/analytics/export`);
-      const res = await fetch(url, { credentials: "include" });
-      if (!res.ok) throw new Error("Export failed");
-      const blob = await res.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = objectUrl;
-      a.download = `analytics-${eventSlug || eventId}.csv`;
-      a.click();
-      URL.revokeObjectURL(objectUrl);
+      await downloadFile(
+        `/api/organizer/${organizerId}/events/${eventId}/analytics/export`,
+        `analytics-${eventSlug || eventId}.csv`
+      );
     } catch (err) {
       console.error("CSV download error:", err);
     } finally {
