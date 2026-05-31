@@ -8,11 +8,15 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  Clapperboard,
   MapPin,
   Music,
+  PartyPopper,
   Search,
+  Ticket,
   Sparkles,
   TrendingUp,
+  Trophy,
   X,
 } from "lucide-react";
 import { usePublicEvents } from "@/hooks/usePublicEvents";
@@ -22,14 +26,31 @@ import { resolveEventBannerImage } from "@/utils/eventBannerImage";
 
 const PAGE_SIZE = 20;
 
-const CATEGORY_ORDER = ["music", "workshop", "business", "entertainment", "food", "wellness"];
+const CATEGORY_ORDER = [
+  "music",
+  "concerts",
+  "sports",
+  "movies",
+  "plays",
+  "activities",
+  "workshop",
+  "business",
+  "entertainment",
+  "food",
+  "wellness",
+];
 const FALLBACK_CATEGORY_COLORS = ["#60a5fa", "#f472b6", "#2dd4bf", "#f59e0b", "#818cf8"];
 
 const KNOWN_CATEGORY_META = {
   business: { label: "Business", icon: Briefcase, color: "#38bdf8" },
+  activities: { label: "Activities", icon: PartyPopper, color: "#22c55e" },
   entertainment: { label: "Entertainment", icon: Sparkles, color: "#ef4444" },
+  concerts: { label: "Concerts", icon: Music, color: "#a855f7" },
   food: { label: "Food", icon: Sparkles, color: "#f59e0b" },
+  movies: { label: "Movies", icon: Clapperboard, color: "#0ea5e9" },
   music: { label: "Music", icon: Music, color: "#a855f7" },
+  plays: { label: "Plays", icon: Ticket, color: "#f97316" },
+  sports: { label: "Sports", icon: Trophy, color: "#14b8a6" },
   wellness: { label: "Wellness", icon: Sparkles, color: "#10b981" },
   workshop: { label: "Workshop", icon: Briefcase, color: "#f97316" },
 };
@@ -49,6 +70,49 @@ const WORKSHOP_SUBCATEGORIES = [
   "Consultation",
   "Corporate Event",
   "Communication",
+].map((label) => ({ label, value: label }));
+
+const SPORTS_SUBCATEGORIES = [
+  "Live Sports",
+  "Stadium Matches",
+  "Esports",
+  "Fitness Events",
+  "Marathons",
+  "Tournaments",
+].map((label) => ({ label, value: label }));
+
+const MOVIES_SUBCATEGORIES = [
+  "Movie Screenings",
+  "Film Festivals",
+  "Premieres",
+  "Drive-In Cinema",
+  "Short Films",
+].map((label) => ({ label, value: label }));
+
+const PLAYS_SUBCATEGORIES = [
+  "Plays",
+  "Drama Shows",
+  "Musical Theatre",
+  "Stage Performances",
+  "Classical Drama",
+].map((label) => ({ label, value: label }));
+
+const CONCERTS_SUBCATEGORIES = [
+  "Live Concerts",
+  "Acoustic Concerts",
+  "Arena Shows",
+  "Orchestra Nights",
+  "DJ Concerts",
+  "Music Festival",
+].map((label) => ({ label, value: label }));
+
+const ACTIVITIES_SUBCATEGORIES = [
+  "Adventure Activities",
+  "Games Night",
+  "Family Activities",
+  "Community Events",
+  "Outdoor Activities",
+  "Experiences",
 ].map((label) => ({ label, value: label }));
 
 const MUSIC_SUBCATEGORIES = [
@@ -78,10 +142,23 @@ const MUSIC_SUBCATEGORIES = [
 
 const KNOWN_SUBCATEGORY_OPTIONS = {
   music: MUSIC_SUBCATEGORIES,
+  concerts: CONCERTS_SUBCATEGORIES,
+  sports: SPORTS_SUBCATEGORIES,
+  movies: MOVIES_SUBCATEGORIES,
+  plays: PLAYS_SUBCATEGORIES,
+  activities: ACTIVITIES_SUBCATEGORIES,
   workshop: WORKSHOP_SUBCATEGORIES,
 };
 
-const PINNED_CATEGORY_KEYS = ["music", "workshop"];
+const PINNED_CATEGORY_KEYS = [
+  "music",
+  "concerts",
+  "sports",
+  "movies",
+  "plays",
+  "activities",
+  "workshop",
+];
 
 const normalizeBrowseValue = (value) => (typeof value === "string" ? value.trim() : "");
 
@@ -100,11 +177,29 @@ const toDisplayLabel = (value) => {
 
 const parseBrowsePage = (value) => Math.max(1, Number.parseInt(value, 10) || 1);
 
+const parseBrowseCoordinate = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const parseBrowseRadius = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
+};
+
 const normalizeSubCategoryValue = (value) => {
   const normalized = normalizeBrowseValue(value);
   if (!normalized) return null;
 
-  const knownOptions = [...WORKSHOP_SUBCATEGORIES, ...MUSIC_SUBCATEGORIES];
+  const knownOptions = [
+    ...WORKSHOP_SUBCATEGORIES,
+    ...MUSIC_SUBCATEGORIES,
+    ...CONCERTS_SUBCATEGORIES,
+    ...SPORTS_SUBCATEGORIES,
+    ...MOVIES_SUBCATEGORIES,
+    ...PLAYS_SUBCATEGORIES,
+    ...ACTIVITIES_SUBCATEGORIES,
+  ];
   const match = knownOptions.find((option) => getLookupKey(option.value) === getLookupKey(normalized));
 
   return match?.value || normalized;
@@ -116,6 +211,26 @@ const inferCategoryKeyFromSubCategory = (subCategory) => {
 
   if (MUSIC_SUBCATEGORIES.some((option) => getLookupKey(option.value) === normalized)) {
     return "music";
+  }
+
+  if (CONCERTS_SUBCATEGORIES.some((option) => getLookupKey(option.value) === normalized)) {
+    return "concerts";
+  }
+
+  if (SPORTS_SUBCATEGORIES.some((option) => getLookupKey(option.value) === normalized)) {
+    return "sports";
+  }
+
+  if (MOVIES_SUBCATEGORIES.some((option) => getLookupKey(option.value) === normalized)) {
+    return "movies";
+  }
+
+  if (PLAYS_SUBCATEGORIES.some((option) => getLookupKey(option.value) === normalized)) {
+    return "plays";
+  }
+
+  if (ACTIVITIES_SUBCATEGORIES.some((option) => getLookupKey(option.value) === normalized)) {
+    return "activities";
   }
 
   if (WORKSHOP_SUBCATEGORIES.some((option) => getLookupKey(option.value) === normalized)) {
@@ -158,16 +273,29 @@ const getBrowseStateFromSearchParams = (searchParams) => {
     getLookupKey(searchParams.get("category")) ||
     inferCategoryKeyFromSubCategory(selectedSubCategory) ||
     "all";
+  const latitude = parseBrowseCoordinate(searchParams.get("lat"));
+  const longitude = parseBrowseCoordinate(searchParams.get("lng"));
 
   return {
     searchQuery: normalizeBrowseValue(searchParams.get("search")),
     selectedCategory,
     selectedSubCategory,
+    latitude,
+    longitude,
+    radiusKm: parseBrowseRadius(searchParams.get("radius")),
     page: parseBrowsePage(searchParams.get("page")),
   };
 };
 
-const buildBrowseSearchParams = ({ searchQuery, selectedCategory, selectedSubCategory, page }) => {
+const buildBrowseSearchParams = ({
+  searchQuery,
+  selectedCategory,
+  selectedSubCategory,
+  latitude,
+  longitude,
+  radiusKm,
+  page,
+}) => {
   const params = new URLSearchParams();
   const normalizedSearch = normalizeBrowseValue(searchQuery);
 
@@ -181,6 +309,14 @@ const buildBrowseSearchParams = ({ searchQuery, selectedCategory, selectedSubCat
 
   if (selectedSubCategory !== "all") {
     params.set("subCategory", selectedSubCategory);
+  }
+
+  if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+    params.set("lat", String(latitude));
+    params.set("lng", String(longitude));
+    if (Number.isFinite(radiusKm) && radiusKm > 0 && radiusKm !== 50) {
+      params.set("radius", String(radiusKm));
+    }
   }
 
   if (page > 1) {
@@ -219,6 +355,9 @@ export default function BrowseEvents({ showPublicHeader = false }) {
       searchQuery: updates.searchQuery ?? urlState.searchQuery,
       selectedCategory: updates.selectedCategory ?? urlState.selectedCategory,
       selectedSubCategory: updates.selectedSubCategory ?? urlState.selectedSubCategory,
+      latitude: updates.latitude ?? urlState.latitude,
+      longitude: updates.longitude ?? urlState.longitude,
+      radiusKm: updates.radiusKm ?? urlState.radiusKm,
       page: updates.page ?? urlState.page,
     };
 
@@ -244,6 +383,9 @@ export default function BrowseEvents({ showPublicHeader = false }) {
     error: catalogError,
   } = usePublicEvents({
     search: urlState.searchQuery || null,
+    latitude: urlState.latitude,
+    longitude: urlState.longitude,
+    radiusKm: urlState.radiusKm,
   });
 
   const {
@@ -256,6 +398,9 @@ export default function BrowseEvents({ showPublicHeader = false }) {
     search: urlState.searchQuery || null,
     category: urlState.selectedCategory === "all" ? null : urlState.selectedCategory,
     subCategory: urlState.selectedSubCategory === "all" ? null : urlState.selectedSubCategory,
+    latitude: urlState.latitude,
+    longitude: urlState.longitude,
+    radiusKm: urlState.radiusKm,
     page: urlState.page,
     limit: PAGE_SIZE,
   });
@@ -439,6 +584,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
   const hasActiveFilters =
     urlState.selectedCategory !== "all" ||
     urlState.selectedSubCategory !== "all" ||
+    (Number.isFinite(urlState.latitude) && Number.isFinite(urlState.longitude)) ||
     Boolean(appliedSearchQuery);
 
   const resultsStart =
@@ -494,6 +640,9 @@ export default function BrowseEvents({ showPublicHeader = false }) {
       searchQuery: "",
       selectedCategory: "all",
       selectedSubCategory: "all",
+      latitude: null,
+      longitude: null,
+      radiusKm: 50,
       page: 1,
     });
   };
@@ -557,18 +706,13 @@ export default function BrowseEvents({ showPublicHeader = false }) {
             </h1>
           </div>
 
-          <div className="w-full lg:w-[360px] xl:w-[400px] lg:flex-shrink-0">
-            <div className="relative">
+          <div className="relative flex-1">
             <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
-            <Input
-              type="search"
-              placeholder="Search events by name or location..."
-              value={searchQuery}
+            <input
               onChange={(event) => setSearchQuery(event.target.value)}
               className="h-11 w-full rounded-xl border-white/[0.08] bg-white/[0.05] pl-10 pr-4 text-sm text-white placeholder:text-white/30 focus:border-[#D60024]/50 focus:ring-1 focus:ring-[#D60024]/50"
             />
           </div>
-        </div>
         </div>
 
         <div className="mb-6 max-w-4xl space-y-3 rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-3 sm:px-4">
@@ -682,6 +826,11 @@ export default function BrowseEvents({ showPublicHeader = false }) {
               {urlState.selectedSubCategory !== "all" && (
                 <Badge className="border-0 bg-white/[0.06] px-2 py-0.5 text-[11px] text-white/60">
                   {urlState.selectedSubCategory}
+                </Badge>
+              )}
+              {Number.isFinite(urlState.latitude) && Number.isFinite(urlState.longitude) && (
+                <Badge className="border-0 bg-[#38bdf8]/10 px-2 py-0.5 text-[11px] text-[#7dd3fc]">
+                  Nearby
                 </Badge>
               )}
               {appliedSearchQuery && (

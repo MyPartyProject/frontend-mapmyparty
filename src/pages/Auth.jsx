@@ -1,9 +1,23 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Building2, Eye, EyeOff, Loader2, Mail, User } from "lucide-react";
+import {
+  ArrowLeft,
+  Building2,
+  Eye,
+  EyeOff,
+  Loader2,
+  Mail,
+  User,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,7 +26,10 @@ import OTPVerificationModal from "@/components/OTPVerificationModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { requestPasswordReset } from "@/services/authService";
 import { fetchSession, resetSessionCache } from "@/utils/auth";
-import { PASSWORD_REQUIREMENTS_TEXT, isStrongPassword } from "@/utils/passwordRules";
+import {
+  PASSWORD_REQUIREMENTS_TEXT,
+  isStrongPassword,
+} from "@/utils/passwordRules";
 import Logo from "../assets/android-chrome-192x192.png";
 
 const EMPTY_LOGIN_FORM = {
@@ -41,16 +58,36 @@ const normalizeUserType = (value) => {
   return null;
 };
 
+const normalizeIndianPhoneNumber = (value) => {
+  const digits = (value || "").replace(/\D/g, "");
+
+  if (digits.length === 10) {
+    return digits;
+  }
+
+  if (digits.length === 12 && digits.startsWith("91")) {
+    return digits.slice(2);
+  }
+
+  return null;
+};
+
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { login: contextLogin } = useAuth();
   const redirectTarget = searchParams.get("redirect") || "";
 
-  const [userType, setUserType] = useState(() => normalizeUserType(searchParams.get("type")));
-  const [isLogin, setIsLogin] = useState(() => searchParams.get("mode") !== "signup");
+  const [userType, setUserType] = useState(() =>
+    normalizeUserType(searchParams.get("type")),
+  );
+  const [isLogin, setIsLogin] = useState(
+    () => searchParams.get("mode") !== "signup",
+  );
   const [isLoading, setIsLoading] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(() => searchParams.get("forgot") === "true");
+  const [showForgotPassword, setShowForgotPassword] = useState(
+    () => searchParams.get("forgot") === "true",
+  );
   const [forgotPasswordSent, setForgotPasswordSent] = useState(false);
 
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -61,8 +98,14 @@ const Auth = () => {
   const [showSignupPassword, setShowSignupPassword] = useState(false);
 
   const initialEmail = searchParams.get("email") || "";
-  const [loginForm, setLoginForm] = useState({ ...EMPTY_LOGIN_FORM, email: initialEmail });
-  const [signupForm, setSignupForm] = useState({ ...EMPTY_SIGNUP_FORM, email: initialEmail });
+  const [loginForm, setLoginForm] = useState({
+    ...EMPTY_LOGIN_FORM,
+    email: initialEmail,
+  });
+  const [signupForm, setSignupForm] = useState({
+    ...EMPTY_SIGNUP_FORM,
+    email: initialEmail,
+  });
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState(initialEmail);
 
   useEffect(() => {
@@ -73,8 +116,10 @@ const Auth = () => {
     toast.success("Password updated. Sign in with your new password.");
     const selectedType = normalizeUserType(searchParams.get("type"));
     navigate(
-      selectedType ? `/auth?mode=login&type=${selectedType}` : "/auth?mode=login",
-      { replace: true }
+      selectedType
+        ? `/auth?mode=login&type=${selectedType}`
+        : "/auth?mode=login",
+      { replace: true },
     );
   }, [navigate, searchParams]);
 
@@ -84,7 +129,10 @@ const Auth = () => {
       return;
     }
 
-    toast.error(AUTH_ERROR_MESSAGES[errorCode] || "Authentication failed. Please try again.");
+    toast.error(
+      AUTH_ERROR_MESSAGES[errorCode] ||
+        "Authentication failed. Please try again.",
+    );
 
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete("error");
@@ -92,13 +140,16 @@ const Auth = () => {
     nextParams.set("mode", "login");
 
     const nextQuery = nextParams.toString();
-    navigate(nextQuery ? `/auth?${nextQuery}` : "/auth?mode=login", { replace: true });
+    navigate(nextQuery ? `/auth?${nextQuery}` : "/auth?mode=login", {
+      replace: true,
+    });
   }, [navigate, searchParams]);
 
   const getDashboardPath = (type) =>
     type === "organizer" ? "/organizer/dashboard-v2" : "/dashboard";
 
-  const getPostAuthDestination = (type) => redirectTarget || getDashboardPath(type);
+  const getPostAuthDestination = (type) =>
+    redirectTarget || getDashboardPath(type);
 
   const handleUserTypeSelect = (type) => {
     setUserType(type);
@@ -160,7 +211,7 @@ const Auth = () => {
     const role = type === "organizer" ? "ORGANIZER" : "USER";
     const name = signupForm.name.trim();
     const email = signupForm.email.trim();
-    const phoneDigits = signupForm.phone.replace(/\D/g, "");
+    const phoneDigits = normalizeIndianPhoneNumber(signupForm.phone);
     const password = signupForm.password;
 
     if (!name || !email || !phoneDigits || !password) {
@@ -168,7 +219,7 @@ const Auth = () => {
       return;
     }
 
-    if (phoneDigits.length < 10 || phoneDigits.length > 15) {
+    if (!phoneDigits) {
       toast.error("Please enter a valid phone number");
       return;
     }
@@ -183,7 +234,13 @@ const Auth = () => {
 
       await apiFetch("auth/send-signup-otp", {
         method: "POST",
-        body: JSON.stringify({ name, email, phone: phoneDigits, password, role }),
+        body: JSON.stringify({
+          name,
+          email,
+          phone: phoneDigits,
+          password,
+          role,
+        }),
       });
 
       setOtpEmail(email);
@@ -211,12 +268,14 @@ const Auth = () => {
 
       const response = await requestPasswordReset(
         email,
-        userType === "organizer" ? "ORGANIZER" : "USER"
+        userType === "organizer" ? "ORGANIZER" : "USER",
       );
 
       setForgotPasswordSent(true);
       setLoginForm((current) => ({ ...current, email }));
-      toast.success(response?.message || "Password reset email sent successfully");
+      toast.success(
+        response?.message || "Password reset email sent successfully",
+      );
     } catch (error) {
       toast.error(error?.message || "Unable to send password reset email");
     } finally {
@@ -245,7 +304,9 @@ const Auth = () => {
     const session = await fetchSession(true);
 
     if (!session?.isAuthenticated) {
-      toast.error("Signup succeeded but session validation failed. Please try logging in.");
+      toast.error(
+        "Signup succeeded but session validation failed. Please try logging in.",
+      );
       return;
     }
 
@@ -283,10 +344,14 @@ const Auth = () => {
               </div>
             </div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2.5">
-              Welcome to <span className="bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">MapMyParty</span>
+              Welcome to{" "}
+              <span className="bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">
+                MapMyParty
+              </span>
             </h1>
             <p className="text-sm text-muted-foreground max-w-lg mx-auto">
-              Your ultimate destination for discovering, creating, and managing unforgettable events
+              Your ultimate destination for discovering, creating, and managing
+              unforgettable events
             </p>
           </div>
 
@@ -299,7 +364,9 @@ const Auth = () => {
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/25 via-secondary/20 to-accent/20 border border-border/60 flex items-center justify-center mx-auto mb-4 group-hover:border-accent/40 transition-colors">
                   <User className="w-7 h-7 text-accent" />
                 </div>
-                <h2 className="text-lg font-semibold text-foreground mb-2">I&apos;m an Attendee</h2>
+                <h2 className="text-lg font-semibold text-foreground mb-2">
+                  I&apos;m an Attendee
+                </h2>
                 <p className="text-muted-foreground text-sm mb-3.5">
                   Discover and book tickets to amazing events near you
                 </p>
@@ -318,7 +385,9 @@ const Auth = () => {
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/25 via-secondary/20 to-accent/20 border border-border/60 flex items-center justify-center mx-auto mb-4 group-hover:border-accent/40 transition-colors">
                   <Building2 className="w-7 h-7 text-accent" />
                 </div>
-                <h2 className="text-lg font-semibold text-foreground mb-2">I&apos;m an Organizer</h2>
+                <h2 className="text-lg font-semibold text-foreground mb-2">
+                  I&apos;m an Organizer
+                </h2>
                 <p className="text-muted-foreground text-sm mb-3.5">
                   Create and manage your own events with ease
                 </p>
@@ -357,7 +426,9 @@ const Auth = () => {
               {userType === "organizer" ? "Organizer" : "Attendee"} Account
             </CardTitle>
             <CardDescription className="text-muted-foreground text-xs sm:text-sm mt-1">
-              {isLogin ? "Welcome back! Sign in to continue" : "Create your account to get started"}
+              {isLogin
+                ? "Welcome back! Sign in to continue"
+                : "Create your account to get started"}
             </CardDescription>
           </CardHeader>
           <CardContent className="px-5 pb-5">
@@ -389,13 +460,16 @@ const Auth = () => {
                         <Mail className="h-4 w-4 text-accent" />
                         Password recovery
                       </div>
-                      <p className="mt-2 text-xs sm:text-sm text-muted-foreground">{forgotPasswordDescription}</p>
+                      <p className="mt-2 text-xs sm:text-sm text-muted-foreground">
+                        {forgotPasswordDescription}
+                      </p>
                     </div>
 
                     {forgotPasswordSent ? (
                       <div className="space-y-3.5">
                         <div className="rounded-xl border border-accent/35 bg-accent/10 p-3.5 text-xs sm:text-sm text-accent">
-                          If this email is registered, a reset link is on its way. Use the newest link within 10 minutes.
+                          If this email is registered, a reset link is on its
+                          way. Use the newest link within 10 minutes.
                         </div>
                         <Button
                           type="button"
@@ -417,9 +491,15 @@ const Auth = () => {
                         </Button>
                       </div>
                     ) : (
-                      <form onSubmit={handleForgotPasswordSubmit} className="space-y-3.5">
+                      <form
+                        onSubmit={handleForgotPasswordSubmit}
+                        className="space-y-3.5"
+                      >
                         <div className="space-y-2">
-                          <Label htmlFor="forgot-email" className="text-muted-foreground text-xs sm:text-sm font-medium">
+                          <Label
+                            htmlFor="forgot-email"
+                            className="text-muted-foreground text-xs sm:text-sm font-medium"
+                          >
                             Email
                           </Label>
                           <Input
@@ -427,7 +507,9 @@ const Auth = () => {
                             type="email"
                             placeholder="Enter your account email"
                             value={forgotPasswordEmail}
-                            onChange={(event) => setForgotPasswordEmail(event.target.value)}
+                            onChange={(event) =>
+                              setForgotPasswordEmail(event.target.value)
+                            }
                             className="h-9 border-border/60 bg-background/75 text-foreground placeholder:text-muted-foreground focus-visible:border-ring"
                           />
                         </div>
@@ -461,9 +543,15 @@ const Auth = () => {
                   </div>
                 ) : (
                   <>
-                    <form onSubmit={(event) => handleLoginSubmit(event, userType)} className="space-y-3.5">
+                    <form
+                      onSubmit={(event) => handleLoginSubmit(event, userType)}
+                      className="space-y-3.5"
+                    >
                       <div className="space-y-2">
-                        <Label htmlFor="email" className="text-muted-foreground text-xs sm:text-sm font-medium">
+                        <Label
+                          htmlFor="email"
+                          className="text-muted-foreground text-xs sm:text-sm font-medium"
+                        >
                           Email
                         </Label>
                         <Input
@@ -473,13 +561,19 @@ const Auth = () => {
                           required
                           value={loginForm.email}
                           onChange={(event) =>
-                            setLoginForm((current) => ({ ...current, email: event.target.value }))
+                            setLoginForm((current) => ({
+                              ...current,
+                              email: event.target.value,
+                            }))
                           }
                           className="h-9 border-border/60 bg-background/75 text-foreground placeholder:text-muted-foreground focus-visible:border-ring"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="password" className="text-muted-foreground text-xs sm:text-sm font-medium">
+                        <Label
+                          htmlFor="password"
+                          className="text-muted-foreground text-xs sm:text-sm font-medium"
+                        >
                           Password
                         </Label>
                         <div className="relative">
@@ -490,7 +584,10 @@ const Auth = () => {
                             required
                             value={loginForm.password}
                             onChange={(event) =>
-                              setLoginForm((current) => ({ ...current, password: event.target.value }))
+                              setLoginForm((current) => ({
+                                ...current,
+                                password: event.target.value,
+                              }))
                             }
                             className="h-9 pr-10 border-border/60 bg-background/75 text-foreground placeholder:text-muted-foreground focus-visible:border-ring"
                           />
@@ -499,9 +596,15 @@ const Auth = () => {
                             variant="ghost"
                             size="sm"
                             className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground"
-                            onClick={() => setShowLoginPassword((current) => !current)}
+                            onClick={() =>
+                              setShowLoginPassword((current) => !current)
+                            }
                           >
-                            {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            {showLoginPassword ? (
+                              <EyeOff className="w-4 h-4" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
+                            )}
                           </Button>
                         </div>
                       </div>
@@ -583,9 +686,15 @@ const Auth = () => {
               </TabsContent>
 
               <TabsContent value="signup" className="space-y-3.5 mt-0">
-                <form onSubmit={(event) => handleSignupSubmit(event, userType)} className="space-y-3.5">
+                <form
+                  onSubmit={(event) => handleSignupSubmit(event, userType)}
+                  className="space-y-3.5"
+                >
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-muted-foreground text-xs sm:text-sm font-medium">
+                    <Label
+                      htmlFor="name"
+                      className="text-muted-foreground text-xs sm:text-sm font-medium"
+                    >
                       Full Name
                     </Label>
                     <Input
@@ -594,13 +703,19 @@ const Auth = () => {
                       required
                       value={signupForm.name}
                       onChange={(event) =>
-                        setSignupForm((current) => ({ ...current, name: event.target.value }))
+                        setSignupForm((current) => ({
+                          ...current,
+                          name: event.target.value,
+                        }))
                       }
                       className="h-9 border-border/60 bg-background/75 text-foreground placeholder:text-muted-foreground focus-visible:border-ring"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email" className="text-muted-foreground text-xs sm:text-sm font-medium">
+                    <Label
+                      htmlFor="signup-email"
+                      className="text-muted-foreground text-xs sm:text-sm font-medium"
+                    >
                       Email
                     </Label>
                     <Input
@@ -610,13 +725,19 @@ const Auth = () => {
                       required
                       value={signupForm.email}
                       onChange={(event) =>
-                        setSignupForm((current) => ({ ...current, email: event.target.value }))
+                        setSignupForm((current) => ({
+                          ...current,
+                          email: event.target.value,
+                        }))
                       }
                       className="h-9 border-border/60 bg-background/75 text-foreground placeholder:text-muted-foreground focus-visible:border-ring"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-phone" className="text-muted-foreground text-xs sm:text-sm font-medium">
+                    <Label
+                      htmlFor="signup-phone"
+                      className="text-muted-foreground text-xs sm:text-sm font-medium"
+                    >
                       Phone Number
                     </Label>
                     <Input
@@ -626,13 +747,19 @@ const Auth = () => {
                       required
                       value={signupForm.phone}
                       onChange={(event) =>
-                        setSignupForm((current) => ({ ...current, phone: event.target.value }))
+                        setSignupForm((current) => ({
+                          ...current,
+                          phone: event.target.value,
+                        }))
                       }
                       className="h-9 border-border/60 bg-background/75 text-foreground placeholder:text-muted-foreground focus-visible:border-ring"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password" className="text-muted-foreground text-xs sm:text-sm font-medium">
+                    <Label
+                      htmlFor="signup-password"
+                      className="text-muted-foreground text-xs sm:text-sm font-medium"
+                    >
                       Password
                     </Label>
                     <div className="relative">
@@ -643,7 +770,10 @@ const Auth = () => {
                         required
                         value={signupForm.password}
                         onChange={(event) =>
-                          setSignupForm((current) => ({ ...current, password: event.target.value }))
+                          setSignupForm((current) => ({
+                            ...current,
+                            password: event.target.value,
+                          }))
                         }
                         className="h-9 pr-10 border-border/60 bg-background/75 text-foreground placeholder:text-muted-foreground focus-visible:border-ring"
                       />
@@ -652,12 +782,20 @@ const Auth = () => {
                         variant="ghost"
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground"
-                        onClick={() => setShowSignupPassword((current) => !current)}
+                        onClick={() =>
+                          setShowSignupPassword((current) => !current)
+                        }
                       >
-                        {showSignupPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showSignupPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
                       </Button>
                     </div>
-                    <p className="text-[11px] text-muted-foreground">{PASSWORD_REQUIREMENTS_TEXT}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {PASSWORD_REQUIREMENTS_TEXT}
+                    </p>
                   </div>
                   <Button
                     type="submit"

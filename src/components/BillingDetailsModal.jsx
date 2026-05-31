@@ -12,6 +12,20 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+const normalizeIndianPhoneNumber = (value) => {
+  const digits = (value || "").replace(/\D/g, "");
+
+  if (digits.length === 10) {
+    return digits;
+  }
+
+  if (digits.length === 12 && digits.startsWith("91")) {
+    return digits.slice(2);
+  }
+
+  return null;
+};
+
 const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => {
   const [formData, setFormData] = useState({
     fullName: "",
@@ -75,9 +89,9 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
     }
 
     // Validate phone number
-    const phoneDigits = formData.phone.replace(/\D/g, "");
-    if (phoneDigits.length < 10 || phoneDigits.length > 15) {
-      toast.error("Please enter a valid phone number (10-15 digits)");
+    const phoneDigits = normalizeIndianPhoneNumber(formData.phone);
+    if (!phoneDigits) {
+      toast.error("Please enter a valid phone number (10 digits)");
       return;
     }
 
@@ -88,7 +102,10 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
       return;
     }
 
-    onSubmit(formData);
+    onSubmit({
+      ...formData,
+      phone: phoneDigits,
+    });
   };
 
   return (

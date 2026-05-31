@@ -565,6 +565,44 @@ const CreateEvent = () => {
       "Thumri",
       "Bolly Tech",
     ],
+    Concerts: [
+      "Live Concerts",
+      "Acoustic Concerts",
+      "Arena Shows",
+      "Orchestra Nights",
+      "DJ Concerts",
+      "Music Festival",
+    ],
+    Sports: [
+      "Live Sports",
+      "Stadium Matches",
+      "Esports",
+      "Fitness Events",
+      "Marathons",
+      "Tournaments",
+    ],
+    Movies: [
+      "Movie Screenings",
+      "Film Festivals",
+      "Premieres",
+      "Drive-In Cinema",
+      "Short Films",
+    ],
+    Plays: [
+      "Plays",
+      "Drama Shows",
+      "Musical Theatre",
+      "Stage Performances",
+      "Classical Drama",
+    ],
+    Activities: [
+      "Adventure Activities",
+      "Games Night",
+      "Family Activities",
+      "Community Events",
+      "Outdoor Activities",
+      "Experiences",
+    ],
     Workshop: [
       "Comedy Shows",
       "Theater Shows",
@@ -3720,6 +3758,11 @@ const CreateEvent = () => {
                         </SelectTrigger>
                         <SelectContent className={selectMenuClass}>
                           <SelectItem value="Music">Music</SelectItem>
+                          <SelectItem value="Concerts">Concerts</SelectItem>
+                          <SelectItem value="Sports">Sports</SelectItem>
+                          <SelectItem value="Movies">Movies</SelectItem>
+                          <SelectItem value="Plays">Plays</SelectItem>
+                          <SelectItem value="Activities">Activities</SelectItem>
                           <SelectItem value="Workshop">Workshop</SelectItem>
                         </SelectContent>
                       </Select>
