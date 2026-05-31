@@ -6,12 +6,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
+  Clapperboard,
   MapPin,
   Music2,
   PartyPopper,
   Search,
   ShieldCheck,
+  Ticket,
   Sparkles,
+  Trophy,
 } from "lucide-react";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -49,6 +52,51 @@ const EVENT_SECTION_CONFIG = [
     filters: { category: "Music", subCategory: "Music Festivals" },
   },
   {
+    key: "concerts",
+    label: "Concerts",
+    eyebrow: "Live",
+    description: "Arena shows, acoustic nights, and high-energy concert moments.",
+    icon: Music2,
+    image: "/images/ph1.jpg",
+    filters: { category: "Concerts", subCategory: "Live Concerts" },
+  },
+  {
+    key: "sports",
+    label: "Sports",
+    eyebrow: "Action",
+    description: "Matches, tournaments, and crowd-pumping live sports events.",
+    icon: Trophy,
+    image: "/images/ph2.jpg",
+    filters: { category: "Sports", subCategory: "Live Sports" },
+  },
+  {
+    key: "movies",
+    label: "Movies",
+    eyebrow: "Cinema",
+    description: "Screenings, premieres, and film nights with a big-screen feel.",
+    icon: Clapperboard,
+    image: eventFallback,
+    filters: { category: "Movies", subCategory: "Movie Screenings" },
+  },
+  {
+    key: "plays",
+    label: "Plays",
+    eyebrow: "Stage",
+    description: "Drama, theater, and live performance stories on stage.",
+    icon: Ticket,
+    image: "/images/ph2.jpg",
+    filters: { category: "Plays", subCategory: "Plays" },
+  },
+  {
+    key: "activities",
+    label: "Activities",
+    eyebrow: "Outings",
+    description: "Adventures, meetups, and hands-on experiences worth planning for.",
+    icon: PartyPopper,
+    image: "/images/ph3.jpg",
+    filters: { category: "Activities", subCategory: "Activities" },
+  },
+  {
     key: "comedy-shows",
     label: "Comedy Shows",
     eyebrow: "Laughs",
@@ -61,7 +109,8 @@ const EVENT_SECTION_CONFIG = [
     key: "theater-shows",
     label: "Theater Shows",
     eyebrow: "Workshop",
-    description: "Stage productions, dramatic nights, and live performance craft.",
+    description:
+      "Stage productions, dramatic nights, and live performance craft.",
     icon: ShieldCheck,
     image: "/images/ph2.jpg",
     filters: { category: "Workshop", subCategory: "Theater Shows" },
@@ -69,9 +118,21 @@ const EVENT_SECTION_CONFIG = [
 ];
 
 const steps = [
-  { title: "Discover", desc: "Spot curated events that match your vibe instantly.", icon: Sparkles },
-  { title: "Book", desc: "Secure seats with one-tap checkout and instant tickets.", icon: ShieldCheck },
-  { title: "Enjoy", desc: "Get reminders, live updates, and seamless entry.", icon: Clock3 },
+  {
+    title: "Discover",
+    desc: "Spot curated events that match your vibe instantly.",
+    icon: Sparkles,
+  },
+  {
+    title: "Book",
+    desc: "Secure seats with one-tap checkout and instant tickets.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Enjoy",
+    desc: "Get reminders, live updates, and seamless entry.",
+    icon: Clock3,
+  },
 ];
 
 const heroSlides = [
@@ -225,7 +286,9 @@ const SearchResultsSkeleton = () => (
 );
 
 const EventCardSkeleton = ({ featured = false }) => (
-  <div className={`relative min-h-[13.25rem] overflow-hidden rounded-[1.35rem] border border-border/40 bg-card/70 shadow-[var(--shadow-card)] ${featured ? "sm:min-h-[14.25rem]" : "sm:min-h-[13.75rem]"}`}>
+  <div
+    className={`relative min-h-[13.25rem] overflow-hidden rounded-[1.35rem] border border-border/40 bg-card/70 shadow-[var(--shadow-card)] ${featured ? "sm:min-h-[14.25rem]" : "sm:min-h-[13.75rem]"}`}
+  >
     <Skeleton className="absolute inset-0 h-full w-full bg-muted/50" />
     <div className="absolute inset-0 bg-gradient-to-t from-background via-background/45 to-transparent" />
     <div className="relative flex min-h-[13.25rem] flex-col justify-between p-4">
@@ -253,7 +316,6 @@ const EmptyState = ({ children }) => (
     </div>
   </div>
 );
-
 
 const formatDate = (value) => {
   if (!value) return "Date TBA";
@@ -284,7 +346,12 @@ const getEventLocation = (event) => {
 
   if (typeof venue === "string" && venue.trim()) return venue;
 
-  const parts = [event.venueName, event.city, event.state, event.country].filter(Boolean);
+  const parts = [
+    event.venueName,
+    event.city,
+    event.state,
+    event.country,
+  ].filter(Boolean);
   if (parts.length) return parts.join(", ");
 
   return event.location || "Location TBA";
@@ -317,7 +384,8 @@ const getEventHref = (event) => {
     event.organizer?.user?.slug;
   const eventSlug = event.eventSlug || event.slug;
 
-  if (organizerSlug && eventSlug) return `/events/${organizerSlug}/${eventSlug}`;
+  if (organizerSlug && eventSlug)
+    return `/events/${organizerSlug}/${eventSlug}`;
   return "/browse-events";
 };
 
@@ -347,7 +415,8 @@ const buildBrowseEventsPath = ({ category, subCategory, search } = {}) => {
 const getCategoryEventGridClass = (count) => {
   if (count <= 0) return "mx-auto w-full max-w-xl";
   if (count === 1) return "mx-auto grid w-full max-w-[24rem] gap-3";
-  if (count === 2) return "mx-auto grid w-full max-w-[48rem] gap-3 sm:grid-cols-2";
+  if (count === 2)
+    return "mx-auto grid w-full max-w-[48rem] gap-3 sm:grid-cols-2";
   return "grid w-full gap-3 sm:grid-cols-2 xl:grid-cols-3";
 };
 
@@ -369,7 +438,9 @@ const LandingEventCard = ({
 
   return (
     <Link to={href || "/browse-events"} className="group block h-full">
-      <article className={`landing-event-card relative h-full min-h-[13.25rem] overflow-hidden rounded-[1.35rem] border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1.5 hover:border-border hover:shadow-[var(--shadow-elegant)] ${featured ? "sm:min-h-[14.25rem]" : "sm:min-h-[13.75rem]"}`}>
+      <article
+        className={`landing-event-card relative h-full min-h-[13.25rem] overflow-hidden rounded-[1.35rem] border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1.5 hover:border-border hover:shadow-[var(--shadow-elegant)] ${featured ? "sm:min-h-[14.25rem]" : "sm:min-h-[13.75rem]"}`}
+      >
         <div className="absolute inset-0 overflow-hidden">
           <img
             src={imageSrc}
@@ -430,7 +501,14 @@ const LandingPage = () => {
   const [eventSections, setEventSections] = useState({});
   const [sectionsLoading, setSectionsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState({ events: [], artists: [], venues: [], totalEvents: 0, totalArtists: 0, totalVenues: 0 });
+  const [searchResults, setSearchResults] = useState({
+    events: [],
+    artists: [],
+    venues: [],
+    totalEvents: 0,
+    totalArtists: 0,
+    totalVenues: 0,
+  });
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
   const [hasSearchResults, setHasSearchResults] = useState(false);
@@ -449,7 +527,14 @@ const LandingPage = () => {
     const normalizedQuery = query.trim();
 
     if (!normalizedQuery) {
-      setSearchResults({ events: [], artists: [], venues: [], totalEvents: 0, totalArtists: 0, totalVenues: 0 });
+      setSearchResults({
+        events: [],
+        artists: [],
+        venues: [],
+        totalEvents: 0,
+        totalArtists: 0,
+        totalVenues: 0,
+      });
       setSearchError("");
       setHasSearchResults(false);
       setSearchLoading(false);
@@ -458,7 +543,14 @@ const LandingPage = () => {
 
     if (normalizedQuery.length < 2) {
       searchRequestRef.current += 1;
-      setSearchResults({ events: [], artists: [], venues: [], totalEvents: 0, totalArtists: 0, totalVenues: 0 });
+      setSearchResults({
+        events: [],
+        artists: [],
+        venues: [],
+        totalEvents: 0,
+        totalArtists: 0,
+        totalVenues: 0,
+      });
       setSearchError("");
       setHasSearchResults(false);
       setSearchLoading(false);
@@ -474,15 +566,20 @@ const LandingPage = () => {
       params.set("q", normalizedQuery);
       params.set("limit", "6");
 
-      const response = await apiFetch(`/api/event/search?${params.toString()}`, {
-        method: "GET",
-      });
+      const response = await apiFetch(
+        `/api/event/search?${params.toString()}`,
+        {
+          method: "GET",
+        },
+      );
 
       if (requestId !== searchRequestRef.current) return;
 
       const data = response?.data || {};
       setSearchResults({
-        events: Array.isArray(data.events) ? data.events.map((event) => mapEventToCard(event)) : [],
+        events: Array.isArray(data.events)
+          ? data.events.map((event) => mapEventToCard(event))
+          : [],
         artists: Array.isArray(data.artists) ? data.artists : [],
         venues: Array.isArray(data.venues) ? data.venues : [],
         totalEvents: data.totalEvents || 0,
@@ -492,7 +589,14 @@ const LandingPage = () => {
       setHasSearchResults(true);
     } catch (error) {
       if (requestId !== searchRequestRef.current) return;
-      setSearchResults({ events: [], artists: [], venues: [], totalEvents: 0, totalArtists: 0, totalVenues: 0 });
+      setSearchResults({
+        events: [],
+        artists: [],
+        venues: [],
+        totalEvents: 0,
+        totalArtists: 0,
+        totalVenues: 0,
+      });
       setSearchError(error.message || "Failed to search events");
       setHasSearchResults(true);
     } finally {
@@ -547,13 +651,18 @@ const LandingPage = () => {
         const results = await Promise.all(
           EVENT_SECTION_CONFIG.map(async (section) => {
             const params = new URLSearchParams();
-            if (section.filters.category) params.set("category", section.filters.category);
-            if (section.filters.subCategory) params.set("subCategory", section.filters.subCategory);
+            if (section.filters.category)
+              params.set("category", section.filters.category);
+            if (section.filters.subCategory)
+              params.set("subCategory", section.filters.subCategory);
             params.set("limit", "3");
 
-            const response = await apiFetch(`/api/event${params.toString() ? `?${params.toString()}` : ""}`, {
-              method: "GET",
-            });
+            const response = await apiFetch(
+              `/api/event${params.toString() ? `?${params.toString()}` : ""}`,
+              {
+                method: "GET",
+              },
+            );
 
             const events = Array.isArray(response?.data?.events)
               ? response.data.events
@@ -562,7 +671,7 @@ const LandingPage = () => {
                 : [];
 
             return [section.key, events.map((event) => mapEventToCard(event))];
-          })
+          }),
         );
 
         if (isMounted) {
@@ -587,7 +696,9 @@ const LandingPage = () => {
   };
 
   const goToPreviousHeroSlide = () => {
-    setActiveHeroSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
+    setActiveHeroSlide(
+      (prev) => (prev - 1 + heroSlides.length) % heroSlides.length,
+    );
   };
 
   const goToNextHeroSlide = () => {
@@ -611,12 +722,21 @@ const LandingPage = () => {
     setSearchError("");
     setHasSearchResults(false);
     setSearchLoading(false);
-    setSearchResults({ events: [], artists: [], venues: [], totalEvents: 0, totalArtists: 0, totalVenues: 0 });
+    setSearchResults({
+      events: [],
+      artists: [],
+      venues: [],
+      totalEvents: 0,
+      totalArtists: 0,
+      totalVenues: 0,
+    });
   };
 
   const featuredVibe = EVENT_SECTION_CONFIG[0];
   const featuredVibeEvents = eventSections[featuredVibe.key] || [];
-  const otherSections = EVENT_SECTION_CONFIG.filter((section) => section.key !== featuredVibe.key);
+  const otherSections = EVENT_SECTION_CONFIG.filter(
+    (section) => section.key !== featuredVibe.key,
+  );
 
   return (
     <div className="landing-homepage min-h-screen flex flex-col overflow-hidden bg-background text-foreground">
@@ -650,7 +770,9 @@ const LandingPage = () => {
                       className="h-full w-full bg-cover bg-center will-change-transform"
                       style={{
                         backgroundImage: `url(${slide.src})`,
-                        animation: isActive ? "heroImageDrift 4200ms ease-out forwards" : "none",
+                        animation: isActive
+                          ? "heroImageDrift 4200ms ease-out forwards"
+                          : "none",
                       }}
                     />
                   )}
@@ -702,181 +824,33 @@ const LandingPage = () => {
           <div className="container relative z-10 px-4 sm:px-6 lg:px-8">
             <div className="grid min-h-[22.5rem] items-center pb-16 pt-4 sm:min-h-[24rem] sm:pt-5 lg:min-h-[25.5rem] lg:grid-cols-[0.42fr_0.58fr] lg:pb-8">
               <div className="landing-reveal max-w-[30rem]">
-                <h1 className="mt-4 max-w-[29rem] text-3xl font-black leading-[1.08] text-foreground drop-shadow-2xl sm:text-4xl lg:text-[2.85rem] xl:text-[3.15rem]">
-                  Ready for your next{" "}
+                <h1 className="mt-4 max-w-[26rem] text-left text-2xl font-black leading-[1.02] tracking-tight text-foreground drop-shadow-2xl text-pretty sm:max-w-[28rem] sm:text-3xl md:text-[3.1rem] lg:text-[2.55rem] xl:text-[2.85rem]">
+                  Find your{" "}
                   <span className="theme-gradient-primary bg-clip-text text-transparent">
-                    unforgettable night?
+                    vibe.
                   </span>
                 </h1>
                 <p className="mt-4 max-w-[28rem] text-sm leading-6 text-foreground/80 drop-shadow-xl sm:text-base sm:leading-7">
-                  Create events, sell tickets, and thrill your guests. Or jump in as an attendee and enjoy the city's best
-                  experiences.
+                  Create events, sell tickets, and thrill your guests. Or jump
+                  in as an attendee and enjoy the city's best experiences.
                 </p>
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                   <Link to="/auth">
-                    <Button size="lg" variant="accent" className="h-12 w-full rounded-full px-7 text-base shadow-[var(--shadow-card)] transition-all duration-300 hover:-translate-y-0.5 sm:w-auto">
+                    <Button
+                      size="lg"
+                      variant="accent"
+                      className="h-12 w-full rounded-full px-7 text-base shadow-[var(--shadow-card)] transition-all duration-300 hover:-translate-y-0.5 sm:w-auto"
+                    >
                       Host an Event
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
-                  <Link to="/browse-events">
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="h-12 w-full rounded-full border-border/60 bg-background/40 px-7 text-base font-semibold text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-accent hover:text-accent-foreground sm:w-auto"
-                    >
-                      Find Events
-                    </Button>
-                  </Link>
                 </div>
               </div>
-              <div className="pointer-events-none hidden lg:block" aria-hidden="true" />
-            </div>
-          </div>
-        </section>
-
-        {/* Search */}
-        <section className="relative bg-background py-8 sm:py-10">
-          <div className="container relative px-4 sm:px-6 lg:px-8">
-            <div className="relative overflow-hidden rounded-[1.75rem] border border-border/50 bg-card/80 p-4 shadow-[var(--shadow-elegant)] backdrop-blur-xl sm:p-5">
-              <div className="theme-gradient-primary absolute inset-0 opacity-10" />
-              <div className="relative space-y-4">
-                <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
-                  <div className="group flex items-center gap-3 rounded-2xl border border-input bg-background/60 px-4 py-4 text-sm text-foreground shadow-inner transition focus-within:border-ring focus-within:bg-card/80">
-                    <Search className="h-5 w-5 text-accent" />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(event) => setSearchQuery(event.target.value)}
-                      onKeyDown={handleSearchKeyDown}
-                      placeholder="Search events, artists, and venues..."
-                      className="w-full bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground/70"
-                    />
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Button
-                      size="lg"
-                      onClick={handleSearchSubmit}
-                      disabled={searchLoading || searchQuery.trim().length < 2}
-                      className="h-12 w-full rounded-full px-7 font-bold lg:w-auto"
-                    >
-                      {searchLoading ? "Searching..." : "Search"}
-                    </Button>
-                    {(searchQuery || hasSearchResults) && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={clearSearch}
-                        className="h-12 rounded-full border-border/60 bg-background/60 px-6 text-foreground hover:bg-accent hover:text-accent-foreground"
-                      >
-                        Clear
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-border/40 bg-muted/40 px-3 py-1.5">
-                    Live search
-                  </div>
-                  <div className="inline-flex items-center gap-2 rounded-full border border-border/40 bg-muted/40 px-3 py-1.5">
-                    Search by event, artist, venue, organizer, or city
-                  </div>
-                  <div className="inline-flex items-center gap-2 rounded-full border border-border/40 bg-muted/40 px-3 py-1.5">
-                    Press Enter for instant results
-                  </div>
-                </div>
-
-                {(searchLoading || searchError || hasSearchResults) && (
-                  <div className="rounded-[1.5rem] border border-border/40 bg-background/75 p-4 shadow-inner sm:p-5">
-                    {searchLoading && <SearchResultsSkeleton />}
-
-                    {!searchLoading && searchError && (
-                      <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground">
-                        {searchError}
-                      </div>
-                    )}
-
-                    {!searchLoading && !searchError && hasSearchResults && (
-                      <div className="space-y-5">
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                          <span className="rounded-full border border-border/40 bg-muted/40 px-3 py-1.5">
-                            {searchResults.totalEvents} event{searchResults.totalEvents === 1 ? "" : "s"}
-                          </span>
-                          <span className="rounded-full border border-border/40 bg-muted/40 px-3 py-1.5">
-                            {searchResults.totalArtists} artist{searchResults.totalArtists === 1 ? "" : "s"}
-                          </span>
-                          <span className="rounded-full border border-border/40 bg-muted/40 px-3 py-1.5">
-                            {searchResults.totalVenues} venue{searchResults.totalVenues === 1 ? "" : "s"}
-                          </span>
-                        </div>
-
-                        {searchResults.events.length > 0 ? (
-                          <div className="space-y-3">
-                            <div>
-                              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Events</p>
-                              <h3 className="text-lg font-semibold text-foreground">Matching events</h3>
-                            </div>
-                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                              {searchResults.events.map((event) => (
-                                <LandingEventCard key={event.id} {...event} />
-                              ))}
-                            </div>
-                          </div>
-                        ) : (
-                          <EmptyState>No matching events found. Try another keyword or browse all events.</EmptyState>
-                        )}
-
-                        {searchResults.artists.length > 0 && (
-                          <div className="space-y-3">
-                            <div>
-                              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Artists</p>
-                              <h3 className="text-lg font-semibold text-foreground">Related artists</h3>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {searchResults.artists.map((artist) => (
-                                <button
-                                  key={`${artist.id}-${artist.eventId}`}
-                                  type="button"
-                                  onClick={() => setSearchQuery(artist.name)}
-                                  className="rounded-full border border-border/40 bg-card/70 px-4 py-2 text-left text-sm text-foreground shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:border-border hover:bg-muted/50"
-                                >
-                                  {artist.name}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {searchResults.venues.length > 0 && (
-                          <div className="space-y-3">
-                            <div>
-                              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Venues</p>
-                              <h3 className="text-lg font-semibold text-foreground">Matching venues</h3>
-                            </div>
-                            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                              {searchResults.venues.map((venue) => (
-                                <button
-                                  key={`${venue.id}-${venue.eventId}`}
-                                  type="button"
-                                  onClick={() => setSearchQuery(venue.name || venue.city || "")}
-                                  className="rounded-2xl border border-border/40 bg-card/70 p-4 text-left shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-border hover:bg-muted/50"
-                                >
-                                  <p className="font-medium text-foreground">{venue.name}</p>
-                                  <p className="mt-1 text-sm text-muted-foreground">
-                                    {[venue.city, venue.state, venue.country].filter(Boolean).join(", ") || "Location available"}
-                                  </p>
-                                  <p className="mt-2 text-xs text-muted-foreground">{venue.eventTitle}</p>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+              <div
+                className="pointer-events-none hidden lg:block"
+                aria-hidden="true"
+              />
             </div>
           </div>
         </section>
@@ -888,14 +862,22 @@ const LandingPage = () => {
             <div className="relative">
               <div className="landing-reveal flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.18em] text-accent">Discover</p>
-                  <h2 className="mt-3 text-3xl font-black text-foreground sm:text-4xl">Pick your vibe</h2>
+                  <p className="text-sm uppercase tracking-[0.18em] text-accent">
+                    Discover
+                  </p>
+                  <h2 className="mt-3 text-3xl font-black text-foreground sm:text-4xl">
+                    Pick your vibe
+                  </h2>
                   <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
-                    Switch between real event moods and jump straight into a filtered browse page when one feels right.
+                    Switch between real event moods and jump straight into a
+                    filtered browse page when one feels right.
                   </p>
                 </div>
                 <Link to="/browse-events">
-                  <Button variant="outline" className="rounded-full border-border/60 bg-background/60 text-foreground hover:bg-accent hover:text-accent-foreground">
+                  <Button
+                    variant="outline"
+                    className="rounded-full border-border/60 bg-background/60 text-foreground hover:bg-accent hover:text-accent-foreground"
+                  >
                     View all events
                     <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
@@ -929,8 +911,12 @@ const LandingPage = () => {
                           </div>
                         </div>
                         <div className="relative p-4">
-                          <h3 className="text-xl font-black text-foreground">{section.label}</h3>
-                          <p className="mt-2 text-sm leading-6 text-muted-foreground">{section.description}</p>
+                          <h3 className="text-xl font-black text-foreground">
+                            {section.label}
+                          </h3>
+                          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                            {section.description}
+                          </p>
                           <div className="mt-4 flex items-center justify-between gap-3 text-sm font-medium text-foreground">
                             <span>Explore this vibe</span>
                             <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-muted/50 transition group-hover:bg-primaryCTA group-hover:text-primary-foreground">
@@ -956,10 +942,19 @@ const LandingPage = () => {
                     <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-card/75 to-background/95" />
                     <div className="theme-gradient-primary absolute inset-0 opacity-10" />
                     <div className="relative flex min-h-[12.25rem] flex-col justify-end">
-                      <p className="text-sm uppercase tracking-[0.18em] text-accent">{featuredVibe.eyebrow}</p>
-                      <h3 className="mt-2 text-2xl font-black text-foreground">{featuredVibe.label}</h3>
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">{featuredVibe.description}</p>
-                      <Link to={buildBrowseEventsPath(featuredVibe.filters)} className="mt-5 inline-flex">
+                      <p className="text-sm uppercase tracking-[0.18em] text-accent">
+                        {featuredVibe.eyebrow}
+                      </p>
+                      <h3 className="mt-2 text-2xl font-black text-foreground">
+                        {featuredVibe.label}
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                        {featuredVibe.description}
+                      </p>
+                      <Link
+                        to={buildBrowseEventsPath(featuredVibe.filters)}
+                        className="mt-5 inline-flex"
+                      >
                         <Button variant="accent" className="rounded-full">
                           Explore live concerts
                           <ArrowRight className="ml-1 h-4 w-4" />
@@ -968,17 +963,27 @@ const LandingPage = () => {
                     </div>
                   </div>
 
-                  <div className={getCategoryEventGridClass(sectionsLoading ? 3 : featuredVibeEvents.length)}>
+                  <div
+                    className={getCategoryEventGridClass(
+                      sectionsLoading ? 3 : featuredVibeEvents.length,
+                    )}
+                  >
                     {sectionsLoading ? (
                       Array.from({ length: 3 }).map((_, index) => (
-                        <EventCardSkeleton key={`${featuredVibe.key}-preview-skeleton-${index}`} featured />
+                        <EventCardSkeleton
+                          key={`${featuredVibe.key}-preview-skeleton-${index}`}
+                          featured
+                        />
                       ))
                     ) : featuredVibeEvents.length > 0 ? (
-                      featuredVibeEvents.map((event) => <LandingEventCard key={event.id} {...event} featured />)
+                      featuredVibeEvents.map((event) => (
+                        <LandingEventCard key={event.id} {...event} featured />
+                      ))
                     ) : (
                       <div>
                         <EmptyState>
-                          No live events are available in this vibe yet. Try another vibe or browse the full catalog.
+                          No live events are available in this vibe yet. Try
+                          another vibe or browse the full catalog.
                         </EmptyState>
                       </div>
                     )}
@@ -995,53 +1000,76 @@ const LandingPage = () => {
           const isReversed = index % 2 === 1;
 
           return (
-            <section key={section.key} className="relative bg-background py-6 sm:py-8">
+            <section
+              key={section.key}
+              className="relative bg-background py-6 sm:py-8"
+            >
               <div className="container relative px-4 sm:px-6 lg:px-8">
                 <div className="relative border-t border-border/30 pt-6">
                   <div className="theme-gradient-primary absolute right-0 top-0 h-56 w-56 rounded-full opacity-10 blur-3xl" />
-                  <div className={`relative grid gap-4 lg:grid-cols-[0.56fr_1.44fr] lg:items-start ${isReversed ? "lg:grid-cols-[1.44fr_0.56fr]" : ""}`}>
-                  <div className={`landing-reveal ${isReversed ? "lg:order-2" : ""}`}>
-                    <div className="relative min-h-[14.25rem] overflow-hidden rounded-[1.5rem] border border-border/50 bg-card p-5 shadow-[var(--shadow-card)]">
-                      <img
-                        src={section.image}
-                        alt=""
-                        aria-hidden="true"
-                        className="absolute inset-0 h-full w-full object-cover opacity-35"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-background via-card/75 to-transparent" />
-                      <div className="theme-gradient-primary absolute inset-0 opacity-10" />
-                      <div className="relative flex min-h-[12.25rem] flex-col justify-end">
-                        <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border/40 bg-muted/50 text-accent shadow-[var(--shadow-card)] backdrop-blur-md">
-                          <Icon className="h-5 w-5" />
+                  <div
+                    className={`relative grid gap-4 lg:grid-cols-[0.56fr_1.44fr] lg:items-start ${isReversed ? "lg:grid-cols-[1.44fr_0.56fr]" : ""}`}
+                  >
+                    <div
+                      className={`landing-reveal ${isReversed ? "lg:order-2" : ""}`}
+                    >
+                      <div className="relative min-h-[14.25rem] overflow-hidden rounded-[1.5rem] border border-border/50 bg-card p-5 shadow-[var(--shadow-card)]">
+                        <img
+                          src={section.image}
+                          alt=""
+                          aria-hidden="true"
+                          className="absolute inset-0 h-full w-full object-cover opacity-35"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background via-card/75 to-transparent" />
+                        <div className="theme-gradient-primary absolute inset-0 opacity-10" />
+                        <div className="relative flex min-h-[12.25rem] flex-col justify-end">
+                          <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border/40 bg-muted/50 text-accent shadow-[var(--shadow-card)] backdrop-blur-md">
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <p className="mt-5 text-xs uppercase tracking-[0.18em] text-accent">
+                            {section.eyebrow}
+                          </p>
+                          <h2 className="mt-2 text-2xl font-black text-foreground sm:text-3xl">
+                            {section.label}
+                          </h2>
+                          <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+                            {section.description}
+                          </p>
+                          <Link
+                            to={buildBrowseEventsPath(section.filters)}
+                            className="mt-5 inline-flex"
+                          >
+                            <Button variant="accent" className="rounded-full">
+                              Browse all
+                              <ArrowRight className="ml-1 h-4 w-4" />
+                            </Button>
+                          </Link>
                         </div>
-                        <p className="mt-5 text-xs uppercase tracking-[0.18em] text-accent">{section.eyebrow}</p>
-                        <h2 className="mt-2 text-2xl font-black text-foreground sm:text-3xl">{section.label}</h2>
-                        <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">{section.description}</p>
-                        <Link to={buildBrowseEventsPath(section.filters)} className="mt-5 inline-flex">
-                          <Button variant="accent" className="rounded-full">
-                            Browse all
-                            <ArrowRight className="ml-1 h-4 w-4" />
-                          </Button>
-                        </Link>
                       </div>
                     </div>
-                  </div>
 
-                  <div className={`landing-reveal ${getCategoryEventGridClass(sectionsLoading ? 3 : events.length)} ${isReversed ? "lg:order-1" : ""}`} style={{ "--landing-delay": "120ms" }}>
-                    {sectionsLoading ? (
-                      Array.from({ length: 3 }).map((_, skeletonIndex) => (
-                        <EventCardSkeleton key={`${section.key}-skeleton-${skeletonIndex}`} />
-                      ))
-                    ) : events.length > 0 ? (
-                      events.map((event) => (
-                        <LandingEventCard key={event.id} {...event} />
-                      ))
-                    ) : (
-                      <div>
-                        <EmptyState>No live events are available in this section yet.</EmptyState>
-                      </div>
-                    )}
-                  </div>
+                    <div
+                      className={`landing-reveal ${getCategoryEventGridClass(sectionsLoading ? 3 : events.length)} ${isReversed ? "lg:order-1" : ""}`}
+                      style={{ "--landing-delay": "120ms" }}
+                    >
+                      {sectionsLoading ? (
+                        Array.from({ length: 3 }).map((_, skeletonIndex) => (
+                          <EventCardSkeleton
+                            key={`${section.key}-skeleton-${skeletonIndex}`}
+                          />
+                        ))
+                      ) : events.length > 0 ? (
+                        events.map((event) => (
+                          <LandingEventCard key={event.id} {...event} />
+                        ))
+                      ) : (
+                        <div>
+                          <EmptyState>
+                            No live events are available in this section yet.
+                          </EmptyState>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1055,10 +1083,15 @@ const LandingPage = () => {
             <div className="relative overflow-hidden rounded-[2rem] border border-border/50 bg-card/60 p-5 shadow-[var(--shadow-elegant)] backdrop-blur-xl sm:p-8">
               <div className="theme-gradient-primary absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full opacity-10 blur-3xl" />
               <div className="landing-reveal relative mx-auto mb-12 max-w-3xl text-center">
-                <p className="text-sm uppercase tracking-[0.18em] text-accent">Seamless</p>
-                <h2 className="mt-3 text-3xl font-black text-foreground sm:text-4xl">How Map MyParty works</h2>
+                <p className="text-sm uppercase tracking-[0.18em] text-accent">
+                  Seamless
+                </p>
+                <h2 className="mt-3 text-3xl font-black text-foreground sm:text-4xl">
+                  How Map MyParty works
+                </h2>
                 <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
-                  From discovery to entry, we keep every step delightful with live updates and secure check-ins.
+                  From discovery to entry, we keep every step delightful with
+                  live updates and secure check-ins.
                 </p>
               </div>
 
@@ -1077,10 +1110,16 @@ const LandingPage = () => {
                       <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/40 bg-accent/10 text-accent shadow-[var(--shadow-card)]">
                         <Icon className="h-6 w-6" />
                       </div>
-                      <span className="text-xs font-semibold text-muted-foreground">0{index + 1}</span>
+                      <span className="text-xs font-semibold text-muted-foreground">
+                        0{index + 1}
+                      </span>
                     </div>
-                    <h3 className="relative mt-6 text-2xl font-black text-foreground">{title}</h3>
-                    <p className="relative mt-3 text-sm leading-7 text-muted-foreground">{desc}</p>
+                    <h3 className="relative mt-6 text-2xl font-black text-foreground">
+                      {title}
+                    </h3>
+                    <p className="relative mt-3 text-sm leading-7 text-muted-foreground">
+                      {desc}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -1095,13 +1134,16 @@ const LandingPage = () => {
               <div className="theme-gradient-primary absolute right-0 top-8 h-80 w-80 rounded-full opacity-10 blur-3xl" />
               <div className="relative grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
                 <div className="landing-reveal space-y-5">
-                  <p className="text-sm uppercase tracking-[0.18em] text-accent">Platform</p>
+                  <p className="text-sm uppercase tracking-[0.18em] text-accent">
+                    Platform
+                  </p>
                   <h2 className="text-3xl font-black text-foreground sm:text-4xl">
                     Built for real event discovery
                   </h2>
                   <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
-                    Map MyParty keeps the public experience focused on discovery, booking, and clear event details without
-                    relying on inflated claims or placeholder activity.
+                    Map MyParty keeps the public experience focused on
+                    discovery, booking, and clear event details without relying
+                    on inflated claims or placeholder activity.
                   </p>
                   <div className="flex flex-wrap gap-3 text-foreground">
                     <div className="flex items-center gap-2 rounded-full border border-border/40 bg-card/70 px-4 py-2 text-sm shadow-[var(--shadow-card)] backdrop-blur">
@@ -1119,7 +1161,10 @@ const LandingPage = () => {
                   </div>
                 </div>
 
-                <div className="landing-reveal relative" style={{ "--landing-delay": "120ms" }}>
+                <div
+                  className="landing-reveal relative"
+                  style={{ "--landing-delay": "120ms" }}
+                >
                   <div className="theme-gradient-primary absolute -inset-6 rounded-[2.5rem] opacity-10 blur-2xl" />
                   <div className="relative rounded-[2rem] border border-border/50 bg-card/75 p-6 shadow-[var(--shadow-card)] backdrop-blur-xl sm:p-7">
                     <div className="grid gap-4">
@@ -1129,9 +1174,12 @@ const LandingPage = () => {
                             <Sparkles className="h-5 w-5" />
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-foreground">Discover</p>
+                            <p className="text-sm font-semibold text-foreground">
+                              Discover
+                            </p>
                             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                              Browse event categories and search by event, artist, venue, organizer, or city.
+                              Browse event categories and search by event,
+                              artist, venue, organizer, or city.
                             </p>
                           </div>
                         </div>
@@ -1143,9 +1191,12 @@ const LandingPage = () => {
                             <ShieldCheck className="h-5 w-5" />
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-foreground">Book</p>
+                            <p className="text-sm font-semibold text-foreground">
+                              Book
+                            </p>
                             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                              Move from event detail to checkout through the platform booking flow.
+                              Move from event detail to checkout through the
+                              platform booking flow.
                             </p>
                           </div>
                         </div>
@@ -1157,9 +1208,12 @@ const LandingPage = () => {
                             <Clock3 className="h-5 w-5" />
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-foreground">Attend</p>
+                            <p className="text-sm font-semibold text-foreground">
+                              Attend
+                            </p>
                             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                              Keep tickets and event access organized inside the attendee experience.
+                              Keep tickets and event access organized inside the
+                              attendee experience.
                             </p>
                           </div>
                         </div>
@@ -1178,30 +1232,24 @@ const LandingPage = () => {
             <div className="relative mx-auto max-w-4xl overflow-hidden rounded-[2rem] border border-border/50 bg-card/75 p-7 shadow-[var(--shadow-elegant)] backdrop-blur-xl sm:p-10">
               <div className="landing-glow pointer-events-none absolute left-1/2 top-8 h-52 w-52 -translate-x-1/2 rounded-full bg-secondary/20 blur-3xl" />
               <div className="relative space-y-6">
-              
                 <h2 className="text-3xl font-black text-foreground md:text-5xl">
-                  Ready for your next{" "}
+                  Find your{" "}
                   <span className="theme-gradient-primary bg-clip-text text-transparent">
-                    unforgettable night?
+                    vibe.
                   </span>
                 </h2>
                 <p className="mx-auto max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
-                  Create events, sell tickets, and thrill your guests. Or jump in as an attendee and enjoy the city's best
-                  experiences.
+                  Create events, sell tickets, and thrill your guests. Or jump
+                  in as an attendee and enjoy the city's best experiences.
                 </p>
                 <div className="flex flex-col justify-center gap-4 sm:flex-row">
                   <Link to="/auth">
-                    <Button size="lg" variant="accent" className="h-12 w-full rounded-full px-8 text-base sm:w-auto">
-                      Host an Event
-                    </Button>
-                  </Link>
-                  <Link to="/browse-events">
                     <Button
                       size="lg"
-                      variant="outline"
-                      className="h-12 w-full rounded-full border-border/60 bg-background/60 px-8 text-base text-foreground hover:bg-accent hover:text-accent-foreground sm:w-auto"
+                      variant="accent"
+                      className="h-12 w-full rounded-full px-8 text-base sm:w-auto"
                     >
-                      Find Events
+                      Host an Event
                     </Button>
                   </Link>
                 </div>

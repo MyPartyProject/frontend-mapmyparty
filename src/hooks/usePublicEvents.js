@@ -2,6 +2,55 @@ import { useState, useEffect, useCallback } from "react";
 import { apiFetch } from "@/config/api";
 
 const PUBLIC_EVENTS_STORAGE_KEY = "mapMyParty_events";
+const DEFAULT_LOCATION_RADIUS_KM = 50;
+
+const toFiniteNumber = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const getEventCoordinates = (event) => {
+  const venue = Array.isArray(event?.venues) ? event.venues[0] : null;
+
+  const latitude =
+    toFiniteNumber(event?.coordinates?.lat) ??
+    toFiniteNumber(event?.latitude) ??
+    toFiniteNumber(event?.venueLatitude) ??
+    toFiniteNumber(event?.venue?.latitude) ??
+    toFiniteNumber(venue?.latitude) ??
+    toFiniteNumber(venue?.lat);
+
+  const longitude =
+    toFiniteNumber(event?.coordinates?.lng) ??
+    toFiniteNumber(event?.longitude) ??
+    toFiniteNumber(event?.venueLongitude) ??
+    toFiniteNumber(event?.venue?.longitude) ??
+    toFiniteNumber(venue?.longitude) ??
+    toFiniteNumber(venue?.lng);
+
+  if (latitude === null || longitude === null) {
+    return null;
+  }
+
+  return { latitude, longitude };
+};
+
+const getDistanceKm = (originLatitude, originLongitude, targetLatitude, targetLongitude) => {
+  const toRadians = (value) => (value * Math.PI) / 180;
+  const earthRadiusKm = 6371;
+
+  const deltaLatitude = toRadians(targetLatitude - originLatitude);
+  const deltaLongitude = toRadians(targetLongitude - originLongitude);
+  const lat1 = toRadians(originLatitude);
+  const lat2 = toRadians(targetLatitude);
+
+  const a =
+    Math.sin(deltaLatitude / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLongitude / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return earthRadiusKm * c;
+};
 
 const getFilterCacheKey = (filterParams = {}) => {
   const params = new URLSearchParams();
@@ -35,6 +84,10 @@ export const usePublicEvents = (initialFilters = {}) => {
     category: initialFilters.category || null,
     subCategory: initialFilters.subCategory || null,
     search: initialFilters.search || null,
+    latitude: toFiniteNumber(initialFilters.latitude),
+    longitude: toFiniteNumber(initialFilters.longitude),
+    radiusKm:
+      toFiniteNumber(initialFilters.radiusKm) ?? DEFAULT_LOCATION_RADIUS_KM,
     page: initialFilters.page || 1,
     limit: initialFilters.limit || 20,
   });
@@ -104,6 +157,40 @@ export const usePublicEvents = (initialFilters = {}) => {
 
         return primarySub === desiredSub || subCategoriesArray.includes(desiredSub);
       });
+    }
+
+    const latitude = toFiniteNumber(filterParams.latitude);
+    const longitude = toFiniteNumber(filterParams.longitude);
+    const radiusKm =
+      toFiniteNumber(filterParams.radiusKm) ?? DEFAULT_LOCATION_RADIUS_KM;
+
+    if (latitude !== null && longitude !== null) {
+      filtered = filtered
+        .map((event) => {
+          const coordinates = getEventCoordinates(event);
+          if (!coordinates) return null;
+
+          const distanceKm = getDistanceKm(
+            latitude,
+            longitude,
+            coordinates.latitude,
+            coordinates.longitude
+          );
+
+          return {
+            ...event,
+            distanceKm,
+          };
+        })
+        .filter((event) => event && event.distanceKm <= radiusKm)
+        .sort((left, right) => {
+          const distanceDifference = left.distanceKm - right.distanceKm;
+          if (distanceDifference !== 0) return distanceDifference;
+
+          const leftDate = left.startDate ? new Date(left.startDate).getTime() : Number.MAX_SAFE_INTEGER;
+          const rightDate = right.startDate ? new Date(right.startDate).getTime() : Number.MAX_SAFE_INTEGER;
+          return leftDate - rightDate;
+        });
     }
 
     const requestedPage = filterParams.page || 1;
@@ -209,15 +296,22 @@ export const usePublicEvents = (initialFilters = {}) => {
    */
   const updateFilters = useCallback((newFilters) => {
     setFilters((prev) => {
-      const updated = { ...prev, ...newFilters };
-      // Reset to page 1 when filters change (except when explicitly setting page)
-      if (
-        !newFilters.page &&
-        (newFilters.category || newFilters.subCategory || newFilters.search)
-      ) {
-        updated.page = 1;
-      }
-      return updated;
+        const updated = { ...prev, ...newFilters };
+        // Reset to page 1 when filters change (except when explicitly setting page)
+        if (
+          !newFilters.page &&
+          (
+            newFilters.category ||
+            newFilters.subCategory ||
+            newFilters.search ||
+            newFilters.latitude !== undefined ||
+            newFilters.longitude !== undefined ||
+            newFilters.radiusKm !== undefined
+          )
+        ) {
+          updated.page = 1;
+        }
+        return updated;
     });
   }, []);
 
@@ -252,6 +346,31 @@ export const usePublicEvents = (initialFilters = {}) => {
         }
       }
 
+      if (has("latitude")) {
+        const value = toFiniteNumber(initialFilters.latitude);
+        if (prev.latitude !== value) {
+          next.latitude = value;
+          changed = true;
+        }
+      }
+
+      if (has("longitude")) {
+        const value = toFiniteNumber(initialFilters.longitude);
+        if (prev.longitude !== value) {
+          next.longitude = value;
+          changed = true;
+        }
+      }
+
+      if (has("radiusKm")) {
+        const value =
+          toFiniteNumber(initialFilters.radiusKm) ?? DEFAULT_LOCATION_RADIUS_KM;
+        if (prev.radiusKm !== value) {
+          next.radiusKm = value;
+          changed = true;
+        }
+      }
+
       if (has("page")) {
         const value = Math.max(1, Number.parseInt(initialFilters.page, 10) || 1);
         if (prev.page !== value) {
@@ -274,6 +393,9 @@ export const usePublicEvents = (initialFilters = {}) => {
     initialFilters.category,
     initialFilters.subCategory,
     initialFilters.search,
+    initialFilters.latitude,
+    initialFilters.longitude,
+    initialFilters.radiusKm,
     initialFilters.page,
     initialFilters.limit,
   ]);
@@ -286,6 +408,9 @@ export const usePublicEvents = (initialFilters = {}) => {
       category: null,
       subCategory: null,
       search: null,
+      latitude: null,
+      longitude: null,
+      radiusKm: DEFAULT_LOCATION_RADIUS_KM,
       page: 1,
       limit: 20,
     });

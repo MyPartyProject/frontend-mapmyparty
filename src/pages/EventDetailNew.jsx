@@ -1,26 +1,82 @@
-import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
+import {
+  useParams,
+  useNavigate,
+  useSearchParams,
+  Link,
+} from "react-router-dom";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  ChevronLeft, ChevronDown, ChevronRight, Calendar, MapPin, Clock, Users, Share2, Heart,
-  Ticket, Star, TrendingUp, Mail, Phone, Globe, Instagram,
-  Facebook, Twitter, Plus, Minus, X, Check, Info,
-  Navigation, Building, User, BookOpen, Medal, Loader2, ShieldCheck,
-  AlertTriangle, Megaphone
+  ChevronLeft,
+  ChevronDown,
+  ChevronRight,
+  Calendar,
+  MapPin,
+  Clock,
+  Users,
+  Share2,
+  Heart,
+  Ticket,
+  Star,
+  TrendingUp,
+  Mail,
+  Phone,
+  Globe,
+  Instagram,
+  Facebook,
+  Twitter,
+  Plus,
+  Minus,
+  X,
+  Check,
+  Info,
+  Navigation,
+  Building,
+  User,
+  BookOpen,
+  Medal,
+  Loader2,
+  ShieldCheck,
+  AlertTriangle,
+  Megaphone,
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, buildUrl } from "@/config/api";
 import usePublicEventDetail from "@/hooks/usePublicEventDetail";
-import { fetchSession, resetSessionCache, isAuthenticated as isAuthedSync } from "@/utils/auth";
+import {
+  fetchSession,
+  resetSessionCache,
+  isAuthenticated as isAuthedSync,
+} from "@/utils/auth";
 import BillingDetailsModal from "@/components/BillingDetailsModal";
 import logoSvg from "@/assets/MMP logo.svg";
 // import PromoterDashboardHeader from "@/components/PromoterDashboardHeader";
+
+const normalizeIndianPhoneNumber = (value) => {
+  const digits = (value || "").replace(/\D/g, "");
+
+  if (digits.length === 10) {
+    return digits;
+  }
+
+  if (digits.length === 12 && digits.startsWith("91")) {
+    return digits.slice(2);
+  }
+
+  return null;
+};
 
 const FALLBACK_IMAGE = "https://via.placeholder.com/1200x600?text=Event";
 const SPONSOR_PLACEHOLDER = "https://via.placeholder.com/200x200?text=Sponsor";
@@ -38,9 +94,7 @@ const decodeHtmlEntities = (value) => {
 };
 
 const galleryMosaicLayouts = {
-  1: [
-    { mobile: [4, 4], desktop: [5, 4] },
-  ],
+  1: [{ mobile: [4, 4], desktop: [5, 4] }],
   2: [
     { mobile: [3, 4], desktop: [4, 4] },
     { mobile: [3, 4], desktop: [4, 4] },
@@ -118,8 +172,12 @@ const galleryMosaicLayouts = {
 const fallbackGalleryMosaicLayout = galleryMosaicLayouts[10];
 
 const getGalleryMosaicTile = (index, count) => {
-  const layout = galleryMosaicLayouts[Math.min(count, 10)] || fallbackGalleryMosaicLayout;
-  return layout[index] || fallbackGalleryMosaicLayout[index % fallbackGalleryMosaicLayout.length];
+  const layout =
+    galleryMosaicLayouts[Math.min(count, 10)] || fallbackGalleryMosaicLayout;
+  return (
+    layout[index] ||
+    fallbackGalleryMosaicLayout[index % fallbackGalleryMosaicLayout.length]
+  );
 };
 
 const EventDetailNew = () => {
@@ -127,7 +185,11 @@ const EventDetailNew = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const isPreviewMode = Boolean(eventId);
-  const { event, loading, error } = usePublicEventDetail(organizerSlug, eventSlug, eventId || null);
+  const { event, loading, error } = usePublicEventDetail(
+    organizerSlug,
+    eventSlug,
+    eventId || null,
+  );
   const [selectedImage, setSelectedImage] = useState(null);
   const [activeTab, setActiveTab] = useState("about");
   const [autoRotatePausedUntil, setAutoRotatePausedUntil] = useState(0);
@@ -140,7 +202,12 @@ const EventDetailNew = () => {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [authMode, setAuthMode] = useState("login");
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
-  const [signupForm, setSignupForm] = useState({ name: "", email: "", phone: "", password: "" });
+  const [signupForm, setSignupForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+  });
   const [isSessionAuthed, setIsSessionAuthed] = useState(isAuthedSync());
   const [sessionUser, setSessionUser] = useState(null);
   const [advisoryModalOpen, setAdvisoryModalOpen] = useState(false);
@@ -158,20 +225,24 @@ const EventDetailNew = () => {
   });
   const galleryImages = useMemo(
     () => (Array.isArray(event?.gallery) ? event.gallery.filter(Boolean) : []),
-    [event?.gallery]
+    [event?.gallery],
   );
   const selectedImageIndex = useMemo(
     () => galleryImages.findIndex((image) => image === selectedImage),
-    [galleryImages, selectedImage]
+    [galleryImages, selectedImage],
   );
   const normalizedFaqs = useMemo(() => {
     if (Array.isArray(event?.faqs) && event.faqs.length > 0) return event.faqs;
-    if (Array.isArray(event?.questions) && event.questions.length > 0) return event.questions;
+    if (Array.isArray(event?.questions) && event.questions.length > 0)
+      return event.questions;
     return [];
   }, [event?.faqs, event?.questions]);
 
   const normalizedTerms = useMemo(() => {
-    if (Array.isArray(event?.termsAndConditions) && event.termsAndConditions.length > 0) {
+    if (
+      Array.isArray(event?.termsAndConditions) &&
+      event.termsAndConditions.length > 0
+    ) {
       return event.termsAndConditions;
     }
     if (event?.TC?.content || event?.TC?.terms) {
@@ -183,11 +254,15 @@ const EventDetailNew = () => {
   const getTermHtml = (term) => {
     if (!term) return "";
     const decodedContent = decodeHtmlEntities(term.content || "");
-    if (decodedContent && (hasHtmlTag(decodedContent) || hasEscapedHtmlTag(term.content))) {
+    if (
+      decodedContent &&
+      (hasHtmlTag(decodedContent) || hasEscapedHtmlTag(term.content))
+    ) {
       return decodedContent;
     }
     const decodedTerms = decodeHtmlEntities(term.terms || "");
-    if (hasHtmlTag(decodedTerms) || hasEscapedHtmlTag(term.terms)) return decodedTerms;
+    if (hasHtmlTag(decodedTerms) || hasEscapedHtmlTag(term.terms))
+      return decodedTerms;
     return "";
   };
 
@@ -210,7 +285,8 @@ const EventDetailNew = () => {
     return visibleTabs;
   }, [visibleTabs]);
 
-  const pauseAutoRotate = () => setAutoRotatePausedUntil(Date.now() + TAB_PAUSE_DURATION_MS);
+  const pauseAutoRotate = () =>
+    setAutoRotatePausedUntil(Date.now() + TAB_PAUSE_DURATION_MS);
   const handleTabSelect = (tab) => {
     setActiveTab(tab);
     pauseAutoRotate();
@@ -236,14 +312,17 @@ const EventDetailNew = () => {
     return () => clearInterval(interval);
   }, [rotatingTabs, autoRotatePausedUntil]);
 
-  const tabAnimationStyle = useMemo(() => ({ animation: "tabFadeSlide 0.6s ease" }), []);
+  const tabAnimationStyle = useMemo(
+    () => ({ animation: "tabFadeSlide 0.6s ease" }),
+    [],
+  );
   const pageCss = useMemo(
     () =>
       `
       @keyframes tabFadeSlide {0%{opacity:0;transform:translateY(10px);}100%{opacity:1;transform:translateY(0);}}
       @keyframes sponsorMarquee {0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
       `,
-    []
+    [],
   );
 
   useEffect(() => {
@@ -266,7 +345,10 @@ const EventDetailNew = () => {
 
   const renderTermsContent = () => {
     const decodedTermsHtml = decodeHtmlEntities(event?.termsHtml || "");
-    if (decodedTermsHtml && (hasHtmlTag(decodedTermsHtml) || hasEscapedHtmlTag(event?.termsHtml))) {
+    if (
+      decodedTermsHtml &&
+      (hasHtmlTag(decodedTermsHtml) || hasEscapedHtmlTag(event?.termsHtml))
+    ) {
       return (
         <div
           className="prose prose-invert max-w-none text-[10px] leading-3 text-gray-400 prose-p:my-0.5 prose-p:text-[10px] prose-p:leading-3 prose-li:my-0 prose-li:text-[10px] prose-li:leading-3 prose-ol:list-decimal prose-ul:list-disc prose-headings:text-xs prose-headings:text-white"
@@ -300,7 +382,9 @@ const EventDetailNew = () => {
       );
     }
 
-    return <p className="text-[10px] leading-3 text-gray-500">No terms provided.</p>;
+    return (
+      <p className="text-[10px] leading-3 text-gray-500">No terms provided.</p>
+    );
   };
 
   const renderFaqTc = () => (
@@ -326,9 +410,13 @@ const EventDetailNew = () => {
                   key={`faq-${idx}`}
                   className="rounded-lg border border-gray-800 bg-gray-950/40 px-4 py-3"
                 >
-                  <p className="text-white font-medium text-sm mb-1">{qa.question}</p>
+                  <p className="text-white font-medium text-sm mb-1">
+                    {qa.question}
+                  </p>
                   {qa.answer ? (
-                    <p className="text-gray-300 text-sm leading-relaxed">{qa.answer}</p>
+                    <p className="text-gray-300 text-sm leading-relaxed">
+                      {qa.answer}
+                    </p>
                   ) : (
                     <p className="text-gray-500 text-xs">No answer provided.</p>
                   )}
@@ -354,25 +442,26 @@ const EventDetailNew = () => {
         </button>
         {tcOpen && (
           <div className="border-t border-gray-800 px-5 py-4 bg-gray-800">
-            {normalizedTerms.length > 0 ? (
-              normalizedTerms.map((t, idx) => (
-                <div key={`term-${idx}`} className="mb-3 last:mb-0">
-                  {getTermHtml(t) ? (
-                    <div
-                      className="space-y-1 text-[10px] leading-3 text-gray-300 [&_*]:text-[10px] [&_*]:leading-3"
-                      dangerouslySetInnerHTML={{ __html: getTermHtml(t) }}
-                    />
-                  ) : (
-                    renderTermsContent()
-                  )}
-                  {t.lastUpdated && (
-                    <p className="mt-2 text-[10px] leading-3 text-gray-500">Last updated: {new Date(t.lastUpdated).toLocaleDateString()}</p>
-                  )}
-                </div>
-              ))
-            ) : (
-              renderTermsContent()
-            )}
+            {normalizedTerms.length > 0
+              ? normalizedTerms.map((t, idx) => (
+                  <div key={`term-${idx}`} className="mb-3 last:mb-0">
+                    {getTermHtml(t) ? (
+                      <div
+                        className="space-y-1 text-[10px] leading-3 text-gray-300 [&_*]:text-[10px] [&_*]:leading-3"
+                        dangerouslySetInnerHTML={{ __html: getTermHtml(t) }}
+                      />
+                    ) : (
+                      renderTermsContent()
+                    )}
+                    {t.lastUpdated && (
+                      <p className="mt-2 text-[10px] leading-3 text-gray-500">
+                        Last updated:{" "}
+                        {new Date(t.lastUpdated).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                ))
+              : renderTermsContent()}
           </div>
         )}
       </div>
@@ -385,40 +474,57 @@ const EventDetailNew = () => {
         renderFaqTc()
       ) : (
         <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
-          <p className="text-sm text-gray-500">No FAQs or terms provided for this event.</p>
+          <p className="text-sm text-gray-500">
+            No FAQs or terms provided for this event.
+          </p>
         </div>
       )}
     </div>
   );
 
   const hasSponsors = useMemo(
-    () => Array.isArray(event?.sponsors) && event.sponsors.length > 0 && (event?.isSponsored ?? true),
-    [event?.isSponsored, event?.sponsors]
+    () =>
+      Array.isArray(event?.sponsors) &&
+      event.sponsors.length > 0 &&
+      (event?.isSponsored ?? true),
+    [event?.isSponsored, event?.sponsors],
   );
 
   const sponsorsSorted = useMemo(() => {
     if (!hasSponsors) return [];
-    return [...event.sponsors].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary));
+    return [...event.sponsors].sort(
+      (a, b) => Number(b.isPrimary) - Number(a.isPrimary),
+    );
   }, [event?.sponsors, hasSponsors]);
 
-  const primarySponsor = useMemo(() => (hasSponsors ? sponsorsSorted[0] : null), [hasSponsors, sponsorsSorted]);
+  const primarySponsor = useMemo(
+    () => (hasSponsors ? sponsorsSorted[0] : null),
+    [hasSponsors, sponsorsSorted],
+  );
   const secondarySponsors = useMemo(
-    () => (hasSponsors && sponsorsSorted.length > 1 ? sponsorsSorted.slice(1) : []),
-    [hasSponsors, sponsorsSorted]
+    () =>
+      hasSponsors && sponsorsSorted.length > 1 ? sponsorsSorted.slice(1) : [],
+    [hasSponsors, sponsorsSorted],
   );
   const showSponsorStrip = hasSponsors;
   const sponsorStripMoves = hasSponsors && sponsorsSorted.length > 3;
   const sponsorStripGroups = useMemo(
-    () => (sponsorStripMoves ? [sponsorsSorted, sponsorsSorted] : [sponsorsSorted]),
-    [sponsorStripMoves, sponsorsSorted]
+    () =>
+      sponsorStripMoves ? [sponsorsSorted, sponsorsSorted] : [sponsorsSorted],
+    [sponsorStripMoves, sponsorsSorted],
   );
 
   const getArtistImage = (artist) =>
-    artist.image || artist.photo || artist.avatar || artist.profileImage || FALLBACK_IMAGE;
+    artist.image ||
+    artist.photo ||
+    artist.avatar ||
+    artist.profileImage ||
+    FALLBACK_IMAGE;
 
   const showPreviousImage = () => {
     if (galleryImages.length <= 1 || selectedImageIndex === -1) return;
-    const previousIndex = (selectedImageIndex - 1 + galleryImages.length) % galleryImages.length;
+    const previousIndex =
+      (selectedImageIndex - 1 + galleryImages.length) % galleryImages.length;
     setSelectedImage(galleryImages[previousIndex]);
   };
 
@@ -450,7 +556,8 @@ const EventDetailNew = () => {
 
       setGalleryScrollState({
         canScrollLeft: scroller.scrollLeft > 4,
-        canScrollRight: maxScrollLeft > 4 && scroller.scrollLeft < maxScrollLeft - 4,
+        canScrollRight:
+          maxScrollLeft > 4 && scroller.scrollLeft < maxScrollLeft - 4,
       });
     };
 
@@ -467,13 +574,13 @@ const EventDetailNew = () => {
   // Resume booking after Google OAuth redirect
   useEffect(() => {
     if (isPreviewMode) return;
-    if (searchParams.get('resumeBooking') !== 'true') return;
+    if (searchParams.get("resumeBooking") !== "true") return;
 
-    const pendingRaw = sessionStorage.getItem('pendingBooking');
-    sessionStorage.removeItem('pendingBooking');
+    const pendingRaw = sessionStorage.getItem("pendingBooking");
+    sessionStorage.removeItem("pendingBooking");
 
     // Clean URL
-    searchParams.delete('resumeBooking');
+    searchParams.delete("resumeBooking");
     setSearchParams(searchParams, { replace: true });
 
     if (!pendingRaw) return;
@@ -482,7 +589,9 @@ const EventDetailNew = () => {
       if (pending.ticketQuantities) {
         setTicketQuantities(pending.ticketQuantities);
       }
-    } catch { return; }
+    } catch {
+      return;
+    }
 
     // Wait for session, then open billing modal
     const resumeAfterLoad = async () => {
@@ -635,7 +744,10 @@ const EventDetailNew = () => {
 
     const payload = {
       eventId: event.id || event.eventId || id,
-      tickets: selectedTickets.map((t) => ({ ticketId: t.id, quantity: t.quantity })),
+      tickets: selectedTickets.map((t) => ({
+        ticketId: t.id,
+        quantity: t.quantity,
+      })),
       userDetails: billingData,
     };
 
@@ -672,7 +784,9 @@ const EventDetailNew = () => {
         state: checkoutState,
       });
     } catch (err) {
-      toast.error(err?.message || "Unable to create booking. Please try again.");
+      toast.error(
+        err?.message || "Unable to create booking. Please try again.",
+      );
       setBookingLoading(false);
     }
   };
@@ -716,8 +830,8 @@ const EventDetailNew = () => {
       toast.error("Please fill all fields");
       return;
     }
-    const phoneDigits = (phone || "").replace(/\D/g, "");
-    if (phoneDigits.length < 10 || phoneDigits.length > 15) {
+    const phoneDigits = normalizeIndianPhoneNumber(phone);
+    if (!phoneDigits) {
       toast.error("Please enter a valid phone number");
       return;
     }
@@ -725,7 +839,13 @@ const EventDetailNew = () => {
     try {
       await apiFetch("auth/signup", {
         method: "POST",
-        body: JSON.stringify({ name, email, phone: phoneDigits, password, role: "USER" }),
+        body: JSON.stringify({
+          name,
+          email,
+          phone: phoneDigits,
+          password,
+          role: "USER",
+        }),
       });
 
       resetSessionCache();
@@ -750,11 +870,14 @@ const EventDetailNew = () => {
     if (isPreviewMode) return;
 
     // Save pending booking state before navigating away
-    sessionStorage.setItem('pendingBooking', JSON.stringify({
-      returnUrl: window.location.pathname,
-      ticketQuantities,
-      timestamp: Date.now(),
-    }));
+    sessionStorage.setItem(
+      "pendingBooking",
+      JSON.stringify({
+        returnUrl: window.location.pathname,
+        ticketQuantities,
+        timestamp: Date.now(),
+      }),
+    );
     const redirect = encodeURIComponent(window.location.href);
     const googleAuthUrl = buildUrl(`/api/auth/google?redirect=${redirect}`);
     window.location.href = googleAuthUrl;
@@ -788,8 +911,14 @@ const EventDetailNew = () => {
     return (
       <div className="event-detail-theme min-h-screen bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">Event Not Found</h2>
-          <Button onClick={() => navigate(isPreviewMode ? "/organizer/myevents" : "/browse-events")}>
+          <h2 className="text-2xl font-bold text-white mb-4">
+            Event Not Found
+          </h2>
+          <Button
+            onClick={() =>
+              navigate(isPreviewMode ? "/organizer/myevents" : "/browse-events")
+            }
+          >
             {isPreviewMode ? "Back to My Events" : "Browse Events"}
           </Button>
         </div>
@@ -838,8 +967,8 @@ const EventDetailNew = () => {
 
       {/* Hero Section - matching reference design */}
       <div className="pt-8 pb-2">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <div className="grid lg:grid-cols-[1.3fr,0.6fr] gap-8 items-start px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
+          <div className="grid grid-cols-1 gap-6 items-start px-0 lg:grid-cols-[1.3fr,0.6fr] lg:gap-8 lg:px-8">
             {/* Left: Hero Image with Overlays */}
             <div className="relative">
               <img
@@ -860,10 +989,6 @@ const EventDetailNew = () => {
                 </Button>
               </div>
 
-             
-                
-              
-
               {/* Primary Sponsor - Bottom Right */}
               {primarySponsor && (
                 <div className="absolute bottom-4 right-4">
@@ -873,7 +998,9 @@ const EventDetailNew = () => {
                       alt={primarySponsor.name}
                       className="h-10 w-10 object-contain rounded-full bg-white/10 p-1"
                     />
-                    <span className="text-[11px] uppercase tracking-[0.15em] text-white/80">Powered by</span>
+                    <span className="text-[11px] uppercase tracking-[0.15em] text-white/80">
+                      Powered by
+                    </span>
                   </div>
                 </div>
               )}
@@ -882,11 +1009,13 @@ const EventDetailNew = () => {
             {/* Right: Event Details Card */}
             <div className="space-y-6">
               <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
-                <CardContent className="p-6 space-y-5">
+                <CardContent className="space-y-5 p-4 sm:p-6">
                   {/* Event Title and Category */}
                   <div className="space-y-3">
-                    <h2 className="text-4xl font-bold text-white leading-tight">{event.title}</h2>
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <h2 className="text-2xl font-bold leading-tight text-white sm:text-3xl lg:text-4xl">
+                      {event.title}
+                    </h2>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-400">
                       {event.category && <span>{event.category}</span>}
                       {event.category && event.subCategory && <span>•</span>}
                       {event.subCategory && <span>{event.subCategory}</span>}
@@ -901,9 +1030,15 @@ const EventDetailNew = () => {
                       <Calendar className="h-6 w-6 text-gray-300" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">Date & Time</p>
-                      <p className="text-white font-semibold text-sm">{formatDate(event.startDate)}</p>
-                      <p className="text-gray-400 text-xs mt-0.5">{formatTime(event.startDate)}</p>
+                      <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">
+                        Date & Time
+                      </p>
+                      <p className="text-white font-semibold text-sm">
+                        {formatDate(event.startDate)}
+                      </p>
+                      <p className="text-gray-400 text-xs mt-0.5">
+                        {formatTime(event.startDate)}
+                      </p>
                     </div>
                   </div>
 
@@ -915,9 +1050,15 @@ const EventDetailNew = () => {
                       <MapPin className="h-6 w-6 text-gray-300" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">Venue</p>
-                      <p className="text-white font-semibold text-sm">{event.venue}</p>
-                      <p className="text-gray-400 text-xs mt-0.5 line-clamp-2">{event.address}</p>
+                      <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">
+                        Venue
+                      </p>
+                      <p className="text-white font-semibold text-sm">
+                        {event.venue}
+                      </p>
+                      <p className="text-gray-400 text-xs mt-0.5 line-clamp-2">
+                        {event.address}
+                      </p>
                     </div>
                   </div>
 
@@ -925,16 +1066,23 @@ const EventDetailNew = () => {
                   <Button
                     onClick={() => {
                       if (isPreviewMode) return;
-                      const ticketSection = document.getElementById('ticket-section');
+                      const ticketSection =
+                        document.getElementById("ticket-section");
                       if (ticketSection) {
-                        ticketSection.scrollIntoView({ behavior: 'smooth' });
+                        ticketSection.scrollIntoView({ behavior: "smooth" });
                       }
                     }}
                     disabled={isPreviewMode}
                     className="w-full bg-primaryCTA hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-primary-foreground font-bold text-base py-2 rounded-lg transition-all mt-4"
                     size="lg"
                   >
-                    {isPreviewMode ? 'Preview Only' : isSoldOut ? 'SOLD OUT' : isSalesClosed ? 'Sales Closed' : 'Book Now'}
+                    {isPreviewMode
+                      ? "Preview Only"
+                      : isSoldOut
+                        ? "SOLD OUT"
+                        : isSalesClosed
+                          ? "Sales Closed"
+                          : "Book Now"}
                   </Button>
                 </CardContent>
               </Card>
@@ -953,7 +1101,6 @@ const EventDetailNew = () => {
           </div>
 
           {/* Section Header */}
-          
 
           {/* Marquee Container */}
           <div className="relative w-full">
@@ -1017,11 +1164,10 @@ const EventDetailNew = () => {
       )}
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-8 lg:px-16 py-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-16 py-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-4">
-
             {/* About Section */}
             <div className="space-y-3">
               <div className="space-y-2">
@@ -1080,78 +1226,191 @@ const EventDetailNew = () => {
                       const lower = text.toLowerCase();
 
                       // Age restrictions
-                      if (lower.includes('18+') || lower.includes('18 +') || lower.includes('age limit') ||
-                          lower.includes('age restriction') || lower.includes('adults only') ||
-                          lower.includes('21+') || lower.includes('21 +') || lower.includes('mature')) return '🔞';
+                      if (
+                        lower.includes("18+") ||
+                        lower.includes("18 +") ||
+                        lower.includes("age limit") ||
+                        lower.includes("age restriction") ||
+                        lower.includes("adults only") ||
+                        lower.includes("21+") ||
+                        lower.includes("21 +") ||
+                        lower.includes("mature")
+                      )
+                        return "🔞";
 
                       // Parking
-                      if (lower.includes('parking') || lower.includes('valet') || lower.includes('vehicle')) return '🅿️';
+                      if (
+                        lower.includes("parking") ||
+                        lower.includes("valet") ||
+                        lower.includes("vehicle")
+                      )
+                        return "🅿️";
 
                       // ID/Documents
-                      if (lower.includes('id') || lower.includes('identification') || lower.includes('valid id') ||
-                          lower.includes('government id') || lower.includes('photo id') ||
-                          lower.includes('passport') || lower.includes('license') || lower.includes('proof')) return '🆔';
+                      if (
+                        lower.includes("id") ||
+                        lower.includes("identification") ||
+                        lower.includes("valid id") ||
+                        lower.includes("government id") ||
+                        lower.includes("photo id") ||
+                        lower.includes("passport") ||
+                        lower.includes("license") ||
+                        lower.includes("proof")
+                      )
+                        return "🆔";
 
                       // Food & Drinks
-                      if (lower.includes('food') || lower.includes('drink') || lower.includes('beverage') ||
-                          lower.includes('refreshment') || lower.includes('meal') || lower.includes('dining') ||
-                          lower.includes('outside food') || lower.includes('outside drink') ||
-                          lower.includes('catering') || lower.includes('restaurant')) return '🍽️';
+                      if (
+                        lower.includes("food") ||
+                        lower.includes("drink") ||
+                        lower.includes("beverage") ||
+                        lower.includes("refreshment") ||
+                        lower.includes("meal") ||
+                        lower.includes("dining") ||
+                        lower.includes("outside food") ||
+                        lower.includes("outside drink") ||
+                        lower.includes("catering") ||
+                        lower.includes("restaurant")
+                      )
+                        return "🍽️";
 
                       // Photography/Camera
-                      if (lower.includes('camera') || lower.includes('photo') || lower.includes('photography') ||
-                          lower.includes('recording') || lower.includes('video') || lower.includes('filming')) return '📸';
+                      if (
+                        lower.includes("camera") ||
+                        lower.includes("photo") ||
+                        lower.includes("photography") ||
+                        lower.includes("recording") ||
+                        lower.includes("video") ||
+                        lower.includes("filming")
+                      )
+                        return "📸";
 
                       // Entry/Gate/Doors
-                      if (lower.includes('entry') || lower.includes('gate') || lower.includes('door') ||
-                          lower.includes('entrance') || lower.includes('admission') || lower.includes('check-in') ||
-                          lower.includes('checkin') || lower.includes('arrive') || lower.includes('arrival')) return '🚪';
+                      if (
+                        lower.includes("entry") ||
+                        lower.includes("gate") ||
+                        lower.includes("door") ||
+                        lower.includes("entrance") ||
+                        lower.includes("admission") ||
+                        lower.includes("check-in") ||
+                        lower.includes("checkin") ||
+                        lower.includes("arrive") ||
+                        lower.includes("arrival")
+                      )
+                        return "🚪";
 
                       // Timing/Schedule
-                      if (lower.includes('time') || lower.includes('schedule') || lower.includes('timing') ||
-                          lower.includes('start') || lower.includes('duration') || lower.includes('hours') ||
-                          lower.includes('clock') || lower.includes('punctual')) return '⏰';
+                      if (
+                        lower.includes("time") ||
+                        lower.includes("schedule") ||
+                        lower.includes("timing") ||
+                        lower.includes("start") ||
+                        lower.includes("duration") ||
+                        lower.includes("hours") ||
+                        lower.includes("clock") ||
+                        lower.includes("punctual")
+                      )
+                        return "⏰";
 
                       // Dress Code
-                      if (lower.includes('dress') || lower.includes('attire') || lower.includes('clothing') ||
-                          lower.includes('outfit') || lower.includes('formal') || lower.includes('casual') ||
-                          lower.includes('wear')) return '👔';
+                      if (
+                        lower.includes("dress") ||
+                        lower.includes("attire") ||
+                        lower.includes("clothing") ||
+                        lower.includes("outfit") ||
+                        lower.includes("formal") ||
+                        lower.includes("casual") ||
+                        lower.includes("wear")
+                      )
+                        return "👔";
 
                       // Safety/Security
-                      if (lower.includes('security') || lower.includes('safety') || lower.includes('safe') ||
-                          lower.includes('emergency') || lower.includes('first aid') || lower.includes('medical')) return '🛡️';
+                      if (
+                        lower.includes("security") ||
+                        lower.includes("safety") ||
+                        lower.includes("safe") ||
+                        lower.includes("emergency") ||
+                        lower.includes("first aid") ||
+                        lower.includes("medical")
+                      )
+                        return "🛡️";
 
                       // Prohibited Items
-                      if (lower.includes('prohibited') || lower.includes('not allowed') || lower.includes('banned') ||
-                          lower.includes('restricted') || lower.includes('forbidden') || lower.includes('no smoking') ||
-                          lower.includes('weapons') || lower.includes('drugs')) return '🚫';
+                      if (
+                        lower.includes("prohibited") ||
+                        lower.includes("not allowed") ||
+                        lower.includes("banned") ||
+                        lower.includes("restricted") ||
+                        lower.includes("forbidden") ||
+                        lower.includes("no smoking") ||
+                        lower.includes("weapons") ||
+                        lower.includes("drugs")
+                      )
+                        return "🚫";
 
                       // Tickets/Passes
-                      if (lower.includes('ticket') || lower.includes('pass') || lower.includes('wristband') ||
-                          lower.includes('badge') || lower.includes('qr') || lower.includes('barcode')) return '🎫';
+                      if (
+                        lower.includes("ticket") ||
+                        lower.includes("pass") ||
+                        lower.includes("wristband") ||
+                        lower.includes("badge") ||
+                        lower.includes("qr") ||
+                        lower.includes("barcode")
+                      )
+                        return "🎫";
 
                       // Weather
-                      if (lower.includes('weather') || lower.includes('rain') || lower.includes('outdoor') ||
-                          lower.includes('indoor') || lower.includes('umbrella') || lower.includes('sun')) return '⛅';
+                      if (
+                        lower.includes("weather") ||
+                        lower.includes("rain") ||
+                        lower.includes("outdoor") ||
+                        lower.includes("indoor") ||
+                        lower.includes("umbrella") ||
+                        lower.includes("sun")
+                      )
+                        return "⛅";
 
                       // Accessibility
-                      if (lower.includes('wheelchair') || lower.includes('accessible') || lower.includes('disability') ||
-                          lower.includes('special needs') || lower.includes('mobility')) return '♿';
+                      if (
+                        lower.includes("wheelchair") ||
+                        lower.includes("accessible") ||
+                        lower.includes("disability") ||
+                        lower.includes("special needs") ||
+                        lower.includes("mobility")
+                      )
+                        return "♿";
 
                       // Children/Kids
-                      if (lower.includes('child') || lower.includes('kid') || lower.includes('minor') ||
-                          lower.includes('baby') || lower.includes('stroller') || lower.includes('family')) return '👶';
+                      if (
+                        lower.includes("child") ||
+                        lower.includes("kid") ||
+                        lower.includes("minor") ||
+                        lower.includes("baby") ||
+                        lower.includes("stroller") ||
+                        lower.includes("family")
+                      )
+                        return "👶";
 
                       // Pets/Animals
-                      if (lower.includes('pet') || lower.includes('dog') || lower.includes('animal') ||
-                          lower.includes('service animal')) return '🐕';
+                      if (
+                        lower.includes("pet") ||
+                        lower.includes("dog") ||
+                        lower.includes("animal") ||
+                        lower.includes("service animal")
+                      )
+                        return "🐕";
 
                       // Seating
-                      if (lower.includes('seat') || lower.includes('chair') || lower.includes('standing') ||
-                          lower.includes('reserved seating')) return '💺';
+                      if (
+                        lower.includes("seat") ||
+                        lower.includes("chair") ||
+                        lower.includes("standing") ||
+                        lower.includes("reserved seating")
+                      )
+                        return "💺";
 
                       // Default icon for custom advisories
-                      return '⚠️';
+                      return "⚠️";
                     };
 
                     return (
@@ -1159,7 +1418,9 @@ const EventDetailNew = () => {
                         key={`advisory-preview-${idx}`}
                         className="flex items-center gap-2.5 p-3 rounded-lg bg-gray-800/30 border border-gray-700/50 hover:bg-gray-800/50 transition-colors"
                       >
-                        <span className="text-lg flex-shrink-0">{getIcon(item)}</span>
+                        <span className="text-lg flex-shrink-0">
+                          {getIcon(item)}
+                        </span>
                         <span className="text-sm text-gray-300">{item}</span>
                       </div>
                     );
@@ -1190,7 +1451,9 @@ const EventDetailNew = () => {
                         className="w-16 h-16 rounded-lg object-cover"
                       />
                       <div className="space-y-2">
-                        <p className="text-white font-medium text-base">{artist.name}</p>
+                        <p className="text-white font-medium text-base">
+                          {artist.name}
+                        </p>
                         <div className="flex gap-3 text-xs font-medium">
                           {artist.instagramLink && (
                             <a
@@ -1259,7 +1522,10 @@ const EventDetailNew = () => {
                   className="event-gallery-mosaic rounded-xl bg-gray-950 p-1"
                 >
                   {galleryImages.map((image, index) => {
-                    const tile = getGalleryMosaicTile(index, galleryImages.length);
+                    const tile = getGalleryMosaicTile(
+                      index,
+                      galleryImages.length,
+                    );
 
                     return (
                       <button
@@ -1346,13 +1612,22 @@ const EventDetailNew = () => {
 
               <div className="flex items-center justify-between p-4 rounded-xl bg-transparent border border-gray-700/50">
                 <div className="flex-1">
-                  <p className="text-white font-semibold text-lg">{event.venue}</p>
-                  <p className="text-gray-400 text-sm mt-0.5">{event.address}</p>
+                  <p className="text-white font-semibold text-lg">
+                    {event.venue}
+                  </p>
+                  <p className="text-gray-400 text-sm mt-0.5">
+                    {event.address}
+                  </p>
                 </div>
                 <Button
                   variant="outline"
                   className="border-gray-700 text-white hover:bg-gray-800 hover:text-white flex items-center gap-2"
-                  onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address)}`, '_blank')}
+                  onClick={() =>
+                    window.open(
+                      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address)}`,
+                      "_blank",
+                    )
+                  }
                 >
                   <MapPin className="h-4 w-4" />
                   Get Directions
@@ -1451,7 +1726,9 @@ const EventDetailNew = () => {
                 <div className="rounded-xl bg-transparent border border-gray-700/50 p-4">
                   <div className="flex items-start gap-3">
                     <div className="flex-1">
-                      <h2 className="text-2xl font-bold text-white mb-2">Organizer Note</h2>
+                      <h2 className="text-2xl font-bold text-white mb-2">
+                        Organizer Note
+                      </h2>
                       <div
                         className="text-sm text-gray-300 leading-relaxed whitespace-pre-line transition-all duration-300"
                         style={
@@ -1470,7 +1747,9 @@ const EventDetailNew = () => {
                       {organizerNoteCanExpand && (
                         <button
                           type="button"
-                          onClick={() => setOrganizerNoteExpanded((prev) => !prev)}
+                          onClick={() =>
+                            setOrganizerNoteExpanded((prev) => !prev)
+                          }
                           className="text-sm font-medium text-red-600 hover:text-red-500 transition mt-2"
                         >
                           {organizerNoteExpanded ? "Show less" : "Show more"}
@@ -1506,11 +1785,17 @@ const EventDetailNew = () => {
                           key={`faq-${idx}`}
                           className="rounded-lg border border-gray-700/50 bg-gray-900/40 px-4 py-3"
                         >
-                          <p className="text-white font-semibold text-base mb-1">{qa.question}</p>
+                          <p className="text-white font-semibold text-base mb-1">
+                            {qa.question}
+                          </p>
                           {qa.answer ? (
-                            <p className="text-gray-400 text-sm leading-relaxed">{qa.answer}</p>
+                            <p className="text-gray-400 text-sm leading-relaxed">
+                              {qa.answer}
+                            </p>
                           ) : (
-                            <p className="text-gray-500 text-xs">No answer provided.</p>
+                            <p className="text-gray-500 text-xs">
+                              No answer provided.
+                            </p>
                           )}
                         </section>
                       ))}
@@ -1533,35 +1818,43 @@ const EventDetailNew = () => {
                 </button>
                 {tcOpen && (
                   <div className="border-t border-gray-800 px-5 py-4 bg-transparent">
-                    {normalizedTerms.length > 0 ? (
-                      normalizedTerms.map((t, idx) => (
-                        <div key={`term-${idx}`} className="mb-2 last:mb-0">
-                          {getTermHtml(t) ? (
-                            <div
-                              className="space-y-1 text-[10px] leading-3 text-gray-400 [&_*]:text-[10px] [&_*]:leading-3"
-                              dangerouslySetInnerHTML={{ __html: getTermHtml(t) }}
-                            />
-                          ) : (
-                            renderTermsContent()
-                          )}
-                          {t.lastUpdated && (
-                            <p className="mt-2 text-[10px] leading-3 text-gray-500">Last updated: {new Date(t.lastUpdated).toLocaleDateString()}</p>
-                          )}
-                        </div>
-                      ))
-                    ) : (
-                      renderTermsContent()
-                    )}
+                    {normalizedTerms.length > 0
+                      ? normalizedTerms.map((t, idx) => (
+                          <div key={`term-${idx}`} className="mb-2 last:mb-0">
+                            {getTermHtml(t) ? (
+                              <div
+                                className="space-y-1 text-[10px] leading-3 text-gray-400 [&_*]:text-[10px] [&_*]:leading-3"
+                                dangerouslySetInnerHTML={{
+                                  __html: getTermHtml(t),
+                                }}
+                              />
+                            ) : (
+                              renderTermsContent()
+                            )}
+                            {t.lastUpdated && (
+                              <p className="mt-2 text-[10px] leading-3 text-gray-500">
+                                Last updated:{" "}
+                                {new Date(t.lastUpdated).toLocaleDateString()}
+                              </p>
+                            )}
+                          </div>
+                        ))
+                      : renderTermsContent()}
                   </div>
                 )}
               </div>
             </div>
 
             {/* Advisory Modal */}
-            <Dialog open={advisoryModalOpen} onOpenChange={setAdvisoryModalOpen}>
+            <Dialog
+              open={advisoryModalOpen}
+              onOpenChange={setAdvisoryModalOpen}
+            >
               <DialogContent className="max-w-lg border-gray-800 bg-gray-900 text-white">
                 <DialogHeader>
-                  <DialogTitle className="text-xl font-bold">Event Guide</DialogTitle>
+                  <DialogTitle className="text-xl font-bold">
+                    Event Guide
+                  </DialogTitle>
                   <DialogDescription className="text-gray-400 text-sm">
                     All advisories and notes for this event
                   </DialogDescription>
@@ -1574,78 +1867,191 @@ const EventDetailNew = () => {
                         const lower = text.toLowerCase();
 
                         // Age restrictions
-                        if (lower.includes('18+') || lower.includes('18 +') || lower.includes('age limit') ||
-                            lower.includes('age restriction') || lower.includes('adults only') ||
-                            lower.includes('21+') || lower.includes('21 +') || lower.includes('mature')) return '🔞';
+                        if (
+                          lower.includes("18+") ||
+                          lower.includes("18 +") ||
+                          lower.includes("age limit") ||
+                          lower.includes("age restriction") ||
+                          lower.includes("adults only") ||
+                          lower.includes("21+") ||
+                          lower.includes("21 +") ||
+                          lower.includes("mature")
+                        )
+                          return "🔞";
 
                         // Parking
-                        if (lower.includes('parking') || lower.includes('valet') || lower.includes('vehicle')) return '🅿️';
+                        if (
+                          lower.includes("parking") ||
+                          lower.includes("valet") ||
+                          lower.includes("vehicle")
+                        )
+                          return "🅿️";
 
                         // ID/Documents
-                        if (lower.includes('id') || lower.includes('identification') || lower.includes('valid id') ||
-                            lower.includes('government id') || lower.includes('photo id') ||
-                            lower.includes('passport') || lower.includes('license') || lower.includes('proof')) return '🆔';
+                        if (
+                          lower.includes("id") ||
+                          lower.includes("identification") ||
+                          lower.includes("valid id") ||
+                          lower.includes("government id") ||
+                          lower.includes("photo id") ||
+                          lower.includes("passport") ||
+                          lower.includes("license") ||
+                          lower.includes("proof")
+                        )
+                          return "🆔";
 
                         // Food & Drinks
-                        if (lower.includes('food') || lower.includes('drink') || lower.includes('beverage') ||
-                            lower.includes('refreshment') || lower.includes('meal') || lower.includes('dining') ||
-                            lower.includes('outside food') || lower.includes('outside drink') ||
-                            lower.includes('catering') || lower.includes('restaurant')) return '🍽️';
+                        if (
+                          lower.includes("food") ||
+                          lower.includes("drink") ||
+                          lower.includes("beverage") ||
+                          lower.includes("refreshment") ||
+                          lower.includes("meal") ||
+                          lower.includes("dining") ||
+                          lower.includes("outside food") ||
+                          lower.includes("outside drink") ||
+                          lower.includes("catering") ||
+                          lower.includes("restaurant")
+                        )
+                          return "🍽️";
 
                         // Photography/Camera
-                        if (lower.includes('camera') || lower.includes('photo') || lower.includes('photography') ||
-                            lower.includes('recording') || lower.includes('video') || lower.includes('filming')) return '📸';
+                        if (
+                          lower.includes("camera") ||
+                          lower.includes("photo") ||
+                          lower.includes("photography") ||
+                          lower.includes("recording") ||
+                          lower.includes("video") ||
+                          lower.includes("filming")
+                        )
+                          return "📸";
 
                         // Entry/Gate/Doors
-                        if (lower.includes('entry') || lower.includes('gate') || lower.includes('door') ||
-                            lower.includes('entrance') || lower.includes('admission') || lower.includes('check-in') ||
-                            lower.includes('checkin') || lower.includes('arrive') || lower.includes('arrival')) return '🚪';
+                        if (
+                          lower.includes("entry") ||
+                          lower.includes("gate") ||
+                          lower.includes("door") ||
+                          lower.includes("entrance") ||
+                          lower.includes("admission") ||
+                          lower.includes("check-in") ||
+                          lower.includes("checkin") ||
+                          lower.includes("arrive") ||
+                          lower.includes("arrival")
+                        )
+                          return "🚪";
 
                         // Timing/Schedule
-                        if (lower.includes('time') || lower.includes('schedule') || lower.includes('timing') ||
-                            lower.includes('start') || lower.includes('duration') || lower.includes('hours') ||
-                            lower.includes('clock') || lower.includes('punctual')) return '⏰';
+                        if (
+                          lower.includes("time") ||
+                          lower.includes("schedule") ||
+                          lower.includes("timing") ||
+                          lower.includes("start") ||
+                          lower.includes("duration") ||
+                          lower.includes("hours") ||
+                          lower.includes("clock") ||
+                          lower.includes("punctual")
+                        )
+                          return "⏰";
 
                         // Dress Code
-                        if (lower.includes('dress') || lower.includes('attire') || lower.includes('clothing') ||
-                            lower.includes('outfit') || lower.includes('formal') || lower.includes('casual') ||
-                            lower.includes('wear')) return '👔';
+                        if (
+                          lower.includes("dress") ||
+                          lower.includes("attire") ||
+                          lower.includes("clothing") ||
+                          lower.includes("outfit") ||
+                          lower.includes("formal") ||
+                          lower.includes("casual") ||
+                          lower.includes("wear")
+                        )
+                          return "👔";
 
                         // Safety/Security
-                        if (lower.includes('security') || lower.includes('safety') || lower.includes('safe') ||
-                            lower.includes('emergency') || lower.includes('first aid') || lower.includes('medical')) return '🛡️';
+                        if (
+                          lower.includes("security") ||
+                          lower.includes("safety") ||
+                          lower.includes("safe") ||
+                          lower.includes("emergency") ||
+                          lower.includes("first aid") ||
+                          lower.includes("medical")
+                        )
+                          return "🛡️";
 
                         // Prohibited Items
-                        if (lower.includes('prohibited') || lower.includes('not allowed') || lower.includes('banned') ||
-                            lower.includes('restricted') || lower.includes('forbidden') || lower.includes('no smoking') ||
-                            lower.includes('weapons') || lower.includes('drugs')) return '🚫';
+                        if (
+                          lower.includes("prohibited") ||
+                          lower.includes("not allowed") ||
+                          lower.includes("banned") ||
+                          lower.includes("restricted") ||
+                          lower.includes("forbidden") ||
+                          lower.includes("no smoking") ||
+                          lower.includes("weapons") ||
+                          lower.includes("drugs")
+                        )
+                          return "🚫";
 
                         // Tickets/Passes
-                        if (lower.includes('ticket') || lower.includes('pass') || lower.includes('wristband') ||
-                            lower.includes('badge') || lower.includes('qr') || lower.includes('barcode')) return '🎫';
+                        if (
+                          lower.includes("ticket") ||
+                          lower.includes("pass") ||
+                          lower.includes("wristband") ||
+                          lower.includes("badge") ||
+                          lower.includes("qr") ||
+                          lower.includes("barcode")
+                        )
+                          return "🎫";
 
                         // Weather
-                        if (lower.includes('weather') || lower.includes('rain') || lower.includes('outdoor') ||
-                            lower.includes('indoor') || lower.includes('umbrella') || lower.includes('sun')) return '⛅';
+                        if (
+                          lower.includes("weather") ||
+                          lower.includes("rain") ||
+                          lower.includes("outdoor") ||
+                          lower.includes("indoor") ||
+                          lower.includes("umbrella") ||
+                          lower.includes("sun")
+                        )
+                          return "⛅";
 
                         // Accessibility
-                        if (lower.includes('wheelchair') || lower.includes('accessible') || lower.includes('disability') ||
-                            lower.includes('special needs') || lower.includes('mobility')) return '♿';
+                        if (
+                          lower.includes("wheelchair") ||
+                          lower.includes("accessible") ||
+                          lower.includes("disability") ||
+                          lower.includes("special needs") ||
+                          lower.includes("mobility")
+                        )
+                          return "♿";
 
                         // Children/Kids
-                        if (lower.includes('child') || lower.includes('kid') || lower.includes('minor') ||
-                            lower.includes('baby') || lower.includes('stroller') || lower.includes('family')) return '👶';
+                        if (
+                          lower.includes("child") ||
+                          lower.includes("kid") ||
+                          lower.includes("minor") ||
+                          lower.includes("baby") ||
+                          lower.includes("stroller") ||
+                          lower.includes("family")
+                        )
+                          return "👶";
 
                         // Pets/Animals
-                        if (lower.includes('pet') || lower.includes('dog') || lower.includes('animal') ||
-                            lower.includes('service animal')) return '🐕';
+                        if (
+                          lower.includes("pet") ||
+                          lower.includes("dog") ||
+                          lower.includes("animal") ||
+                          lower.includes("service animal")
+                        )
+                          return "🐕";
 
                         // Seating
-                        if (lower.includes('seat') || lower.includes('chair') || lower.includes('standing') ||
-                            lower.includes('reserved seating')) return '💺';
+                        if (
+                          lower.includes("seat") ||
+                          lower.includes("chair") ||
+                          lower.includes("standing") ||
+                          lower.includes("reserved seating")
+                        )
+                          return "💺";
 
                         // Default icon for custom advisories
-                        return '⚠️';
+                        return "⚠️";
                       };
 
                       return (
@@ -1653,13 +2059,17 @@ const EventDetailNew = () => {
                           key={`advisory-modal-${idx}`}
                           className="flex items-center gap-3 p-3 rounded-lg bg-gray-800/30 border border-gray-700/50 hover:bg-gray-800/50 transition-colors"
                         >
-                          <span className="text-xl flex-shrink-0">{getIcon(item)}</span>
+                          <span className="text-xl flex-shrink-0">
+                            {getIcon(item)}
+                          </span>
                           <p className="text-white text-sm">{item}</p>
                         </div>
                       );
                     })
                   ) : (
-                    <p className="text-sm text-gray-500 text-center py-8">No advisories provided.</p>
+                    <p className="text-sm text-gray-500 text-center py-8">
+                      No advisories provided.
+                    </p>
                   )}
                 </div>
               </DialogContent>
@@ -1685,22 +2095,37 @@ const EventDetailNew = () => {
                         className={`p-4 rounded-xl border border-gray-700/50 bg-transparent ${ticket.available === 0 ? "opacity-60" : ""}`}
                       >
                         <div className="flex justify-between items-start mb-1">
-                          <h4 className="font-bold text-white text-xl">{ticket.name}</h4>
-                          <span className="text-xl font-bold text-red-600">{formatCurrency(ticket.price)}</span>
+                          <h4 className="font-bold text-white text-xl">
+                            {ticket.name}
+                          </h4>
+                          <span className="text-xl font-bold text-red-600">
+                            {formatCurrency(ticket.price)}
+                          </span>
                         </div>
-                        <p className="text-[11px] text-gray-500 mb-3">{ticket.description}</p>
-                        
+                        <p className="text-[11px] text-gray-500 mb-3">
+                          {ticket.description}
+                        </p>
+
                         <div className="flex items-center justify-between">
                           <div className="text-[10px] text-gray-500">
                             <p>{ticket.available} available</p>
                             {Number.isFinite(cap) && cap < Infinity && (
-                              <p className="text-gray-600 mt-0.5">Max {cap} per user</p>
+                              <p className="text-gray-600 mt-0.5">
+                                Max {cap} per user
+                              </p>
                             )}
                           </div>
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => handleQuantityChange(ticket.id, -1)}
-                              disabled={!qty || isPreviewMode || isSalesClosed || ticket.available === 0}
+                              onClick={() =>
+                                handleQuantityChange(ticket.id, -1)
+                              }
+                              disabled={
+                                !qty ||
+                                isPreviewMode ||
+                                isSalesClosed ||
+                                ticket.available === 0
+                              }
                               className="h-7 w-7 rounded-full border border-gray-600 flex items-center justify-center text-white hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
                             >
                               <Minus className="h-3 w-3" />
@@ -1710,20 +2135,30 @@ const EventDetailNew = () => {
                             </span>
                             <button
                               onClick={() => handleQuantityChange(ticket.id, 1)}
-                              disabled={isPreviewMode || isSalesClosed || ticket.available === 0 || qty >= cap}
+                              disabled={
+                                isPreviewMode ||
+                                isSalesClosed ||
+                                ticket.available === 0 ||
+                                qty >= cap
+                              }
                               className="h-7 w-7 rounded-full border border-gray-600 flex items-center justify-center text-white hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
                             >
                               <Plus className="h-3 w-3" />
                             </button>
                           </div>
                         </div>
-                        
+
                         {ticket.available === 0 && (
                           <p className="text-gray-500 text-xs mt-2">Sold out</p>
                         )}
-                        {ticket.available > 0 && Number.isFinite(cap) && cap < Infinity && qty >= cap && (
-                          <p className="text-gray-500 text-xs mt-2">Max per user limit reached</p>
-                        )}
+                        {ticket.available > 0 &&
+                          Number.isFinite(cap) &&
+                          cap < Infinity &&
+                          qty >= cap && (
+                            <p className="text-gray-500 text-xs mt-2">
+                              Max per user limit reached
+                            </p>
+                          )}
                       </div>
                     );
                   })}
@@ -1731,12 +2166,19 @@ const EventDetailNew = () => {
 
                 <div className="pt-3 border-t border-gray-800 flex justify-between items-center text-sm">
                   <span className="text-gray-400">Tickets</span>
-                  <span className="font-semibold text-white text-base">{totalTickets}</span>
+                  <span className="font-semibold text-white text-base">
+                    {totalTickets}
+                  </span>
                 </div>
 
                 <Button
                   onClick={handleBookNow}
-                  disabled={isPreviewMode || totalTickets === 0 || isSalesClosed || isSoldOut}
+                  disabled={
+                    isPreviewMode ||
+                    totalTickets === 0 ||
+                    isSalesClosed ||
+                    isSoldOut
+                  }
                   className="w-full bg-primaryCTA hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-primary-foreground font-semibold transition-all text-sm py-4 rounded-lg"
                 >
                   <Ticket className="h-4 w-4 mr-2" />
@@ -1744,7 +2186,9 @@ const EventDetailNew = () => {
                 </Button>
 
                 <p className="text-[11px] text-center text-gray-500">
-                  {bookingDisabledReason ? "Booking unavailable" : "Secure payment • Instant confirmation"}
+                  {bookingDisabledReason
+                    ? "Booking unavailable"
+                    : "Secure payment • Instant confirmation"}
                 </p>
               </div>
 
@@ -1848,7 +2292,8 @@ const EventDetailNew = () => {
               Sign in to book instantly
             </DialogTitle>
             <DialogDescription className="text-gray-400">
-              Secure checkout with email or Google. We'll auto-apply your details to the ticket.
+              Secure checkout with email or Google. We'll auto-apply your
+              details to the ticket.
             </DialogDescription>
           </DialogHeader>
 
@@ -1867,7 +2312,9 @@ const EventDetailNew = () => {
                     type="email"
                     placeholder="you@example.com"
                     value={loginForm.email}
-                    onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                    onChange={(e) =>
+                      setLoginForm({ ...loginForm, email: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -1877,7 +2324,9 @@ const EventDetailNew = () => {
                     type="password"
                     placeholder="••••••••"
                     value={loginForm.password}
-                    onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                    onChange={(e) =>
+                      setLoginForm({ ...loginForm, password: e.target.value })
+                    }
                   />
                 </div>
                 <div className="flex justify-end">
@@ -1888,7 +2337,11 @@ const EventDetailNew = () => {
                     Forgot password?
                   </Link>
                 </div>
-                <Button type="submit" className="w-full py-5" disabled={authLoading}>
+                <Button
+                  type="submit"
+                  className="w-full py-5"
+                  disabled={authLoading}
+                >
                   {authLoading ? (
                     <span className="flex items-center justify-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -1904,7 +2357,9 @@ const EventDetailNew = () => {
                   <span className="w-full border-t border-gray-700" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-gray-900 px-2 text-gray-500">or continue with</span>
+                  <span className="bg-gray-900 px-2 text-gray-500">
+                    or continue with
+                  </span>
                 </div>
               </div>
               <Button
@@ -1943,7 +2398,9 @@ const EventDetailNew = () => {
                     id="inline-name"
                     placeholder="Your name"
                     value={signupForm.name}
-                    onChange={(e) => setSignupForm({ ...signupForm, name: e.target.value })}
+                    onChange={(e) =>
+                      setSignupForm({ ...signupForm, name: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -1953,7 +2410,9 @@ const EventDetailNew = () => {
                     type="email"
                     placeholder="you@example.com"
                     value={signupForm.email}
-                    onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })}
+                    onChange={(e) =>
+                      setSignupForm({ ...signupForm, email: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -1961,9 +2420,11 @@ const EventDetailNew = () => {
                   <Input
                     id="inline-signup-phone"
                     type="tel"
-                    placeholder="10-15 digits"
+                    placeholder="10 digits"
                     value={signupForm.phone}
-                    onChange={(e) => setSignupForm({ ...signupForm, phone: e.target.value })}
+                    onChange={(e) =>
+                      setSignupForm({ ...signupForm, phone: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -1973,10 +2434,16 @@ const EventDetailNew = () => {
                     type="password"
                     placeholder="Create a password"
                     value={signupForm.password}
-                    onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
+                    onChange={(e) =>
+                      setSignupForm({ ...signupForm, password: e.target.value })
+                    }
                   />
                 </div>
-                <Button type="submit" className="w-full py-5" disabled={authLoading}>
+                <Button
+                  type="submit"
+                  className="w-full py-5"
+                  disabled={authLoading}
+                >
                   {authLoading ? (
                     <span className="flex items-center justify-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
