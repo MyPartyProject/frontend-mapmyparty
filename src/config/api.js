@@ -1,10 +1,6 @@
 const rawEnvBase = import.meta.env.VITE_API_BASE_URL;
-// const hostedDefault = "https://mapmyparty.com/api";
-// const localDefault = "http://localhost:9090/api";
-
-// AWS deployed
-// const hostedDefault = "https://api.mapmyparty.com/api";
-// const localDefault = "https://api.mapmyparty.com/api";
+const hostedDefault = "https://api.mapmyparty.com/api";
+const localDefault = "http://localhost:9090/api";
 
 export const API_BASE_URL = `${(rawEnvBase || (import.meta.env.DEV ? localDefault : hostedDefault))
   .replace(/\/+$/, "")
