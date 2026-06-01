@@ -60,6 +60,7 @@ import {
   isAuthenticated as isAuthedSync,
 } from "@/utils/auth";
 import BillingDetailsModal from "@/components/BillingDetailsModal";
+import { useAuth } from "@/contexts/AuthContext";
 import logoSvg from "@/assets/MMP logo.svg";
 // import PromoterDashboardHeader from "@/components/PromoterDashboardHeader";
 
@@ -183,6 +184,12 @@ const EventDetailNew = () => {
   const { organizerSlug, eventSlug, eventId } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const {
+    isAuthenticated: contextIsAuthenticated,
+    user: contextUser,
+    loading: contextAuthLoading,
+    login: syncAuthSession,
+  } = useAuth();
   const isPreviewMode = Boolean(eventId);
   const { event, loading, error } = usePublicEventDetail(
     organizerSlug,
@@ -226,6 +233,20 @@ const EventDetailNew = () => {
     () => (Array.isArray(event?.gallery) ? event.gallery.filter(Boolean) : []),
     [event?.gallery],
   );
+
+  useEffect(() => {
+    if (contextIsAuthenticated) {
+      setIsSessionAuthed(true);
+      setSessionUser(contextUser || null);
+      return;
+    }
+
+    if (!contextAuthLoading && !isAuthedSync()) {
+      setIsSessionAuthed(false);
+      setSessionUser(null);
+    }
+  }, [contextAuthLoading, contextIsAuthenticated, contextUser]);
+
   const selectedImageIndex = useMemo(
     () => galleryImages.findIndex((image) => image === selectedImage),
     [galleryImages, selectedImage],
@@ -738,19 +759,24 @@ const EventDetailNew = () => {
     return "";
   }, [isPreviewMode, isSalesClosed, isSoldOut]);
 
-  const ensureSession = async () => {
+  const ensureSession = async (forceRefresh = false) => {
     setAuthLoading(true);
     try {
-      const session = await fetchSession();
+      const session = await fetchSession(forceRefresh);
       if (session?.isAuthenticated) {
         setIsSessionAuthed(true);
         setSessionUser(session.user || null);
+        await syncAuthSession(session);
         return true;
       }
+
+      setIsSessionAuthed(false);
+      setSessionUser(null);
     } catch (err) {
       console.warn("Auth check failed, using cached flag", err);
-      if (isAuthedSync()) {
+      if (contextIsAuthenticated || isAuthedSync()) {
         setIsSessionAuthed(true);
+        setSessionUser(contextUser || null);
         return true;
       }
     } finally {
@@ -770,14 +796,11 @@ const EventDetailNew = () => {
       return;
     }
 
-    // Check if user is authenticated
-    if (!isSessionAuthed) {
+    const hasSession = await ensureSession(!(isSessionAuthed || contextIsAuthenticated));
+    if (!hasSession) {
       setAuthModalOpen(true);
       return;
     }
-
-    // Ensure we have fresh session data
-    await ensureSession();
 
     // Show billing modal to collect address details
     setBillingModalOpen(true);
@@ -882,6 +905,7 @@ const EventDetailNew = () => {
 
       setIsSessionAuthed(true);
       setSessionUser(session.user);
+      await syncAuthSession(session);
       setAuthModalOpen(false);
       setBillingModalOpen(true);
     } catch (err) {
@@ -925,6 +949,7 @@ const EventDetailNew = () => {
 
       setIsSessionAuthed(true);
       setSessionUser(session.user);
+      await syncAuthSession(session);
       setAuthModalOpen(false);
       setBillingModalOpen(true);
     } catch (err) {
