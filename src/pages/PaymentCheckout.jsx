@@ -90,6 +90,22 @@ const PaymentCheckout = () => {
     };
   }, [bookingData]);
 
+  const isFreeCheckout = Boolean(bookingData)
+    && (
+      bookingData.paymentRequired === false
+      || bookingData.checkoutProvider === "FREE"
+      || (Boolean(bookingData?.totals) && Number(totalsSafe.total || 0) <= 0)
+    );
+
+  useEffect(() => {
+    if (!checkoutReady || !bookingData?.bookingId || !isFreeCheckout) {
+      return;
+    }
+
+    sessionStorage.removeItem("pendingCheckout");
+    navigate(`/booking-success?bookingId=${bookingData.bookingId}`, { replace: true });
+  }, [checkoutReady, bookingData?.bookingId, isFreeCheckout, navigate]);
+
   const totalQty = useMemo(() => tickets.reduce((sum, ticket) => sum + (ticket.quantity || 0), 0), [tickets]);
 
   const formatCurrency = (value = 0) =>
@@ -150,6 +166,12 @@ const PaymentCheckout = () => {
       return;
     }
 
+    if (isFreeCheckout) {
+      sessionStorage.removeItem("pendingCheckout");
+      navigate(`/booking-success?bookingId=${bookingData.bookingId}`, { replace: true });
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
@@ -161,6 +183,13 @@ const PaymentCheckout = () => {
       });
 
       const checkout = initResponse?.data;
+      if (initResponse?.success && checkout?.paymentRequired === false) {
+        sessionStorage.removeItem("pendingCheckout");
+        toast.success("Booking confirmed successfully!");
+        navigate(`/booking-success?bookingId=${checkout.bookingId || bookingData.bookingId}`);
+        return;
+      }
+
       if (!initResponse?.success || !checkout?.key || !checkout?.orderId || !checkout?.paymentId) {
         throw new Error(initResponse?.errorMessage || "Unable to initialize payment");
       }
@@ -385,20 +414,26 @@ const PaymentCheckout = () => {
                 {isProcessing ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Processing Payment...
+                    {isFreeCheckout ? "Confirming Booking..." : "Processing Payment..."}
                   </>
                 ) : (
-                  "Pay securely with Razorpay"
+                  isFreeCheckout ? "Confirm free booking" : "Pay securely with Razorpay"
                 )}
               </Button>
               <p className="text-xs text-center text-white/60">
                 {isProcessing
-                  ? "Please wait while Razorpay Checkout opens or verifies your payment..."
-                  : "Your booking is confirmed only after secure server-side payment verification."}
+                  ? isFreeCheckout
+                    ? "Please wait while your booking is confirmed..."
+                    : "Please wait while Razorpay Checkout opens or verifies your payment..."
+                  : isFreeCheckout
+                    ? "Your booking will be confirmed without payment."
+                    : "Your booking is confirmed only after secure server-side payment verification."}
               </p>
-              <p className="text-xs text-center text-amber-300/80 bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 mt-2">
-                Razorpay Test Mode: use Razorpay test credentials and test payment methods until production keys are enabled.
-              </p>
+              {!isFreeCheckout && (
+                <p className="text-xs text-center text-amber-300/80 bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 mt-2">
+                  Razorpay Test Mode: use Razorpay test credentials and test payment methods until production keys are enabled.
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>

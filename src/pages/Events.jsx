@@ -6,6 +6,7 @@ import ClassicGridTemplate from "@/components/EventsPageTemplates/ClassicGridTem
 import MagazineMasonryTemplate from "@/components/EventsPageTemplates/MagazineMasonryTemplate";
 import ListTableTemplate from "@/components/EventsPageTemplates/ListTableTemplate";
 import { resolveEventBannerImage } from "@/utils/eventBannerImage";
+import { formatEventPriceLabel, normalizePriceLabel } from "@/utils/priceFormatter";
 
 const Events = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -75,16 +76,16 @@ const Events = () => {
 
       if (numericPrices.length > 0) {
         const minPrice = Math.min(...numericPrices);
-        return minPrice > 0 ? `From ₹${minPrice}` : "Free";
+        return formatEventPriceLabel(minPrice, { prefix: "From" });
       }
     }
 
     if (typeof event.price === "number") {
-      return event.price > 0 ? `From ₹${event.price}` : "Free";
+      return formatEventPriceLabel(event.price, { prefix: "From" });
     }
 
     if (typeof event.price === "string" && event.price.trim()) {
-      return event.price;
+      return normalizePriceLabel(event.price);
     }
 
     return "Free";

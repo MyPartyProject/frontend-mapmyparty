@@ -101,9 +101,15 @@ const getArtistIdentity = (artist) => {
   if (stableId) return `id:${stableId}`;
 
   const name = normalizeArtistIdentityPart(artist?.name);
-  const instagram = normalizeArtistIdentityPart(artist?.instagram || artist?.instagramLink);
-  const spotify = normalizeArtistIdentityPart(artist?.spotify || artist?.spotifyLink);
-  const image = normalizeArtistIdentityPart(artist?.photo || artist?.image);
+  const instagram = normalizeArtistIdentityPart(
+    artist?.instagram || artist?.instagramLink || artist?.instagramUrl || artist?.instagramHandle
+  );
+  const spotify = normalizeArtistIdentityPart(
+    artist?.spotify || artist?.spotifyLink || artist?.spotifyUrl
+  );
+  const image = normalizeArtistIdentityPart(
+    artist?.photo || artist?.image || artist?.imageUrl || artist?.avatar || artist?.profileImage
+  );
 
   return `profile:${name}|${instagram}|${spotify}|${image}`;
 };
@@ -113,6 +119,23 @@ const getArtistRenderKey = (artist) => {
   if (stableId) return `id:${stableId}`;
   if (artist?.clientId) return `client:${artist.clientId}`;
   return getArtistIdentity(artist);
+};
+
+const extractArtistList = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (!payload || typeof payload !== "object") return [];
+
+  const candidates = [
+    payload.artists,
+    payload.data?.artists,
+    payload.event?.artists,
+    payload.data?.event?.artists,
+    payload.event?.data?.artists,
+    payload.data?.data?.artists,
+    payload.data?.data?.event?.artists,
+  ];
+
+  return candidates.find(Array.isArray) || [];
 };
 
 const CreateEvent = () => {
@@ -421,7 +444,15 @@ const CreateEvent = () => {
     endTime: "",
   });
   const [ticketPrice, setTicketPrice] = useState("49");
-  const [artists, setArtists] = useState([createEmptyArtist()]);
+  const [artists, setArtistsState] = useState([createEmptyArtist()]);
+  const artistsRef = useRef(artists);
+  const setArtists = (updater) => {
+    setArtistsState((previousArtists) => {
+      const nextArtists = typeof updater === "function" ? updater(previousArtists) : updater;
+      artistsRef.current = nextArtists;
+      return nextArtists;
+    });
+  };
   const initialAdvisoryState = {
     smokingAllowed: false,
     drinkingAllowed: false,
@@ -809,6 +840,24 @@ const CreateEvent = () => {
     const hydrateEvent = async (eventToEdit) => {
       if (!isMounted || !eventToEdit) return;
 
+      const previousEventId =
+        eventCacheRef.current?.id ||
+        eventCacheRef.current?._id ||
+        eventCacheRef.current?.eventId ||
+        eventCacheRef.current?.publicId ||
+        backendEventId;
+      const incomingEventId =
+        eventToEdit.id ||
+        eventToEdit._id ||
+        eventToEdit.eventId ||
+        eventToEdit.publicId ||
+        editId;
+      const isSameEventHydration =
+        previousEventId &&
+        incomingEventId &&
+        String(previousEventId) === String(incomingEventId);
+      const previousCachedArtists = extractArtistList(eventCacheRef.current);
+
       editHydratedRef.current = editId;
       eventCacheRef.current = eventToEdit;
       setEditHydrationError("");
@@ -948,21 +997,37 @@ const CreateEvent = () => {
         setCurrentEventType(eventToEdit.type);
       }
 
-      const normalizedArtists = normalizeArtists(
-        Array.isArray(eventToEdit.artists) ? eventToEdit.artists : []
-      );
+      const normalizedArtists = normalizeArtists(extractArtistList(eventToEdit));
+      const currentArtists = normalizeArtists(artistsRef.current);
+      const cachedArtists = normalizeArtists(previousCachedArtists);
+      const shouldPreserveCurrentArtists =
+        normalizedArtists.length === 0 &&
+        isSameEventHydration &&
+        (currentArtists.length > 0 || cachedArtists.length > 0);
+      const nextArtists = shouldPreserveCurrentArtists
+        ? currentArtists.length
+          ? currentArtists
+          : cachedArtists
+        : normalizedArtists;
 
       setArtists(
-        normalizedArtists.length
-          ? normalizedArtists
+        nextArtists.length
+          ? nextArtists
           : [createEmptyArtist()]
       );
-      if (normalizedArtists.length) {
-        setCreatedArtistIndices(normalizedArtists.map(getArtistIdentity));
+      eventCacheRef.current = {
+        ...eventCacheRef.current,
+        artists: nextArtists,
+      };
+      if (nextArtists.length) {
+        setCreatedArtistIndices(nextArtists.map(getArtistIdentity));
         artistsLoadedRef.current = true;
-        setOriginalArtists(normalizedArtists);
+        if (!shouldPreserveCurrentArtists) {
+          setOriginalArtists(nextArtists);
+        }
       } else {
         setOriginalArtists([]);
+        artistsLoadedRef.current = false;
       }
     };
 
@@ -1074,19 +1139,34 @@ const CreateEvent = () => {
       try {
         if (!isEditMode || !backendEventId || currentStep !== 6) return;
         if (artistsLoadedRef.current) return;
-        const hasArtistsLoaded = artists.some((a) => a.name || a.photo || a.instagram || a.spotify);
-        if (hasArtistsLoaded) return;
+        const currentArtists = normalizeArtists(artistsRef.current);
+        if (currentArtists.length > 0) {
+          if (eventCacheRef.current) {
+            eventCacheRef.current = {
+              ...eventCacheRef.current,
+              artists: currentArtists,
+            };
+          }
+          artistsLoadedRef.current = true;
+          return;
+        }
 
         // Try cache first
         const cached = eventCacheRef.current;
-        const artistDataCached = Array.isArray(cached?.artists) ? cached.artists : [];
+        const artistDataCached = extractArtistList(cached);
         if (artistDataCached.length) {
           const normalizedCached = normalizeArtists(artistDataCached);
-          setArtists(normalizedCached);
-          setCreatedArtistIndices(normalizedCached.map(getArtistIdentity));
-          setOriginalArtists(normalizedCached);
-          artistsLoadedRef.current = true;
-          return;
+          if (normalizedCached.length) {
+            setArtists(normalizedCached);
+            setCreatedArtistIndices(normalizedCached.map(getArtistIdentity));
+            setOriginalArtists(normalizedCached);
+            eventCacheRef.current = {
+              ...cached,
+              artists: normalizedCached,
+            };
+            artistsLoadedRef.current = true;
+            return;
+          }
         }
 
         // Check if fetch is already in progress
@@ -1102,18 +1182,31 @@ const CreateEvent = () => {
         });
         const response = await apiFetch(fetchUrl, { method: "GET" });
         const eventData = response.data?.event || response.data || response.event || response;
-        eventCacheRef.current = eventData;
-        const artistData = Array.isArray(eventData?.artists) ? eventData.artists : [];
+        const artistData = extractArtistList(eventData);
         const normalized = normalizeArtists(artistData);
+        const currentArtistsAfterFetch = normalizeArtists(artistsRef.current);
+        const shouldPreserveCurrentArtists =
+          normalized.length === 0 && currentArtistsAfterFetch.length > 0;
+        const nextArtists = shouldPreserveCurrentArtists
+          ? currentArtistsAfterFetch
+          : normalized;
 
         setArtists(
-          normalized.length
-            ? normalized
+          nextArtists.length
+            ? nextArtists
             : [createEmptyArtist()]
         );
-        if (normalized.length) {
-          setCreatedArtistIndices(normalized.map(getArtistIdentity));
-          setOriginalArtists(normalized);
+        eventCacheRef.current = {
+          ...eventData,
+          artists: nextArtists,
+        };
+        if (nextArtists.length) {
+          setCreatedArtistIndices(nextArtists.map(getArtistIdentity));
+          if (!shouldPreserveCurrentArtists) {
+            setOriginalArtists(nextArtists);
+          }
+        } else {
+          setOriginalArtists([]);
         }
         artistsLoadedRef.current = true;
       } catch (err) {
@@ -2145,15 +2238,24 @@ const CreateEvent = () => {
         }));
 
         const response = await updateEventStep6(backendEventId, { artists: persistPayload });
-        const updatedEvent = response?.data || response?.event || response;
+        const responseArtists = extractArtistList(response);
         const savedArtists = normalizeArtists(
-          Array.isArray(updatedEvent?.artists) ? updatedEvent.artists : persistPayload
+          responseArtists.length > 0 || persistPayload.length === 0
+            ? responseArtists
+            : persistPayload
         );
 
         console.log("Step 6 API Response:", response);
         setOriginalArtists(savedArtists);
         setCreatedArtistIndices(savedArtists.map(getArtistIdentity));
         setArtists(savedArtists.length ? savedArtists : [createEmptyArtist()]);
+        if (eventCacheRef.current) {
+          eventCacheRef.current = {
+            ...eventCacheRef.current,
+            artists: savedArtists,
+          };
+        }
+        artistsLoadedRef.current = true;
         if (!advance) {
           toast.success("Artist details saved.");
         }
@@ -2648,20 +2750,40 @@ const CreateEvent = () => {
 
     return (list || [])
       .map((a) => {
-        const image = (a.photo || a.image || "").trim();
-        const instagramLink = (a.instagram || a.instagramLink || "").trim();
-        const spotifyLink = (a.spotify || a.spotifyLink || "").trim();
+        const artist = a?.artist || a?.profile || a || {};
+        const image = (
+          artist.photo ||
+          artist.image ||
+          artist.imageUrl ||
+          artist.avatar ||
+          artist.profileImage ||
+          ""
+        ).trim();
+        const instagramLink = (
+          artist.instagram ||
+          artist.instagramLink ||
+          artist.instagramUrl ||
+          artist.instagramHandle ||
+          ""
+        ).trim();
+        const spotifyLink = (
+          artist.spotify ||
+          artist.spotifyLink ||
+          artist.spotifyUrl ||
+          ""
+        ).trim();
         return {
-          id: a.id || a._id || a.artistId || "",
-          clientId: a.clientId || "",
-          name: (a.name || "").trim(),
+          id: artist.id || artist._id || artist.artistId || a?.id || a?._id || "",
+          clientId: artist.clientId || a?.clientId || "",
+          name: (artist.name || "").trim(),
           image,
           photo: image,
           instagram: instagramLink,
           instagramLink,
           spotify: spotifyLink,
           spotifyLink,
-          gender: normalizeArtistGender(a.gender),
+          gender: normalizeArtistGender(artist.gender),
+          ...(artist.publicId || a?.publicId ? { publicId: artist.publicId || a.publicId } : {}),
         };
       })
       .filter((a) => a.name || a.instagramLink || a.spotifyLink || a.image)
@@ -2711,9 +2833,9 @@ const CreateEvent = () => {
   const hasArtistContent = (artist = {}) =>
     Boolean(
       (artist.name || "").trim() ||
-      (artist.photo || artist.image || "").trim() ||
-      (artist.instagram || artist.instagramLink || "").trim() ||
-      (artist.spotify || artist.spotifyLink || "").trim()
+      (artist.photo || artist.image || artist.imageUrl || artist.avatar || artist.profileImage || "").trim() ||
+      (artist.instagram || artist.instagramLink || artist.instagramUrl || artist.instagramHandle || "").trim() ||
+      (artist.spotify || artist.spotifyLink || artist.spotifyUrl || "").trim()
     );
 
   const updateArtistField = (index, key, value) => {

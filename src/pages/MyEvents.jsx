@@ -222,6 +222,11 @@ const MyEvents = () => {
     };
   };
 
+  const openPrimaryEventAction = useCallback((path) => {
+    if (!path) return;
+    window.open(path, "_blank", "noopener,noreferrer");
+  }, []);
+
   const handleSearch = useCallback((e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
@@ -390,7 +395,7 @@ const MyEvents = () => {
                     {/* Actions */}
                     <div className="flex items-center gap-1.5 pt-3 border-t border-border/50">
                       <button
-                        onClick={() => navigate(primaryAction.path)}
+                        onClick={() => openPrimaryEventAction(primaryAction.path)}
                         className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-primaryCTA px-2.5 text-[11px] font-semibold text-primary-foreground transition-all duration-200 hover:bg-primaryCTA-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                         title={primaryAction.title}
                       >

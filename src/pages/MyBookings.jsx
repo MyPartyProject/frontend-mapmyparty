@@ -22,6 +22,7 @@ import QRCode from "qrcode";
 import StarRating from "@/components/StarRating";
 import { buildCanonicalQrPayload } from "@/utils/qrPayload";
 import { resolveEventBannerImage } from "@/utils/eventBannerImage";
+import { formatIndianRupee } from "@/utils/priceFormatter";
 
 const MyBookings = ({
   browseEventsPath = "/dashboard/browse-events",
@@ -241,7 +242,7 @@ const MyBookings = ({
       doc.text(`Date: ${ticket.eventStartDate ? new Date(ticket.eventStartDate).toLocaleDateString() : 'TBA'}`, 20, 100);
       const venue = [ticket.venueName, ticket.venueCity].filter(Boolean).join(', ') || 'TBA';
       doc.text(`Venue: ${venue}`, 20, 110);
-      if (ticket.ticketPrice) doc.text(`Price: â‚¹${ticket.ticketPrice.toLocaleString()}`, 20, 120);
+      if (ticket.ticketPrice) doc.text(`Price: ${formatIndianRupee(ticket.ticketPrice)}`, 20, 120);
       if (ticket.qrCode) {
         const qrData = buildCanonicalQrPayload(ticket.qrCode);
         if (qrData) {
@@ -394,7 +395,7 @@ const MyBookings = ({
         {[
           { label: "Total Bookings", value: stats.total, icon: Receipt, color: "#D60024" },
           { label: "Upcoming", value: stats.upcoming, icon: Calendar, color: "#60a5fa" },
-          { label: "Total Spent", value: `â‚¹${stats.totalSpent.toLocaleString()}`, icon: CreditCard, color: "#22c55e" },
+          { label: "Total Spent", value: formatIndianRupee(stats.totalSpent), icon: CreditCard, color: "#22c55e" },
         ].map((stat) => {
           const Icon = stat.icon;
           return (
@@ -485,7 +486,7 @@ const MyBookings = ({
                   </div>
                   <div className="flex items-center justify-between pt-2.5 border-t border-white/[0.06]">
                     <span className="text-xs font-mono text-white/40">{getBookingDisplayId(booking)}</span>
-                    <span className="text-sm font-bold text-[#D60024]">â‚¹{booking.totalPrice.toLocaleString()}</span>
+                    <span className="text-sm font-bold text-[#D60024]">{formatIndianRupee(booking.totalPrice || 0)}</span>
                   </div>
                 </div>
               </div>
@@ -578,7 +579,7 @@ const MyBookings = ({
                     {/* Amount summary */}
                     <div className="px-4 py-3 rounded-lg bg-white/[0.03] border border-white/[0.04] flex-shrink-0 min-w-[110px]">
                       <p className="text-[10px] text-white/30 mb-0.5 uppercase tracking-wide">Total</p>
-                      <p className="text-sm font-bold text-[#D60024]">Rs {booking.totalPrice.toLocaleString()}</p>
+                      <p className="text-sm font-bold text-[#D60024]">{formatIndianRupee(booking.totalPrice || 0)}</p>
                       {booking.payment?.paymentMethod && (
                         <p className="text-[10px] text-white/40 mt-1 uppercase tracking-wide">{booking.payment.paymentMethod}</p>
                       )}

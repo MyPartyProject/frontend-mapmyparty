@@ -6,7 +6,6 @@ import {
 } from "react-router-dom";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -321,6 +320,58 @@ const EventDetailNew = () => {
       `
       @keyframes tabFadeSlide {0%{opacity:0;transform:translateY(10px);}100%{opacity:1;transform:translateY(0);}}
       @keyframes sponsorMarquee {0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+      @keyframes eventHeroFadeIn {0%{opacity:0;transform:translateY(18px) scale(0.99);}100%{opacity:1;transform:translateY(0) scale(1);}}
+      @keyframes eventGlassSheen {0%,18%{transform:translateX(-70%) rotate(10deg);opacity:0;}35%{opacity:1;}58%,100%{transform:translateX(70%) rotate(10deg);opacity:0;}}
+
+      .event-hero-enter {
+        animation: eventHeroFadeIn 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+
+      .event-glass-panel {
+        background:
+          linear-gradient(145deg, hsl(var(--foreground) / 0.075), transparent 44%),
+          linear-gradient(160deg, hsl(var(--card) / 0.26), hsl(var(--background) / 0.14));
+        border: 1px solid hsl(var(--foreground) / 0.075);
+        box-shadow:
+          0 24px 70px -44px hsl(var(--background) / 0.9),
+          0 14px 34px -30px hsl(var(--accent) / 0.36),
+          inset 0 1px 0 hsl(var(--foreground) / 0.13),
+          inset 0 -22px 58px -54px hsl(var(--accent) / 0.3);
+        backdrop-filter: blur(30px) saturate(145%);
+        -webkit-backdrop-filter: blur(30px) saturate(145%);
+      }
+
+      .event-glass-panel::before {
+        content: "";
+        position: absolute;
+        inset: -45% -55%;
+        background: linear-gradient(110deg, transparent 40%, hsl(var(--foreground) / 0.14) 50%, transparent 60%);
+        animation: eventGlassSheen 9s ease-in-out infinite;
+        pointer-events: none;
+      }
+
+      .event-glass-panel::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 20% 0%, hsl(var(--foreground) / 0.1), transparent 34%),
+          linear-gradient(180deg, hsl(var(--foreground) / 0.045), transparent 42%);
+        pointer-events: none;
+      }
+
+      .event-info-block {
+        background: hsl(var(--card) / 0.16);
+        border: 1px solid hsl(var(--foreground) / 0.055);
+        box-shadow: inset 0 1px 0 hsl(var(--foreground) / 0.07);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .event-hero-enter,
+        .event-glass-panel::before {
+          animation: none;
+        }
+      }
       `,
     [],
   );
@@ -758,7 +809,24 @@ const EventDetailNew = () => {
         body: JSON.stringify(payload),
       });
       if (!res?.success) {
-        throw new Error(res?.message || "Booking failed");
+        throw new Error(res?.errorMessage || res?.message || "Booking failed");
+      }
+
+      const bookingData = res.data;
+      if (!bookingData?.bookingId) {
+        throw new Error("Booking response did not include a booking ID");
+      }
+
+      const paymentRequired = bookingData?.paymentRequired !== false
+        && bookingData?.checkoutProvider !== "FREE"
+        && Number(bookingData?.totals?.grandTotal || 0) > 0;
+
+      if (!paymentRequired) {
+        setBillingModalOpen(false);
+        sessionStorage.removeItem("pendingCheckout");
+        toast.success("Booking confirmed successfully!");
+        navigate(`/booking-success?bookingId=${bookingData.bookingId}`);
+        return;
       }
 
       const checkoutState = {
@@ -772,7 +840,7 @@ const EventDetailNew = () => {
           banner: event.bannerImage || event.image || FALLBACK_IMAGE,
         },
         tickets: selectedTickets,
-        bookingData: res.data,
+        bookingData,
       };
 
       // Close billing modal
@@ -965,24 +1033,29 @@ const EventDetailNew = () => {
         </div>
       )}
 
-      {/* Hero Section - matching reference design */}
-      <div className="pt-8 pb-2">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
-          <div className="grid grid-cols-1 gap-6 items-start px-0 lg:grid-cols-[1.3fr,0.6fr] lg:gap-8 lg:px-8">
-            {/* Left: Hero Image with Overlays */}
-            <div className="relative">
-              <img
-                src={event.image}
-                alt={event.title}
-                className="w-full h-auto rounded-2xl object-cover shadow-2xl"
-              />
+      {/* Hero Section - immersive event detail experience */}
+      <section className="relative isolate overflow-hidden pb-8 pt-6 lg:pb-12 lg:pt-10">
+        <div className="absolute inset-0 min-h-[640px] overflow-hidden">
+          <img
+            src={event.image || FALLBACK_IMAGE}
+            alt={event.title}
+            className="h-full w-full scale-[1.02] object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-background/35" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/35 to-background/70" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-transparent to-background" />
+          <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-b from-transparent via-background/75 to-background" />
+        </div>
 
-              {/* Share Button - Top Right Corner */}
-              <div className="absolute top-4 right-4">
+        <div className="relative mx-auto max-w-7xl px-6 lg:px-12">
+          <div className="event-hero-enter grid min-h-[560px] items-center gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.45fr)]">
+            {/* Banner interaction layer */}
+            <div className="relative min-h-[320px] lg:min-h-[520px]">
+              <div className="absolute right-0 top-0">
                 <Button
                   variant="ghost"
                   onClick={handleShare}
-                  className="bg-gray-900/90 hover:bg-gray-900 text-white border border-gray-700/50 backdrop-blur-md rounded-full p-3 shadow-lg"
+                  className="h-11 w-11 rounded-full border border-border/45 bg-card/70 p-0 text-foreground shadow-[0_18px_48px_-28px_hsl(var(--background)/0.95)] backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-card/90 hover:text-foreground"
                   title="Share event"
                 >
                   <Share2 className="h-5 w-5" />
@@ -991,105 +1064,78 @@ const EventDetailNew = () => {
 
               {/* Primary Sponsor - Bottom Right */}
               {primarySponsor && (
-                <div className="absolute bottom-4 right-4">
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-black/70 backdrop-blur-md border border-white/15 shadow-lg">
+                <div className="absolute bottom-0 right-0">
+                  <div className="flex items-center gap-2 rounded-full border border-border/45 bg-card/65 px-3 py-2 shadow-[0_18px_48px_-28px_hsl(var(--background)/0.95)] backdrop-blur-md">
                     <img
                       src={primarySponsor.logo || SPONSOR_PLACEHOLDER}
                       alt={primarySponsor.name}
-                      className="h-10 w-10 object-contain rounded-full bg-white/10 p-1"
+                      className="h-10 w-10 rounded-full bg-muted/50 object-contain p-1"
                     />
-                    <span className="text-[11px] uppercase tracking-[0.15em] text-white/80">
-                      Powered by
-                    </span>
+                    <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground">Powered by</span>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Right: Event Details Card */}
-            <div className="space-y-6">
-              <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
-                <CardContent className="space-y-5 p-4 sm:p-6">
-                  {/* Event Title and Category */}
-                  <div className="space-y-3">
-                    <h2 className="text-2xl font-bold leading-tight text-white sm:text-3xl lg:text-4xl">
-                      {event.title}
-                    </h2>
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-400">
-                      {event.category && <span>{event.category}</span>}
-                      {event.category && event.subCategory && <span>•</span>}
-                      {event.subCategory && <span>{event.subCategory}</span>}
-                    </div>
+            {/* Right: Event Details Glass Panel */}
+            <aside className="event-glass-panel relative flex min-h-[350px] w-full max-w-[360px] flex-col justify-self-center overflow-hidden rounded-[var(--radius)] p-4 sm:p-5 lg:justify-self-end lg:p-6">
+              <div className="relative z-10 flex flex-1 flex-col">
+                {/* Event Title and Category */}
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-semibold leading-[1.12] text-foreground sm:text-3xl lg:text-[2rem]">{event.title}</h2>
+                  <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                    {event.category && <span>{event.category}</span>}
+                    {event.category && event.subCategory && <span>•</span>}
+                    {event.subCategory && <span>{event.subCategory}</span>}
                   </div>
+                </div>
 
-                  {/* <div className="h-px bg-gray-800"></div> */}
-
+                <div className="mt-5 space-y-3">
                   {/* Date & Time */}
-                  <div className="flex items-start gap-4">
-                    <div className="h-12 w-12 flex items-center justify-center rounded-xl bg-gray-800/80 border border-gray-700">
-                      <Calendar className="h-6 w-6 text-gray-300" />
+                  <div className="event-info-block flex items-start gap-3 rounded-lg p-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border/30 bg-primaryCTA/15 text-accent shadow-inner">
+                      <Calendar className="h-4 w-4" />
                     </div>
-                    <div className="flex-1">
-                      <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">
-                        Date & Time
-                      </p>
-                      <p className="text-white font-semibold text-sm">
-                        {formatDate(event.startDate)}
-                      </p>
-                      <p className="text-gray-400 text-xs mt-0.5">
-                        {formatTime(event.startDate)}
-                      </p>
+                    <div className="min-w-0 flex-1">
+                      <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Date & Time</p>
+                      <p className="text-[13px] font-semibold leading-snug text-foreground">{formatDate(event.startDate)}</p>
+                      <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{formatTime(event.startDate)}</p>
                     </div>
                   </div>
-
-                  {/* <div className="h-px bg-gray-800"></div> */}
 
                   {/* Location */}
-                  <div className="flex items-start gap-4">
-                    <div className="h-12 w-12 flex items-center justify-center rounded-xl bg-gray-800/80 border border-gray-700">
-                      <MapPin className="h-6 w-6 text-gray-300" />
+                  <div className="event-info-block flex items-start gap-3 rounded-lg p-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border/30 bg-primaryCTA/15 text-accent shadow-inner">
+                      <MapPin className="h-4 w-4" />
                     </div>
-                    <div className="flex-1">
-                      <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">
-                        Venue
-                      </p>
-                      <p className="text-white font-semibold text-sm">
-                        {event.venue}
-                      </p>
-                      <p className="text-gray-400 text-xs mt-0.5 line-clamp-2">
-                        {event.address}
-                      </p>
+                    <div className="min-w-0 flex-1">
+                      <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Venue</p>
+                      <p className="text-[13px] font-semibold leading-snug text-foreground">{event.venue}</p>
+                      <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted-foreground">{event.address}</p>
                     </div>
                   </div>
+                </div>
 
-                  {/* Book Now Button */}
-                  <Button
-                    onClick={() => {
-                      if (isPreviewMode) return;
-                      const ticketSection =
-                        document.getElementById("ticket-section");
-                      if (ticketSection) {
-                        ticketSection.scrollIntoView({ behavior: "smooth" });
-                      }
-                    }}
-                    disabled={isPreviewMode}
-                    className="w-full bg-primaryCTA hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-primary-foreground font-bold text-base py-2 rounded-lg transition-all mt-4"
-                    size="lg"
-                  >
-                    {isPreviewMode
-                      ? "Preview Only"
-                      : isSoldOut
-                        ? "SOLD OUT"
-                        : isSalesClosed
-                          ? "Sales Closed"
-                          : "Book Now"}
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
+                {/* Book Now Button */}
+                <Button
+                  onClick={() => {
+                    if (isPreviewMode) return;
+                    const ticketSection = document.getElementById('ticket-section');
+                    if (ticketSection) {
+                      ticketSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  disabled={isPreviewMode}
+                  className="mt-auto h-10 w-full rounded-lg bg-primaryCTA text-sm font-semibold text-primary-foreground shadow-[0_16px_38px_-24px_hsl(var(--primary)/0.86)] transition-all hover:-translate-y-0.5 hover:bg-primaryCTA-hover hover:shadow-[0_20px_46px_-26px_hsl(var(--primary)/0.9)] active:translate-y-0 active:bg-primaryCTA-active"
+                  size="lg"
+                >
+                  {isPreviewMode ? 'Preview Only' : isSoldOut ? 'SOLD OUT' : isSalesClosed ? 'Sales Closed' : 'Book Now'}
+                </Button>
+              </div>
+            </aside>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Sponsor Strip Section */}
       {showSponsorStrip && (

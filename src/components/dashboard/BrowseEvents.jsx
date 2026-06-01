@@ -23,6 +23,7 @@ import { usePublicEvents } from "@/hooks/usePublicEvents";
 import Header from "@/components/Header";
 import { isAuthenticated as checkAuth } from "@/utils/auth";
 import { resolveEventBannerImage } from "@/utils/eventBannerImage";
+import { formatEventPriceLabel, normalizePriceLabel } from "@/utils/priceFormatter";
 
 const PAGE_SIZE = 20;
 
@@ -627,11 +628,13 @@ export default function BrowseEvents({ showPublicHeader = false }) {
 
       if (prices.length > 0) {
         const minPrice = Math.min(...prices);
-        return minPrice > 0 ? `Rs.${minPrice.toLocaleString()}` : "Free";
+        return formatEventPriceLabel(minPrice);
       }
     }
 
-    return typeof event.price === "number" && event.price > 0 ? `Rs.${event.price}` : "Free";
+    if (typeof event.price === "number") return formatEventPriceLabel(event.price);
+
+    return normalizePriceLabel(event.price) || "Free";
   };
 
   const clearAllFilters = () => {
@@ -650,6 +653,8 @@ export default function BrowseEvents({ showPublicHeader = false }) {
   const EventCard = ({ event }) => (
     <Link
       to={`/events/${event.organizer?.slug || "events"}/${event.slug || event.id}`}
+      target="_blank"
+      rel="noopener noreferrer"
       className="group block"
     >
       <div className="h-full overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.03] transition-all duration-200 hover:border-white/[0.12] hover:bg-white/[0.05]">
@@ -660,7 +665,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-          <span className="absolute left-3 top-3 rounded-lg bg-[#D60024] px-2.5 py-1 text-xs font-semibold text-white">
+          <span className="absolute left-3 top-3 inline-flex min-w-[4.75rem] items-center justify-center rounded-lg bg-[#D60024] px-3.5 py-1.5 text-xs font-bold leading-none tabular-nums text-white">
             {getEventPriceDisplay(event)}
           </span>
         </div>

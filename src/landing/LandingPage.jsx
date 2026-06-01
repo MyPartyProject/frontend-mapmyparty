@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { apiFetch } from "@/config/api";
 import eventFallback from "@/assets/event-music.jpg";
 import { resolveEventBannerImage } from "@/utils/eventBannerImage";
+import { formatEventPriceLabel } from "@/utils/priceFormatter";
 
 const EVENT_SECTION_CONFIG = [
   {
@@ -359,8 +360,7 @@ const getEventLocation = (event) => {
 
 const getPriceLabel = (price) => {
   if (!Number.isFinite(price)) return null;
-  if (price <= 0) return "Free";
-  return `From ${new Intl.NumberFormat(undefined, { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(price)}`;
+  return formatEventPriceLabel(price, { prefix: "From" });
 };
 
 const getEventPriceDisplay = (event) => {
@@ -436,11 +436,16 @@ const LandingEventCard = ({
     if (imageSrc !== eventFallback) setImageSrc(eventFallback);
   };
 
+  const opensEventDetail = typeof href === "string" && href.startsWith("/events/");
+
   return (
-    <Link to={href || "/browse-events"} className="group block h-full">
-      <article
-        className={`landing-event-card relative h-full min-h-[13.25rem] overflow-hidden rounded-[1.35rem] border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1.5 hover:border-border hover:shadow-[var(--shadow-elegant)] ${featured ? "sm:min-h-[14.25rem]" : "sm:min-h-[13.75rem]"}`}
-      >
+    <Link
+      to={href || "/browse-events"}
+      target={opensEventDetail ? "_blank" : undefined}
+      rel={opensEventDetail ? "noopener noreferrer" : undefined}
+      className="group block h-full"
+    >
+      <article className={`landing-event-card relative h-full min-h-[13.25rem] overflow-hidden rounded-[1.35rem] border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1.5 hover:border-border hover:shadow-[var(--shadow-elegant)] ${featured ? "sm:min-h-[14.25rem]" : "sm:min-h-[13.75rem]"}`}>
         <div className="absolute inset-0 overflow-hidden">
           <img
             src={imageSrc}
@@ -461,7 +466,7 @@ const LandingEventCard = ({
               </div>
             )}
             {price && (
-              <div className="shrink-0 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent shadow-[var(--shadow-card)] backdrop-blur-md">
+              <div className="inline-flex min-w-[5.25rem] shrink-0 items-center justify-center rounded-full border border-accent/30 bg-accent/10 px-3.5 py-1.5 text-xs font-bold leading-none tabular-nums text-accent shadow-[var(--shadow-card)] backdrop-blur-md">
                 {price}
               </div>
             )}

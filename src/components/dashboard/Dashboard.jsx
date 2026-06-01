@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { apiFetch } from "@/config/api";
 import { resolveEventBannerImage } from "@/utils/eventBannerImage";
+import { formatEventPriceLabel } from "@/utils/priceFormatter";
 
 const Dashboard = () => {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
@@ -126,7 +127,12 @@ const Dashboard = () => {
   const EventCard = ({ event, showPrice = true }) => {
     if (!event.organizer?.slug || !event.slug) return null;
     return (
-      <Link to={`/events/${event.organizer.slug}/${event.slug}`} className="group block">
+      <Link
+        to={`/events/${event.organizer.slug}/${event.slug}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group block"
+      >
         <div className="rounded-xl overflow-hidden border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.05] hover:border-white/[0.12] transition-all duration-200">
           <div className="relative h-44 overflow-hidden">
             <img
@@ -139,8 +145,8 @@ const Dashboard = () => {
               {event.category}
             </Badge>
             {showPrice && (
-              <span className="absolute bottom-3 right-3 text-sm font-bold text-white bg-[#D60024] px-2.5 py-1 rounded-lg">
-                {event.price > 0 ? `â‚¹${event.price.toLocaleString()}` : "Free"}
+              <span className="absolute bottom-3 right-3 inline-flex min-w-[4.75rem] items-center justify-center rounded-lg bg-[#D60024] px-3.5 py-1.5 text-sm font-extrabold leading-none tabular-nums text-white">
+                {formatEventPriceLabel(event.price)}
               </span>
             )}
           </div>
@@ -209,7 +215,11 @@ const Dashboard = () => {
                   <span>{nextEvent.location}</span>
                 </div>
               </div>
-              <Link to={`/events/${nextEvent.organizer.slug}/${nextEvent.slug}`}>
+              <Link
+                to={`/events/${nextEvent.organizer.slug}/${nextEvent.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Button className="text-sm font-medium h-9 px-5">
                   View Details
                 </Button>
@@ -302,7 +312,13 @@ const Dashboard = () => {
             <div className="space-y-2">
               {upcomingEvents.slice(0, 5).map((event) => (
                 event.organizer?.slug && event.slug ? (
-                  <Link key={`cal-${event.id}`} to={`/events/${event.organizer.slug}/${event.slug}`} className="block group">
+                  <Link
+                    key={`cal-${event.id}`}
+                    to={`/events/${event.organizer.slug}/${event.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block group"
+                  >
                     <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/[0.04] transition-colors">
                       <div className="text-center min-w-[44px] py-1.5 px-2 rounded-lg bg-white/[0.05] border border-white/[0.06]">
                         <p className="text-[10px] font-semibold text-[#D60024] uppercase">
