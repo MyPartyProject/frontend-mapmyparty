@@ -135,6 +135,7 @@ const Header = ({
           const { latitude, longitude } = position.coords;
           navigate(
             buildBrowseEventsUrl((params) => {
+              params.set("nearby", "true");
               params.set("lat", String(latitude));
               params.set("lng", String(longitude));
               params.delete("page");

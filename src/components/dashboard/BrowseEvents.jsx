@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clapperboard,
+  Loader2,
   MapPin,
   Music,
   PartyPopper,
@@ -24,6 +25,7 @@ import Header from "@/components/Header";
 import { isAuthenticated as checkAuth } from "@/utils/auth";
 import { resolveEventBannerImage } from "@/utils/eventBannerImage";
 import { formatEventPriceLabel, normalizePriceLabel } from "@/utils/priceFormatter";
+import { toast } from "sonner";
 
 const PAGE_SIZE = 20;
 
@@ -188,6 +190,8 @@ const parseBrowseRadius = (value) => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
 };
 
+const parseBrowseNearby = (value) => value === "true" || value === "1";
+
 const normalizeSubCategoryValue = (value) => {
   const normalized = normalizeBrowseValue(value);
   if (!normalized) return null;
@@ -274,15 +278,20 @@ const getBrowseStateFromSearchParams = (searchParams) => {
     getLookupKey(searchParams.get("category")) ||
     inferCategoryKeyFromSubCategory(selectedSubCategory) ||
     "all";
-  const latitude = parseBrowseCoordinate(searchParams.get("lat"));
-  const longitude = parseBrowseCoordinate(searchParams.get("lng"));
+  const parsedLatitude = parseBrowseCoordinate(searchParams.get("lat"));
+  const parsedLongitude = parseBrowseCoordinate(searchParams.get("lng"));
+  const nearby =
+    parseBrowseNearby(searchParams.get("nearby")) &&
+    Number.isFinite(parsedLatitude) &&
+    Number.isFinite(parsedLongitude);
 
   return {
     searchQuery: normalizeBrowseValue(searchParams.get("search")),
     selectedCategory,
     selectedSubCategory,
-    latitude,
-    longitude,
+    nearby,
+    latitude: nearby ? parsedLatitude : null,
+    longitude: nearby ? parsedLongitude : null,
     radiusKm: parseBrowseRadius(searchParams.get("radius")),
     page: parseBrowsePage(searchParams.get("page")),
   };
@@ -292,6 +301,7 @@ const buildBrowseSearchParams = ({
   searchQuery,
   selectedCategory,
   selectedSubCategory,
+  nearby,
   latitude,
   longitude,
   radiusKm,
@@ -312,7 +322,8 @@ const buildBrowseSearchParams = ({
     params.set("subCategory", selectedSubCategory);
   }
 
-  if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+  if (nearby && Number.isFinite(latitude) && Number.isFinite(longitude)) {
+    params.set("nearby", "true");
     params.set("lat", String(latitude));
     params.set("lng", String(longitude));
     if (Number.isFinite(radiusKm) && radiusKm > 0 && radiusKm !== 50) {
@@ -350,12 +361,14 @@ export default function BrowseEvents({ showPublicHeader = false }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const urlState = useMemo(() => getBrowseStateFromSearchParams(searchParams), [searchParams]);
   const [searchQuery, setSearchQuery] = useState(() => urlState.searchQuery);
+  const [nearbyLoading, setNearbyLoading] = useState(false);
 
   const updateBrowseState = useCallback((updates, options = {}) => {
     const nextState = {
       searchQuery: updates.searchQuery ?? urlState.searchQuery,
       selectedCategory: updates.selectedCategory ?? urlState.selectedCategory,
       selectedSubCategory: updates.selectedSubCategory ?? urlState.selectedSubCategory,
+      nearby: updates.nearby ?? urlState.nearby,
       latitude: updates.latitude ?? urlState.latitude,
       longitude: updates.longitude ?? urlState.longitude,
       radiusKm: updates.radiusKm ?? urlState.radiusKm,
@@ -371,6 +384,17 @@ export default function BrowseEvents({ showPublicHeader = false }) {
         inferCategoryKeyFromSubCategory(nextState.selectedSubCategory) || "all";
     }
 
+    if (
+      !nextState.nearby ||
+      !Number.isFinite(nextState.latitude) ||
+      !Number.isFinite(nextState.longitude)
+    ) {
+      nextState.nearby = false;
+      nextState.latitude = null;
+      nextState.longitude = null;
+      nextState.radiusKm = 50;
+    }
+
     const nextParams = buildBrowseSearchParams(nextState);
 
     if (nextParams.toString() !== searchParams.toString()) {
@@ -384,9 +408,9 @@ export default function BrowseEvents({ showPublicHeader = false }) {
     error: catalogError,
   } = usePublicEvents({
     search: urlState.searchQuery || null,
-    latitude: urlState.latitude,
-    longitude: urlState.longitude,
-    radiusKm: urlState.radiusKm,
+    latitude: urlState.nearby ? urlState.latitude : null,
+    longitude: urlState.nearby ? urlState.longitude : null,
+    radiusKm: urlState.nearby ? urlState.radiusKm : 50,
   });
 
   const {
@@ -399,9 +423,9 @@ export default function BrowseEvents({ showPublicHeader = false }) {
     search: urlState.searchQuery || null,
     category: urlState.selectedCategory === "all" ? null : urlState.selectedCategory,
     subCategory: urlState.selectedSubCategory === "all" ? null : urlState.selectedSubCategory,
-    latitude: urlState.latitude,
-    longitude: urlState.longitude,
-    radiusKm: urlState.radiusKm,
+    latitude: urlState.nearby ? urlState.latitude : null,
+    longitude: urlState.nearby ? urlState.longitude : null,
+    radiusKm: urlState.nearby ? urlState.radiusKm : 50,
     page: urlState.page,
     limit: PAGE_SIZE,
   });
@@ -585,7 +609,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
   const hasActiveFilters =
     urlState.selectedCategory !== "all" ||
     urlState.selectedSubCategory !== "all" ||
-    (Number.isFinite(urlState.latitude) && Number.isFinite(urlState.longitude)) ||
+    urlState.nearby ||
     Boolean(appliedSearchQuery);
 
   const resultsStart =
@@ -637,12 +661,60 @@ export default function BrowseEvents({ showPublicHeader = false }) {
     return normalizePriceLabel(event.price) || "Free";
   };
 
+  const isLocationSupported =
+    typeof window !== "undefined" &&
+    window.isSecureContext &&
+    typeof navigator !== "undefined" &&
+    "geolocation" in navigator;
+
+  const applyNearbyFilter = () => {
+    if (!isLocationSupported) {
+      toast.error("Location is not available in this browser or page context.");
+      return;
+    }
+
+    setNearbyLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        updateBrowseState({
+          nearby: true,
+          latitude,
+          longitude,
+          radiusKm: 50,
+          page: 1,
+        });
+        setNearbyLoading(false);
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        toast.error(
+          error?.code === 1
+            ? "Location access denied. Please allow location to use Nearby."
+            : "Unable to detect your location right now.",
+        );
+        setNearbyLoading(false);
+      },
+    );
+  };
+
+  const clearNearbyFilter = () => {
+    updateBrowseState({
+      nearby: false,
+      latitude: null,
+      longitude: null,
+      radiusKm: 50,
+      page: 1,
+    });
+  };
+
   const clearAllFilters = () => {
     setSearchQuery("");
     updateBrowseState({
       searchQuery: "",
       selectedCategory: "all",
       selectedSubCategory: "all",
+      nearby: false,
       latitude: null,
       longitude: null,
       radiusKm: 50,
@@ -820,6 +892,41 @@ export default function BrowseEvents({ showPublicHeader = false }) {
             </div>
           )}
 
+          <div className="border-t border-white/[0.06] pt-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <span className="flex-shrink-0 text-[10px] font-medium uppercase tracking-[0.22em] text-white/35">
+                Location
+              </span>
+              <button
+                type="button"
+                onClick={applyNearbyFilter}
+                disabled={nearbyLoading || !isLocationSupported}
+                className={`inline-flex w-fit items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+                  urlState.nearby
+                    ? "bg-[#38bdf8]/15 text-[#7dd3fc] ring-1 ring-[#38bdf8]/30"
+                    : "border border-white/[0.06] bg-white/[0.05] text-white/60 hover:bg-white/[0.08] hover:text-white"
+                }`}
+                title={!isLocationSupported ? "Location not available" : "Use your current location"}
+              >
+                {nearbyLoading ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <MapPin className="h-3.5 w-3.5" />
+                )}
+                {urlState.nearby ? "Nearby selected" : "Nearby"}
+              </button>
+              {urlState.nearby && (
+                <button
+                  type="button"
+                  onClick={clearNearbyFilter}
+                  className="inline-flex w-fit items-center gap-1 text-[11px] text-white/40 hover:text-white"
+                >
+                  <X className="h-3 w-3" /> Remove nearby
+                </button>
+              )}
+            </div>
+          </div>
+
           {hasActiveFilters && (
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <span className="text-[11px] text-white/30">Filters:</span>
@@ -833,7 +940,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                   {urlState.selectedSubCategory}
                 </Badge>
               )}
-              {Number.isFinite(urlState.latitude) && Number.isFinite(urlState.longitude) && (
+              {urlState.nearby && (
                 <Badge className="border-0 bg-[#38bdf8]/10 px-2 py-0.5 text-[11px] text-[#7dd3fc]">
                   Nearby
                 </Badge>
