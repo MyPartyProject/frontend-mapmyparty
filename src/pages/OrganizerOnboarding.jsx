@@ -19,11 +19,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import {
+  PHONE_INPUT_PROPS,
+  normalizeTenDigitPhoneNumber,
+  sanitizeTenDigitPhoneInput,
+} from "@/utils/phone";
 
 const buildProfileDefaults = (user, profile = null) => ({
   name: profile?.name || user?.name || "",
   description: profile?.description || "",
-  contact: profile?.contact || user?.phone || "",
+  contact: sanitizeTenDigitPhoneInput(profile?.contact || user?.phone || ""),
   email: profile?.email || user?.email || "",
   state: profile?.state || "",
   address: profile?.address || "",
@@ -242,10 +247,18 @@ const OrganizerOnboarding = () => {
       return;
     }
 
+    const contact = profileForm.contact?.trim()
+      ? normalizeTenDigitPhoneNumber(profileForm.contact)
+      : undefined;
+    if (profileForm.contact?.trim() && !contact) {
+      toast.error("Contact number must be exactly 10 digits.");
+      return;
+    }
+
     const payload = {
       name,
       description: profileForm.description?.trim() || undefined,
-      contact: profileForm.contact?.trim() || undefined,
+      contact,
       email: profileForm.email?.trim() || undefined,
       state: profileForm.state?.trim() || undefined,
       address: profileForm.address?.trim() || undefined,
@@ -509,8 +522,9 @@ const OrganizerOnboarding = () => {
                     <Label htmlFor="org-contact">Contact Number</Label>
                     <Input
                       id="org-contact"
+                      {...PHONE_INPUT_PROPS}
                       value={profileForm.contact}
-                      onChange={(e) => onProfileInputChange("contact", e.target.value)}
+                      onChange={(e) => onProfileInputChange("contact", sanitizeTenDigitPhoneInput(e.target.value))}
                       className="bg-[#070b14] border-white/15 text-white"
                     />
                   </div>

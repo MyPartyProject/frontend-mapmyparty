@@ -10,6 +10,11 @@ import { Label } from "@/components/ui/label";
 import { fetchAdminProfile, updateAdminProfile } from "@/services/adminService";
 import { useAuth } from "@/contexts/AuthContext";
 import {
+  PHONE_INPUT_PROPS,
+  normalizeTenDigitPhoneNumber,
+  sanitizeTenDigitPhoneInput,
+} from "@/utils/phone";
+import {
   Calendar,
   CreditCard,
   Loader2,
@@ -66,7 +71,7 @@ const PromoterProfile = () => {
         setForm({
           name: user?.name || "",
           email: user?.email || "",
-          phone: user?.phone || "",
+          phone: sanitizeTenDigitPhoneInput(user?.phone || ""),
           avatar: user?.avatar || "",
           password: "",
         });
@@ -82,10 +87,11 @@ const PromoterProfile = () => {
 
   const hasChanges = useMemo(() => {
     if (!profile) return false;
+    const profilePhone = sanitizeTenDigitPhoneInput(profile.phone || "");
     return (
       form.name.trim() !== (profile.name || "") ||
       form.email.trim() !== (profile.email || "") ||
-      form.phone.trim() !== (profile.phone || "") ||
+      form.phone.trim() !== profilePhone ||
       form.avatar.trim() !== (profile.avatar || "") ||
       Boolean(form.password.trim())
     );
@@ -97,7 +103,10 @@ const PromoterProfile = () => {
   }, [data]);
 
   const handleChange = (field) => (event) => {
-    setForm((current) => ({ ...current, [field]: event.target.value }));
+    const value = field === "phone"
+      ? sanitizeTenDigitPhoneInput(event.target.value)
+      : event.target.value;
+    setForm((current) => ({ ...current, [field]: value }));
   };
 
   const handleSave = async (event) => {
@@ -105,9 +114,18 @@ const PromoterProfile = () => {
     if (!profile) return;
 
     const payload = {};
+    const profilePhone = sanitizeTenDigitPhoneInput(profile.phone || "");
+    const nextPhone = sanitizeTenDigitPhoneInput(form.phone);
     if (form.name.trim() !== (profile.name || "")) payload.name = form.name.trim();
     if (form.email.trim() !== (profile.email || "")) payload.email = form.email.trim();
-    if (form.phone.trim() !== (profile.phone || "")) payload.phone = form.phone.trim();
+    if (nextPhone !== profilePhone) {
+      const normalizedPhone = normalizeTenDigitPhoneNumber(nextPhone);
+      if (!normalizedPhone) {
+        toast.error("Phone number must be exactly 10 digits.");
+        return;
+      }
+      payload.phone = normalizedPhone;
+    }
     if (form.avatar.trim() !== (profile.avatar || "")) payload.avatar = form.avatar.trim();
     if (form.password.trim()) payload.password = form.password.trim();
 
@@ -123,7 +141,7 @@ const PromoterProfile = () => {
       setForm({
         name: updatedUser?.name || "",
         email: updatedUser?.email || "",
-        phone: updatedUser?.phone || "",
+        phone: sanitizeTenDigitPhoneInput(updatedUser?.phone || ""),
         avatar: updatedUser?.avatar || "",
         password: "",
       });
@@ -258,7 +276,7 @@ const PromoterProfile = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="promoter-phone">Phone Number</Label>
-                  <Input id="promoter-phone" value={form.phone} onChange={handleChange("phone")} />
+                  <Input id="promoter-phone" {...PHONE_INPUT_PROPS} value={form.phone} onChange={handleChange("phone")} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="promoter-avatar">Avatar URL</Label>

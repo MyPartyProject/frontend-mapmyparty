@@ -58,6 +58,16 @@ import {
   uploadOrganizerLogo,
   validateOrganizerLogoFile,
 } from "@/services/organizerLogoService";
+import {
+  PHONE_INPUT_PROPS,
+  normalizeTenDigitPhoneNumber,
+  sanitizeTenDigitPhoneInput,
+} from "@/utils/phone";
+
+const sanitizeOwnerProfile = (owner = {}) => ({
+  ...(owner || {}),
+  phone: sanitizeTenDigitPhoneInput(owner?.phone || ""),
+});
 
 // Profile Content Component
 const OrganizerProfileContent = ({ user }) => {
@@ -73,7 +83,7 @@ const OrganizerProfileContent = ({ user }) => {
     ownerId: payload.ownerId || "",
     createdAt: payload.createdAt || "",
     updatedAt: payload.updatedAt || "",
-    contact: payload.contact || "",
+    contact: sanitizeTenDigitPhoneInput(payload.contact || ""),
     email: payload.email || "",
     instagram: payload.instagram || "",
     linkedin: payload.linkedin || "",
@@ -83,7 +93,7 @@ const OrganizerProfileContent = ({ user }) => {
     snapchat: payload.snapchat || "",
     ownerName: owner.name || payload.ownerName || "",
     ownerEmail: owner.email || payload.ownerEmail || "",
-    ownerPhone: owner.phone || payload.contact || payload.ownerPhone || "",
+    ownerPhone: sanitizeTenDigitPhoneInput(owner.phone || payload.contact || payload.ownerPhone || ""),
     ownerAvatar: owner.avatar || "",
     counts: {
       events: payload?._count?.events ?? 0,
@@ -114,8 +124,8 @@ const OrganizerProfileContent = ({ user }) => {
   const [profileData, setProfileData] = useState(() => buildInitialData(user?.organizer || {}, user));
   const [editData, setEditData] = useState(() => buildInitialData(user?.organizer || {}, user));
   const [bankDraft, setBankDraft] = useState(() => buildInitialData(user?.organizer || {}, user).bankDetails);
-  const [owner, setOwner] = useState(() => user || {});
-  const [ownerDraft, setOwnerDraft] = useState(() => user || {});
+  const [owner, setOwner] = useState(() => sanitizeOwnerProfile(user));
+  const [ownerDraft, setOwnerDraft] = useState(() => sanitizeOwnerProfile(user));
   const [isOwnerModalOpen, setIsOwnerModalOpen] = useState(false);
   const [isOwnerAvatarPickerOpen, setIsOwnerAvatarPickerOpen] = useState(false);
   const [isOwnerCameraOpen, setIsOwnerCameraOpen] = useState(false);
@@ -145,8 +155,8 @@ const OrganizerProfileContent = ({ user }) => {
     setProfileData(fresh);
     setEditData(fresh);
     setBankDraft(fresh.bankDetails);
-    setOwner(user || {});
-    setOwnerDraft(user || {});
+    setOwner(sanitizeOwnerProfile(user));
+    setOwnerDraft(sanitizeOwnerProfile(user));
   }, [user]);
 
   useEffect(() => {
@@ -161,7 +171,7 @@ const OrganizerProfileContent = ({ user }) => {
     setLoadingProfile(true);
     try {
       // Use user prop from context as owner data
-      const ownerData = user || {};
+      const ownerData = sanitizeOwnerProfile(user);
       setOwner(ownerData);
       setOwnerDraft(ownerData);
 
@@ -197,7 +207,10 @@ const OrganizerProfileContent = ({ user }) => {
   };
 
   const handleInputChange = (field, value) => {
-    setEditData((prev) => ({ ...prev, [field]: value }));
+    setEditData((prev) => ({
+      ...prev,
+      [field]: field === "contact" ? sanitizeTenDigitPhoneInput(value) : value,
+    }));
   };
 
   const handleOrganizerLogoChange = async (event) => {
@@ -239,6 +252,15 @@ const OrganizerProfileContent = ({ user }) => {
         uploadedLogoPublicId = logoUpload.publicId;
       }
 
+      const contact = editData.contact?.trim()
+        ? normalizeTenDigitPhoneNumber(editData.contact)
+        : undefined;
+      if (editData.contact?.trim() && !contact) {
+        toast.error("Contact number must be exactly 10 digits");
+        setIsSaving(false);
+        return;
+      }
+
       const allowed = {
         name: editData.name,
         description: editData.description,
@@ -249,7 +271,7 @@ const OrganizerProfileContent = ({ user }) => {
         reddit: editData.reddit,
         x: editData.x,
         snapchat: editData.snapchat,
-        contact: editData.contact,
+        contact,
         email: editData.email,
       };
       const payload = Object.fromEntries(
@@ -467,21 +489,32 @@ const OrganizerProfileContent = ({ user }) => {
   ];
 
   const openOwnerModal = useCallback(() => {
-    setOwnerDraft(owner || {});
+    setOwnerDraft(sanitizeOwnerProfile(owner));
     setIsOwnerModalOpen(true);
   }, [owner]);
 
   const handleOwnerFieldChange = (field, value) => {
-    setOwnerDraft(prev => ({ ...prev, [field]: value }));
+    setOwnerDraft(prev => ({
+      ...prev,
+      [field]: field === "phone" ? sanitizeTenDigitPhoneInput(value) : value,
+    }));
   };
 
   const handleSaveOwner = async () => {
     setIsOwnerSaving(true);
     try {
+      const phone = ownerDraft.phone?.trim()
+        ? normalizeTenDigitPhoneNumber(ownerDraft.phone)
+        : undefined;
+      if (ownerDraft.phone?.trim() && !phone) {
+        toast.error("Phone number must be exactly 10 digits");
+        return;
+      }
+
       const payload = {
         name: ownerDraft.name,
         email: ownerDraft.email,
-        phone: ownerDraft.phone,
+        phone,
         avatar: ownerDraft.avatar,
         whatsAppNotification: ownerDraft.whatsAppNotification
       };
@@ -489,7 +522,7 @@ const OrganizerProfileContent = ({ user }) => {
         method: "PUT",
         body: JSON.stringify(payload)
       });
-      setOwner(ownerDraft);
+      setOwner({ ...ownerDraft, phone: phone || "" });
       setIsOwnerModalOpen(false);
     } catch (error) {
       console.error("Failed to update owner:", error);
@@ -505,7 +538,7 @@ const OrganizerProfileContent = ({ user }) => {
     stopOwnerCameraStream();
     setOwnerPendingAvatar(null);
     setOwnerCapturedPhoto(null);
-    setOwnerDraft(owner || {});
+    setOwnerDraft(sanitizeOwnerProfile(owner));
   };
 
   const openOwnerAvatarPicker = () => {
@@ -658,11 +691,11 @@ const OrganizerProfileContent = ({ user }) => {
                   <label className="text-sm text-white/70">Phone</label>
                   <div className="flex gap-2">
                     <input
-                      type="text"
+                      {...PHONE_INPUT_PROPS}
                       value={ownerDraft.phone || ""}
                       onChange={(e) => handleOwnerFieldChange("phone", e.target.value)}
                       className="flex-1 px-4 py-3 rounded-xl bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:border-ring/50 focus:outline-none transition"
-                      placeholder="+1234567890"
+                      placeholder="10 digit phone number"
                     />
                   </div>
                 </div>
@@ -1174,11 +1207,11 @@ const OrganizerProfileContent = ({ user }) => {
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-white/80">Contact</label>
                   <input
-                    type="text"
+                    {...PHONE_INPUT_PROPS}
                     value={editData.contact}
                     onChange={(e) => handleInputChange("contact", e.target.value)}
                     className="w-full px-4 py-2 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:outline-none"
-                    placeholder="+1234567890"
+                    placeholder="10 digit contact number"
                   />
                 </div>
                 <div className="space-y-2">

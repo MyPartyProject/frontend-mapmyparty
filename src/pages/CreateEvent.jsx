@@ -68,6 +68,11 @@ import { TEMPLATE_CONFIGS, DETAIL_TEMPLATE_CONFIGS, getTemplateConfig, mapTempla
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
+import {
+  PHONE_INPUT_PROPS,
+  normalizeTenDigitPhoneNumber,
+  sanitizeTenDigitPhoneInput,
+} from "@/utils/phone";
 
 const DEFAULT_ARTIST_GENDER = "MALE";
 const ARTIST_GENDER_VALUES = ["MALE", "FEMALE", "OTHER"];
@@ -702,7 +707,7 @@ const CreateEvent = () => {
             setState(venueData.state || '');
             setCountry(venueData.country || '');
             setPostalCode(venueData.postalCode || '');
-            setVenueContact(venueData.contact || '');
+            setVenueContact(sanitizeTenDigitPhoneInput(venueData.contact || ''));
             setVenueEmail(venueData.email || '');
             setFullAddress(venueData.fullAddress || '');
             
@@ -947,7 +952,7 @@ const CreateEvent = () => {
         setState(firstVenue.state || "");
         setCountry(firstVenue.country || eventToEdit.country || "India");
         setPostalCode(firstVenue.postalCode || eventToEdit.postalCode || "");
-        setVenueContact(firstVenue.contact || eventToEdit.venueContact || "");
+        setVenueContact(sanitizeTenDigitPhoneInput(firstVenue.contact || eventToEdit.venueContact || ""));
         setVenueEmail(firstVenue.email || eventToEdit.venueEmail || "");
         setFullAddress(firstVenue.fullAddress || firstVenue.address || "");
         setOriginalVenueData({
@@ -1889,6 +1894,11 @@ const CreateEvent = () => {
         toast.error("Contact number is required");
         return;
       }
+      const venueContactDigits = normalizeTenDigitPhoneNumber(venueContact);
+      if (!venueContactDigits) {
+        toast.error("Contact number must be exactly 10 digits");
+        return;
+      }
       if (!venueEmail.trim()) {
         toast.error("Email is required");
         return;
@@ -1904,7 +1914,7 @@ const CreateEvent = () => {
       const fallbackAddressParts = [venueName, city, state, postalCode, country || "India"].filter(Boolean);
       const venueData = {
         name: venueName,
-        contact: venueContact,
+        contact: venueContactDigits,
         email: venueEmail,
         fullAddress: fullAddress || fallbackAddressParts.join(", "),
         city: city,
@@ -4572,10 +4582,10 @@ const CreateEvent = () => {
                         <Label htmlFor="venueContact">Contact Number *</Label>
                         <Input
                           id="venueContact"
-                          type="tel"
-                          placeholder="Enter contact number"
+                          {...PHONE_INPUT_PROPS}
+                          placeholder="10 digit contact number"
                           value={venueContact}
-                          onChange={(e) => setVenueContact(e.target.value)}
+                          onChange={(e) => setVenueContact(sanitizeTenDigitPhoneInput(e.target.value))}
                           className={fieldClass}
                         />
                       </div>

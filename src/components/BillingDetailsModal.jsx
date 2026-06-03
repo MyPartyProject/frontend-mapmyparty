@@ -11,20 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-
-const normalizeIndianPhoneNumber = (value) => {
-  const digits = (value || "").replace(/\D/g, "");
-
-  if (digits.length === 10) {
-    return digits;
-  }
-
-  if (digits.length === 12 && digits.startsWith("91")) {
-    return digits.slice(2);
-  }
-
-  return null;
-};
+import {
+  PHONE_INPUT_PROPS,
+  normalizeTenDigitPhoneNumber,
+  sanitizeTenDigitPhoneInput,
+} from "@/utils/phone";
 
 const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => {
   const [formData, setFormData] = useState({
@@ -45,14 +36,17 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
         ...prev,
         fullName: user.name || "",
         email: user.email || "",
-        phone: user.phone || "",
+        phone: sanitizeTenDigitPhoneInput(user.phone || ""),
       }));
     }
   }, [isOpen, user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "phone" ? sanitizeTenDigitPhoneInput(value) : value,
+    }));
   };
 
   const handleSubmit = (e) => {
@@ -89,7 +83,7 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
     }
 
     // Validate phone number
-    const phoneDigits = normalizeIndianPhoneNumber(formData.phone);
+    const phoneDigits = normalizeTenDigitPhoneNumber(formData.phone);
     if (!phoneDigits) {
       toast.error("Please enter a valid phone number (10 digits)");
       return;
@@ -165,7 +159,7 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
               <Input
                 id="phone"
                 name="phone"
-                type="tel"
+                {...PHONE_INPUT_PROPS}
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="9876543210"

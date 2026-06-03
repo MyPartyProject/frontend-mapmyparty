@@ -225,7 +225,7 @@ const PaymentCheckout = () => {
         }
       };
 
-      const razorpay = new window.Razorpay({
+      const razorpayOptions = {
         key: checkout.key,
         amount: checkout.amount,
         currency: checkout.currency,
@@ -235,6 +235,12 @@ const PaymentCheckout = () => {
         prefill: checkout.prefill,
         notes: checkout.notes,
         theme: checkout.theme,
+        ...(checkout.customer_id
+          ? {
+            customer_id: checkout.customer_id,
+            remember_customer: checkout.remember_customer !== false,
+          }
+          : {}),
         handler: async (razorpayResponse) => {
           checkoutFinished = true;
           try {
@@ -271,7 +277,9 @@ const PaymentCheckout = () => {
             });
           },
         },
-      });
+      };
+
+      const razorpay = new window.Razorpay(razorpayOptions);
 
       razorpay.on("payment.failed", (response) => {
         const message = response?.error?.description || response?.error?.reason || "Payment failed. Please try again.";

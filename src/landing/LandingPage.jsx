@@ -118,6 +118,18 @@ const EVENT_SECTION_CONFIG = [
   },
 ];
 
+const PICK_YOUR_VIBE_EXCLUDED_KEYS = new Set([
+  "movies",
+  "plays",
+  "activities",
+  "comedy-shows",
+  "theater-shows",
+]);
+
+const PICK_YOUR_VIBE_CONFIG = EVENT_SECTION_CONFIG.filter(
+  (section) => !PICK_YOUR_VIBE_EXCLUDED_KEYS.has(section.key),
+);
+
 const steps = [
   {
     title: "Discover",
@@ -890,7 +902,7 @@ const LandingPage = () => {
               </div>
 
               <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-                {EVENT_SECTION_CONFIG.map((section, index) => {
+                {PICK_YOUR_VIBE_CONFIG.map((section, index) => {
                   const Icon = section.icon;
 
                   return (

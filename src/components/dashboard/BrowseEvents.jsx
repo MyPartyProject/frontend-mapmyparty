@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Briefcase,
   Calendar,
@@ -403,21 +402,11 @@ export default function BrowseEvents({ showPublicHeader = false }) {
   }, [searchParams, setSearchParams, urlState]);
 
   const {
-    allEvents: catalogEvents = [],
-    loading: catalogLoading,
-    error: catalogError,
-  } = usePublicEvents({
-    search: urlState.searchQuery || null,
-    latitude: urlState.nearby ? urlState.latitude : null,
-    longitude: urlState.nearby ? urlState.longitude : null,
-    radiusKm: urlState.nearby ? urlState.radiusKm : 50,
-  });
-
-  const {
+    catalogEvents = [],
     events: visibleEvents = [],
     allEvents: filteredEvents = [],
     loading: eventsLoading,
-    error: eventsError,
+    error,
     pagination,
   } = usePublicEvents({
     search: urlState.searchQuery || null,
@@ -430,8 +419,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
     limit: PAGE_SIZE,
   });
 
-  const loading = catalogLoading || eventsLoading;
-  const error = eventsError || catalogError;
+  const loading = eventsLoading;
   const appliedSearchQuery = urlState.searchQuery;
 
   useEffect(() => {
@@ -786,6 +774,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
           <div className="relative flex-1">
             <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
             <input
+              value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               className="h-11 w-full rounded-xl border-white/[0.08] bg-white/[0.05] pl-10 pr-4 text-sm text-white placeholder:text-white/30 focus:border-[#D60024]/50 focus:ring-1 focus:ring-[#D60024]/50"
             />

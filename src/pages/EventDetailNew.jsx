@@ -61,22 +61,13 @@ import {
 } from "@/utils/auth";
 import BillingDetailsModal from "@/components/BillingDetailsModal";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  PHONE_INPUT_PROPS,
+  normalizeTenDigitPhoneNumber,
+  sanitizeTenDigitPhoneInput,
+} from "@/utils/phone";
 import logoSvg from "@/assets/MMP logo.svg";
 // import PromoterDashboardHeader from "@/components/PromoterDashboardHeader";
-
-const normalizeIndianPhoneNumber = (value) => {
-  const digits = (value || "").replace(/\D/g, "");
-
-  if (digits.length === 10) {
-    return digits;
-  }
-
-  if (digits.length === 12 && digits.startsWith("91")) {
-    return digits.slice(2);
-  }
-
-  return null;
-};
 
 const FALLBACK_IMAGE = "https://via.placeholder.com/1200x600?text=Event";
 const SPONSOR_PLACEHOLDER = "https://via.placeholder.com/200x200?text=Sponsor";
@@ -922,7 +913,7 @@ const EventDetailNew = () => {
       toast.error("Please fill all fields");
       return;
     }
-    const phoneDigits = normalizeIndianPhoneNumber(phone);
+    const phoneDigits = normalizeTenDigitPhoneNumber(phone);
     if (!phoneDigits) {
       toast.error("Please enter a valid phone number");
       return;
@@ -2490,11 +2481,11 @@ const EventDetailNew = () => {
                   <Label htmlFor="inline-signup-phone">Phone</Label>
                   <Input
                     id="inline-signup-phone"
-                    type="tel"
+                    {...PHONE_INPUT_PROPS}
                     placeholder="10 digits"
                     value={signupForm.phone}
                     onChange={(e) =>
-                      setSignupForm({ ...signupForm, phone: e.target.value })
+                      setSignupForm({ ...signupForm, phone: sanitizeTenDigitPhoneInput(e.target.value) })
                     }
                   />
                 </div>

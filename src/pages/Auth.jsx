@@ -30,6 +30,11 @@ import {
   PASSWORD_REQUIREMENTS_TEXT,
   isStrongPassword,
 } from "@/utils/passwordRules";
+import {
+  PHONE_INPUT_PROPS,
+  normalizeTenDigitPhoneNumber,
+  sanitizeTenDigitPhoneInput,
+} from "@/utils/phone";
 import Logo from "../assets/android-chrome-192x192.png";
 
 const EMPTY_LOGIN_FORM = {
@@ -53,20 +58,6 @@ const AUTH_ERROR_MESSAGES = {
 const normalizeUserType = (value) => {
   if (value === "user" || value === "organizer") {
     return value;
-  }
-
-  return null;
-};
-
-const normalizeIndianPhoneNumber = (value) => {
-  const digits = (value || "").replace(/\D/g, "");
-
-  if (digits.length === 10) {
-    return digits;
-  }
-
-  if (digits.length === 12 && digits.startsWith("91")) {
-    return digits.slice(2);
   }
 
   return null;
@@ -211,7 +202,7 @@ const Auth = () => {
     const role = type === "organizer" ? "ORGANIZER" : "USER";
     const name = signupForm.name.trim();
     const email = signupForm.email.trim();
-    const phoneDigits = normalizeIndianPhoneNumber(signupForm.phone);
+    const phoneDigits = normalizeTenDigitPhoneNumber(signupForm.phone);
     const password = signupForm.password;
 
     if (!name || !email || !phoneDigits || !password) {
@@ -742,14 +733,14 @@ const Auth = () => {
                     </Label>
                     <Input
                       id="signup-phone"
-                      type="tel"
-                      placeholder="Enter your phone number"
+                      {...PHONE_INPUT_PROPS}
+                      placeholder="10 digit phone number"
                       required
                       value={signupForm.phone}
                       onChange={(event) =>
                         setSignupForm((current) => ({
                           ...current,
-                          phone: event.target.value,
+                          phone: sanitizeTenDigitPhoneInput(event.target.value),
                         }))
                       }
                       className="h-9 border-border/60 bg-background/75 text-foreground placeholder:text-muted-foreground focus-visible:border-ring"

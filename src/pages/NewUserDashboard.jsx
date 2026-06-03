@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
 import {
   Search,
@@ -7,7 +7,6 @@ import {
   MapPin,
   ChevronDown,
   User as UserIcon,
-  X,
   Loader2,
   Ticket,
   LogOut,
@@ -27,7 +26,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { apiFetch } from "@/config/api";
 import { toast } from "sonner";
@@ -87,6 +85,111 @@ const getStoredUserInfo = () => {
   };
 };
 
+const DASHBOARD_SEARCH_MIN_LENGTH = 2;
+const DASHBOARD_SEARCH_DEBOUNCE_MS = 300;
+const DASHBOARD_SEARCH_LIMIT = 6;
+const DASHBOARD_RESULT_LIMIT = 3;
+
+const EMPTY_SEARCH_RESULTS = {
+  events: [],
+  artists: [],
+  venues: [],
+  totalEvents: 0,
+  totalArtists: 0,
+  totalVenues: 0,
+};
+
+const normalizeSearchPayload = (response) => {
+  const data = response?.data ?? response ?? {};
+  const events = Array.isArray(data.events) ? data.events : [];
+  const artists = Array.isArray(data.artists) ? data.artists : [];
+  const venues = Array.isArray(data.venues) ? data.venues : [];
+
+  return {
+    events,
+    artists,
+    venues,
+    totalEvents: Number(data.totalEvents) || events.length,
+    totalArtists: Number(data.totalArtists) || artists.length,
+    totalVenues: Number(data.totalVenues) || venues.length,
+  };
+};
+
+const buildBrowseSearchPath = (query) => {
+  const normalized = String(query || "").trim();
+  return normalized
+    ? `/dashboard/browse-events?search=${encodeURIComponent(normalized)}`
+    : "/dashboard/browse-events";
+};
+
+const getLinkedEventPath = (item, fallbackQuery) => {
+  const organizerSlug =
+    item?.organizerSlug ||
+    item?.organizer?.slug ||
+    item?.organizer?.organizerSlug ||
+    item?.organizer?.user?.slug;
+  const eventSlug = item?.eventSlug || item?.slug;
+
+  if (organizerSlug && eventSlug) {
+    return `/events/${organizerSlug}/${eventSlug}`;
+  }
+
+  return buildBrowseSearchPath(fallbackQuery);
+};
+
+const getResultTitle = (item, fallback = "Untitled") =>
+  item?.title || item?.name || item?.eventTitle || fallback;
+
+const getResultMeta = (item, type) => {
+  if (type === "event") {
+    return [item?.subCategory || item?.category, item?.organizer?.name]
+      .filter(Boolean)
+      .join(" | ") || "Event";
+  }
+
+  if (type === "artist") {
+    return item?.eventTitle ? `Artist | ${item.eventTitle}` : "Artist";
+  }
+
+  const location = [item?.city, item?.state].filter(Boolean).join(", ");
+  return [location, item?.eventTitle].filter(Boolean).join(" | ") || "Venue";
+};
+
+const DashboardSearchSection = ({ title, type, icon: Icon, items, onSelect }) => {
+  if (!items.length) return null;
+
+  return (
+    <div className="py-2">
+      <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">
+        {title}
+      </p>
+      <div className="space-y-1 px-1.5">
+        {items.map((item, index) => (
+          <button
+            key={`${type}-${item.id || item.eventId || item.name || item.title || "result"}-${index}`}
+            type="button"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => onSelect(item)}
+            className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-white/[0.06] focus:bg-white/[0.06] focus:outline-none"
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.05] text-white/55">
+              <Icon className="h-4 w-4" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-medium text-white">
+                {getResultTitle(item)}
+              </span>
+              <span className="block truncate text-xs text-white/45">
+                {getResultMeta(item, type)}
+              </span>
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const NewUserDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -101,6 +204,13 @@ const NewUserDashboard = () => {
   const [locationError, setLocationError] = useState(null);
   const [geocodeResult, setGeocodeResult] = useState(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState(EMPTY_SEARCH_RESULTS);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchContainerRef = useRef(null);
+  const searchRequestRef = useRef(0);
 
   const { user: authUser, logout: contextLogout } = useAuth();
 
@@ -125,6 +235,113 @@ const NewUserDashboard = () => {
     if (!term) return INDIAN_STATES;
     return INDIAN_STATES.filter((s) => s.toLowerCase().includes(term));
   }, [stateInput]);
+
+  const normalizedSearchQuery = searchQuery.trim();
+  const visibleSearchResults = useMemo(() => ({
+    events: searchResults.events.slice(0, DASHBOARD_RESULT_LIMIT),
+    artists: searchResults.artists.slice(0, DASHBOARD_RESULT_LIMIT),
+    venues: searchResults.venues.slice(0, DASHBOARD_RESULT_LIMIT),
+  }), [searchResults]);
+  const hasVisibleSearchResults =
+    visibleSearchResults.events.length > 0 ||
+    visibleSearchResults.artists.length > 0 ||
+    visibleSearchResults.venues.length > 0;
+  const totalSearchResults =
+    searchResults.totalEvents + searchResults.totalArtists + searchResults.totalVenues;
+
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false);
+  }, []);
+
+  const navigateToBrowseSearch = useCallback((query = searchQuery) => {
+    navigate(buildBrowseSearchPath(query));
+    closeSearch();
+  }, [closeSearch, navigate, searchQuery]);
+
+  const handleSearchResultSelect = useCallback((item) => {
+    navigate(getLinkedEventPath(item, normalizedSearchQuery));
+    setSearchQuery("");
+    closeSearch();
+  }, [closeSearch, navigate, normalizedSearchQuery]);
+
+  const handleSearchSubmit = useCallback((event) => {
+    event.preventDefault();
+    navigateToBrowseSearch(normalizedSearchQuery);
+  }, [navigateToBrowseSearch, normalizedSearchQuery]);
+
+  const handleSearchKeyDown = useCallback((event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeSearch();
+    }
+  }, [closeSearch]);
+
+  useEffect(() => {
+    const query = normalizedSearchQuery;
+
+    if (query.length < DASHBOARD_SEARCH_MIN_LENGTH) {
+      searchRequestRef.current += 1;
+      setSearchResults(EMPTY_SEARCH_RESULTS);
+      setSearchLoading(false);
+      setSearchError("");
+      setSearchOpen(false);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    const requestId = searchRequestRef.current + 1;
+    searchRequestRef.current = requestId;
+    setSearchOpen(true);
+    setSearchLoading(true);
+    setSearchError("");
+
+    const timer = window.setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({
+          q: query,
+          limit: String(DASHBOARD_SEARCH_LIMIT),
+        });
+        const response = await apiFetch(`/api/event/search?${params.toString()}`, {
+          method: "GET",
+          signal: controller.signal,
+          suppressAuthFailure: true,
+        });
+
+        if (requestId !== searchRequestRef.current) return;
+        setSearchResults(normalizeSearchPayload(response));
+      } catch (error) {
+        if (controller.signal.aborted || requestId !== searchRequestRef.current) return;
+        console.error("Dashboard search failed", error);
+        setSearchResults(EMPTY_SEARCH_RESULTS);
+        setSearchError(error?.message || "Search is unavailable right now");
+      } finally {
+        if (requestId === searchRequestRef.current) {
+          setSearchLoading(false);
+        }
+      }
+    }, DASHBOARD_SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [normalizedSearchQuery]);
+
+  useEffect(() => {
+    if (!searchOpen) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target)
+      ) {
+        closeSearch();
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [closeSearch, searchOpen]);
 
   const extractStateFromEvent = (event = {}) => {
     const candidates = [
@@ -271,14 +488,88 @@ const NewUserDashboard = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="relative w-56">
+          <form
+            ref={searchContainerRef}
+            onSubmit={handleSearchSubmit}
+            className="relative w-72 xl:w-80"
+          >
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
             <Input
               type="search"
               placeholder="Search events..."
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              onFocus={() => {
+                if (normalizedSearchQuery.length >= DASHBOARD_SEARCH_MIN_LENGTH) {
+                  setSearchOpen(true);
+                }
+              }}
+              onKeyDown={handleSearchKeyDown}
               className="w-full pl-9 pr-3 h-9 bg-white/[0.05] border-white/[0.08] text-white text-sm placeholder:text-white/30 rounded-lg focus:ring-1 focus:ring-[#D60024]/50 focus:border-[#D60024]/50"
             />
-          </div>
+            {searchOpen && normalizedSearchQuery.length >= DASHBOARD_SEARCH_MIN_LENGTH && (
+              <div className="absolute right-0 top-full z-50 mt-2 w-[24rem] overflow-hidden rounded-xl border border-white/[0.08] bg-[#12121a] text-white shadow-2xl">
+                <div className="border-b border-white/[0.06] px-3 py-2">
+                  <p className="truncate text-xs text-white/45">
+                    Search results for <span className="text-white/80">"{normalizedSearchQuery}"</span>
+                  </p>
+                </div>
+
+                <div className="max-h-[26rem] overflow-y-auto py-1">
+                  {searchLoading ? (
+                    <div className="flex items-center gap-2 px-4 py-5 text-sm text-white/55">
+                      <Loader2 className="h-4 w-4 animate-spin text-[#D60024]" />
+                      Searching...
+                    </div>
+                  ) : searchError ? (
+                    <div className="px-4 py-5 text-sm text-red-300">
+                      {searchError}
+                    </div>
+                  ) : hasVisibleSearchResults ? (
+                    <>
+                      <DashboardSearchSection
+                        title="Events"
+                        type="event"
+                        icon={Compass}
+                        items={visibleSearchResults.events}
+                        onSelect={handleSearchResultSelect}
+                      />
+                      <DashboardSearchSection
+                        title="Artists"
+                        type="artist"
+                        icon={UserIcon}
+                        items={visibleSearchResults.artists}
+                        onSelect={handleSearchResultSelect}
+                      />
+                      <DashboardSearchSection
+                        title="Venues"
+                        type="venue"
+                        icon={MapPin}
+                        items={visibleSearchResults.venues}
+                        onSelect={handleSearchResultSelect}
+                      />
+                    </>
+                  ) : (
+                    <div className="px-4 py-5 text-sm text-white/55">
+                      No matching events, artists, or venues.
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => navigateToBrowseSearch(normalizedSearchQuery)}
+                  className="flex w-full items-center justify-between border-t border-white/[0.06] px-3 py-2 text-left text-sm text-white/75 transition-colors hover:bg-white/[0.06] hover:text-white"
+                >
+                  <span>View all results</span>
+                  <span className="text-xs text-white/35">
+                    {totalSearchResults > 0 ? `${totalSearchResults} found` : "Browse events"}
+                  </span>
+                </button>
+              </div>
+            )}
+          </form>
 
           <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.06]">
             <Bell className="h-4 w-4" />

@@ -55,12 +55,69 @@ const getDistanceKm = (originLatitude, originLongitude, targetLatitude, targetLo
 const getFilterCacheKey = (filterParams = {}) => {
   const params = new URLSearchParams();
 
-  if (filterParams.category) params.set("category", filterParams.category);
-  if (filterParams.subCategory) params.set("subCategory", filterParams.subCategory);
   if (filterParams.search) params.set("search", filterParams.search);
 
   const query = params.toString();
   return query ? `${PUBLIC_EVENTS_STORAGE_KEY}:${query}` : PUBLIC_EVENTS_STORAGE_KEY;
+};
+
+const extractEventsArray = (payload) => {
+  const candidates = [
+    payload?.data?.events,
+    payload?.data?.items,
+    payload?.data?.results,
+    payload?.data?.data?.events,
+    payload?.data?.data?.items,
+    payload?.data?.data?.results,
+    payload?.data?.data,
+    payload?.data,
+    payload?.events,
+    payload?.items,
+    payload?.results,
+    payload,
+  ];
+
+  return candidates.find((candidate) => Array.isArray(candidate)) || [];
+};
+
+const normalizeStatus = (value) =>
+  typeof value === "string" ? value.trim().toUpperCase() : "";
+
+const NON_PUBLIC_PUBLISH_STATUSES = new Set([
+  "DRAFT",
+  "PENDING",
+  "UNPUBLISHED",
+  "PRIVATE",
+  "REJECTED",
+]);
+
+const HIDDEN_EVENT_STATUSES = new Set(["CANCELLED", "COMPLETED"]);
+
+const isPubliclyVisibleEvent = (event) => {
+  if (!event || typeof event !== "object") return false;
+
+  const eventStatus = normalizeStatus(event?.eventStatus || event?.event_status);
+  if (HIDDEN_EVENT_STATUSES.has(eventStatus)) return false;
+
+  const publishStatus = normalizeStatus(
+    event?.publishStatus || event?.publish_status || event?.publishstatus
+  );
+
+  if (publishStatus) {
+    return publishStatus === "PUBLISHED";
+  }
+
+  const fallbackStatus = normalizeStatus(event?.status);
+
+  if (fallbackStatus === "PUBLISHED") return true;
+  if (
+    NON_PUBLIC_PUBLISH_STATUSES.has(fallbackStatus) ||
+    HIDDEN_EVENT_STATUSES.has(fallbackStatus)
+  ) {
+    return false;
+  }
+
+  return true;
 };
 
 /**
@@ -68,6 +125,8 @@ const getFilterCacheKey = (filterParams = {}) => {
  * Shows events from localStorage until backend API is ready
  */
 export const usePublicEvents = (initialFilters = {}) => {
+  const [sourceEvents, setSourceEvents] = useState([]);
+  const [catalogEvents, setCatalogEvents] = useState([]);
   const [events, setEvents] = useState([]);
   const [allEvents, setAllEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -93,23 +152,13 @@ export const usePublicEvents = (initialFilters = {}) => {
   });
 
   const applyFiltersAndPaginate = useCallback((rawEvents = [], filterParams = {}) => {
-    let filtered = Array.isArray(rawEvents) ? [...rawEvents] : [];
+    let catalog = Array.isArray(rawEvents) ? [...rawEvents] : [];
 
-    // Only keep published events
-    filtered = filtered.filter((event) => {
-      const status = (
-        event.publishStatus ||
-        event.publish_status ||
-        event.publishstatus ||
-        event.status
-      );
-
-      return typeof status === "string" && status.toUpperCase() === "PUBLISHED";
-    });
+    catalog = catalog.filter(isPubliclyVisibleEvent);
 
     if (filterParams.search) {
       const searchLower = filterParams.search.toLowerCase();
-      filtered = filtered.filter((event) => {
+      catalog = catalog.filter((event) => {
         const potentialFields = [
           event.title,
           event.eventTitle,
@@ -129,6 +178,47 @@ export const usePublicEvents = (initialFilters = {}) => {
         );
       });
     }
+
+    const latitude = toFiniteNumber(filterParams.latitude);
+    const longitude = toFiniteNumber(filterParams.longitude);
+    const radiusKm =
+      toFiniteNumber(filterParams.radiusKm) ?? DEFAULT_LOCATION_RADIUS_KM;
+
+    if (latitude !== null && longitude !== null) {
+      const eventsWithDistance = catalog
+        .map((event) => {
+          const coordinates = getEventCoordinates(event);
+          if (!coordinates) return null;
+
+          const distanceKm = getDistanceKm(
+            latitude,
+            longitude,
+            coordinates.latitude,
+            coordinates.longitude
+          );
+
+          return {
+            ...event,
+            distanceKm,
+          };
+        })
+        .filter(Boolean);
+
+      if (eventsWithDistance.length > 0) {
+        catalog = eventsWithDistance
+          .filter((event) => event.distanceKm <= radiusKm)
+          .sort((left, right) => {
+            const distanceDifference = left.distanceKm - right.distanceKm;
+            if (distanceDifference !== 0) return distanceDifference;
+
+            const leftDate = left.startDate ? new Date(left.startDate).getTime() : Number.MAX_SAFE_INTEGER;
+            const rightDate = right.startDate ? new Date(right.startDate).getTime() : Number.MAX_SAFE_INTEGER;
+            return leftDate - rightDate;
+          });
+      }
+    }
+
+    let filtered = [...catalog];
 
     if (filterParams.category) {
       const desired = filterParams.category.toUpperCase();
@@ -159,40 +249,6 @@ export const usePublicEvents = (initialFilters = {}) => {
       });
     }
 
-    const latitude = toFiniteNumber(filterParams.latitude);
-    const longitude = toFiniteNumber(filterParams.longitude);
-    const radiusKm =
-      toFiniteNumber(filterParams.radiusKm) ?? DEFAULT_LOCATION_RADIUS_KM;
-
-    if (latitude !== null && longitude !== null) {
-      filtered = filtered
-        .map((event) => {
-          const coordinates = getEventCoordinates(event);
-          if (!coordinates) return null;
-
-          const distanceKm = getDistanceKm(
-            latitude,
-            longitude,
-            coordinates.latitude,
-            coordinates.longitude
-          );
-
-          return {
-            ...event,
-            distanceKm,
-          };
-        })
-        .filter((event) => event && event.distanceKm <= radiusKm)
-        .sort((left, right) => {
-          const distanceDifference = left.distanceKm - right.distanceKm;
-          if (distanceDifference !== 0) return distanceDifference;
-
-          const leftDate = left.startDate ? new Date(left.startDate).getTime() : Number.MAX_SAFE_INTEGER;
-          const rightDate = right.startDate ? new Date(right.startDate).getTime() : Number.MAX_SAFE_INTEGER;
-          return leftDate - rightDate;
-        });
-    }
-
     const requestedPage = filterParams.page || 1;
     const limit = filterParams.limit || 20;
     const totalEvents = filtered.length;
@@ -202,6 +258,7 @@ export const usePublicEvents = (initialFilters = {}) => {
     const paginatedEvents = filtered.slice(startIndex, startIndex + limit);
 
     return {
+      catalogEvents: catalog,
       allEvents: filtered,
       events: paginatedEvents,
       pagination: {
@@ -216,7 +273,7 @@ export const usePublicEvents = (initialFilters = {}) => {
   /**
    * Fetch events from API or localStorage
    */
-  const fetchEvents = useCallback(async (filterParams = filters) => {
+  const fetchEvents = useCallback(async (filterParams = {}) => {
     try {
       setLoading(true);
       setError(null);
@@ -224,26 +281,18 @@ export const usePublicEvents = (initialFilters = {}) => {
 
       try {
         const params = new URLSearchParams();
-        if (filterParams.category) params.set("category", filterParams.category);
-        if (filterParams.subCategory) params.set("subCategory", filterParams.subCategory);
         if (filterParams.search) params.set("search", filterParams.search);
 
         const response = await apiFetch(`/api/event${params.toString() ? `?${params.toString()}` : ""}`, {
           method: "GET",
         });
 
-        const eventsData = response.data?.events || response.data || response;
-        sourceEvents = Array.isArray(eventsData) ? eventsData : [];
+        sourceEvents = extractEventsArray(response);
 
         try {
           localStorage.setItem(getFilterCacheKey(filterParams), JSON.stringify(sourceEvents));
 
-          const hasServerFilters =
-            Boolean(filterParams.category) ||
-            Boolean(filterParams.subCategory) ||
-            Boolean(filterParams.search);
-
-          if (!hasServerFilters) {
+          if (!filterParams.search) {
             localStorage.setItem(PUBLIC_EVENTS_STORAGE_KEY, JSON.stringify(sourceEvents));
           }
         } catch (storageError) {
@@ -256,40 +305,31 @@ export const usePublicEvents = (initialFilters = {}) => {
 
           const queryScopedCache = localStorage.getItem(getFilterCacheKey(filterParams));
           const stored = queryScopedCache || localStorage.getItem(PUBLIC_EVENTS_STORAGE_KEY);
-          sourceEvents = stored ? JSON.parse(stored) : [];
+          sourceEvents = stored ? extractEventsArray(JSON.parse(stored)) : [];
           setError(null);
         } else {
           throw apiError;
         }
       }
 
-      const {
-        allEvents: processedAllEvents,
-        events: processedEvents,
-        pagination: paginationData,
-      } = applyFiltersAndPaginate(
-        sourceEvents,
-        filterParams
-      );
-
-      setAllEvents(processedAllEvents);
-      setEvents(processedEvents);
-      setPagination(paginationData);
+      setSourceEvents(sourceEvents);
     } catch (err) {
       console.error("❌ Error fetching public events:", err);
       setError(err.message || "Failed to fetch events");
+      setSourceEvents([]);
+      setCatalogEvents([]);
       setAllEvents([]);
       setEvents([]);
-      setPagination({
+      setPagination((current) => ({
         page: 1,
-        limit: filterParams.limit || 20,
+        limit: current.limit || 20,
         totalPages: 0,
         totalEvents: 0,
-      });
+      }));
     } finally {
       setLoading(false);
     }
-  }, [filters, applyFiltersAndPaginate]);
+  }, []);
 
   /**
    * Update filters and refetch
@@ -420,17 +460,32 @@ export const usePublicEvents = (initialFilters = {}) => {
    * Refresh events
    */
   const refresh = useCallback(() => {
-    fetchEvents(filters);
-  }, [fetchEvents, filters]);
+    fetchEvents({ search: filters.search });
+  }, [fetchEvents, filters.search]);
 
-  // Fetch events when filters change
   useEffect(() => {
-    fetchEvents(filters);
-  }, [filters, fetchEvents]);
+    const {
+      catalogEvents: processedCatalogEvents,
+      allEvents: processedAllEvents,
+      events: processedEvents,
+      pagination: paginationData,
+    } = applyFiltersAndPaginate(sourceEvents, filters);
+
+    setCatalogEvents(processedCatalogEvents);
+    setAllEvents(processedAllEvents);
+    setEvents(processedEvents);
+    setPagination(paginationData);
+  }, [sourceEvents, filters, applyFiltersAndPaginate]);
+
+  // Fetch source events when the server-backed query changes.
+  useEffect(() => {
+    fetchEvents({ search: filters.search });
+  }, [filters.search, fetchEvents]);
 
   return {
     events,
     allEvents,
+    catalogEvents,
     loading,
     error,
     pagination,

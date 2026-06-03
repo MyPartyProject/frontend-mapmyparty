@@ -18,9 +18,108 @@ import {
   Loader2,
 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { apiFetch } from "@/config/api";
+
+const HEADER_SEARCH_MIN_LENGTH = 2;
+const HEADER_SEARCH_DEBOUNCE_MS = 300;
+const HEADER_SEARCH_LIMIT = 6;
+const HEADER_RESULT_LIMIT = 3;
+
+const EMPTY_SEARCH_RESULTS = {
+  events: [],
+  artists: [],
+  venues: [],
+  totalEvents: 0,
+  totalArtists: 0,
+  totalVenues: 0,
+};
+
+const normalizeSearchPayload = (response) => {
+  const data = response?.data ?? response ?? {};
+  const events = Array.isArray(data.events) ? data.events : [];
+  const artists = Array.isArray(data.artists) ? data.artists : [];
+  const venues = Array.isArray(data.venues) ? data.venues : [];
+
+  return {
+    events,
+    artists,
+    venues,
+    totalEvents: Number(data.totalEvents) || events.length,
+    totalArtists: Number(data.totalArtists) || artists.length,
+    totalVenues: Number(data.totalVenues) || venues.length,
+  };
+};
+
+const getResultTitle = (item, fallback = "Untitled") =>
+  item?.title || item?.name || item?.eventTitle || fallback;
+
+const getResultMeta = (item, type) => {
+  if (type === "event") {
+    return [item?.subCategory || item?.category, item?.organizer?.name]
+      .filter(Boolean)
+      .join(" | ") || "Event";
+  }
+
+  if (type === "artist") {
+    return item?.eventTitle ? `Artist | ${item.eventTitle}` : "Artist";
+  }
+
+  const location = [item?.city, item?.state].filter(Boolean).join(", ");
+  return [location, item?.eventTitle].filter(Boolean).join(" | ") || "Venue";
+};
+
+const getLinkedEventPath = (item, fallbackPath) => {
+  const organizerSlug =
+    item?.organizerSlug ||
+    item?.organizer?.slug ||
+    item?.organizer?.organizerSlug ||
+    item?.organizer?.user?.slug;
+  const eventSlug = item?.eventSlug || item?.slug;
+
+  if (organizerSlug && eventSlug) {
+    return `/events/${organizerSlug}/${eventSlug}`;
+  }
+
+  return fallbackPath;
+};
+
+const HeaderSearchSection = ({ title, type, icon: Icon, items, onSelect }) => {
+  if (!items.length) return null;
+
+  return (
+    <div className="py-2">
+      <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">
+        {title}
+      </p>
+      <div className="space-y-1 px-1.5">
+        {items.map((item, index) => (
+          <button
+            key={`${type}-${item.id || item.eventId || item.name || item.title || "result"}-${index}`}
+            type="button"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => onSelect(item)}
+            className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-white/[0.06] focus:bg-white/[0.06] focus:outline-none"
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.05] text-white/55">
+              <Icon className="h-4 w-4" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-medium text-white">
+                {getResultTitle(item)}
+              </span>
+              <span className="block truncate text-xs text-white/45">
+                {getResultMeta(item, type)}
+              </span>
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const Header = ({
   isAuthenticated: isAuthenticatedProp = undefined,
@@ -31,7 +130,14 @@ const Header = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState(EMPTY_SEARCH_RESULTS);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
+  const desktopSearchRef = useRef(null);
+  const mobileSearchRef = useRef(null);
+  const searchRequestRef = useRef(0);
   const navigate = useNavigate();
   const location = useLocation();
   const {
@@ -111,7 +217,7 @@ const Header = ({
     navigate("/", { replace: true });
   };
 
-  const buildBrowseEventsUrl = (updater) => {
+  const buildBrowseEventsUrl = useCallback((updater) => {
     const params = new URLSearchParams(
       location.pathname.includes("browse-events") ? location.search : "",
     );
@@ -120,7 +226,119 @@ const Header = ({
 
     const query = params.toString();
     return `/browse-events${query ? `?${query}` : ""}`;
-  };
+  }, [location.pathname, location.search]);
+
+  const normalizedSearchQuery = searchQuery.trim();
+  const visibleSearchResults = useMemo(() => ({
+    events: searchResults.events.slice(0, HEADER_RESULT_LIMIT),
+    artists: searchResults.artists.slice(0, HEADER_RESULT_LIMIT),
+    venues: searchResults.venues.slice(0, HEADER_RESULT_LIMIT),
+  }), [searchResults]);
+  const hasVisibleSearchResults =
+    visibleSearchResults.events.length > 0 ||
+    visibleSearchResults.artists.length > 0 ||
+    visibleSearchResults.venues.length > 0;
+  const totalSearchResults =
+    searchResults.totalEvents + searchResults.totalArtists + searchResults.totalVenues;
+
+  const getBrowseSearchUrl = useCallback((query = searchQuery) =>
+    buildBrowseEventsUrl((params) => {
+      const normalized = String(query || "").trim();
+      if (normalized) {
+        params.set("search", normalized);
+      } else {
+        params.delete("search");
+      }
+      params.delete("page");
+    }), [buildBrowseEventsUrl, searchQuery]);
+
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false);
+  }, []);
+
+  const navigateToBrowseSearch = useCallback((query = searchQuery) => {
+    navigate(getBrowseSearchUrl(query));
+    setSearchQuery("");
+    setMobileSearchOpen(false);
+    closeSearch();
+  }, [closeSearch, getBrowseSearchUrl, navigate, searchQuery]);
+
+  const handleSearchResultSelect = useCallback((item) => {
+    navigate(getLinkedEventPath(item, getBrowseSearchUrl(normalizedSearchQuery)));
+    setSearchQuery("");
+    setMobileSearchOpen(false);
+    closeSearch();
+  }, [closeSearch, getBrowseSearchUrl, navigate, normalizedSearchQuery]);
+
+  useEffect(() => {
+    const query = normalizedSearchQuery;
+
+    if (query.length < HEADER_SEARCH_MIN_LENGTH) {
+      searchRequestRef.current += 1;
+      setSearchResults(EMPTY_SEARCH_RESULTS);
+      setSearchLoading(false);
+      setSearchError("");
+      setSearchOpen(false);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    const requestId = searchRequestRef.current + 1;
+    searchRequestRef.current = requestId;
+    setSearchOpen(true);
+    setSearchLoading(true);
+    setSearchError("");
+
+    const timer = window.setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({
+          q: query,
+          limit: String(HEADER_SEARCH_LIMIT),
+        });
+        const response = await apiFetch(`/api/event/search?${params.toString()}`, {
+          method: "GET",
+          signal: controller.signal,
+          suppressAuthFailure: true,
+        });
+
+        if (requestId !== searchRequestRef.current) return;
+        setSearchResults(normalizeSearchPayload(response));
+      } catch (error) {
+        if (controller.signal.aborted || requestId !== searchRequestRef.current) return;
+        console.error("Header search failed", error);
+        setSearchResults(EMPTY_SEARCH_RESULTS);
+        setSearchError(error?.message || "Search is unavailable right now");
+      } finally {
+        if (requestId === searchRequestRef.current) {
+          setSearchLoading(false);
+        }
+      }
+    }, HEADER_SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [normalizedSearchQuery]);
+
+  useEffect(() => {
+    if (!searchOpen) return undefined;
+
+    const handlePointerDown = (event) => {
+      const target = event.target;
+      const clickedDesktop =
+        desktopSearchRef.current && desktopSearchRef.current.contains(target);
+      const clickedMobile =
+        mobileSearchRef.current && mobileSearchRef.current.contains(target);
+
+      if (!clickedDesktop && !clickedMobile) {
+        closeSearch();
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [closeSearch, searchOpen]);
 
   const handleDetectLocation = async () => {
     if (!isLocationSupported) {
@@ -160,24 +378,23 @@ const Header = ({
     }
   };
 
-  const executeSearch = () => {
-    if (searchQuery.trim().length >= 2) {
-      navigate(
-        buildBrowseEventsUrl((params) => {
-          params.set("search", searchQuery.trim());
-          params.delete("page");
-        }),
-      );
-      setSearchQuery("");
-      setMobileSearchOpen(false);
+  const executeSearch = useCallback(() => {
+    if (normalizedSearchQuery.length >= HEADER_SEARCH_MIN_LENGTH) {
+      navigateToBrowseSearch(normalizedSearchQuery);
     }
-  };
+  }, [navigateToBrowseSearch, normalizedSearchQuery]);
 
-  const handleSearchSubmit = (e) => {
-    if (e.key === "Enter") {
-      executeSearch();
+  const handleSearchSubmit = useCallback((event) => {
+    event.preventDefault();
+    executeSearch();
+  }, [executeSearch]);
+
+  const handleSearchKeyDown = useCallback((event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeSearch();
     }
-  };
+  }, [closeSearch]);
 
   const mobileMenuItemClass =
     "w-full justify-start gap-3 rounded-xl px-3 py-3 text-left";
@@ -191,6 +408,81 @@ const Header = ({
   const isLandingPage =
     forceMainHeader &&
     (location.pathname === "/" || location.pathname === "/landing/homepage");
+
+  const renderSearchDropdown = (isMobile = false) => {
+    if (!searchOpen || normalizedSearchQuery.length < HEADER_SEARCH_MIN_LENGTH) {
+      return null;
+    }
+
+    return (
+      <div
+        className={`z-50 overflow-hidden rounded-xl border border-white/[0.08] bg-[#12121a] text-white shadow-2xl ${
+          isMobile
+            ? "mt-2 w-full"
+            : "absolute left-0 top-full mt-2 w-[24rem]"
+        }`}
+      >
+        <div className="border-b border-white/[0.06] px-3 py-2">
+          <p className="truncate text-xs text-white/45">
+            Search results for <span className="text-white/80">"{normalizedSearchQuery}"</span>
+          </p>
+        </div>
+
+        <div className="max-h-[26rem] overflow-y-auto py-1">
+          {searchLoading ? (
+            <div className="flex items-center gap-2 px-4 py-5 text-sm text-white/55">
+              <Loader2 className="h-4 w-4 animate-spin text-[#D60024]" />
+              Searching...
+            </div>
+          ) : searchError ? (
+            <div className="px-4 py-5 text-sm text-red-300">
+              {searchError}
+            </div>
+          ) : hasVisibleSearchResults ? (
+            <>
+              <HeaderSearchSection
+                title="Events"
+                type="event"
+                icon={Ticket}
+                items={visibleSearchResults.events}
+                onSelect={handleSearchResultSelect}
+              />
+              <HeaderSearchSection
+                title="Artists"
+                type="artist"
+                icon={User}
+                items={visibleSearchResults.artists}
+                onSelect={handleSearchResultSelect}
+              />
+              <HeaderSearchSection
+                title="Venues"
+                type="venue"
+                icon={MapPin}
+                items={visibleSearchResults.venues}
+                onSelect={handleSearchResultSelect}
+              />
+            </>
+          ) : (
+            <div className="px-4 py-5 text-sm text-white/55">
+              No matching events, artists, or venues.
+            </div>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => navigateToBrowseSearch(normalizedSearchQuery)}
+          className="flex w-full items-center justify-between border-t border-white/[0.06] px-3 py-2 text-left text-sm text-white/75 transition-colors hover:bg-white/[0.06] hover:text-white"
+        >
+          <span>View all results</span>
+          <span className="text-xs text-white/35">
+            {totalSearchResults > 0 ? `${totalSearchResults} found` : "Browse events"}
+          </span>
+        </button>
+      </div>
+    );
+  };
 
   // Don't show header on dashboard/organizer/promoter pages unless forced
   if (resolvedIsAuthenticated && isDashboard && !forceMainHeader) {
@@ -221,17 +513,27 @@ const Header = ({
           </Link>
 
           {/* Search Bar - Hidden on mobile */}
-          <div className="hidden md:flex items-center gap-2 bg-[rgba(255,255,255,0.08)] rounded-full px-4 py-2 flex-1 max-w-xs">
+          <form
+            ref={desktopSearchRef}
+            onSubmit={handleSearchSubmit}
+            className="relative hidden md:flex items-center gap-2 bg-[rgba(255,255,255,0.08)] rounded-full px-4 py-2 flex-1 max-w-xs"
+          >
             <Search className="h-4 w-4 text-[rgba(255,255,255,0.5)]" />
             <input
-              type="text"
+              type="search"
               placeholder="Search events..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleSearchSubmit}
+              onFocus={() => {
+                if (normalizedSearchQuery.length >= HEADER_SEARCH_MIN_LENGTH) {
+                  setSearchOpen(true);
+                }
+              }}
+              onKeyDown={handleSearchKeyDown}
               className="bg-transparent outline-none text-sm text-white placeholder:text-[rgba(255,255,255,0.5)] w-full"
             />
-          </div>
+            {renderSearchDropdown(false)}
+          </form>
         </div>
 
         {/* Desktop Navigation - Show main nav for non-authenticated users or when forced */}
@@ -418,7 +720,13 @@ const Header = ({
             variant="ghost"
             size="icon"
             onClick={() => {
-              setMobileSearchOpen((current) => !current);
+              const nextMobileSearchOpen = !mobileSearchOpen;
+              setMobileSearchOpen(nextMobileSearchOpen);
+              if (!nextMobileSearchOpen) {
+                closeSearch();
+              } else if (normalizedSearchQuery.length >= HEADER_SEARCH_MIN_LENGTH) {
+                setSearchOpen(true);
+              }
               setMobileMenuOpen(false);
             }}
             className="h-10 w-10 rounded-full text-white hover:bg-[rgba(255,255,255,0.08)]"
@@ -447,6 +755,7 @@ const Header = ({
             onClick={() => {
               setMobileMenuOpen((current) => !current);
               setMobileSearchOpen(false);
+              closeSearch();
             }}
             aria-label="Toggle menu"
           >
@@ -456,26 +765,37 @@ const Header = ({
       </div>
 
       {mobileSearchOpen && (
-        <div className="md:hidden border-t border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.04)] px-4 py-3">
-          <div className="flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.08)] px-4 py-2">
+        <div
+          ref={mobileSearchRef}
+          className="md:hidden border-t border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.04)] px-4 py-3"
+        >
+          <form
+            onSubmit={handleSearchSubmit}
+            className="flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.08)] px-4 py-2"
+          >
             <Search className="h-4 w-4 shrink-0 text-[rgba(255,255,255,0.55)]" />
             <input
-              type="text"
+              type="search"
               placeholder="Search events..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleSearchSubmit}
+              onFocus={() => {
+                if (normalizedSearchQuery.length >= HEADER_SEARCH_MIN_LENGTH) {
+                  setSearchOpen(true);
+                }
+              }}
+              onKeyDown={handleSearchKeyDown}
               className="w-full bg-transparent text-sm text-white outline-none placeholder:text-[rgba(255,255,255,0.55)]"
             />
             <button
-              type="button"
-              onClick={executeSearch}
+              type="submit"
               className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-black transition hover:opacity-90"
               aria-label="Run search"
             >
               <Search className="h-4 w-4" />
             </button>
-          </div>
+          </form>
+          {renderSearchDropdown(true)}
         </div>
       )}
 
