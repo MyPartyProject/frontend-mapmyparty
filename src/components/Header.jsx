@@ -8,7 +8,6 @@ import {
 import {
   Menu,
   X,
-  ChevronDown,
   User,
   Ticket,
   Settings,
@@ -16,6 +15,7 @@ import {
   MapPin,
   Search,
   Loader2,
+  LayoutDashboard,
 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -91,7 +91,7 @@ const HeaderSearchSection = ({ title, type, icon: Icon, items, onSelect }) => {
 
   return (
     <div className="py-2">
-      <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">
+      <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
         {title}
       </p>
       <div className="space-y-1 px-1.5">
@@ -101,16 +101,16 @@ const HeaderSearchSection = ({ title, type, icon: Icon, items, onSelect }) => {
             type="button"
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => onSelect(item)}
-            className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-white/[0.06] focus:bg-white/[0.06] focus:outline-none"
+            className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-muted/55 focus:bg-muted/55 focus:outline-none"
           >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.05] text-white/55">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/40 bg-muted/40 text-muted-foreground">
               <Icon className="h-4 w-4" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-medium text-white">
+              <span className="block truncate text-sm font-medium text-foreground">
                 {getResultTitle(item)}
               </span>
-              <span className="block truncate text-xs text-white/45">
+              <span className="block truncate text-xs text-muted-foreground">
                 {getResultMeta(item, type)}
               </span>
             </span>
@@ -134,8 +134,10 @@ const Header = ({
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [desktopSearchExpanded, setDesktopSearchExpanded] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const desktopSearchRef = useRef(null);
+  const desktopSearchInputRef = useRef(null);
   const mobileSearchRef = useRef(null);
   const searchRequestRef = useRef(0);
   const navigate = useNavigate();
@@ -256,9 +258,19 @@ const Header = ({
     setSearchOpen(false);
   }, []);
 
+  const openDesktopSearch = useCallback(() => {
+    setDesktopSearchExpanded(true);
+    setMobileMenuOpen(false);
+
+    if (normalizedSearchQuery.length >= HEADER_SEARCH_MIN_LENGTH) {
+      setSearchOpen(true);
+    }
+  }, [normalizedSearchQuery.length]);
+
   const navigateToBrowseSearch = useCallback((query = searchQuery) => {
     navigate(getBrowseSearchUrl(query));
     setSearchQuery("");
+    setDesktopSearchExpanded(false);
     setMobileSearchOpen(false);
     closeSearch();
   }, [closeSearch, getBrowseSearchUrl, navigate, searchQuery]);
@@ -266,6 +278,7 @@ const Header = ({
   const handleSearchResultSelect = useCallback((item) => {
     navigate(getLinkedEventPath(item, getBrowseSearchUrl(normalizedSearchQuery)));
     setSearchQuery("");
+    setDesktopSearchExpanded(false);
     setMobileSearchOpen(false);
     closeSearch();
   }, [closeSearch, getBrowseSearchUrl, navigate, normalizedSearchQuery]);
@@ -322,7 +335,17 @@ const Header = ({
   }, [normalizedSearchQuery]);
 
   useEffect(() => {
-    if (!searchOpen) return undefined;
+    if (!desktopSearchExpanded) return undefined;
+
+    const frame = window.requestAnimationFrame(() => {
+      desktopSearchInputRef.current?.focus();
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [desktopSearchExpanded]);
+
+  useEffect(() => {
+    if (!searchOpen && !desktopSearchExpanded && !mobileSearchOpen) return undefined;
 
     const handlePointerDown = (event) => {
       const target = event.target;
@@ -332,13 +355,15 @@ const Header = ({
         mobileSearchRef.current && mobileSearchRef.current.contains(target);
 
       if (!clickedDesktop && !clickedMobile) {
+        setDesktopSearchExpanded(false);
+        setMobileSearchOpen(false);
         closeSearch();
       }
     };
 
     document.addEventListener("mousedown", handlePointerDown);
     return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, [closeSearch, searchOpen]);
+  }, [closeSearch, desktopSearchExpanded, mobileSearchOpen, searchOpen]);
 
   const handleDetectLocation = async () => {
     if (!isLocationSupported) {
@@ -378,28 +403,48 @@ const Header = ({
     }
   };
 
-  const executeSearch = useCallback(() => {
-    if (normalizedSearchQuery.length >= HEADER_SEARCH_MIN_LENGTH) {
-      navigateToBrowseSearch(normalizedSearchQuery);
-    }
-  }, [navigateToBrowseSearch, normalizedSearchQuery]);
-
   const handleSearchSubmit = useCallback((event) => {
     event.preventDefault();
-    executeSearch();
-  }, [executeSearch]);
+    if (normalizedSearchQuery.length >= HEADER_SEARCH_MIN_LENGTH) {
+      setSearchOpen(true);
+    }
+  }, [normalizedSearchQuery.length]);
 
   const handleSearchKeyDown = useCallback((event) => {
     if (event.key === "Escape") {
       event.preventDefault();
+      setDesktopSearchExpanded(false);
+      setMobileSearchOpen(false);
       closeSearch();
     }
   }, [closeSearch]);
 
   const mobileMenuItemClass =
-    "w-full justify-start gap-3 rounded-xl px-3 py-3 text-left";
+    "h-11 w-full justify-start gap-3 rounded-xl px-3 text-left text-sm font-medium text-muted-foreground hover:bg-muted/55 hover:text-foreground active:scale-[0.99]";
   const mobileMenuLinkClass =
-    "block w-full rounded-xl px-3 py-3 text-sm font-medium text-left hover:bg-[rgba(255,255,255,0.06)] hover:text-primary transition-colors";
+    "flex h-11 w-full items-center rounded-xl px-3 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-muted/55 hover:text-foreground active:scale-[0.99]";
+  const mobileIconButtonClass =
+    "h-9 w-9 rounded-full border border-border/45 bg-card/60 p-0 text-foreground shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted/70 hover:text-foreground active:translate-y-0";
+  const mobileSectionClass =
+    "rounded-[1rem] border border-border/35 bg-background/35 p-2";
+  const mobileSectionLabelClass =
+    "px-3 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground";
+  const mobileLogoutButtonClass =
+    "h-11 w-full justify-start gap-3 rounded-xl border border-border/45 bg-card/65 px-3 text-left text-sm font-medium text-destructive hover:border-destructive/45 hover:bg-destructive/10 hover:text-destructive active:scale-[0.99]";
+  const navLinkClass =
+    "text-[15px] font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground";
+  const actionButtonClass =
+    "group relative h-9 w-9 rounded-full border border-border/50 bg-card/55 p-0 text-foreground shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted/70 hover:text-foreground focus-visible:ring-ring disabled:hover:translate-y-0";
+  const expandingActionButtonClass =
+    "group h-9 w-9 justify-start gap-0 overflow-hidden rounded-full border border-border/50 bg-card/55 px-2.5 text-foreground shadow-[var(--shadow-card)] transition-[width,gap,background-color,border-color,color,transform] duration-300 ease-out hover:w-[7.75rem] hover:-translate-y-0.5 hover:gap-1.5 hover:bg-muted/70 hover:text-foreground focus-visible:w-[7.75rem] focus-visible:gap-1.5 focus-visible:ring-ring disabled:hover:w-9 disabled:hover:translate-y-0 disabled:hover:gap-0";
+  const expandingActionLabelClass =
+    "max-w-0 overflow-hidden whitespace-nowrap text-[13px] font-medium leading-none opacity-0 transition-[max-width,opacity] duration-300 ease-out group-hover:max-w-[5.75rem] group-hover:opacity-100 group-focus-visible:max-w-[5.75rem] group-focus-visible:opacity-100";
+  const tooltipClass =
+    "pointer-events-none absolute left-1/2 top-[calc(100%+0.55rem)] z-50 -translate-x-1/2 whitespace-nowrap rounded-md border border-border/50 bg-card px-2.5 py-1 text-xs font-medium text-foreground opacity-0 shadow-[var(--shadow-card)] transition-all duration-200 group-hover:translate-y-0.5 group-hover:opacity-100 group-focus-visible:translate-y-0.5 group-focus-visible:opacity-100";
+  const dropdownContentClass =
+    "rounded-xl border border-border/50 bg-card/95 text-foreground shadow-[var(--shadow-card)] backdrop-blur-xl";
+  const dropdownItemClass =
+    "cursor-pointer hover:bg-muted/55 focus:bg-muted/55";
 
   const isDashboard =
     location.pathname.startsWith("/dashboard") ||
@@ -416,26 +461,26 @@ const Header = ({
 
     return (
       <div
-        className={`z-50 overflow-hidden rounded-xl border border-white/[0.08] bg-[#12121a] text-white shadow-2xl ${
+        className={`z-50 overflow-hidden rounded-xl border border-border/50 bg-card/95 text-foreground shadow-[var(--shadow-card)] backdrop-blur-xl ${
           isMobile
             ? "mt-2 w-full"
-            : "absolute left-0 top-full mt-2 w-[24rem]"
+            : "absolute right-0 top-full mt-2 w-[24rem]"
         }`}
       >
-        <div className="border-b border-white/[0.06] px-3 py-2">
-          <p className="truncate text-xs text-white/45">
-            Search results for <span className="text-white/80">"{normalizedSearchQuery}"</span>
+        <div className="border-b border-border/40 px-3 py-2">
+          <p className="truncate text-xs text-muted-foreground">
+            Search results for <span className="text-foreground">"{normalizedSearchQuery}"</span>
           </p>
         </div>
 
         <div className="max-h-[26rem] overflow-y-auto py-1">
           {searchLoading ? (
-            <div className="flex items-center gap-2 px-4 py-5 text-sm text-white/55">
-              <Loader2 className="h-4 w-4 animate-spin text-[#D60024]" />
+            <div className="flex items-center gap-2 px-4 py-5 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin text-accent" />
               Searching...
             </div>
           ) : searchError ? (
-            <div className="px-4 py-5 text-sm text-red-300">
+            <div className="px-4 py-5 text-sm text-destructive">
               {searchError}
             </div>
           ) : hasVisibleSearchResults ? (
@@ -463,7 +508,7 @@ const Header = ({
               />
             </>
           ) : (
-            <div className="px-4 py-5 text-sm text-white/55">
+            <div className="px-4 py-5 text-sm text-muted-foreground">
               No matching events, artists, or venues.
             </div>
           )}
@@ -473,10 +518,10 @@ const Header = ({
           type="button"
           onMouseDown={(event) => event.preventDefault()}
           onClick={() => navigateToBrowseSearch(normalizedSearchQuery)}
-          className="flex w-full items-center justify-between border-t border-white/[0.06] px-3 py-2 text-left text-sm text-white/75 transition-colors hover:bg-white/[0.06] hover:text-white"
+          className="flex w-full items-center justify-between border-t border-border/40 px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-muted/55 hover:text-foreground"
         >
           <span>View all results</span>
-          <span className="text-xs text-white/35">
+          <span className="text-xs text-muted-foreground">
             {totalSearchResults > 0 ? `${totalSearchResults} found` : "Browse events"}
           </span>
         </button>
@@ -493,33 +538,68 @@ const Header = ({
     <header
       className={`sticky top-0 z-50 w-full ${
         isLandingPage
-          ? "-mb-16 bg-gradient-to-b from-background/45 via-background/15 to-transparent backdrop-blur-sm shadow-none"
-          : "bg-[rgba(255,255,255,0.08)] backdrop-blur-xl shadow-[0_18px_60px_-24px_rgba(0,0,0,0.65)]"
-      } ${forceMainHeader ? "" : "border-b border-[rgba(255,255,255,0.18)]"}`}
+          ? "-mb-14 bg-gradient-to-b from-background/55 via-background/20 to-transparent backdrop-blur-sm shadow-none"
+          : "bg-card/70 shadow-[var(--shadow-card)] backdrop-blur-xl"
+      } ${forceMainHeader ? "" : "border-b border-border/45"} relative`}
     >
-      <div className="container flex h-16 items-center justify-between px-4 md:px-6 gap-4">
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:px-5 lg:px-8">
         {/* Brand + Search */}
-        <div className="flex items-center gap-4 flex-1 min-w-0">
+        <div className="flex min-w-0 flex-1 basis-0 items-center gap-3">
           <Link
             to="/"
-            className="flex items-center gap-3 font-bold text-xl group text-white whitespace-nowrap min-w-0"
+            className="group flex min-w-0 items-center gap-2.5 whitespace-nowrap text-base font-semibold text-foreground"
           >
             <img
               src="/logo.png"
               alt="MapMyParty"
-              className="h-10 w-10 object-contain"
+              className="h-8 w-8 object-contain"
             />
-            <span className="text-white hidden sm:inline">Map MyParty</span>
+            <span className="hidden text-foreground sm:inline">Map MyParty</span>
           </Link>
 
-          {/* Search Bar - Hidden on mobile */}
+        </div>
+
+        {/* Desktop Navigation - Show main nav for non-authenticated users or when forced */}
+        {(!resolvedIsAuthenticated || forceMainHeader) && (
+          <nav className="hidden items-center gap-5 md:flex lg:gap-6">
+            <Link
+              to="/browse-events"
+              className={navLinkClass}
+            >
+              Browse Events
+            </Link>
+            <Link
+              to="/host-events"
+              className={navLinkClass}
+            >
+              Host Events
+            </Link>
+            <Link
+              to="/about"
+              className={navLinkClass}
+            >
+              About
+            </Link>
+            <Link
+              to="/contact"
+              className={navLinkClass}
+            >
+              Contact
+            </Link>
+          </nav>
+        )}
+
+        {/* Auth Buttons + Location */}
+        <div className="hidden flex-1 basis-0 items-center justify-end gap-3 md:flex">
           <form
             ref={desktopSearchRef}
             onSubmit={handleSearchSubmit}
-            className="relative hidden md:flex items-center gap-2 bg-[rgba(255,255,255,0.08)] rounded-full px-4 py-2 flex-1 max-w-xs"
+            className={`relative hidden h-9 items-center justify-end rounded-full border border-border/50 bg-card/55 shadow-[var(--shadow-card)] transition-[width,background-color,border-color] duration-300 ease-out md:flex ${
+              desktopSearchExpanded ? "w-[19rem] lg:w-[20rem]" : "w-9"
+            }`}
           >
-            <Search className="h-4 w-4 text-[rgba(255,255,255,0.5)]" />
             <input
+              ref={desktopSearchInputRef}
               type="search"
               placeholder="Search events..."
               value={searchQuery}
@@ -530,55 +610,46 @@ const Header = ({
                 }
               }}
               onKeyDown={handleSearchKeyDown}
-              className="bg-transparent outline-none text-sm text-white placeholder:text-[rgba(255,255,255,0.5)] w-full"
+              className={`min-w-0 bg-transparent pl-3 text-[13px] text-foreground outline-none placeholder:text-muted-foreground transition-all duration-300 ${
+                desktopSearchExpanded
+                  ? "w-full opacity-100"
+                  : "w-0 opacity-0 pointer-events-none"
+              }`}
+              tabIndex={desktopSearchExpanded ? 0 : -1}
             />
+            <button
+              type="button"
+              onClick={openDesktopSearch}
+              className="group/search flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted/70 hover:text-foreground"
+              aria-label="Search events"
+              aria-expanded={desktopSearchExpanded}
+            >
+              <Search className="h-4 w-4" />
+            </button>
             {renderSearchDropdown(false)}
           </form>
-        </div>
-
-        {/* Desktop Navigation - Show main nav for non-authenticated users or when forced */}
-        {(!resolvedIsAuthenticated || forceMainHeader) && (
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-[rgba(255,255,255,0.65)]">
-            <Link
-              to="/browse-events"
-              className="hover:text-white transition-colors duration-200"
-            >
-              Browse Events
-            </Link>
-            <Link
-              to="/host-events"
-              className="hover:text-white transition-colors duration-200"
-            >
-              Host Events
-            </Link>
-            <Link
-              to="/about"
-              className="hover:text-white transition-colors duration-200"
-            >
-              About
-            </Link>
-            <Link
-              to="/contact"
-              className="hover:text-white transition-colors duration-200"
-            >
-              Contact
-            </Link>
-          </nav>
-        )}
-
-        {/* Auth Buttons + Location */}
-        <div className="hidden md:flex items-center gap-3">
           <Button
             variant="ghost"
+            size="icon"
             onClick={handleDetectLocation}
             disabled={locationLoading || !isLocationSupported}
-            className="text-white border border-[rgba(255,255,255,0.18)] hover:bg-[rgba(255,255,255,0.08)] rounded-full px-4 gap-2"
-            title={!isLocationSupported ? "Location not available" : "Use your current location"}
+            aria-label={
+              locationLoading
+                ? "Detecting location"
+                : !isLocationSupported
+                  ? "Location unavailable"
+                  : "Near Me"
+            }
+            className={expandingActionButtonClass}
           >
-            <MapPin className="h-4 w-4" />
-            <span className="hidden lg:inline">
+            {locationLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <MapPin className="h-4 w-4" />
+            )}
+            <span aria-hidden="true" className={expandingActionLabelClass}>
               {locationLoading
-                ? "Detecting..."
+                ? "Detecting"
                 : !isLocationSupported
                   ? "Unavailable"
                   : "Near Me"}
@@ -590,43 +661,47 @@ const Header = ({
                 <>
                   <Button
                     variant="ghost"
+                    size="icon"
                     onClick={handleDashboardNav}
-                    className="text-white border border-[rgba(255,255,255,0.18)] hover:bg-[rgba(255,255,255,0.08)] rounded-full px-4"
+                    className={expandingActionButtonClass}
+                    aria-label="Dashboard"
                   >
-                    Dashboard
+                    <LayoutDashboard className="h-4 w-4" />
+                    <span aria-hidden="true" className={expandingActionLabelClass}>Dashboard</span>
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
-                        className="gap-2 text-white hover:bg-[rgba(255,255,255,0.08)] hover:text-white border border-[rgba(255,255,255,0.18)] rounded-full px-4"
+                        size="icon"
+                        className={expandingActionButtonClass}
+                        aria-label="Profile"
                       >
                         <User className="h-4 w-4" />
-                        Profile
-                        <ChevronDown className="h-4 w-4" />
+                        <span aria-hidden="true" className={expandingActionLabelClass}>Profile</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="end"
-                      className="w-52 rounded-xl border border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.08)] text-white shadow-[0_20px_50px_-20px_rgba(0,0,0,0.65)] backdrop-blur-xl"
+                      className={`w-52 ${dropdownContentClass}`}
                     >
                       <DropdownMenuItem
                         onClick={handleProfileNav}
-                        className="cursor-pointer hover:bg-[rgba(255,255,255,0.08)] focus:bg-[rgba(255,255,255,0.08)]"
+                        className={dropdownItemClass}
                       >
                         <User className="mr-2 h-4 w-4" />
                         Profile
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={handleBookingsNav}
-                        className="cursor-pointer hover:bg-[rgba(255,255,255,0.08)] focus:bg-[rgba(255,255,255,0.08)]"
+                        className={dropdownItemClass}
                       >
                         <Ticket className="mr-2 h-4 w-4" />
                         My Bookings
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={handleLogout}
-                        className="cursor-pointer text-[#FF5555] focus:text-[#FF5555] hover:bg-[rgba(255,255,255,0.08)]"
+                        className={`${dropdownItemClass} text-destructive focus:text-destructive`}
                       >
                         <LogOut className="mr-2 h-4 w-4" />
                         Logout
@@ -639,34 +714,35 @@ const Header = ({
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="gap-2 text-white hover:bg-[rgba(255,255,255,0.08)] hover:text-white border border-[rgba(255,255,255,0.18)] rounded-full px-4"
+                      size="icon"
+                      className={expandingActionButtonClass}
+                      aria-label="Profile"
                     >
                       <User className="h-4 w-4" />
-                      Profile
-                      <ChevronDown className="h-4 w-4" />
+                      <span aria-hidden="true" className={expandingActionLabelClass}>Profile</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"
-                    className="w-56 rounded-xl border border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.08)] text-white shadow-[0_20px_50px_-20px_rgba(0,0,0,0.65)] backdrop-blur-xl"
+                    className={`w-56 ${dropdownContentClass}`}
                   >
                     <DropdownMenuItem
                       onClick={() => navigate("/promoter/profile")}
-                      className="cursor-pointer hover:bg-[rgba(255,255,255,0.08)] focus:bg-[rgba(255,255,255,0.08)]"
+                      className={dropdownItemClass}
                     >
                       <User className="mr-2 h-4 w-4" />
                       My Profile
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => navigate("/promoter/dashboard")}
-                      className="cursor-pointer hover:bg-[rgba(255,255,255,0.08)] focus:bg-[rgba(255,255,255,0.08)]"
+                      className={dropdownItemClass}
                     >
                       <Settings className="mr-2 h-4 w-4" />
                       Dashboard
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={handleLogout}
-                      className="cursor-pointer text-[#FF5555] focus:text-[#FF5555] hover:bg-[rgba(255,255,255,0.08)]"
+                      className={`${dropdownItemClass} text-destructive focus:text-destructive`}
                     >
                       <LogOut className="mr-2 h-4 w-4" />
                       Logout
@@ -677,18 +753,24 @@ const Header = ({
                 <>
                   <Button
                     variant="ghost"
+                    size="icon"
                     onClick={() => navigate("/organizer/dashboard-v2")}
-                    className="text-white border border-[rgba(255,255,255,0.18)] hover:bg-[rgba(255,255,255,0.08)] rounded-full px-4"
+                    className={expandingActionButtonClass}
+                    aria-label="Dashboard"
                   >
-                    Dashboard
+                    <LayoutDashboard className="h-4 w-4" />
+                    <span aria-hidden="true" className={expandingActionLabelClass}>Dashboard</span>
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="ghost"
+                    size="icon"
                     onClick={handleLogout}
-                    className="bg-[#D60024] text-white hover:opacity-90 rounded-full px-4 border border-transparent"
+                    className={`${actionButtonClass} text-destructive hover:text-destructive`}
+                    aria-label="Logout"
+                    title="Logout"
                   >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Logout
+                    <LogOut className="h-4 w-4" />
+                    <span className={tooltipClass}>Logout</span>
                   </Button>
                 </>
               )}
@@ -698,14 +780,14 @@ const Header = ({
               <Button
                 variant="ghost"
                 onClick={handleAuthClick}
-                className="text-white hover:text-white border border-[rgba(255,255,255,0.18)] hover:bg-[rgba(255,255,255,0.08)] rounded-full px-4"
+                className="h-9 rounded-full border border-border/50 bg-card/45 px-3 text-[13px] text-foreground hover:bg-muted/70 hover:text-foreground"
               >
                 Login
               </Button>
               <Button
                 variant="default"
                 onClick={handleAuthClick}
-                className="rounded-full px-5 shadow-[0_12px_35px_-18px_rgba(0,0,0,0.7)]"
+                className="h-9 rounded-full px-4 text-[13px] shadow-[var(--shadow-card)]"
               >
                 Sign Up
               </Button>
@@ -714,7 +796,7 @@ const Header = ({
         </div>
 
         {/* Mobile Menu Toggle */}
-        <div className="md:hidden flex items-center gap-1">
+        <div className="flex items-center gap-2 md:hidden">
           <Button
             type="button"
             variant="ghost"
@@ -729,10 +811,10 @@ const Header = ({
               }
               setMobileMenuOpen(false);
             }}
-            className="h-10 w-10 rounded-full text-white hover:bg-[rgba(255,255,255,0.08)]"
+            className={mobileIconButtonClass}
             aria-label="Search events"
           >
-            <Search className="h-5 w-5" />
+            <Search className="h-4 w-4" />
           </Button>
           <Button
             type="button"
@@ -740,18 +822,17 @@ const Header = ({
             size="icon"
             onClick={handleDetectLocation}
             disabled={locationLoading || !isLocationSupported}
-            className="h-10 w-10 rounded-full text-white hover:bg-[rgba(255,255,255,0.08)]"
+            className={mobileIconButtonClass}
             aria-label="Near me"
-            title={!isLocationSupported ? "Location not available" : "Use your current location"}
           >
             {locationLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <MapPin className="h-5 w-5" />
+              <MapPin className="h-4 w-4" />
             )}
           </Button>
           <button
-            className="p-2 text-white"
+            className={`${mobileIconButtonClass} flex items-center justify-center`}
             onClick={() => {
               setMobileMenuOpen((current) => !current);
               setMobileSearchOpen(false);
@@ -759,7 +840,7 @@ const Header = ({
             }}
             aria-label="Toggle menu"
           >
-            {mobileMenuOpen ? <X /> : <Menu />}
+            {mobileMenuOpen ? <X className="h-4 w-4 transition-transform duration-200" /> : <Menu className="h-4 w-4 transition-transform duration-200" />}
           </button>
         </div>
       </div>
@@ -767,13 +848,13 @@ const Header = ({
       {mobileSearchOpen && (
         <div
           ref={mobileSearchRef}
-          className="md:hidden border-t border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.04)] px-4 py-3"
+          className="border-t border-border/45 bg-card/55 px-4 py-3 md:hidden"
         >
           <form
             onSubmit={handleSearchSubmit}
-            className="flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.08)] px-4 py-2"
+            className="flex items-center gap-2 rounded-full border border-border/50 bg-background/60 px-3 py-2"
           >
-            <Search className="h-4 w-4 shrink-0 text-[rgba(255,255,255,0.55)]" />
+            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
             <input
               type="search"
               placeholder="Search events..."
@@ -785,12 +866,17 @@ const Header = ({
                 }
               }}
               onKeyDown={handleSearchKeyDown}
-              className="w-full bg-transparent text-sm text-white outline-none placeholder:text-[rgba(255,255,255,0.55)]"
+              className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
             />
             <button
-              type="submit"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-black transition hover:opacity-90"
-              aria-label="Run search"
+              type="button"
+              onClick={() => {
+                if (normalizedSearchQuery.length >= HEADER_SEARCH_MIN_LENGTH) {
+                  setSearchOpen(true);
+                }
+              }}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primaryCTA text-primary-foreground transition hover:bg-primaryCTA-hover"
+              aria-label="Show search results"
             >
               <Search className="h-4 w-4" />
             </button>
@@ -801,163 +887,172 @@ const Header = ({
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-background">
-            <nav className="container py-4 flex flex-col gap-2">
-              {(!resolvedIsAuthenticated || forceMainHeader || isAttendee) && (
-                <>
-                  <Link
-                    to="/browse-events"
-                    className={mobileMenuLinkClass}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Browse Events
-                  </Link>
-                  <Link
-                    to="/host-events"
-                    className={mobileMenuLinkClass}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Host Events
-                  </Link>
-                  <Link
-                    to="/about"
-                    className={mobileMenuLinkClass}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    About
-                  </Link>
-                  <Link
-                    to="/contact"
-                    className={mobileMenuLinkClass}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Contact
-                  </Link>
-              </>
-            )}
+        <div className="absolute inset-x-0 top-full z-50 md:hidden">
+          <div className="mx-auto max-w-md px-3 pt-2">
+            <nav className="animate-in fade-in slide-in-from-top-2 max-h-[calc(100vh-4.5rem)] overflow-y-auto rounded-[1.25rem] border border-border/45 bg-card/95 p-3 shadow-[var(--shadow-elegant)] backdrop-blur-xl duration-200">
+              <div className="flex flex-col gap-3">
+                {(!resolvedIsAuthenticated || forceMainHeader || isAttendee) && (
+                  <div className={mobileSectionClass}>
+                    <div className={mobileSectionLabelClass}>Navigation</div>
+                    <div className="space-y-1">
+                      <Link
+                        to="/browse-events"
+                        className={mobileMenuLinkClass}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Browse Events
+                      </Link>
+                      <Link
+                        to="/host-events"
+                        className={mobileMenuLinkClass}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Host Events
+                      </Link>
+                      <Link
+                        to="/about"
+                        className={mobileMenuLinkClass}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        About
+                      </Link>
+                      <Link
+                        to="/contact"
+                        className={mobileMenuLinkClass}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Contact
+                      </Link>
+                    </div>
+                  </div>
+                )}
 
-            {resolvedIsAuthenticated ? (
-              <>
-                {isAttendee ? (
+                {resolvedIsAuthenticated ? (
                   <>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        handleProfileNav();
-                        setMobileMenuOpen(false);
-                      }}
-                      className={mobileMenuItemClass}
-                    >
-                      <User className="mr-2 h-4 w-4" />
-                      Profile
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        handleBookingsNav();
-                        setMobileMenuOpen(false);
-                      }}
-                      className={mobileMenuItemClass}
-                    >
-                      <Ticket className="mr-2 h-4 w-4" />
-                      My Bookings
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        handleDashboardNav();
-                        setMobileMenuOpen(false);
-                      }}
-                      className={mobileMenuItemClass}
-                    >
-                      <Settings className="mr-2 h-4 w-4" />
-                      Dashboard
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        handleLogout();
-                        setMobileMenuOpen(false);
-                      }}
-                      className={`${mobileMenuItemClass} text-[#FF5555] hover:text-[#FF5555]`}
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Logout
-                    </Button>
-                  </>
-                ) : isPromoter ? (
-                  <>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        navigate("/promoter/profile");
-                        setMobileMenuOpen(false);
-                      }}
-                      className={mobileMenuItemClass}
-                    >
-                      <User className="mr-2 h-4 w-4" />
-                      My Profile
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        navigate("/promoter/dashboard");
-                        setMobileMenuOpen(false);
-                      }}
-                      className={mobileMenuItemClass}
-                    >
-                      <Settings className="mr-2 h-4 w-4" />
-                      Dashboard
-                    </Button>
+                    <div className={mobileSectionClass}>
+                      <div className={mobileSectionLabelClass}>Account</div>
+                      <div className="space-y-1">
+                        {isAttendee ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              onClick={() => {
+                                handleProfileNav();
+                                setMobileMenuOpen(false);
+                              }}
+                              className={mobileMenuItemClass}
+                            >
+                              <User className="h-4 w-4" />
+                              Profile
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              onClick={() => {
+                                handleBookingsNav();
+                                setMobileMenuOpen(false);
+                              }}
+                              className={mobileMenuItemClass}
+                            >
+                              <Ticket className="h-4 w-4" />
+                              My Bookings
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              onClick={() => {
+                                handleDashboardNav();
+                                setMobileMenuOpen(false);
+                              }}
+                              className={mobileMenuItemClass}
+                            >
+                              <Settings className="h-4 w-4" />
+                              Dashboard
+                            </Button>
+                          </>
+                        ) : isPromoter ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              onClick={() => {
+                                navigate("/promoter/profile");
+                                setMobileMenuOpen(false);
+                              }}
+                              className={mobileMenuItemClass}
+                            >
+                              <User className="h-4 w-4" />
+                              My Profile
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              onClick={() => {
+                                navigate("/promoter/dashboard");
+                                setMobileMenuOpen(false);
+                              }}
+                              className={mobileMenuItemClass}
+                            >
+                              <Settings className="h-4 w-4" />
+                              Dashboard
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            onClick={() => {
+                              navigate("/organizer/dashboard-v2");
+                              setMobileMenuOpen(false);
+                            }}
+                            className={mobileMenuItemClass}
+                          >
+                            <Settings className="h-4 w-4" />
+                            Dashboard
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="px-1 pb-1 pt-1">
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          handleLogout();
+                          setMobileMenuOpen(false);
+                        }}
+                        className={mobileLogoutButtonClass}
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                      </Button>
+                    </div>
                   </>
                 ) : (
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      navigate("/organizer/dashboard-v2");
-                      setMobileMenuOpen(false);
-                    }}
-                    className={mobileMenuItemClass}
-                  >
-                    Dashboard
-                  </Button>
+                  <div className={mobileSectionClass}>
+                    <div className={mobileSectionLabelClass}>Account</div>
+                    <div className="space-y-1">
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          handleAuthClick();
+                          setMobileMenuOpen(false);
+                        }}
+                        className={mobileMenuItemClass}
+                      >
+                        Login
+                      </Button>
+                      <Button
+                        variant="default"
+                        onClick={() => {
+                          handleAuthClick();
+                          setMobileMenuOpen(false);
+                        }}
+                        className="h-11 w-full justify-start rounded-xl px-3 text-left text-sm font-medium"
+                      >
+                        Sign Up
+                      </Button>
+                    </div>
+                  </div>
                 )}
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    handleLogout();
-                    setMobileMenuOpen(false);
-                  }}
-                  className={mobileMenuItemClass}
-                >
-                  Logout
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    handleAuthClick();
-                    setMobileMenuOpen(false);
-                  }}
-                  className={mobileMenuItemClass}
-                >
-                  Login
-                </Button>
-                <Button
-                  variant="default"
-                  onClick={() => {
-                    handleAuthClick();
-                    setMobileMenuOpen(false);
-                  }}
-                  className={mobileMenuItemClass}
-                >
-                  Sign Up
-                </Button>
-              </>
-            )}
-          </nav>
+              </div>
+            </nav>
+          </div>
         </div>
       )}
     </header>
