@@ -802,6 +802,21 @@ export async function createTicket(ticketData) {
     "table": "TABLE_TICKET",
     "group-pass": "GROUP_TICKET"
   };
+  const ticketType = typeMap[ticketData.type] || "STANDARD_TICKET";
+  const rawPrice = String(ticketData.price ?? "").trim();
+  const numericPrice = Number(rawPrice);
+
+  if (rawPrice === "" || !Number.isFinite(numericPrice)) {
+    throw new Error("Ticket price must be a valid number");
+  }
+
+  if (ticketType === "GUESTLIST") {
+    if (numericPrice < 0) {
+      throw new Error("Guest List price must be 0 or more");
+    }
+  } else if (numericPrice <= 0) {
+    throw new Error("This ticket type must have a price greater than 0");
+  }
 
   // Map entry type from frontend to backend format
   const entryTypeMap = {
@@ -812,9 +827,9 @@ export async function createTicket(ticketData) {
   // Prepare the request body according to API spec
   const payload = {
     name: ticketData.ticketName.trim(),
-    type: typeMap[ticketData.type] || "STANDARD_TICKET",
+    type: ticketType,
     entryType: entryTypeMap[ticketData.ticketCategory] || "SINGLE_ENTRY",
-    price: parseFloat(ticketData.price) || 0,
+    price: numericPrice,
     totalQty: parseInt(ticketData.quantity) || 0,
     info: ticketData.description || "",
     eventId: ticketData.eventId, // Backend event ID (UUID)
@@ -836,6 +851,96 @@ export async function createTicket(ticketData) {
   });
 
   console.log("✅ Ticket created successfully:", response);
+  return response;
+}
+
+/**
+ * Update ticket - Step 3: Tickets
+ *
+ * API Endpoint: PUT /api/ticket/update-ticket/:ticketId
+ *
+ * @param {string} ticketId - Ticket ID to update
+ * @param {Object} ticketData - Ticket data to send
+ * @returns {Promise<Object>} Response with updated ticket
+ */
+export async function updateTicket(ticketId, ticketData) {
+  if (!ticketId) {
+    throw new Error("Ticket ID is required to update a ticket");
+  }
+
+  const url = buildUrl(`/api/ticket/update-ticket/${ticketId}`);
+
+  console.log("ðŸŽ« Updating Ticket");
+  console.log("ðŸ“‹ Ticket ID:", ticketId);
+  console.log("ðŸ“‹ Ticket Data:", ticketData);
+
+  if (!ticketData.ticketName || ticketData.ticketName.trim() === "") {
+    throw new Error("Ticket name is required");
+  }
+
+  if (!ticketData.quantity || parseInt(ticketData.quantity) <= 0) {
+    throw new Error("Valid ticket quantity is required");
+  }
+
+  const typeMap = {
+    "vip-guest": "GUESTLIST",
+    "standard": "STANDARD_TICKET",
+    "table": "TABLE_TICKET",
+    "group-pass": "GROUP_TICKET"
+  };
+  const ticketType = typeMap[ticketData.type] || "STANDARD_TICKET";
+  const rawPrice = String(ticketData.price ?? "").trim();
+  const numericPrice = Number(rawPrice);
+
+  if (rawPrice === "" || !Number.isFinite(numericPrice)) {
+    throw new Error("Ticket price must be a valid number");
+  }
+
+  if (ticketType === "GUESTLIST") {
+    if (numericPrice < 0) {
+      throw new Error("Guest List price must be 0 or more");
+    }
+  } else if (numericPrice <= 0) {
+    throw new Error("This ticket type must have a price greater than 0");
+  }
+
+  const entryTypeMap = {
+    "Single": "SINGLE_ENTRY",
+    "Couple": "COUPLE_ENTRY"
+  };
+
+  const payload = {
+    name: ticketData.ticketName.trim(),
+    type: ticketType,
+    entryType: entryTypeMap[ticketData.ticketCategory] || "SINGLE_ENTRY",
+    price: numericPrice,
+    totalQty: parseInt(ticketData.quantity) || 0,
+    info: ticketData.description || "",
+    comingSoon: ticketData.comingSoon || false,
+    onGroundOnly: ticketData.onsiteOnly || false,
+    maxPerUser: parseInt(ticketData.maxPerCustomer) || 10,
+    gstRate: Number(ticketData.gstRate ?? 18.0),
+  };
+
+  if (ticketData.purchaseExpiry) {
+    payload.purchaseExpiry = ticketData.purchaseExpiry;
+  }
+
+  if (ticketData.gstType) {
+    payload.gstType = ticketData.gstType;
+  }
+
+  console.log("ðŸ“¤ Sending ticket update payload:", JSON.stringify(payload, null, 2));
+
+  const response = await apiFetch(url, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  console.log("âœ… Ticket updated successfully:", response);
   return response;
 }
 

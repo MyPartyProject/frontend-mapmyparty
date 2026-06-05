@@ -1,4 +1,4 @@
- import { useState } from "react";
+ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,10 +21,12 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Ticket } from "lucide-react";
 
-const TicketTypeModal = ({ open, onClose, ticketType, onSave }) => {
+const TicketTypeModal = ({ open, onClose, ticketType, onSave, initialTicket = null }) => {
+  const isGuestListTicket = ticketType === "vip-guest";
+  const isEditing = Boolean(initialTicket);
   const [ticketName, setTicketName] = useState("");
   const [ticketCategory, setTicketCategory] = useState("");
-  const [price, setPrice] = useState("");
+  const [price, setPrice] = useState(isGuestListTicket ? "0" : "");
   const [quantity, setQuantity] = useState("");
   const [description, setDescription] = useState("");
   const [maxPerCustomer, setMaxPerCustomer] = useState("");
@@ -34,20 +36,54 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave }) => {
   const [groupQuantity, setGroupQuantity] = useState("");
   const [tableQuantity, setTableQuantity] = useState("");
 
+  useEffect(() => {
+    if (!open) return;
+
+    setTicketName(initialTicket?.ticketName || "");
+    setTicketCategory(initialTicket?.ticketCategory || "");
+    setPrice(
+      initialTicket?.price !== undefined && initialTicket?.price !== null
+        ? String(initialTicket.price)
+        : isGuestListTicket
+          ? "0"
+          : ""
+    );
+    setQuantity(
+      initialTicket?.quantity !== undefined && initialTicket?.quantity !== null
+        ? String(initialTicket.quantity)
+        : initialTicket?.available !== undefined && initialTicket?.available !== null
+          ? String(initialTicket.available)
+          : ""
+    );
+    setDescription(initialTicket?.description || "");
+    setMaxPerCustomer(
+      initialTicket?.maxPerCustomer !== undefined && initialTicket?.maxPerCustomer !== null
+        ? String(initialTicket.maxPerCustomer)
+        : ""
+    );
+    setComingSoon(Boolean(initialTicket?.comingSoon));
+    setOnsiteOnly(Boolean(initialTicket?.onsiteOnly));
+    setTicketEntryType(initialTicket?.ticketEntryType || "single");
+    setGroupQuantity(initialTicket?.groupQuantity ? String(initialTicket.groupQuantity) : "");
+    setTableQuantity(initialTicket?.tableQuantity ? String(initialTicket.tableQuantity) : "");
+  }, [open, initialTicket, isGuestListTicket]);
+
   const getTitle = () => {
+    const actionLabel = isEditing ? "Edit" : "Add";
+
     switch (ticketType) {
       case "vip-guest":
         return (
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-primary" />
-            <span>Add VIP Guest List</span>
+            <span>{actionLabel} VIP Guest List</span>
           </div>
         );
       case "standard":
         return (
           <div className="flex items-center gap-2">
             <Ticket className="w-5 h-5 text-primary" />
-            <span>Add Standard Ticket</span>
+            <span>{actionLabel} Standard Ticket</span>
           </div>
         );
       case "table":
@@ -56,21 +92,21 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave }) => {
             <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
               <span className="text-xs font-bold text-primary">T</span>
             </div>
-            <span>Add Table Ticket</span>
+            <span>{actionLabel} Table Ticket</span>
           </div>
         );
       case "group-pass":
         return (
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-primary" />
-            <span>Add Group Pass</span>
+            <span>{actionLabel} Group Pass</span>
           </div>
         );
       default:
         return (
           <div className="flex items-center gap-2">
             <Ticket className="w-5 h-5 text-primary" />
-            <span>Add Ticket</span>
+            <span>{actionLabel} Ticket</span>
           </div>
         );
     }
@@ -78,12 +114,21 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave }) => {
 
   const handleSave = () => {
     // Basic validation
-    if (!ticketName) {
+    if (!ticketName.trim()) {
       alert("Please enter a ticket name");
       return;
     }
-    if (ticketType !== "vip-guest" && !price) {
-      alert("Please enter a price");
+    const numericPrice = Number(String(price).trim());
+    if (String(price).trim() === "" || !Number.isFinite(numericPrice)) {
+      alert("Please enter a valid price");
+      return;
+    }
+    if (isGuestListTicket && numericPrice < 0) {
+      alert("Guest List price must be 0 or more");
+      return;
+    }
+    if (!isGuestListTicket && numericPrice <= 0) {
+      alert("This ticket type must have a price greater than 0");
       return;
     }
     if (!quantity) {
@@ -94,7 +139,7 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave }) => {
     const data = {
       ticketName,
       ticketCategory,
-      price: ticketType === "vip-guest" ? "0" : price,
+      price: String(numericPrice),
       quantity,
       description,
       maxPerCustomer: maxPerCustomer || "10", // Default to 10 if not set
@@ -104,6 +149,12 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave }) => {
       groupQuantity: groupQuantity || "1",
       tableQuantity: tableQuantity || "1",
       type: ticketType,
+      id: initialTicket?.id,
+      publicId: initialTicket?.publicId,
+      soldQty: initialTicket?.soldQty,
+      purchaseExpiry: initialTicket?.purchaseExpiry,
+      gstType: initialTicket?.gstType,
+      gstRate: initialTicket?.gstRate,
     };
     
     onSave(data);
@@ -116,7 +167,7 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave }) => {
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">{getTitle()}</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            Configure the details for this ticket type
+            {isEditing ? "Edit the details for this ticket type" : "Configure the details for this ticket type"}
           </DialogDescription>
         </DialogHeader>
 
@@ -198,23 +249,22 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave }) => {
                   </div>
                 )}
 
-                {ticketType !== "vip-guest" && (
-                  <div>
-                    <Label htmlFor="price" className="font-medium">Price (₹) *</Label>
-                    <div className="relative mt-1">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
-                      <Input
-                        id="price"
-                        type="number"
-                        min="0"
-                        placeholder="499"
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                        className="pl-8"
-                      />
-                    </div>
+                <div>
+                  <Label htmlFor="price" className="font-medium">Price (₹) *</Label>
+                  <div className="relative mt-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                    <Input
+                      id="price"
+                      type="number"
+                      min={isGuestListTicket ? "0" : "1"}
+                      step="0.01"
+                      placeholder={isGuestListTicket ? "0" : "499"}
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      className="pl-8"
+                    />
                   </div>
-                )}
+                </div>
 
                 <div>
                   <Label htmlFor="quantity" className="font-medium">Total Tickets Available *</Label>
@@ -306,7 +356,7 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave }) => {
             onClick={handleSave}
             className="px-6 h-10 rounded-lg font-medium bg-primary hover:bg-primary/90 transition-colors text-white"
           >
-            Save Ticket
+            {isEditing ? "Update Ticket" : "Save Ticket"}
           </Button>
           </div>
         </div>

@@ -62,7 +62,7 @@ import eventMusic from "@/assets/event-music.jpg";
 import TicketTypeModal from "@/components/TicketTypeModal";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { updateEventStep1, updateEventStep2, uploadFlyerImage, deleteFlyerImage, uploadGalleryImages, deleteGalleryImage, generateEventId, createTicket, deleteTicket, createVenue, updateVenue, updateEventStep6, uploadArtistImage, deleteArtist, createEventStep1, persistFlyerUrl, uploadDraftImage, persistGalleryUrls, deleteDraftCloudinaryImage } from "@/services/eventService";
+import { updateEventStep1, updateEventStep2, uploadFlyerImage, deleteFlyerImage, uploadGalleryImages, deleteGalleryImage, generateEventId, createTicket, updateTicket, deleteTicket, createVenue, updateVenue, updateEventStep6, uploadArtistImage, deleteArtist, createEventStep1, persistFlyerUrl, uploadDraftImage, persistGalleryUrls, deleteDraftCloudinaryImage } from "@/services/eventService";
 import { apiFetch } from "@/config/api";
 import { TEMPLATE_CONFIGS, DETAIL_TEMPLATE_CONFIGS, getTemplateConfig, mapTemplateId, mapTemplateNameToId } from "@/config/templates";
 import { Calendar } from "@/components/ui/calendar";
@@ -177,6 +177,7 @@ const CreateEvent = () => {
   const [showLoading, setShowLoading] = useState(false); // Control loading overlay visibility
   const [ticketModalOpen, setTicketModalOpen] = useState(false);
   const [selectedTicketType, setSelectedTicketType] = useState(null);
+  const [editingTicketIndex, setEditingTicketIndex] = useState(null);
   const [savedTickets, setSavedTickets] = useState([]);
   const [createdTicketIds, setCreatedTicketIds] = useState([]); // Track created tickets
   const [eventId, setEventId] = useState(null);
@@ -205,6 +206,8 @@ const CreateEvent = () => {
   const [originalArtists, setOriginalArtists] = useState([]);
   const [sponsorUploadIndex, setSponsorUploadIndex] = useState(null);
   const [sponsorSaving, setSponsorSaving] = useState(false);
+  const [sponsorDialogOpen, setSponsorDialogOpen] = useState(false);
+  const [activeSponsorIndex, setActiveSponsorIndex] = useState(null);
   const [isSponsored, setIsSponsored] = useState(false);
   const [originalIsSponsored, setOriginalIsSponsored] = useState(false);
   const [publishState, setPublishState] = useState("DRAFT");
@@ -340,8 +343,11 @@ const CreateEvent = () => {
     setLoadingMessage("");
     setTicketModalOpen(false);
     setSelectedTicketType(null);
+    setEditingTicketIndex(null);
     setShowEmojiPicker(false);
     setAdvisoryDialogOpen(false);
+    setSponsorDialogOpen(false);
+    setActiveSponsorIndex(null);
     setArtistDialogOpen(false);
     setActiveArtistIndex(null);
     setStartCalendarOpen(false);
@@ -2726,7 +2732,26 @@ const CreateEvent = () => {
   };
 
   const openTicketModal = (type) => {
+    setEditingTicketIndex(null);
     setSelectedTicketType(type);
+    setTicketModalOpen(true);
+  };
+
+  const resolveTicketModalType = (ticket = {}) => {
+    if (["vip-guest", "standard", "table", "group-pass"].includes(ticket.type)) {
+      return ticket.type;
+    }
+
+    const ticketLabel = `${ticket.ticketEntryType || ticket.ticketCategory || ""}`.toLowerCase();
+    if (ticketLabel.includes("guest")) return "vip-guest";
+    if (ticketLabel.includes("table")) return "table";
+    if (ticketLabel.includes("group")) return "group-pass";
+    return "standard";
+  };
+
+  const openEditTicketModal = (ticket, index) => {
+    setEditingTicketIndex(index);
+    setSelectedTicketType(resolveTicketModalType(ticket));
     setTicketModalOpen(true);
   };
 
@@ -2832,12 +2857,55 @@ const CreateEvent = () => {
     });
   };
 
-  const addSponsorRow = () => {
-    setSponsors((prev) => [...prev, { ...emptySponsor }]);
+  const hasSponsorContent = (sponsor = {}) =>
+    Boolean(
+      (sponsor.name || "").trim() ||
+      (sponsor.logoUrl || sponsor.logo || "").trim() ||
+      (sponsor.websiteUrl || sponsor.website || sponsor.link || "").trim()
+    );
+
+  const openSponsorEditor = (index) => {
+    setActiveSponsorIndex(index);
+    setSponsorDialogOpen(true);
   };
 
-  const removeSponsorRow = (index) => {
-    setSponsors((prev) => (prev.length === 1 ? prev : prev.filter((_, i) => i !== index)));
+  const addSponsorFromSection = () => {
+    setIsSponsored(true);
+    const reusableIndex = sponsors.findIndex((sponsor) => !hasSponsorContent(sponsor));
+
+    if (reusableIndex >= 0) {
+      openSponsorEditor(reusableIndex);
+      return;
+    }
+
+    const nextIndex = sponsors.length;
+    setSponsors((prev) => [...prev, { ...emptySponsor }]);
+    openSponsorEditor(nextIndex);
+  };
+
+  const removeSponsorFromSection = (index) => {
+    const sponsorToRemove = sponsors[index];
+    if (!sponsorToRemove) return;
+
+    setSponsors((prev) => {
+      const nextSponsors = prev.filter((_, sponsorIndex) => sponsorIndex !== index);
+      if (nextSponsors.length === 0) return [{ ...emptySponsor }];
+      if (nextSponsors.length === 1) return [{ ...nextSponsors[0], isPrimary: true }];
+      if (nextSponsors.some((sponsor) => sponsor.isPrimary)) return nextSponsors;
+      return nextSponsors.map((sponsor, sponsorIndex) => ({
+        ...sponsor,
+        isPrimary: sponsorIndex === 0,
+      }));
+    });
+
+    if (activeSponsorIndex === index) {
+      setSponsorDialogOpen(false);
+      setActiveSponsorIndex(null);
+    } else if (activeSponsorIndex !== null && activeSponsorIndex > index) {
+      setActiveSponsorIndex((prev) => prev - 1);
+    }
+
+    toast.success("Sponsor removed.");
   };
 
   const hasArtistContent = (artist = {}) =>
@@ -2999,8 +3067,50 @@ const CreateEvent = () => {
 
   const handleSaveTicket = async (ticketData) => {
     try {
-      setLoadingMessage("Creating ticket...");
+      const isEditingTicket = editingTicketIndex !== null && savedTickets[editingTicketIndex];
+      setLoadingMessage(isEditingTicket ? "Updating ticket..." : "Creating ticket...");
       setShowLoading(true);
+
+      if (isEditingTicket) {
+        const existingTicket = savedTickets[editingTicketIndex];
+        const ticketWithEvent = {
+          ...existingTicket,
+          ...ticketData,
+          eventId: backendEventId,
+        };
+
+        let updatedTicket = {
+          ...existingTicket,
+          ...ticketData,
+        };
+
+        if (existingTicket.id) {
+          const response = await updateTicket(existingTicket.id, ticketWithEvent);
+          const responseTicket = response?.data?.ticket || response?.data || response?.ticket || response;
+          const normalizedResponseTicket = normalizeTicketForEdit(responseTicket);
+
+          updatedTicket = {
+            ...existingTicket,
+            ...ticketData,
+            ...(normalizedResponseTicket || {}),
+            id: existingTicket.id,
+            publicId: normalizedResponseTicket?.publicId || existingTicket.publicId,
+            groupQuantity: ticketData.groupQuantity,
+            tableQuantity: ticketData.tableQuantity,
+          };
+        }
+
+        const updatedTickets = savedTickets.map((ticket, index) =>
+          index === editingTicketIndex ? updatedTicket : ticket
+        );
+
+        setSavedTickets(updatedTickets);
+        localStorage.setItem(`event_${backendEventId}_tickets`, JSON.stringify(updatedTickets));
+        setEditingTicketIndex(null);
+
+        toast.success("Ticket updated successfully!");
+        return;
+      }
       
       // Add event ID to ticket data
       const ticketWithEvent = {
@@ -3028,10 +3138,11 @@ const CreateEvent = () => {
       
       toast.success("Ticket created successfully!");
     } catch (error) {
-      console.error("Error creating ticket:", error);
-      toast.error(error.message || "Failed to create ticket. Please try again.");
+      console.error("Error saving ticket:", error);
+      toast.error(error.message || "Failed to save ticket. Please try again.");
     } finally {
       setShowLoading(false);
+      setLoadingMessage("");
     }
   };
 
@@ -4068,174 +4179,319 @@ const CreateEvent = () => {
               )}
 
               {/* Step 5: Sponsor */}
-              {currentStep === 5 && (
-                <div className="space-y-6">
-                  <div className="flex flex-col gap-4 rounded-xl border border-border/50 bg-background/60 p-5">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold text-foreground">Is this event sponsored?</p>
-                        <p className="text-xs text-muted-foreground">
-                          Toggle “Yes” to add sponsor details required by the backend (name required; optional logo URL, website).
-                        </p>
+              {currentStep === 5 && (() => {
+                const sponsorCards = sponsors
+                  .map((sponsor, index) => ({ sponsor, index }))
+                  .filter(({ sponsor }) => hasSponsorContent(sponsor));
+                const activeSponsor = activeSponsorIndex !== null ? sponsors[activeSponsorIndex] : null;
+                const activeSponsorLogo = activeSponsor?.logoUrl || activeSponsor?.logo || "";
+                const activeFieldId = activeSponsorIndex ?? "sponsor";
+
+                return (
+                  <div className="space-y-5">
+                    <div className="flex flex-col gap-4 rounded-xl border border-border/50 bg-background/60 p-5">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold text-foreground">Is this event sponsored?</p>
+                          <p className="text-xs text-muted-foreground">
+                            Toggle Yes to add sponsor details required by the backend.
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs uppercase tracking-[0.08em] text-muted-foreground">No</span>
+                          <Switch
+                            checked={isSponsored}
+                            onCheckedChange={(checked) => {
+                              setIsSponsored(checked);
+                              if (!checked) {
+                                setSponsorDialogOpen(false);
+                                setActiveSponsorIndex(null);
+                              }
+                            }}
+                          />
+                          <span className="text-xs uppercase tracking-[0.08em] text-muted-foreground">Yes</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs uppercase tracking-[0.08em] text-muted-foreground">No</span>
-                        <Switch checked={isSponsored} onCheckedChange={setIsSponsored} />
-                        <span className="text-xs uppercase tracking-[0.08em] text-muted-foreground">Yes</span>
-                      </div>
+                      {!isSponsored && (
+                        <div className="text-xs text-muted-foreground">
+                          Sponsors are disabled. Click Next to continue or toggle Yes to add sponsor information.
+                        </div>
+                      )}
                     </div>
-                    {!isSponsored && (
-                      <div className="text-xs text-muted-foreground">
-                        Sponsors are disabled. Click “Next” to continue or toggle “Yes” to add sponsor information.
-                      </div>
+
+                    {isSponsored && (
+                      <>
+                        <div className="flex flex-col gap-4 rounded-xl border border-border/50 bg-background/40 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Step 5</p>
+                            <h3 className="mt-2 text-2xl font-bold text-foreground">Sponsor</h3>
+                            <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+                              Highlight event partners with compact sponsor profiles. Open a card to update the same sponsor details.
+                            </p>
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="group h-11 shrink-0 rounded-[10px] border-border bg-background/60 px-4 text-foreground shadow-[var(--shadow-card)] hover:border-ring/60 hover:bg-muted hover:text-foreground"
+                            onClick={addSponsorFromSection}
+                          >
+                            <Plus className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:rotate-90" />
+                            Add Sponsor
+                          </Button>
+                        </div>
+
+                        {sponsorCards.length > 0 ? (
+                          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                            {sponsorCards.map(({ sponsor, index }) => {
+                              const sponsorLogo = sponsor.logoUrl || sponsor.logo || "";
+                              const sponsorWebsite = sponsor.websiteUrl || sponsor.website || sponsor.link || "";
+                              const isPrimarySponsor = Boolean(sponsor.isPrimary) || sponsorCards.length === 1;
+
+                              return (
+                                <article
+                                  key={`sponsor-card-${index}`}
+                                  className="group relative overflow-hidden rounded-xl border border-border/50 bg-card/75 p-3 shadow-[var(--shadow-card)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-ring/50 hover:shadow-[var(--shadow-elegant)]"
+                                >
+                                  <div className="theme-gradient-primary pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-10" />
+                                  <div className="relative flex min-w-0 items-center gap-3">
+                                    <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-border/50 bg-background/60">
+                                      {sponsorLogo ? (
+                                        <img src={sponsorLogo} alt={`${sponsor.name || "Sponsor"} logo`} className="h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-105" />
+                                      ) : (
+                                        <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                                          <ImageIcon className="h-7 w-7" />
+                                        </div>
+                                      )}
+                                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-background/80 to-transparent opacity-80" />
+                                    </div>
+
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0">
+                                          <p className="truncate text-sm font-semibold text-foreground">{sponsor.name || "New sponsor"}</p>
+                                          <p className="mt-1 text-xs text-muted-foreground">Sponsor {index + 1}</p>
+                                        </div>
+                                        <div className="flex shrink-0 items-center gap-1">
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+                                            onClick={() => openSponsorEditor(index)}
+                                            title="Edit sponsor"
+                                            aria-label={`Edit ${sponsor.name || `sponsor ${index + 1}`}`}
+                                          >
+                                            <Pencil className="h-3.5 w-3.5" />
+                                          </Button>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                            onClick={() => removeSponsorFromSection(index)}
+                                            title="Remove sponsor"
+                                            aria-label={`Remove ${sponsor.name || `sponsor ${index + 1}`}`}
+                                          >
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                          </Button>
+                                        </div>
+                                      </div>
+
+                                      <div className="mt-3 space-y-2 text-xs text-muted-foreground">
+                                        <div className="flex min-w-0 items-center gap-2">
+                                          <Globe className="h-3.5 w-3.5 shrink-0 text-accent" />
+                                          <span className="truncate">{sponsorWebsite || "Website optional"}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <Check className="h-3.5 w-3.5 shrink-0 text-accent" />
+                                          <span className="truncate">{isPrimarySponsor ? "Primary sponsor" : "Supporting sponsor"}</span>
+                                        </div>
+                                      </div>
+
+                                      <div className="mt-3 flex flex-wrap gap-2">
+                                        <Badge className="rounded-full border-border/50 bg-background/50 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                                          {sponsorLogo ? "Logo ready" : "No logo"}
+                                        </Badge>
+                                        <Badge className="rounded-full border-border/50 bg-background/50 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                                          {sponsorWebsite ? "Website linked" : "Website optional"}
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </article>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="rounded-xl border border-dashed border-border/60 bg-background/40 p-6 text-center shadow-[var(--shadow-card)]">
+                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-border/50 bg-card text-muted-foreground">
+                              <ImageIcon className="h-5 w-5" />
+                            </div>
+                            <p className="mt-3 text-sm font-semibold text-foreground">No sponsors added yet</p>
+                            <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-muted-foreground">
+                              Add sponsors as compact profiles, then use Save Section when partner details are ready.
+                            </p>
+                          </div>
+                        )}
+
+                        <Dialog
+                          open={sponsorDialogOpen && Boolean(activeSponsor)}
+                          onOpenChange={(open) => {
+                            setSponsorDialogOpen(open);
+                            if (!open) setActiveSponsorIndex(null);
+                          }}
+                        >
+                          {activeSponsor && (
+                            <DialogContent className="max-h-[90vh] max-w-3xl overflow-hidden border-border/50 bg-popover/95 p-0 text-foreground shadow-[var(--shadow-elegant)] backdrop-blur-xl">
+                              <div className="max-h-[86vh] overflow-y-auto">
+                                <div className="relative overflow-hidden border-b border-border/50 p-5 sm:p-6">
+                                  <div className="theme-gradient-primary pointer-events-none absolute inset-0 opacity-10" />
+                                  <DialogHeader className="relative">
+                                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                      Sponsor profile
+                                    </p>
+                                    <DialogTitle className="mt-2 text-2xl text-foreground">
+                                      {activeSponsor.name || "Add sponsor details"}
+                                    </DialogTitle>
+                                    <DialogDescription className="text-muted-foreground">
+                                      Update the sponsor information shown in this event partner section.
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                </div>
+
+                                <div className="space-y-5 p-5 sm:p-6">
+                                  <div className="grid gap-4 md:grid-cols-2">
+                                    <div className="space-y-2.5">
+                                      <Label htmlFor={`sponsor-name-${activeFieldId}`} className="text-[13px] font-medium text-foreground">Sponsor Name *</Label>
+                                      <Input
+                                        id={`sponsor-name-${activeFieldId}`}
+                                        placeholder="BrandCo"
+                                        value={activeSponsor.name}
+                                        className={fieldClass}
+                                        onChange={(e) => handleSponsorChange(activeSponsorIndex, "name", e.target.value)}
+                                      />
+                                    </div>
+
+                                    <div className="space-y-2.5">
+                                      <Label htmlFor={`sponsor-website-${activeFieldId}`} className="text-[13px] font-medium text-foreground">Website URL (Optional)</Label>
+                                      <Input
+                                        id={`sponsor-website-${activeFieldId}`}
+                                        type="url"
+                                        placeholder="https://brandco.example.com"
+                                        value={activeSponsor.websiteUrl}
+                                        className={fieldClass}
+                                        onChange={(e) => handleSponsorChange(activeSponsorIndex, "websiteUrl", e.target.value)}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="rounded-xl border border-border/50 bg-background/40 p-4">
+                                    <div className="mb-3 flex items-center justify-between gap-3">
+                                      <div>
+                                        <Label htmlFor={`sponsor-logo-${activeFieldId}`} className="text-[13px] font-medium text-foreground">Sponsor Logo</Label>
+                                        <p className="mt-1 text-xs text-muted-foreground">PNG / SVG with transparent background preferred</p>
+                                      </div>
+                                      {activeSponsorLogo && (
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-9 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                          onClick={() => handleRemoveSponsorLogo(activeSponsorIndex)}
+                                        >
+                                          <X className="mr-2 h-3.5 w-3.5" />
+                                          Remove
+                                        </Button>
+                                      )}
+                                    </div>
+
+                                    <div className="grid gap-4 sm:grid-cols-[12rem_1fr]">
+                                      <div className="relative aspect-square overflow-hidden rounded-xl border border-border/50 bg-card shadow-[var(--shadow-card)]">
+                                        {activeSponsorLogo ? (
+                                          <img src={activeSponsorLogo} alt={`${activeSponsor.name || "Sponsor"} logo preview`} className="h-full w-full object-contain p-4" />
+                                        ) : (
+                                          <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground">
+                                            <ImageIcon className="h-7 w-7" />
+                                            <span className="text-xs">No logo</span>
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      <div className="relative flex min-h-[12rem] items-center justify-center rounded-xl border border-dashed border-border/60 bg-card/60 p-5 text-center transition-all duration-200 hover:border-ring/60 hover:bg-muted/30">
+                                        <input
+                                          id={`sponsor-logo-${activeFieldId}`}
+                                          type="file"
+                                          accept="image/*"
+                                          onChange={(e) => handleSponsorLogoChange(activeSponsorIndex, e.target.files?.[0])}
+                                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                                        />
+                                        <div className="pointer-events-none flex flex-col items-center gap-2">
+                                          <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/50 bg-background/60 text-muted-foreground shadow-[var(--shadow-card)]">
+                                            {sponsorUploadIndex === activeSponsorIndex ? (
+                                              <Loader2 className="h-5 w-5 animate-spin" />
+                                            ) : (
+                                              <Upload className="h-5 w-5" />
+                                            )}
+                                          </span>
+                                          <p className="text-sm font-semibold text-foreground">
+                                            {sponsorUploadIndex === activeSponsorIndex ? "Uploading logo..." : "Upload sponsor logo"}
+                                          </p>
+                                          <p className="max-w-xs text-xs leading-5 text-muted-foreground">
+                                            Choose a logo to make this sponsor card easier to scan.
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="rounded-xl border border-border/50 bg-background/40 p-4">
+                                    {sponsors.length > 1 ? (
+                                      <div className="flex items-center gap-3">
+                                        <Switch
+                                          checked={Boolean(activeSponsor.isPrimary)}
+                                          onCheckedChange={() => setPrimarySponsor(activeSponsorIndex)}
+                                        />
+                                        <div>
+                                          <p className="text-sm text-foreground">Mark as primary sponsor</p>
+                                          <p className="text-xs text-muted-foreground">Required when multiple sponsors exist.</p>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="text-xs text-muted-foreground">
+                                        Single sponsor is primary by default.
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <DialogFooter className="border-t border-border/50 bg-card/80 px-5 py-4 sm:px-6">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="h-10 rounded-lg border-border bg-background text-foreground hover:bg-muted hover:text-foreground"
+                                    onClick={() => setSponsorDialogOpen(false)}
+                                  >
+                                    Close
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="accent"
+                                    className="h-10 rounded-lg px-5"
+                                    onClick={() => setSponsorDialogOpen(false)}
+                                  >
+                                    Done
+                                  </Button>
+                                </DialogFooter>
+                              </div>
+                            </DialogContent>
+                          )}
+                        </Dialog>
+                      </>
                     )}
                   </div>
-
-                  {isSponsored && (
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                      <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">
-                          Add sponsor details to highlight partners on your event page.
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Required: Sponsor name. Optional: logo, website URL. When multiple sponsors exist, mark one as primary.
-                        </p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={addSponsorRow}
-                        className="h-10 rounded-lg border-border bg-background/60 px-4 text-foreground hover:border-ring/60 hover:bg-muted"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Sponsor
-                      </Button>
-                    </div>
-                  )}
-
-                  {isSponsored && (
-                    <div className="space-y-5">
-                      {sponsors.map((sponsor, index) => (
-                        <Card key={index} className={`border ${cardBase}`} style={{ borderColor: pageTheme.border }}>
-                          <CardContent className="p-5 space-y-5">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <p className="text-sm text-muted-foreground">Sponsor {index + 1}</p>
-                                <h5 className="font-semibold text-foreground">Brand details</h5>
-                              </div>
-                              {sponsors.length > 1 && (
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => removeSponsorRow(index)}
-                                  className="text-foreground hover:text-foreground"
-                                >
-                                  <X className="w-4 h-4" />
-                                </Button>
-                              )}
-                            </div>
-
-                            <div className="grid gap-5 md:grid-cols-2">
-                              <div className="space-y-2.5">
-                                <Label className="text-[13px] font-medium text-[#d4d4d4]">Sponsor Name *</Label>
-                                <Input
-                                  placeholder="BrandCo"
-                                  value={sponsor.name}
-                                  className={fieldClass}
-                                  onChange={(e) => handleSponsorChange(index, "name", e.target.value)}
-                                />
-                              </div>
-                              <div className="space-y-2.5">
-                                <Label className="text-[13px] font-medium text-[#d4d4d4]">Website URL (Optional)</Label>
-                                <Input
-                                  type="url"
-                                  placeholder="https://brandco.example.com"
-                                  value={sponsor.websiteUrl}
-                                  className={fieldClass}
-                                  onChange={(e) => handleSponsorChange(index, "websiteUrl", e.target.value)}
-                                />
-                              </div>
-                            </div>
-
-                            <div className="grid gap-5 md:grid-cols-2">
-                              <div className="space-y-2.5">
-                                <Label className="text-[13px] font-medium text-[#d4d4d4]">Logo</Label>
-                                <div className="space-y-3">
-                                  <div className="relative rounded-xl border border-dashed border-border/50 bg-background/40 px-4 py-5 text-center transition-all duration-200 hover:border-ring/60">
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => handleSponsorLogoChange(index, e.target.files?.[0])}
-                                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                                  />
-                                    <div className="pointer-events-none flex flex-col items-center gap-2">
-                                      <Upload className="h-4 w-4 text-muted-foreground" />
-                                      <p className="text-sm text-muted-foreground">Upload sponsor logo</p>
-                                      <p className="text-xs text-muted-foreground/80">PNG / SVG preferred</p>
-                                    </div>
-                                  </div>
-                                  <p className="text-xs text-muted-foreground">PNG / SVG with transparent background preferred</p>
-                                  {sponsorUploadIndex === index && (
-                                    <div className="flex items-center gap-2 text-sm text-primary">
-                                      <Loader2 className="w-4 h-4 animate-spin" />
-                                      <span>Uploading logo...</span>
-                                    </div>
-                                  )}
-                                  {sponsor.logoUrl && (
-                                    <div className="relative w-28 h-28 rounded-lg overflow-hidden border border-border/50 bg-background/40 flex items-center justify-center">
-                                      <img
-                                        src={sponsor.logoUrl}
-                                        alt={`${sponsor.name || "Sponsor"} logo`}
-                                        className="w-full h-full object-contain p-2"
-                                      />
-                                      <Button
-                                        type="button"
-                                        variant="destructive"
-                                        size="icon"
-                                        className="absolute -top-2 -right-2 h-7 w-7 rounded-full"
-                                        onClick={() => handleRemoveSponsorLogo(index)}
-                                        title="Remove logo"
-                                      >
-                                        <X className="w-3 h-3" />
-                                      </Button>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-3">
-                                {sponsors.length > 1 ? (
-                                  <>
-                                    <Switch
-                                      checked={Boolean(sponsor.isPrimary)}
-                                      onCheckedChange={() => setPrimarySponsor(index)}
-                                    />
-                                    <div>
-                                      <p className="text-sm text-foreground">Mark as primary sponsor</p>
-                                      <p className="text-xs text-muted-foreground">Required when multiple sponsors exist.</p>
-                                    </div>
-                                  </>
-                                ) : (
-                                  <div className="text-xs text-muted-foreground bg-background/40 px-3 py-2 rounded-lg border border-border/50">
-                                    Single sponsor is primary by default.
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-
-                  {isSponsored && sponsors.length === 0 && (
-                    <div className="border border-dashed border-border/50 rounded-xl p-4 text-sm text-muted-foreground text-center">
-                      No sponsors added yet. Click “Add Sponsor” to include partners.
-                    </div>
-                  )}
-                </div>
-              )}
+                );
+              })()}
 
               {/* Step 2: Date & Time */}
               {currentStep === 2 && (
@@ -4480,22 +4736,40 @@ const CreateEvent = () => {
                                   )}
                                 </div>
                                 
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteTicket(ticket, index);
-                                  }}
-                                  disabled={showLoading}
-                                  className="text-muted-foreground hover:text-foreground"
-                                >
-                                  {showLoading ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                  ) : (
-                                    <X className="w-4 h-4" />
-                                  )}
-                                </Button>
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openEditTicketModal(ticket, index);
+                                    }}
+                                    disabled={showLoading}
+                                    className="text-muted-foreground hover:text-foreground"
+                                    title="Edit ticket"
+                                    aria-label={`Edit ${ticket.ticketName || `ticket ${index + 1}`}`}
+                                  >
+                                    <Pencil className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteTicket(ticket, index);
+                                    }}
+                                    disabled={showLoading}
+                                    className="text-muted-foreground hover:text-foreground"
+                                    title="Delete ticket"
+                                    aria-label={`Delete ${ticket.ticketName || `ticket ${index + 1}`}`}
+                                  >
+                                    {showLoading ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <X className="w-4 h-4" />
+                                    )}
+                                  </Button>
+                                </div>
                               </div>
                             </CardContent>
                           </Card>
@@ -5325,9 +5599,11 @@ const CreateEvent = () => {
           onClose={() => {
             setTicketModalOpen(false);
             setSelectedTicketType(null);
+            setEditingTicketIndex(null);
           }}
           ticketType={selectedTicketType}
           onSave={handleSaveTicket}
+          initialTicket={editingTicketIndex !== null ? savedTickets[editingTicketIndex] : null}
         />
       )}
     </div>
