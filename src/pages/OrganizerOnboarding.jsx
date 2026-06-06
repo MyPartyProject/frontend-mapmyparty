@@ -275,21 +275,24 @@ const OrganizerOnboarding = () => {
       const createdOrganizer = createResponse?.data || createResponse || {};
 
       if (logoFile && createdOrganizer?.id) {
-        let uploadedLogoPublicId = null;
+        let uploadedLogoStorageKey = null;
         try {
           const logoUpload = await uploadOrganizerLogo(createdOrganizer.id, logoFile);
-          uploadedLogoPublicId = logoUpload.publicId;
+          uploadedLogoStorageKey = logoUpload.storageKey || logoUpload.key || logoUpload.publicId;
 
           await apiFetch("organizer/me/profile", {
             method: "PATCH",
-            body: JSON.stringify({ logo: logoUpload.url }),
+            body: JSON.stringify({
+              logo: logoUpload.url,
+              logoStorageKey: uploadedLogoStorageKey,
+            }),
           });
 
           clearLogoSelection();
           toast.success("Organizer profile created with logo");
         } catch (logoError) {
-          if (uploadedLogoPublicId) {
-            await deleteOrganizerLogoUpload(uploadedLogoPublicId).catch(() => {});
+          if (uploadedLogoStorageKey) {
+            await deleteOrganizerLogoUpload(uploadedLogoStorageKey).catch(() => {});
           }
           clearLogoSelection();
           toast.error(
