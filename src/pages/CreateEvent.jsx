@@ -43,6 +43,7 @@ import {
   Music2,
   Pencil,
   Plus,
+  RotateCcw,
   Smile,
   Sparkles,
   Ticket,
@@ -67,6 +68,7 @@ import { apiFetch } from "@/config/api";
 import { TEMPLATE_CONFIGS, DETAIL_TEMPLATE_CONFIGS, getTemplateConfig, mapTemplateId, mapTemplateNameToId } from "@/config/templates";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import {
   PHONE_INPUT_PROPS,
@@ -242,6 +244,92 @@ const CreateEvent = () => {
     const date = new Date(`${value}T00:00:00`);
     return isValidDateObject(date) ? date : null;
   };
+  const buildEventDateTime = (dateValue, timeValue) => {
+    const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateValue || "");
+    const timeMatch = /^(\d{2}):(\d{2})$/.exec(timeValue || "");
+    if (!dateMatch || !timeMatch) return null;
+
+    const year = Number(dateMatch[1]);
+    const month = Number(dateMatch[2]);
+    const day = Number(dateMatch[3]);
+    const hour = Number(timeMatch[1]);
+    const minute = Number(timeMatch[2]);
+
+    if (hour > 23 || minute > 59) return null;
+
+    const date = new Date(year, month - 1, day, hour, minute, 0, 0);
+    if (
+      date.getFullYear() !== year ||
+      date.getMonth() !== month - 1 ||
+      date.getDate() !== day ||
+      date.getHours() !== hour ||
+      date.getMinutes() !== minute
+    ) {
+      return null;
+    }
+
+    return date;
+  };
+  const validateEventDateTime = () => {
+    const start = buildEventDateTime(startDate, startTime);
+    const end = buildEventDateTime(endDate, endTime);
+
+    if (!start || !end) {
+      return { error: "Please select a valid start and end date/time" };
+    }
+
+    if (start.getTime() < Date.now()) {
+      return { error: "Starting date and time must be in the future" };
+    }
+
+    if (end.getTime() <= start.getTime()) {
+      return { error: "Ending date and time must be after starting date and time" };
+    }
+
+    return {
+      startDateTime: start.toISOString(),
+      endDateTime: end.toISOString(),
+    };
+  };
+  const isEndDateTimeNotAfterStart = ({
+    nextStartDate = startDate,
+    nextStartTime = startTime,
+    nextEndDate = endDate,
+    nextEndTime = endTime,
+  } = {}) => {
+    const start = buildEventDateTime(nextStartDate, nextStartTime);
+    const end = buildEventDateTime(nextEndDate, nextEndTime);
+
+    return Boolean(start && end && end.getTime() <= start.getTime());
+  };
+  const clearEndTimeIfInvalid = (nextValues = {}) => {
+    if (!isEndDateTimeNotAfterStart(nextValues)) return false;
+
+    setEndTime("");
+    return true;
+  };
+  const notifyEndTimeCleared = () => {
+    toast.info("Ending time cleared. It must be after starting time.");
+  };
+  const handleStartTimeChange = (value) => {
+    setStartTime(value);
+    if (clearEndTimeIfInvalid({ nextStartTime: value })) {
+      notifyEndTimeCleared();
+    }
+  };
+  const handleEndTimeChange = (value) => {
+    setEndTime(value);
+  };
+  const resetDateTimeInputs = () => {
+    setStartDate("");
+    setStartTime("");
+    setEndDate("");
+    setEndTime("");
+    setStartCalendarOpen(false);
+    setEndCalendarOpen(false);
+    setStartTimeOpen(false);
+    setEndTimeOpen(false);
+  };
 
   const formatDateValue = (value) => {
     if (!value) return "";
@@ -249,8 +337,8 @@ const CreateEvent = () => {
     return date ? format(date, "dd MMM yyyy") : value;
   };
 
-  const parseTime = (value) => {
-    if (!value) return { hour: "", minute: "00", ampm: "AM" };
+  const parseTime = (value, defaultAmpm = "AM") => {
+    if (!value) return { hour: "", minute: "00", ampm: defaultAmpm };
     const [h, m = "00"] = value.split(":");
     const hourNum = Number(h) || 0;
     const ampm = hourNum >= 12 ? "PM" : "AM";
@@ -271,10 +359,35 @@ const CreateEvent = () => {
     return `${hour}:${minute} ${ampm}`;
   };
 
-  const TimePicker = ({ value, onChange, onClose }) => {
-    const { hour, minute, ampm } = parseTime(value);
-    const setPart = (h = hour, m = minute, ap = ampm, close = false) => {
-      onChange(buildTime(h, m, ap));
+  const TimePicker = ({ value, onChange, onClose, defaultAmpm = "AM", isValueInvalid, onInvalid }) => {
+    const parsedTime = parseTime(value, defaultAmpm);
+    const [draftHour, setDraftHour] = useState(parsedTime.hour);
+    const [draftMinute, setDraftMinute] = useState(parsedTime.minute);
+    const [draftAmpm, setDraftAmpm] = useState(parsedTime.ampm);
+
+    useEffect(() => {
+      const nextTime = parseTime(value, defaultAmpm);
+      setDraftHour(nextTime.hour);
+      setDraftMinute(nextTime.minute);
+      setDraftAmpm(nextTime.ampm);
+    }, [value, defaultAmpm]);
+
+    const setPart = (h = draftHour, m = draftMinute, ap = draftAmpm, close = false) => {
+      setDraftHour(h);
+      setDraftMinute(m);
+      setDraftAmpm(ap);
+
+      if (!h) return;
+
+      const nextValue = buildTime(h, m, ap);
+      const invalid = typeof isValueInvalid === "function" && isValueInvalid(nextValue);
+
+      if (invalid) {
+        if (close) onInvalid?.();
+        return;
+      }
+
+      onChange(nextValue);
       if (close) onClose?.();
     };
 
@@ -291,8 +404,8 @@ const CreateEvent = () => {
               <button
                 key={h}
                 type="button"
-                className={`${itemBase} ${h === hour ? itemActive : ""}`}
-                onClick={() => setPart(h, minute, ampm, false)}
+                className={`${itemBase} ${h === draftHour ? itemActive : ""}`}
+                onClick={() => setPart(h, draftMinute, draftAmpm, false)}
               >
                 {h}
               </button>
@@ -306,8 +419,8 @@ const CreateEvent = () => {
               <button
                 key={m}
                 type="button"
-                className={`${itemBase} ${m === minute ? itemActive : ""}`}
-                onClick={() => setPart(hour, m, ampm, true)}
+                className={`${itemBase} ${m === draftMinute ? itemActive : ""}`}
+                onClick={() => setPart(draftHour, m, draftAmpm, true)}
               >
                 {m}
               </button>
@@ -321,8 +434,8 @@ const CreateEvent = () => {
               <button
                 key={ap}
                 type="button"
-                className={`${itemBase} ${ap === ampm ? itemActive : ""}`}
-                onClick={() => setPart(hour, minute, ap, true)}
+                className={`${itemBase} ${ap === draftAmpm ? itemActive : ""}`}
+                onClick={() => setPart(draftHour, draftMinute, ap, Boolean(draftHour))}
               >
                 {ap}
               </button>
@@ -1792,8 +1905,9 @@ const CreateEvent = () => {
         toast.error("Ending time is required");
         return;
       }
-      if (endDate < startDate) {
-        toast.error("Ending date must be after starting date");
+      const dateTimeValidation = validateEventDateTime();
+      if (dateTimeValidation.error) {
+        toast.error(dateTimeValidation.error);
         return;
       }
 
@@ -1809,9 +1923,7 @@ const CreateEvent = () => {
         return;
       }
 
-      // Combine date and time into ISO format for comparison and update
-      const startDateTime = new Date(`${startDate}T${startTime}`).toISOString();
-      const endDateTime = new Date(`${endDate}T${endTime}`).toISOString();
+      const { startDateTime, endDateTime } = dateTimeValidation;
 
       // Call API for Step 3 - Update Date & Time
       try {
@@ -4496,6 +4608,26 @@ const CreateEvent = () => {
               {/* Step 2: Date & Time */}
               {currentStep === 2 && (
                 <div className="space-y-6">
+                  <div className="flex justify-end">
+                    <TooltipProvider delayDuration={150}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            aria-label="Reset date and time"
+                            disabled={!startDate && !startTime && !endDate && !endTime}
+                            onClick={resetDateTimeInputs}
+                            className="h-9 w-9 rounded-full border-border/60 bg-background/60 text-muted-foreground hover:border-ring hover:text-foreground"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="left">Reset date and time</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                   <div className="grid md:grid-cols-2 gap-5">
                     <div className="flex flex-col gap-2">
                       <Label className="text-[13px] font-medium text-[#d4d4d4]">Starting Date *</Label>
@@ -4518,9 +4650,13 @@ const CreateEvent = () => {
                             onSelect={(date) => {
                               if (!date) return;
                               const iso = format(date, "yyyy-MM-dd");
+                              const nextEndDate = endDate && iso > endDate ? iso : endDate;
                               setStartDate(iso);
-                              if (endDate && iso > endDate) {
-                                setEndDate(iso);
+                              if (nextEndDate !== endDate) {
+                                setEndDate(nextEndDate);
+                              }
+                              if (clearEndTimeIfInvalid({ nextStartDate: iso, nextEndDate })) {
+                                notifyEndTimeCleared();
                               }
                               setStartCalendarOpen(false);
                             }}
@@ -4532,7 +4668,7 @@ const CreateEvent = () => {
                     </div>
                     <div className="flex flex-col gap-2">
                       <Label className="text-[13px] font-medium text-[#d4d4d4]">Starting Time *</Label>
-                      <Popover open={endTimeOpen} onOpenChange={setEndTimeOpen}>
+                      <Popover open={startTimeOpen} onOpenChange={setStartTimeOpen}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
@@ -4551,9 +4687,7 @@ const CreateEvent = () => {
                         >
                           <TimePicker
                             value={startTime}
-                            onChange={(val) => {
-                              setStartTime(val);
-                            }}
+                            onChange={handleStartTimeChange}
                             onClose={() => setStartTimeOpen(false)}
                           />
                         </PopoverContent>
@@ -4584,6 +4718,9 @@ const CreateEvent = () => {
                               if (!date) return;
                               const iso = format(date, "yyyy-MM-dd");
                               setEndDate(iso);
+                              if (clearEndTimeIfInvalid({ nextEndDate: iso })) {
+                                notifyEndTimeCleared();
+                              }
                               setEndCalendarOpen(false);
                             }}
                             disabled={{
@@ -4596,7 +4733,7 @@ const CreateEvent = () => {
                     </div>
                     <div className="flex flex-col gap-2">
                       <Label className="text-[13px] font-medium text-[#d4d4d4]">Ending Time *</Label>
-                      <Popover>
+                      <Popover open={endTimeOpen} onOpenChange={setEndTimeOpen}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
@@ -4615,10 +4752,11 @@ const CreateEvent = () => {
                         >
                           <TimePicker
                             value={endTime}
-                            onChange={(val) => {
-                              setEndTime(val);
-                            }}
+                            onChange={handleEndTimeChange}
                             onClose={() => setEndTimeOpen(false)}
+                            defaultAmpm={parseTime(startTime).ampm}
+                            isValueInvalid={(value) => isEndDateTimeNotAfterStart({ nextEndTime: value })}
+                            onInvalid={() => toast.error("Ending time must be after starting time")}
                           />
                         </PopoverContent>
                       </Popover>
