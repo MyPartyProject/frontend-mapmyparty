@@ -754,6 +754,68 @@ export async function updateEventStep2(eventId, updateData) {
   return response;
 }
 
+const TABLE_GROUP_CAPACITY_LIMIT = 15;
+const INTEGER_STRING_PATTERN = /^-?\d+$/;
+const POSITIVE_INTEGER_STRING_PATTERN = /^\d+$/;
+
+const TICKET_TYPE_MAP = {
+  "vip-guest": "GUESTLIST",
+  "standard": "STANDARD_TICKET",
+  "table": "TABLE_TICKET",
+  "group-pass": "GROUP_TICKET"
+};
+
+const ENTRY_TYPE_MAP = {
+  "Single": "SINGLE_ENTRY",
+  "Couple": "COUPLE_ENTRY"
+};
+
+const validateTicketPriceForPayload = (price, ticketType) => {
+  const rawPrice = String(price ?? "").trim();
+  const numericPrice = Number(rawPrice);
+
+  if (rawPrice === "" || !Number.isFinite(numericPrice)) {
+    throw new Error("Ticket price must be a valid number");
+  }
+
+  if (!INTEGER_STRING_PATTERN.test(rawPrice) || !Number.isInteger(numericPrice)) {
+    throw new Error("Ticket price must be a whole number");
+  }
+
+  if (ticketType === "GUESTLIST") {
+    if (numericPrice < 0) {
+      throw new Error("Guest List price must be 0 or more");
+    }
+  } else if (numericPrice <= 0) {
+    throw new Error("This ticket type must have a price greater than 0");
+  }
+
+  return numericPrice;
+};
+
+const validateTicketCapacityForPayload = (ticketData, ticketType) => {
+  if (ticketType !== "TABLE_TICKET" && ticketType !== "GROUP_TICKET") {
+    return undefined;
+  }
+
+  const isTableTicket = ticketType === "TABLE_TICKET";
+  const label = isTableTicket ? "Table capacity" : "Group size";
+  const rawCapacity = String(isTableTicket ? ticketData.tableQuantity ?? "" : ticketData.groupQuantity ?? "").trim();
+  const numericCapacity = Number(rawCapacity);
+
+  if (
+    rawCapacity === "" ||
+    !POSITIVE_INTEGER_STRING_PATTERN.test(rawCapacity) ||
+    !Number.isInteger(numericCapacity) ||
+    numericCapacity < 1 ||
+    numericCapacity > TABLE_GROUP_CAPACITY_LIMIT
+  ) {
+    throw new Error(`${label} must be between 1 and ${TABLE_GROUP_CAPACITY_LIMIT}`);
+  }
+
+  return numericCapacity;
+};
+
 /**
  * Create ticket - Step 3: Tickets
  * 
@@ -795,40 +857,15 @@ export async function createTicket(ticketData) {
     throw new Error("Valid ticket quantity is required");
   }
 
-  // Map ticket type from frontend to backend format
-  const typeMap = {
-    "vip-guest": "GUESTLIST",
-    "standard": "STANDARD_TICKET",
-    "table": "TABLE_TICKET",
-    "group-pass": "GROUP_TICKET"
-  };
-  const ticketType = typeMap[ticketData.type] || "STANDARD_TICKET";
-  const rawPrice = String(ticketData.price ?? "").trim();
-  const numericPrice = Number(rawPrice);
-
-  if (rawPrice === "" || !Number.isFinite(numericPrice)) {
-    throw new Error("Ticket price must be a valid number");
-  }
-
-  if (ticketType === "GUESTLIST") {
-    if (numericPrice < 0) {
-      throw new Error("Guest List price must be 0 or more");
-    }
-  } else if (numericPrice <= 0) {
-    throw new Error("This ticket type must have a price greater than 0");
-  }
-
-  // Map entry type from frontend to backend format
-  const entryTypeMap = {
-    "Single": "SINGLE_ENTRY",
-    "Couple": "COUPLE_ENTRY"
-  };
+  const ticketType = TICKET_TYPE_MAP[ticketData.type] || "STANDARD_TICKET";
+  const numericPrice = validateTicketPriceForPayload(ticketData.price, ticketType);
+  const capacity = validateTicketCapacityForPayload(ticketData, ticketType);
 
   // Prepare the request body according to API spec
   const payload = {
     name: ticketData.ticketName.trim(),
     type: ticketType,
-    entryType: entryTypeMap[ticketData.ticketCategory] || "SINGLE_ENTRY",
+    entryType: ENTRY_TYPE_MAP[ticketData.ticketCategory] || "SINGLE_ENTRY",
     price: numericPrice,
     totalQty: parseInt(ticketData.quantity) || 0,
     info: ticketData.description || "",
@@ -839,6 +876,10 @@ export async function createTicket(ticketData) {
     maxPerUser: parseInt(ticketData.maxPerCustomer) || 10,
     gstRate: 18.0 // Default GST rate
   };
+
+  if (capacity !== undefined) {
+    payload.capacity = capacity;
+  }
 
   console.log("📤 Sending ticket payload:", JSON.stringify(payload, null, 2));
 
@@ -882,37 +923,14 @@ export async function updateTicket(ticketId, ticketData) {
     throw new Error("Valid ticket quantity is required");
   }
 
-  const typeMap = {
-    "vip-guest": "GUESTLIST",
-    "standard": "STANDARD_TICKET",
-    "table": "TABLE_TICKET",
-    "group-pass": "GROUP_TICKET"
-  };
-  const ticketType = typeMap[ticketData.type] || "STANDARD_TICKET";
-  const rawPrice = String(ticketData.price ?? "").trim();
-  const numericPrice = Number(rawPrice);
-
-  if (rawPrice === "" || !Number.isFinite(numericPrice)) {
-    throw new Error("Ticket price must be a valid number");
-  }
-
-  if (ticketType === "GUESTLIST") {
-    if (numericPrice < 0) {
-      throw new Error("Guest List price must be 0 or more");
-    }
-  } else if (numericPrice <= 0) {
-    throw new Error("This ticket type must have a price greater than 0");
-  }
-
-  const entryTypeMap = {
-    "Single": "SINGLE_ENTRY",
-    "Couple": "COUPLE_ENTRY"
-  };
+  const ticketType = TICKET_TYPE_MAP[ticketData.type] || "STANDARD_TICKET";
+  const numericPrice = validateTicketPriceForPayload(ticketData.price, ticketType);
+  const capacity = validateTicketCapacityForPayload(ticketData, ticketType);
 
   const payload = {
     name: ticketData.ticketName.trim(),
     type: ticketType,
-    entryType: entryTypeMap[ticketData.ticketCategory] || "SINGLE_ENTRY",
+    entryType: ENTRY_TYPE_MAP[ticketData.ticketCategory] || "SINGLE_ENTRY",
     price: numericPrice,
     totalQty: parseInt(ticketData.quantity) || 0,
     info: ticketData.description || "",
@@ -921,6 +939,10 @@ export async function updateTicket(ticketId, ticketData) {
     maxPerUser: parseInt(ticketData.maxPerCustomer) || 10,
     gstRate: Number(ticketData.gstRate ?? 18.0),
   };
+
+  if (capacity !== undefined) {
+    payload.capacity = capacity;
+  }
 
   if (ticketData.purchaseExpiry) {
     payload.purchaseExpiry = ticketData.purchaseExpiry;
