@@ -1,4 +1,4 @@
-import { deleteDraftCloudinaryImage, uploadTempImage } from "@/services/eventService";
+import { deleteDraftStorageObject, uploadTempImage } from "@/services/eventService";
 
 export const ORGANIZER_LOGO_CONSTRAINTS = {
   allowedMimeTypes: ["image/png", "image/jpeg", "image/webp"],
@@ -95,7 +95,7 @@ export const uploadOrganizerLogo = async (organizerId, file) => {
   };
 };
 
-export const deleteOrganizerLogoUpload = async (publicId) => {
-  if (!publicId) return;
-  await deleteDraftCloudinaryImage(publicId);
+export const deleteOrganizerLogoUpload = async (storageKey) => {
+  if (!storageKey) return;
+  await deleteDraftStorageObject(storageKey, "ORGANIZER_LOGO");
 };

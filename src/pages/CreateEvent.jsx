@@ -63,7 +63,7 @@ import eventMusic from "@/assets/event-music.jpg";
 import TicketTypeModal from "@/components/TicketTypeModal";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { updateEventStep1, updateEventStep2, uploadFlyerImage, deleteFlyerImage, uploadGalleryImages, deleteGalleryImage, generateEventId, createTicket, updateTicket, deleteTicket, createVenue, updateVenue, updateEventStep6, uploadArtistImage, deleteArtist, createEventStep1, persistFlyerUrl, uploadDraftImage, persistGalleryUrls, deleteDraftCloudinaryImage } from "@/services/eventService";
+import { updateEventStep1, updateEventStep2, uploadFlyerImage, deleteFlyerImage, uploadGalleryImages, deleteGalleryImage, generateEventId, createTicket, updateTicket, deleteTicket, createVenue, updateVenue, updateEventStep6, uploadArtistImage, uploadSponsorLogo, deleteArtist, createEventStep1, persistFlyerUrl, uploadDraftImage, persistGalleryUrls, deleteDraftStorageObject } from "@/services/eventService";
 import { apiFetch } from "@/config/api";
 import { TEMPLATE_CONFIGS, DETAIL_TEMPLATE_CONFIGS, getTemplateConfig, mapTemplateId, mapTemplateNameToId } from "@/config/templates";
 import { Calendar } from "@/components/ui/calendar";
@@ -161,12 +161,12 @@ const CreateEvent = () => {
   const [eventType, setEventType] = useState("one-time");
   const [coverImage, setCoverImage] = useState(null);
   const [coverImageFile, setCoverImageFile] = useState(null);
-  const [coverPublicId, setCoverPublicId] = useState(null);
+  const [coverStorageKey, setCoverStorageKey] = useState(null);
   const [existingGalleryUrls, setExistingGalleryUrls] = useState([]); // Existing images from backend (URLs)
   const [galleryImages, setGalleryImages] = useState([]); // All images (existing URLs + new previews)
   const [galleryImageFiles, setGalleryImageFiles] = useState([]); // Only NEW files to upload
   const [galleryImageIds, setGalleryImageIds] = useState([]); // Map of URL -> ID for deletion
-  const [galleryImagePublicIds, setGalleryImagePublicIds] = useState({}); // Map URL -> Cloudinary publicId
+  const [galleryImageStorageKeys, setGalleryImageStorageKeys] = useState({}); // Map URL -> storage key
   const [deletedImageIds, setDeletedImageIds] = useState(new Set()); // Track deleted image IDs to filter them out
   const [imagesChanged, setImagesChanged] = useState(false);
   const [textFieldsChanged, setTextFieldsChanged] = useState(false); // Track if text fields changed
@@ -174,7 +174,7 @@ const CreateEvent = () => {
   const [removeGalleryIds, setRemoveGalleryIds] = useState([]); // Track gallery image IDs to remove
   const [uploadingCover, setUploadingCover] = useState(false); // Loader for cover image upload
   const [uploadingGallery, setUploadingGallery] = useState(false); // Loader for gallery upload
-  const [draftCoverPublicId, setDraftCoverPublicId] = useState(null); // Store draft cover publicId for later persistence
+  const [draftCoverStorageKey, setDraftCoverStorageKey] = useState(null); // Store draft cover key for later persistence
   const [draftGalleryUploads, setDraftGalleryUploads] = useState([]); // Store draft gallery uploads { url, publicId }
   const [loadingMessage, setLoadingMessage] = useState(""); // Message for loading overlay
   const [showLoading, setShowLoading] = useState(false); // Control loading overlay visibility
@@ -774,6 +774,7 @@ const CreateEvent = () => {
       name: s?.name || nested.name || "",
       websiteUrl: s?.websiteUrl || s?.website || s?.link || nested.websiteUrl || nested.website || nested.link || "",
       logoUrl: s?.logoUrl || s?.logo || nested.logoUrl || nested.logo || "",
+      logoStorageKey: s?.logoStorageKey || s?.storageKey || s?.key || s?.logoPublicId || nested.logoStorageKey || nested.storageKey || nested.key || nested.publicId || "",
       isPrimary: typeof s?.isPrimary === "boolean" ? s.isPrimary : idx === 0,
     };
   };
@@ -854,7 +855,7 @@ const CreateEvent = () => {
         setExistingGalleryUrls([]);
         setGalleryImages([]);
         setGalleryImageIds({});
-        setGalleryImagePublicIds({});
+        setGalleryImageStorageKeys({});
         return;
       }
 
@@ -872,12 +873,12 @@ const CreateEvent = () => {
         setExistingGalleryUrls(imageUrls);
         setGalleryImages(imageUrls);
         setGalleryImageIds(imageIdMap);
-        setGalleryImagePublicIds(publicIdMap);
+        setGalleryImageStorageKeys(publicIdMap);
       } else {
         setExistingGalleryUrls([]);
         setGalleryImages([]);
         setGalleryImageIds({});
-        setGalleryImagePublicIds({});
+        setGalleryImageStorageKeys({});
       }
     };
 
@@ -1541,11 +1542,11 @@ const CreateEvent = () => {
 
             // Upload media first (backend /update-event is JSON-only)
             if (imagesChanged) {
-              if (coverImageFile || draftCoverPublicId) {
+              if (coverImageFile || draftCoverStorageKey) {
                 try {
-                  // If we have a draft publicId, persist it; otherwise upload file
-                  if (draftCoverPublicId) {
-                    await persistFlyerUrl(backendEventId, { url: coverImage, publicId: draftCoverPublicId });
+                  // If we have a draft key, persist it; otherwise upload file
+                  if (draftCoverStorageKey) {
+                    await persistFlyerUrl(backendEventId, { url: coverImage, publicId: draftCoverStorageKey });
                   } else {
                     const coverResp = await uploadFlyerImage(backendEventId, coverImageFile);
                     const coverData = coverResp.data || coverResp;
@@ -1665,13 +1666,13 @@ const CreateEvent = () => {
             console.log("💾 Backend Event ID stored:", backendId);
           }
           
-          if (backendId && (coverImageFile || draftCoverPublicId)) {
+          if (backendId && (coverImageFile || draftCoverStorageKey)) {
             // Persist draft cover image if available; otherwise upload file
             try {
               setShowLoading(true);
               setLoadingMessage("Saving cover image...");
-              if (draftCoverPublicId) {
-                await persistFlyerUrl(backendId, { url: coverImage, publicId: draftCoverPublicId });
+              if (draftCoverStorageKey) {
+                await persistFlyerUrl(backendId, { url: coverImage, publicId: draftCoverStorageKey });
                 toast.success("Cover image saved to event.");
               } else {
                 const coverResp = await uploadFlyerImage(backendId, coverImageFile);
@@ -2432,11 +2433,11 @@ const CreateEvent = () => {
       setImagesChanged(true);
       setRemoveFlyerImage(false);
 
-      // Upload immediately to Cloudinary draft
+      // Upload immediately to storage draft
       const { url, publicId } = await uploadDraftImage(file, 'flyers');
       setCoverImage(url);
-      setDraftCoverPublicId(publicId);
-      setCoverPublicId(publicId);
+      setDraftCoverStorageKey(publicId);
+      setCoverStorageKey(publicId);
       toast.success("Cover image uploaded successfully.");
     } catch (error) {
       console.error("Failed to upload cover image:", error);
@@ -2444,7 +2445,7 @@ const CreateEvent = () => {
       // Reset on error
       setCoverImage(null);
       setCoverImageFile(null);
-      setDraftCoverPublicId(null);
+      setDraftCoverStorageKey(null);
     } finally {
       setUploadingCover(false);
     }
@@ -2452,11 +2453,11 @@ const CreateEvent = () => {
 
   const handleRemoveCoverImage = async () => {
     const deleteDraftCoverIfAny = async () => {
-      if (draftCoverPublicId) {
+      if (draftCoverStorageKey) {
         try {
-          await deleteDraftCloudinaryImage(draftCoverPublicId, "EVENT_FLYER");
+          await deleteDraftStorageObject(draftCoverStorageKey, "EVENT_FLYER");
         } catch (err) {
-          console.warn("⚠️ Failed to delete draft cover from Cloudinary", err?.message);
+          console.warn("Failed to delete draft cover from storage", err?.message);
         }
       }
     };
@@ -2472,8 +2473,8 @@ const CreateEvent = () => {
         
         console.log("✅ Flyer image deleted from backend successfully!");
 
-        if (coverPublicId) {
-          await deleteDraftCloudinaryImage(coverPublicId, "EVENT_FLYER");
+        if (coverStorageKey) {
+          await deleteDraftStorageObject(coverStorageKey, "EVENT_FLYER");
         }
         await deleteDraftCoverIfAny();
 
@@ -2481,8 +2482,8 @@ const CreateEvent = () => {
         setCoverImage(null);
         setCoverImageFile(null);
         setRemoveFlyerImage(true);
-        setDraftCoverPublicId(null);
-        setCoverPublicId(null);
+        setDraftCoverStorageKey(null);
+        setCoverStorageKey(null);
         setImagesChanged(true);
         
         // Reset the file input value to clear the filename
@@ -2508,8 +2509,8 @@ const CreateEvent = () => {
 
       setCoverImage(null);
       setCoverImageFile(null);
-      setDraftCoverPublicId(null);
-      setCoverPublicId(null);
+      setDraftCoverStorageKey(null);
+      setCoverStorageKey(null);
       setRemoveFlyerImage(true);
       setImagesChanged(true);
       
@@ -2565,7 +2566,7 @@ const CreateEvent = () => {
 
       setGalleryImages((prev) => [...prev, ...newUrls]);
       setDraftGalleryUploads((prev) => [...prev, ...newDrafts]);
-      setGalleryImagePublicIds((prev) => ({ ...prev, ...newDrafts.reduce((acc, d) => ({ ...acc, [d.url]: d.publicId }), {}) }));
+      setGalleryImageStorageKeys((prev) => ({ ...prev, ...newDrafts.reduce((acc, d) => ({ ...acc, [d.url]: d.publicId }), {}) }));
       setImagesChanged(true);
 
       toast.success(`${uploads.length} gallery image(s) uploaded.`);
@@ -2585,13 +2586,13 @@ const CreateEvent = () => {
     const imageToRemove = galleryImages[index];
     
     const draftMatch = draftGalleryUploads.find((d) => d.url === imageToRemove);
-    const publicIdFromMap = galleryImagePublicIds[imageToRemove];
+    const publicIdFromMap = galleryImageStorageKeys[imageToRemove];
     const deleteDraftIfAny = async () => {
       if (draftMatch?.publicId) {
         try {
-          await deleteDraftCloudinaryImage(draftMatch.publicId, "EVENT_GALLERY");
+          await deleteDraftStorageObject(draftMatch.publicId, "EVENT_GALLERY");
         } catch (err) {
-          console.warn("⚠️ Failed to delete draft gallery image from Cloudinary", err?.message);
+          console.warn("Failed to delete draft gallery image from storage", err?.message);
         }
       }
     };
@@ -2617,7 +2618,7 @@ const CreateEvent = () => {
         await deleteGalleryImage(backendEventId, imageId);
 
         if (publicIdFromMap) {
-          await deleteDraftCloudinaryImage(publicIdFromMap, "EVENT_GALLERY");
+          await deleteDraftStorageObject(publicIdFromMap, "EVENT_GALLERY");
         }
         
         console.log("✅ Gallery image deleted from backend successfully!");
@@ -2669,7 +2670,7 @@ const CreateEvent = () => {
         return newMap;
       });
 
-      setGalleryImagePublicIds(prev => {
+      setGalleryImageStorageKeys(prev => {
         const next = { ...prev };
         delete next[imageToRemove];
         return next;
@@ -2696,7 +2697,7 @@ const CreateEvent = () => {
 
       if (draftMatch) {
         setDraftGalleryUploads((prev) => prev.filter((d) => d.url !== imageToRemove));
-        setGalleryImagePublicIds((prev) => {
+        setGalleryImageStorageKeys((prev) => {
           const next = { ...prev };
           delete next[imageToRemove];
           return next;
@@ -2750,9 +2751,9 @@ const CreateEvent = () => {
 
     if (publicId) {
       try {
-        await deleteDraftCloudinaryImage(publicId, "EVENT_GALLERY");
+        await deleteDraftStorageObject(publicId, "ARTIST_IMAGE");
       } catch (err) {
-        console.warn("⚠️ Failed to delete artist photo from Cloudinary", err?.message);
+        console.warn("Failed to delete artist photo from storage", err?.message);
       }
     }
 
@@ -2792,12 +2793,14 @@ const CreateEvent = () => {
       .map((s) => ({
         name: (s.name || "").trim(),
         logoUrl: (s.logoUrl || s.logo || "").trim(),
+        logoStorageKey: (s.logoStorageKey || s.storageKey || s.key || s.logoPublicId || s.publicId || "").trim(),
         websiteUrl: (s.websiteUrl || s.website || "").trim(),
         isPrimary: Boolean(s.isPrimary),
       }))
       .map((s) => ({
         name: s.name,
         ...(s.logoUrl ? { logoUrl: s.logoUrl } : {}),
+        ...(s.logoStorageKey ? { logoStorageKey: s.logoStorageKey } : {}),
         ...(s.websiteUrl ? { websiteUrl: s.websiteUrl } : {}),
         isPrimary: s.isPrimary,
       }))
@@ -2851,6 +2854,9 @@ const CreateEvent = () => {
           spotifyLink,
           gender: normalizeArtistGender(artist.gender),
           ...(artist.publicId || a?.publicId ? { publicId: artist.publicId || a.publicId } : {}),
+          ...(artist.imageStorageKey || artist.storageKey || artist.key || artist.publicId || a?.imageStorageKey
+            ? { imageStorageKey: artist.imageStorageKey || artist.storageKey || artist.key || artist.publicId || a.imageStorageKey }
+            : {}),
         };
       })
       .filter((a) => a.name || a.instagramLink || a.spotifyLink || a.image)
@@ -3014,7 +3020,7 @@ const CreateEvent = () => {
     if (!artistId) {
       if (artistToRemove.publicId) {
         try {
-          await deleteDraftCloudinaryImage(artistToRemove.publicId, "EVENT_GALLERY");
+          await deleteDraftStorageObject(artistToRemove.publicId, "ARTIST_IMAGE");
         } catch (err) {
           console.warn("⚠️ Failed to delete unsaved artist photo", err?.message);
         }
@@ -3059,12 +3065,12 @@ const CreateEvent = () => {
       setSponsorUploadIndex(index);
       setShowLoading(true);
       setLoadingMessage("Uploading sponsor logo...");
-      const upload = await uploadArtistImage(backendEventId, file); // reuse Cloudinary flow (EVENT_GALLERY)
+      const upload = await uploadSponsorLogo(backendEventId, file);
       const logoUrl = upload?.data?.url || upload?.data?.image || "";
       const publicId = upload?.data?.publicId;
       setSponsors((prev) => {
         const next = [...prev];
-        next[index] = { ...next[index], logoUrl, logo: logoUrl, logoPublicId: publicId };
+        next[index] = { ...next[index], logoUrl, logo: logoUrl, logoPublicId: publicId, logoStorageKey: publicId };
         return next;
       });
       toast.success("Logo uploaded");
@@ -3084,15 +3090,15 @@ const CreateEvent = () => {
 
     if (publicId) {
       try {
-        await deleteDraftCloudinaryImage(publicId, "EVENT_GALLERY");
+        await deleteDraftStorageObject(publicId, "SPONSOR_LOGO");
       } catch (err) {
-        console.warn("⚠️ Failed to delete sponsor logo from Cloudinary", err?.message);
+        console.warn("Failed to delete sponsor logo from storage", err?.message);
       }
     }
 
     setSponsors((prev) => {
       const next = [...prev];
-      next[index] = { ...next[index], logoUrl: "", logo: "", logoPublicId: "" };
+      next[index] = { ...next[index], logoUrl: "", logo: "", logoPublicId: "", logoStorageKey: "" };
       return next;
     });
   };

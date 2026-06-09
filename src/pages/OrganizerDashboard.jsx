@@ -243,13 +243,13 @@ const OrganizerProfileContent = ({ user }) => {
   const handleSave = async () => {
     if (isSaving) return;
     setIsSaving(true);
-    let uploadedLogoPublicId = null;
+    let uploadedLogoStorageKey = null;
     try {
       let nextLogo = editData.logo;
       if (logoFile) {
         const logoUpload = await uploadOrganizerLogo(editData.id, logoFile);
         nextLogo = logoUpload.url;
-        uploadedLogoPublicId = logoUpload.publicId;
+        uploadedLogoStorageKey = logoUpload.storageKey || logoUpload.key || logoUpload.publicId;
       }
 
       const contact = editData.contact?.trim()
@@ -282,6 +282,9 @@ const OrganizerProfileContent = ({ user }) => {
 
       if (logoFile || editData.logo !== profileData.logo) {
         payload.logo = nextLogo || null;
+        if (uploadedLogoStorageKey) {
+          payload.logoStorageKey = uploadedLogoStorageKey;
+        }
       }
 
       if (Object.keys(payload).length === 0) {
@@ -307,8 +310,8 @@ const OrganizerProfileContent = ({ user }) => {
       setIsEditing(false);
       toast.success("Organizer profile updated");
     } catch (error) {
-      if (uploadedLogoPublicId) {
-        await deleteOrganizerLogoUpload(uploadedLogoPublicId).catch(() => {});
+      if (uploadedLogoStorageKey) {
+        await deleteOrganizerLogoUpload(uploadedLogoStorageKey).catch(() => {});
       }
       console.error("Failed to save organizer profile:", error);
       toast.error(error?.message || "Failed to save organizer profile");

@@ -1,99 +1,115 @@
-import { buildUrl, apiFetch, customFetch } from "@/config/api";
+import { buildUrl, apiFetch } from "@/config/api";
 
-// -------- Cloudinary Signature + Upload Helpers (internal) --------
-const getAuthToken = () =>
-  sessionStorage.getItem("authToken") ||
-  sessionStorage.getItem("accessToken") ||
-  localStorage.getItem("authToken") ||
-  "";
+// -------- S3 Storage Upload Helpers (internal) --------
+const DRAFT_MEDIA_TYPE_BY_FOLDER = {
+  flyer: "EVENT_FLYER",
+  flyers: "EVENT_FLYER",
+  cover: "EVENT_FLYER",
+  gallery: "EVENT_GALLERY",
+  general: "EVENT_GALLERY",
+};
 
-async function getCloudinarySignature(type, entityId) {
-  if (!type || !entityId) {
-    throw new Error("Upload signature requires both type and entityId");
-  }
-
-  const token = getAuthToken();
-  const url = buildUrl(`/api/cloudinary/sign?type=${encodeURIComponent(type)}&entityId=${encodeURIComponent(entityId)}`);
-  const res = await customFetch(url, {
-    method: "GET",
-    headers: token
-      ? {
-          Authorization: `Bearer ${token}`,
-        }
-      : {},
-  });
-
-  const json = await res.json().catch(() => ({}));
-
-  if (res.status === 429) {
-    throw new Error("Upload rate limit reached. Please try again in a few moments.");
-  }
-
-  if (!res.ok || json.success === false) {
-    throw new Error(json.error || json.errorMessage || json.message || "Failed to get upload signature");
-  }
-
-  const data = json.data || json;
+const normalizeUploadMetadata = (payload = {}) => {
+  const data = payload.data || payload;
+  const key = data.key || data.storageKey || data.publicId || "";
+  const url = data.url || data.publicUrl || "";
 
   return {
-    cloudName: data.cloud_name,
-    apiKey: data.api_key,
-    timestamp: data.timestamp,
-    folder: data.folder,
-    signature: data.signature,
-    uploadPreset: data.upload_preset,
-    resourceType: data.resource_type || "image",
-    allowedFormats: data.allowed_formats,
-    maxBytes: data.max_bytes,
+    ...data,
+    url,
+    publicUrl: data.publicUrl || url,
+    key,
+    storageKey: key,
+    publicId: key,
+    raw: payload,
   };
+};
+
+const getFileExtension = (fileName = "") =>
+  fileName.includes(".") ? fileName.split(".").pop().toLowerCase() : "";
+
+const validateFileAgainstConstraints = (file, constraints = {}) => {
+  const allowedTypes = constraints.allowedMimeTypes || ["image/jpeg", "image/png", "image/webp"];
+  const allowedExtensions = constraints.allowedExtensions || ["jpg", "jpeg", "png", "webp"];
+  const maxBytes = constraints.maxBytes || 5_000_000;
+  const extension = getFileExtension(file.name || "");
+
+  if (file.size > maxBytes) {
+    throw new Error(`File too large. Max ${(maxBytes / 1_000_000).toFixed(0)}MB allowed.`);
+  }
+
+  if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(extension)) {
+    throw new Error(`Invalid file format. Allowed: ${allowedExtensions.join(", ")}`);
+  }
+};
+
+async function requestStorageUpload({ file, mediaType, entityId = null, draft = false }) {
+  if (!file || !(file instanceof File)) {
+    throw new Error("Valid file is required");
+  }
+
+  const response = await apiFetch(buildUrl("/api/storage/uploads/presign"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      mediaType,
+      entityId,
+      draft,
+      fileName: file.name || "upload",
+      contentType: file.type || "application/octet-stream",
+      sizeBytes: file.size,
+    }),
+  });
+
+  return response?.data || response;
+}
+
+async function uploadToStorage(file, presign) {
+  validateFileAgainstConstraints(file, presign.constraints);
+
+  const upload = presign.upload || {};
+  if (!upload.url || !upload.method) {
+    throw new Error("Upload URL was not returned by the server.");
+  }
+
+  const res = await fetch(upload.url, {
+    method: upload.method,
+    headers: upload.headers || {},
+    body: file,
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || "Upload failed");
+  }
+}
+
+async function completeStorageUpload({ mediaType, entityId = null, key }) {
+  const response = await apiFetch(buildUrl("/api/storage/uploads/complete"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      mediaType,
+      entityId,
+      key,
+    }),
+  });
+
+  return normalizeUploadMetadata(response);
+}
+
+async function uploadFileToStorage(file, { mediaType, entityId = null, draft = false }) {
+  const presign = await requestStorageUpload({ file, mediaType, entityId, draft });
+  await uploadToStorage(file, presign);
+  return completeStorageUpload({
+    mediaType,
+    entityId,
+    key: presign.key || presign.storageKey || presign.publicId,
+  });
 }
 
 /**
- * Get a Cloudinary signature for folder-based draft uploads (no event required)
- */
-async function getCloudinarySignatureForFolder(folder) {
-  if (!folder || typeof folder !== "string") {
-    throw new Error("Valid folder is required for draft upload signature");
-  }
-
-  const token = getAuthToken();
-  const url = buildUrl(`/api/cloudinary/sign?folder=${encodeURIComponent(folder)}`);
-  const res = await customFetch(url, {
-    method: "GET",
-    headers: token
-      ? {
-          Authorization: `Bearer ${token}`,
-        }
-      : {},
-  });
-
-  const json = await res.json().catch(() => ({}));
-
-  if (res.status === 429) {
-    throw new Error("Upload rate limit reached. Please try again in a few moments.");
-  }
-
-  if (!res.ok || json.success === false) {
-    throw new Error(json.error || json.errorMessage || json.message || "Failed to get folder upload signature");
-  }
-
-  const data = json.data || json;
-
-  return {
-    cloudName: data.cloud_name,
-    apiKey: data.api_key,
-    timestamp: data.timestamp,
-    folder: data.folder,
-    signature: data.signature,
-    uploadPreset: data.upload_preset,
-    resourceType: data.resource_type || "image",
-    allowedFormats: data.allowed_formats,
-    maxBytes: data.max_bytes,
-  };
-}
-
-/**
- * Upload an image to Cloudinary (client-side). Returns { url, publicId, raw } without persisting.
+ * Upload an image to S3. Returns { url, key, publicId, raw } without persisting.
  */
 export async function uploadTempImage(file, type, entityId) {
   if (!file || !(file instanceof File)) {
@@ -104,54 +120,45 @@ export async function uploadTempImage(file, type, entityId) {
     throw new Error("type and entityId are required for uploads");
   }
 
-  const sig = await getCloudinarySignature(type, entityId);
-  const uploadJson = await uploadToCloudinary(file, sig);
-
-  const url = uploadJson.secure_url || uploadJson.url;
-  const publicId = uploadJson.public_id || uploadJson.publicId;
-
-  return { url, publicId, raw: uploadJson };
+  return uploadFileToStorage(file, { mediaType: type, entityId, draft: false });
 }
 
 /**
  * Upload an image to a draft folder without requiring an event.
- * Returns { url, publicId, raw }.
+ * Returns { url, key, publicId, raw }.
  */
 export async function uploadDraftImage(file, subfolder = "general") {
   if (!file || !(file instanceof File)) {
     throw new Error("Valid image file is required");
   }
 
-  const folder = `mapmyparty/draft/${subfolder}`;
-  const sig = await getCloudinarySignatureForFolder(folder);
-  const uploadJson = await uploadToCloudinary(file, sig);
-
-  const url = uploadJson.secure_url || uploadJson.url;
-  const publicId = uploadJson.public_id || uploadJson.publicId;
-
-  return { url, publicId, raw: uploadJson };
+  const mediaType = DRAFT_MEDIA_TYPE_BY_FOLDER[subfolder] || "EVENT_GALLERY";
+  return uploadFileToStorage(file, { mediaType, draft: true });
 }
 
 /**
- * Persist an already-uploaded flyer URL to backend (no Cloudinary upload).
+ * Persist an already-uploaded flyer URL/key to backend.
  */
 export async function persistFlyerUrl(eventId, flyer) {
   if (!eventId) throw new Error("Event ID is required");
   if (!flyer) throw new Error("Flyer data is required");
 
   const imageUrl = flyer.imageUrl || flyer.url;
-  const publicId = flyer.publicId;
+  const storageKey = flyer.storageKey || flyer.key || flyer.publicId;
 
   if (!imageUrl) throw new Error("Flyer imageUrl is required");
+  if (!storageKey) throw new Error("Flyer storageKey is required");
 
   const url = buildUrl(`/api/event/update-flyer/${eventId}`);
   const payload = {
     url: imageUrl,
-    publicId,
+    key: storageKey,
+    storageKey,
+    publicId: storageKey,
     type: "EVENT_FLYER",
   };
 
-  console.log("🔗 Persisting flyer metadata to backend:", payload);
+  console.log("Persisting flyer metadata to backend:", payload);
 
   const res = await apiFetch(url, {
     method: "PATCH",
@@ -162,172 +169,70 @@ export async function persistFlyerUrl(eventId, flyer) {
   return res;
 }
 
-async function getCloudinaryDeleteSignature(publicId) {
-  if (!publicId) {
-    throw new Error("Public ID is required for delete signature");
-  }
-
-  const token = getAuthToken();
-  const url = buildUrl(`/api/cloudinary/sign-delete?publicId=${encodeURIComponent(publicId)}`);
-  const res = await customFetch(url, {
-    method: "GET",
-    headers: token
-      ? {
-          Authorization: `Bearer ${token}`,
-        }
-      : {},
-  });
-
-  const json = await res.json().catch(() => ({}));
-
-  if (res.status === 429) {
-    throw new Error("Delete rate limit reached. Please try again in a few moments.");
-  }
-
-  if (!res.ok || json.success === false) {
-    throw new Error(json.error || json.errorMessage || json.message || "Failed to get delete signature");
-  }
-
-  const data = json.data || json;
-
-  return {
-    cloudName: data.cloud_name,
-    apiKey: data.api_key,
-    timestamp: data.timestamp,
-    signature: data.signature,
-    publicId: data.public_id || publicId,
-  };
-}
-
 /**
- * Delete an image from Cloudinary (client-side). Returns { result }.
+ * Delete an uploaded storage object via backend ownership checks.
  */
-export async function deleteCloudinaryImage(publicId) {
-  if (!publicId || typeof publicId !== "string") {
-    throw new Error("Valid publicId is required");
+export async function deleteStorageObject(key, type = null) {
+  if (!key || typeof key !== "string") {
+    return;
   }
 
-  const sig = await getCloudinaryDeleteSignature(publicId);
-
-  const form = new FormData();
-  form.append("public_id", sig.publicId);
-  form.append("api_key", sig.apiKey);
-  form.append("timestamp", sig.timestamp);
-  form.append("signature", sig.signature);
-
-  const deleteUrl = `https://api.cloudinary.com/v1_1/${sig.cloudName}/image/destroy`;
-  const res = await fetch(deleteUrl, { method: "POST", body: form });
-  if (!res.ok) {
-    const errJson = await res.json().catch(() => ({}));
-    throw new Error(errJson.error?.message || errJson.message || "Delete failed");
-  }
-  return res.json();
-}
-
-/**
- * Delete a Cloudinary image via backend draft endpoint (best-effort).
- * This is used to clean up temporary uploads or explicit deletions from UI.
- */
-export async function deleteDraftCloudinaryImage(publicId, type = null) {
-  if (!publicId || typeof publicId !== "string") {
-    return; // quietly ignore missing ids
-  }
-
-  const payload = { publicId };
-  if (type) payload.type = type;
+  const payload = { key, storageKey: key, publicId: key };
+  if (type) payload.mediaType = type;
 
   try {
-    await apiFetch(buildUrl("/api/cloudinary/draft"), {
+    await apiFetch(buildUrl("/api/storage/uploads/object"), {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
   } catch (err) {
-    console.warn("⚠️ Failed to delete draft Cloudinary image", publicId, err?.message);
+    console.warn("Failed to delete uploaded storage object", key, err?.message);
   }
 }
 
-async function uploadToCloudinary(file, signaturePayload) {
-  const {
-    cloudName,
-    apiKey,
-    timestamp,
-    folder,
-    signature,
-    uploadPreset,
-    resourceType = "image",
-    allowedFormats,
-    maxBytes,
-  } = signaturePayload || {};
-
-  if (!cloudName || !apiKey || !timestamp || !signature || !folder) {
-    throw new Error("Missing Cloudinary configuration");
-  }
-
-  // Client-side validation per spec
-  const allowed = (allowedFormats || "jpg,jpeg,png,webp")
-    .split(",")
-    .map((f) => f.trim().toLowerCase())
-    .filter(Boolean);
-  const limit = maxBytes || 100_000_000;
-
-  if (file.size > limit) {
-    throw new Error(`File too large. Max ${(limit / 1_000_000).toFixed(0)}MB allowed.`);
-  }
-
-  const fileType = (file.type || "").toLowerCase();
-  const fileExt = file.name?.split(".").pop()?.toLowerCase();
-  const isValidType =
-    allowed.length === 0 ||
-    allowed.some((fmt) => fileType.includes(fmt) || (fileExt && fileExt === fmt));
-
-  if (!isValidType) {
-    throw new Error(`Invalid file format. Allowed: ${allowed.join(", ")}`);
-  }
-
-  const form = new FormData();
-  form.append("file", file);
-  form.append("api_key", apiKey);
-  form.append("timestamp", timestamp);
-  form.append("folder", folder);
-  if (allowedFormats) form.append("allowed_formats", allowedFormats);
-  form.append("signature", signature);
-  if (uploadPreset) form.append("upload_preset", uploadPreset);
-
-  const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
-  const res = await fetch(uploadUrl, { method: "POST", body: form });
-  if (!res.ok) {
-    const errJson = await res.json().catch(() => ({}));
-    throw new Error(errJson.error?.message || errJson.message || "Upload failed");
-  }
-  return res.json();
-}
+export const deleteDraftStorageObject = deleteStorageObject;
 
 /**
- * Upload Artist Image (Cloudinary direct)
- * Returns normalized shape: { data: { image: <url>, url: <url>, publicId: <id> } }
+ * Upload Artist Image.
+ * Returns normalized shape: { data: { image: <url>, url: <url>, publicId: <key> } }
  */
 export async function uploadArtistImage(eventId, file) {
   if (!eventId) throw new Error("Event ID is required");
   if (!file || !(file instanceof File)) throw new Error("Valid artist image file is required");
 
-  const sig = await getCloudinarySignature("EVENT_GALLERY", eventId);
-  const uploadJson = await uploadToCloudinary(file, sig);
-
-  const secureUrl = uploadJson.secure_url || uploadJson.url;
-  const publicId = uploadJson.public_id || uploadJson.publicId;
+  const upload = await uploadTempImage(file, "ARTIST_IMAGE", eventId);
 
   return {
     data: {
-      image: secureUrl,
-      url: secureUrl,
-      publicId,
+      image: upload.url,
+      url: upload.url,
+      key: upload.key,
+      storageKey: upload.storageKey,
+      publicId: upload.publicId,
+    },
+  };
+}
+
+export async function uploadSponsorLogo(eventId, file) {
+  if (!eventId) throw new Error("Event ID is required");
+  if (!file || !(file instanceof File)) throw new Error("Valid sponsor logo file is required");
+
+  const upload = await uploadTempImage(file, "SPONSOR_LOGO", eventId);
+
+  return {
+    data: {
+      image: upload.url,
+      url: upload.url,
+      key: upload.key,
+      storageKey: upload.storageKey,
+      publicId: upload.publicId,
     },
   };
 }
 
 /**
- * Persist already-uploaded gallery URLs to backend (no Cloudinary upload).
+ * Persist already-uploaded gallery URLs/keys to backend.
  */
 export async function persistGalleryUrls(eventId, images) {
   if (!eventId) throw new Error("Event ID is required");
@@ -336,11 +241,13 @@ export async function persistGalleryUrls(eventId, images) {
   const url = buildUrl(`/api/event/${eventId}/images`);
   const payload = images.map((img) => ({
     url: img.url,
-    publicId: img.publicId,
+    key: img.storageKey || img.key || img.publicId,
+    storageKey: img.storageKey || img.key || img.publicId,
+    publicId: img.storageKey || img.key || img.publicId,
     type: img.type || "EVENT_GALLERY",
   }));
 
-  console.log("🔗 Persisting gallery metadata to backend:", payload);
+  console.log("Persisting gallery metadata to backend:", payload);
 
   const res = await apiFetch(url, {
     method: "POST",
@@ -350,7 +257,6 @@ export async function persistGalleryUrls(eventId, images) {
 
   return res;
 }
-
 /**
  * Create event - Step 1: Basic Details
  * 
@@ -501,11 +407,11 @@ export async function updateEventStep1(eventId, eventData) {
  * @param {File} flyerImage - Flyer image file
  * @returns {Promise<Object>} Response with uploaded image URL
  */
-// Upload/Replace Flyer Image (Cloudinary direct)
+// Upload/replace flyer image through S3 storage.
 // Preserves old response shape: { data: { flyerImage: <url>, url: <url>, publicId: <id> } }
 export async function uploadFlyerImage(eventId, flyerImage) {
-  console.log("📸 Uploading Flyer Image (Cloudinary direct)");
-  console.log("📋 Event ID:", eventId);
+  console.log("Uploading flyer image");
+  console.log("Event ID:", eventId);
 
   if (!eventId) {
     throw new Error("Event ID is required");
@@ -516,38 +422,33 @@ export async function uploadFlyerImage(eventId, flyerImage) {
   }
 
   try {
-    const sig = await getCloudinarySignature("EVENT_FLYER", eventId);
-    const uploadJson = await uploadToCloudinary(flyerImage, sig);
+    const upload = await uploadTempImage(flyerImage, "EVENT_FLYER", eventId);
 
-    const secureUrl = uploadJson.secure_url || uploadJson.url;
-    const publicId = uploadJson.public_id || uploadJson.publicId;
-
-    // Persist to backend DB to match old behavior
     try {
-      await persistFlyerUrl(eventId, { url: secureUrl, publicId });
-      console.log("✅ Flyer metadata persisted to backend");
+      await persistFlyerUrl(eventId, upload);
+      console.log("Flyer metadata persisted to backend");
     } catch (persistErr) {
-      console.error("❌ Failed to persist flyer URL to backend:", persistErr);
+      console.error("Failed to persist flyer URL to backend:", persistErr);
       throw new Error(persistErr?.message || "Failed to save flyer image. Please try again.");
     }
 
     const normalized = {
       data: {
-        flyerImage: secureUrl,
-        url: secureUrl,
-        publicId,
+        flyerImage: upload.url,
+        url: upload.url,
+        key: upload.key,
+        storageKey: upload.storageKey,
+        publicId: upload.publicId,
       },
     };
 
-    console.log("✅ Flyer image uploaded successfully:", normalized);
+    console.log("Flyer image uploaded successfully:", normalized);
     return normalized;
   } catch (error) {
-    console.error("❌ Failed to upload flyer image:");
-    console.error("   Error message:", error.message);
+    console.error("Failed to upload flyer image:", error.message);
     throw error;
   }
 }
-
 /**
  * Delete Flyer Image
  * 
@@ -589,11 +490,11 @@ export async function deleteFlyerImage(eventId) {
  * @param {File[]} galleryImages - Array of gallery image files (1-10 images, JPEG/PNG/WebP/GIF, ≤10MB each)
  * @returns {Promise<Object>} Response with uploaded image URLs
  */
-// Upload Gallery Images (Cloudinary direct)
+// Upload gallery images through S3 storage.
 // Preserves old response shape: { data: { images: [ { id, url, type: 'EVENT_GALLERY' } ] } }
 export async function uploadGalleryImages(eventId, galleryImages) {
-  console.log("📸 Uploading Gallery Images (Cloudinary direct)");
-  console.log("📋 Event ID:", eventId);
+  console.log("Uploading gallery images");
+  console.log("Event ID:", eventId);
 
   if (!eventId) {
     throw new Error("Event ID is required");
@@ -608,20 +509,18 @@ export async function uploadGalleryImages(eventId, galleryImages) {
   }
 
   try {
-    const sig = await getCloudinarySignature("EVENT_GALLERY", eventId);
-
     const uploads = await Promise.all(
       galleryImages.map(async (image, index) => {
         if (!(image instanceof File)) {
           throw new Error(`Gallery file at index ${index} is not a File`);
         }
-        const uploadJson = await uploadToCloudinary(image, sig);
-        const secureUrl = uploadJson.secure_url || uploadJson.url;
-        const publicId = uploadJson.public_id || uploadJson.publicId;
+        const upload = await uploadTempImage(image, "EVENT_GALLERY", eventId);
         return {
-          id: publicId, // temporary; will be replaced by DB ID after persist
-          url: secureUrl,
-          publicId,
+          id: upload.publicId,
+          url: upload.url,
+          key: upload.key,
+          storageKey: upload.storageKey,
+          publicId: upload.publicId,
           type: "EVENT_GALLERY",
         };
       })
@@ -629,27 +528,27 @@ export async function uploadGalleryImages(eventId, galleryImages) {
 
     let backendImages = [];
 
-    // Persist to backend DB
     try {
       const persistRes = await persistGalleryUrls(eventId, uploads);
-      // Expect response: { data: { images: [ { id, url, ... } ] } }
       backendImages =
         persistRes?.data?.images ||
         persistRes?.images ||
         persistRes?.data ||
         [];
-      console.log("✅ Gallery metadata persisted to backend");
+      console.log("Gallery metadata persisted to backend");
     } catch (persistErr) {
-      console.error("❌ Failed to persist gallery metadata to backend:", persistErr);
+      console.error("Failed to persist gallery metadata to backend:", persistErr);
       throw new Error(persistErr?.message || "Failed to save gallery images. Please try again.");
     }
 
-    // Prefer backend IDs (DB UUID) for delete route compatibility
     const imagesForUi =
       Array.isArray(backendImages) && backendImages.length > 0
         ? backendImages.map((img, idx) => ({
-            id: img.id || uploads[idx]?.id, // DB ID preferred
+            id: img.id || uploads[idx]?.id,
             url: img.url || uploads[idx]?.url,
+            key: img.key || img.storageKey || img.publicId || uploads[idx]?.key,
+            storageKey: img.storageKey || img.key || img.publicId || uploads[idx]?.storageKey,
+            publicId: img.publicId || img.storageKey || img.key || uploads[idx]?.publicId,
             type: img.type || "EVENT_GALLERY",
           }))
         : uploads;
@@ -660,15 +559,13 @@ export async function uploadGalleryImages(eventId, galleryImages) {
       },
     };
 
-    console.log("✅ Gallery images uploaded successfully:", normalized);
+    console.log("Gallery images uploaded successfully:", normalized);
     return normalized;
   } catch (error) {
-    console.error("❌ Failed to upload gallery images:");
-    console.error("   Error message:", error.message);
+    console.error("Failed to upload gallery images:", error.message);
     throw error;
   }
 }
-
 /**
  * Delete Gallery Image
  * 
