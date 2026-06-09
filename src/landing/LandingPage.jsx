@@ -24,7 +24,7 @@ import eventFallback from "@/assets/event-music.jpg";
 import { resolveEventBannerImage } from "@/utils/eventBannerImage";
 import { formatEventPriceLabel } from "@/utils/priceFormatter";
 
-const EVENT_SECTION_CONFIG = [
+const PICK_YOUR_VIBE_SECTION_CONFIG = [
   {
     key: "live-concerts",
     label: "Live Concerts",
@@ -118,6 +118,37 @@ const EVENT_SECTION_CONFIG = [
   },
 ];
 
+const EVENT_SECTION_CONFIG = [
+  {
+    ...PICK_YOUR_VIBE_SECTION_CONFIG[0],
+    key: "music",
+    label: "Music",
+    description:
+      "Live concerts, festivals, club nights, and music-led experiences.",
+    filters: { category: "Music" },
+  },
+  {
+    ...PICK_YOUR_VIBE_SECTION_CONFIG[3],
+    filters: { category: "Concerts" },
+  },
+  {
+    ...PICK_YOUR_VIBE_SECTION_CONFIG[4],
+    filters: { category: "Sports" },
+  },
+  {
+    ...PICK_YOUR_VIBE_SECTION_CONFIG[5],
+    filters: { category: "Movies" },
+  },
+  {
+    ...PICK_YOUR_VIBE_SECTION_CONFIG[6],
+    filters: { category: "Plays" },
+  },
+  {
+    ...PICK_YOUR_VIBE_SECTION_CONFIG[7],
+    filters: { category: "Activities" },
+  },
+];
+
 const PICK_YOUR_VIBE_EXCLUDED_KEYS = new Set([
   "movies",
   "plays",
@@ -126,7 +157,7 @@ const PICK_YOUR_VIBE_EXCLUDED_KEYS = new Set([
   "theater-shows",
 ]);
 
-const PICK_YOUR_VIBE_CONFIG = EVENT_SECTION_CONFIG.filter(
+const PICK_YOUR_VIBE_CONFIG = PICK_YOUR_VIBE_SECTION_CONFIG.filter(
   (section) => !PICK_YOUR_VIBE_EXCLUDED_KEYS.has(section.key),
 );
 
@@ -298,34 +329,34 @@ const SearchResultsSkeleton = () => (
   </div>
 );
 
-const EventCardSkeleton = ({ featured = false }) => (
+const EventCardSkeleton = () => (
   <div
-    className={`relative min-h-[13.25rem] overflow-hidden rounded-[1.35rem] border border-border/40 bg-card/70 shadow-[var(--shadow-card)] ${featured ? "sm:min-h-[14.25rem]" : "sm:min-h-[13.75rem]"}`}
+    className="relative min-h-[11.25rem] overflow-hidden rounded-lg border border-border/40 bg-card/70 shadow-[var(--shadow-card)]"
   >
     <Skeleton className="absolute inset-0 h-full w-full bg-muted/50" />
     <div className="absolute inset-0 bg-gradient-to-t from-background via-background/45 to-transparent" />
-    <div className="relative flex min-h-[13.25rem] flex-col justify-between p-4">
-      <div className="flex items-center justify-between gap-3">
-        <Skeleton className="h-7 w-24 rounded-full bg-muted/60" />
-        <Skeleton className="h-7 w-20 rounded-full bg-muted/60" />
+    <div className="relative flex min-h-[11.25rem] flex-col justify-between p-3">
+      <div className="flex items-center justify-between gap-2">
+        <Skeleton className="h-6 w-20 rounded-full bg-muted/60" />
+        <Skeleton className="h-6 w-16 rounded-full bg-muted/60" />
       </div>
-      <div className="space-y-3">
-        <Skeleton className="h-6 w-4/5 bg-muted/60" />
-        <Skeleton className="h-4 w-2/3 bg-muted/60" />
-        <Skeleton className="h-8 w-28 rounded-full bg-muted/60" />
+      <div className="space-y-2.5">
+        <Skeleton className="h-5 w-4/5 bg-muted/60" />
+        <Skeleton className="h-3.5 w-2/3 bg-muted/60" />
+        <Skeleton className="h-7 w-24 rounded-full bg-muted/60" />
       </div>
     </div>
   </div>
 );
 
 const EmptyState = ({ children }) => (
-  <div className="relative overflow-hidden rounded-[1.25rem] border border-border/40 bg-card/70 px-5 py-5 text-sm text-muted-foreground shadow-[var(--shadow-card)]">
+  <div className="relative flex min-h-[11.25rem] overflow-hidden rounded-lg border border-border/40 bg-card/70 px-3.5 py-3 text-xs text-muted-foreground shadow-[var(--shadow-card)]">
     <div className="theme-gradient-primary absolute inset-0 opacity-10" />
-    <div className="relative flex items-center gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/40 bg-muted/50 text-accent shadow-[var(--shadow-card)]">
-        <Sparkles className="h-4 w-4" />
+    <div className="relative mt-auto flex items-center gap-2.5">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/40 bg-muted/50 text-accent shadow-[var(--shadow-card)]">
+        <Sparkles className="h-3.5 w-3.5" />
       </div>
-      <p className="max-w-xl leading-6">{children}</p>
+      <p className="leading-5">{children}</p>
     </div>
   </div>
 );
@@ -424,12 +455,19 @@ const buildBrowseEventsPath = ({ category, subCategory, search } = {}) => {
   return `/browse-events${params.toString() ? `?${params.toString()}` : ""}`;
 };
 
-const getCategoryEventGridClass = (count) => {
-  if (count <= 0) return "mx-auto w-full max-w-xl";
-  if (count === 1) return "mx-auto grid w-full max-w-[24rem] gap-3";
+const getRightAlignedGridOffsetClass = (count) => {
+  if (count <= 1)
+    return "sm:[&>*:first-child]:col-start-2 lg:[&>*:first-child]:col-start-3 2xl:[&>*:first-child]:col-start-4";
   if (count === 2)
-    return "mx-auto grid w-full max-w-[48rem] gap-3 sm:grid-cols-2";
-  return "grid w-full gap-3 sm:grid-cols-2 xl:grid-cols-3";
+    return "lg:[&>*:first-child]:col-start-2 2xl:[&>*:first-child]:col-start-3";
+  if (count === 3) return "2xl:[&>*:first-child]:col-start-2";
+  return "";
+};
+
+const getCategoryEventGridClass = (count, alignRight = false) => {
+  const baseClass = "grid w-full gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4";
+  if (!alignRight) return baseClass;
+  return `${baseClass} ${getRightAlignedGridOffsetClass(count)}`;
 };
 
 const LandingEventCard = ({
@@ -440,7 +478,6 @@ const LandingEventCard = ({
   image,
   category,
   price,
-  featured = false,
 }) => {
   const [imageSrc, setImageSrc] = useState(image || eventFallback);
 
@@ -457,7 +494,7 @@ const LandingEventCard = ({
       rel={opensEventDetail ? "noopener noreferrer" : undefined}
       className="group block h-full"
     >
-      <article className={`landing-event-card relative h-full min-h-[13.25rem] overflow-hidden rounded-[1.35rem] border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1.5 hover:border-border hover:shadow-[var(--shadow-elegant)] ${featured ? "sm:min-h-[14.25rem]" : "sm:min-h-[13.75rem]"}`}>
+      <article className="landing-event-card relative h-full min-h-[11.25rem] overflow-hidden rounded-lg border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1 hover:border-border hover:shadow-[var(--shadow-elegant)]">
         <div className="absolute inset-0 overflow-hidden">
           <img
             src={imageSrc}
@@ -466,49 +503,114 @@ const LandingEventCard = ({
             onError={handleImageError}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-background/5" />
-          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background/55 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-background/55 to-transparent" />
           <div className="theme-gradient-primary absolute inset-0 opacity-10 transition-opacity duration-500 group-hover:opacity-20" />
         </div>
 
-        <div className="relative flex h-full min-h-[13.25rem] flex-col justify-between p-3.5 sm:min-h-[inherit]">
-          <div className="flex items-start justify-between gap-3">
+        <div className="relative flex h-full min-h-[11.25rem] flex-col justify-between p-3 sm:min-h-[inherit]">
+          <div className="flex items-start justify-between gap-2">
             {category && (
-              <div className="max-w-[65%] truncate rounded-full border border-border/40 bg-card/85 px-3 py-1 text-xs font-medium text-foreground shadow-[var(--shadow-card)] backdrop-blur-md">
+              <div className="max-w-[62%] truncate rounded-full border border-border/40 bg-card/85 px-2.5 py-1 text-[0.68rem] font-medium leading-none text-foreground shadow-[var(--shadow-card)] backdrop-blur-md">
                 {category}
               </div>
             )}
             {price && (
-              <div className="inline-flex min-w-[5.25rem] shrink-0 items-center justify-center rounded-full border border-accent/30 bg-accent/10 px-3.5 py-1.5 text-xs font-bold leading-none tabular-nums text-accent shadow-[var(--shadow-card)] backdrop-blur-md">
+              <div className="inline-flex min-w-[4.75rem] shrink-0 items-center justify-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-[0.68rem] font-bold leading-none tabular-nums text-accent shadow-[var(--shadow-card)] backdrop-blur-md">
                 {price}
               </div>
             )}
           </div>
 
           <div className="mt-auto">
-            <h3 className="line-clamp-2 text-base font-black leading-tight text-foreground drop-shadow-xl transition-colors group-hover:text-accent sm:text-lg">
+            <h3 className="line-clamp-2 text-sm font-black leading-tight text-foreground drop-shadow-xl transition-colors group-hover:text-accent sm:text-base">
               {title}
             </h3>
-            <div className="mt-2.5 grid gap-1.5 text-xs text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <CalendarRange className="h-3.5 w-3.5 shrink-0 text-accent" />
+            <div className="mt-2 grid gap-1 text-[0.7rem] text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <CalendarRange className="h-3 w-3 shrink-0 text-accent" />
                 <span className="line-clamp-1">{date}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5 shrink-0 text-accent" />
+              <div className="flex items-center gap-1.5">
+                <MapPin className="h-3 w-3 shrink-0 text-accent" />
                 <span className="line-clamp-1">{location}</span>
               </div>
             </div>
-            <div className="mt-3.5 flex items-center justify-between gap-3">
+            <div className="mt-3 flex items-center justify-between gap-2.5">
               <span className="h-px flex-1 bg-gradient-to-r from-border/70 via-border/30 to-transparent" />
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/40 bg-card/75 px-3.5 py-2 text-xs font-semibold text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition-all duration-300 group-hover:border-border group-hover:bg-primaryCTA group-hover:text-primary-foreground">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/40 bg-card/75 px-3 py-1.5 text-[0.68rem] font-semibold text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition-all duration-300 group-hover:border-border group-hover:bg-primaryCTA group-hover:text-primary-foreground">
                 View Details
-                <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+                <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-1" />
               </span>
             </div>
           </div>
         </div>
       </article>
     </Link>
+  );
+};
+
+const LandingDiscoverySection = ({
+  section,
+  events,
+  sectionsLoading,
+  emptyMessage,
+  isReversed = false,
+  className = "relative bg-background py-3 sm:py-4",
+  headerDelay = "0ms",
+}) => {
+  const itemCount = sectionsLoading ? 3 : Math.max(events.length, 1);
+
+  return (
+    <section className={className}>
+      <div className="container relative px-4 sm:px-6 lg:px-8">
+        <div className="relative border-t border-border/20 pt-3">
+          <div
+            className={`theme-gradient-primary pointer-events-none absolute top-0 h-36 w-36 rounded-full opacity-10 blur-3xl ${isReversed ? "left-0" : "right-0"}`}
+          />
+          <div
+            className={`landing-reveal relative flex flex-col gap-3 sm:items-end sm:justify-between ${isReversed ? "sm:flex-row-reverse" : "sm:flex-row"}`}
+            style={{ "--landing-delay": headerDelay }}
+          >
+            <div
+              className={`min-w-0 sm:max-w-2xl ${isReversed ? "sm:text-right" : ""}`}
+            >
+              <h2 className="text-3xl font-black leading-tight text-foreground sm:text-[2.15rem]">
+                {section.label}
+              </h2>
+              <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+                {section.description}
+              </p>
+            </div>
+            <Link
+              to={buildBrowseEventsPath(section.filters)}
+              className="shrink-0"
+            >
+              <Button variant="accent" className="h-10 rounded-full px-4">
+                Browse all
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+
+          <div
+            className={`landing-reveal relative mt-3.5 ${getCategoryEventGridClass(itemCount, isReversed)}`}
+            style={{ "--landing-delay": "120ms" }}
+          >
+            {sectionsLoading ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <EventCardSkeleton key={`${section.key}-skeleton-${index}`} />
+              ))
+            ) : events.length > 0 ? (
+              events.map((event) => (
+                <LandingEventCard key={event.id} {...event} />
+              ))
+            ) : (
+              <EmptyState>{emptyMessage}</EmptyState>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 };
 
@@ -947,152 +1049,29 @@ const LandingPage = () => {
                 })}
               </div>
 
-              <div className="mt-8 border-t border-border/30 pt-6">
-                <div className="grid gap-4 lg:grid-cols-[0.58fr_1.42fr] lg:items-start">
-                  <div className="relative min-h-[14.25rem] overflow-hidden rounded-[1.5rem] border border-border/40 bg-card p-5 shadow-[var(--shadow-card)]">
-                    <img
-                      src={featuredVibe.image}
-                      alt=""
-                      aria-hidden="true"
-                      className="absolute inset-0 h-full w-full object-cover opacity-35"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-card/75 to-background/95" />
-                    <div className="theme-gradient-primary absolute inset-0 opacity-10" />
-                    <div className="relative flex min-h-[12.25rem] flex-col justify-end">
-                      <p className="text-sm uppercase tracking-[0.18em] text-accent">
-                        {featuredVibe.eyebrow}
-                      </p>
-                      <h3 className="mt-2 text-2xl font-black text-foreground">
-                        {featuredVibe.label}
-                      </h3>
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                        {featuredVibe.description}
-                      </p>
-                      <Link
-                        to={buildBrowseEventsPath(featuredVibe.filters)}
-                        className="mt-5 inline-flex"
-                      >
-                        <Button variant="accent" className="rounded-full">
-                          Explore live concerts
-                          <ArrowRight className="ml-1 h-4 w-4" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-
-                  <div
-                    className={getCategoryEventGridClass(
-                      sectionsLoading ? 3 : featuredVibeEvents.length,
-                    )}
-                  >
-                    {sectionsLoading ? (
-                      Array.from({ length: 3 }).map((_, index) => (
-                        <EventCardSkeleton
-                          key={`${featuredVibe.key}-preview-skeleton-${index}`}
-                          featured
-                        />
-                      ))
-                    ) : featuredVibeEvents.length > 0 ? (
-                      featuredVibeEvents.map((event) => (
-                        <LandingEventCard key={event.id} {...event} featured />
-                      ))
-                    ) : (
-                      <div>
-                        <EmptyState>
-                          No live events are available in this vibe yet. Try
-                          another vibe or browse the full catalog.
-                        </EmptyState>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </section>
 
-        {otherSections.map((section, index) => {
-          const events = eventSections[section.key] || [];
-          const Icon = section.icon;
-          const isReversed = index % 2 === 1;
+        <LandingDiscoverySection
+          section={featuredVibe}
+          events={featuredVibeEvents}
+          sectionsLoading={sectionsLoading}
+          emptyMessage={
+            "No live events are available in this vibe yet. Try another vibe or browse the full catalog."
+          }
+        />
 
-          return (
-            <section
-              key={section.key}
-              className="relative bg-background py-6 sm:py-8"
-            >
-              <div className="container relative px-4 sm:px-6 lg:px-8">
-                <div className="relative border-t border-border/30 pt-6">
-                  <div className="theme-gradient-primary absolute right-0 top-0 h-56 w-56 rounded-full opacity-10 blur-3xl" />
-                  <div
-                    className={`relative grid gap-4 lg:grid-cols-[0.56fr_1.44fr] lg:items-start ${isReversed ? "lg:grid-cols-[1.44fr_0.56fr]" : ""}`}
-                  >
-                    <div
-                      className={`landing-reveal ${isReversed ? "lg:order-2" : ""}`}
-                    >
-                      <div className="relative min-h-[14.25rem] overflow-hidden rounded-[1.5rem] border border-border/50 bg-card p-5 shadow-[var(--shadow-card)]">
-                        <img
-                          src={section.image}
-                          alt=""
-                          aria-hidden="true"
-                          className="absolute inset-0 h-full w-full object-cover opacity-35"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-background via-card/75 to-transparent" />
-                        <div className="theme-gradient-primary absolute inset-0 opacity-10" />
-                        <div className="relative flex min-h-[12.25rem] flex-col justify-end">
-                          <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border/40 bg-muted/50 text-accent shadow-[var(--shadow-card)] backdrop-blur-md">
-                            <Icon className="h-5 w-5" />
-                          </div>
-                          <p className="mt-5 text-xs uppercase tracking-[0.18em] text-accent">
-                            {section.eyebrow}
-                          </p>
-                          <h2 className="mt-2 text-2xl font-black text-foreground sm:text-3xl">
-                            {section.label}
-                          </h2>
-                          <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-                            {section.description}
-                          </p>
-                          <Link
-                            to={buildBrowseEventsPath(section.filters)}
-                            className="mt-5 inline-flex"
-                          >
-                            <Button variant="accent" className="rounded-full">
-                              Browse all
-                              <ArrowRight className="ml-1 h-4 w-4" />
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div
-                      className={`landing-reveal ${getCategoryEventGridClass(sectionsLoading ? 3 : events.length)} ${isReversed ? "lg:order-1" : ""}`}
-                      style={{ "--landing-delay": "120ms" }}
-                    >
-                      {sectionsLoading ? (
-                        Array.from({ length: 3 }).map((_, skeletonIndex) => (
-                          <EventCardSkeleton
-                            key={`${section.key}-skeleton-${skeletonIndex}`}
-                          />
-                        ))
-                      ) : events.length > 0 ? (
-                        events.map((event) => (
-                          <LandingEventCard key={event.id} {...event} />
-                        ))
-                      ) : (
-                        <div>
-                          <EmptyState>
-                            No live events are available in this section yet.
-                          </EmptyState>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-          );
-        })}
+        {otherSections.map((section, index) => (
+          <LandingDiscoverySection
+            key={section.key}
+            section={section}
+            events={eventSections[section.key] || []}
+            sectionsLoading={sectionsLoading}
+            emptyMessage={"No live events are available in this section yet."}
+            isReversed={(index + 1) % 2 === 1}
+          />
+        ))}
 
         {/* How it works */}
         <section className="relative bg-background py-10 sm:py-12">

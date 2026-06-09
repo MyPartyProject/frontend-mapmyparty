@@ -21,6 +21,19 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Ticket } from "lucide-react";
 
+const TABLE_GROUP_CAPACITY_LIMIT = 15;
+const WHOLE_NUMBER_PATTERN = /^\d+$/;
+
+const isWholeNumberInput = (value) => WHOLE_NUMBER_PATTERN.test(String(value).trim());
+
+const handleWholeNumberChange = (setter) => (event) => {
+  const nextValue = event.target.value;
+
+  if (/^\d*$/.test(nextValue)) {
+    setter(nextValue);
+  }
+};
+
 const TicketTypeModal = ({ open, onClose, ticketType, onSave, initialTicket = null }) => {
   const isGuestListTicket = ticketType === "vip-guest";
   const isEditing = Boolean(initialTicket);
@@ -118,9 +131,14 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave, initialTicket = nu
       alert("Please enter a ticket name");
       return;
     }
-    const numericPrice = Number(String(price).trim());
-    if (String(price).trim() === "" || !Number.isFinite(numericPrice)) {
+    const trimmedPrice = String(price).trim();
+    const numericPrice = Number(trimmedPrice);
+    if (trimmedPrice === "" || !Number.isFinite(numericPrice)) {
       alert("Please enter a valid price");
+      return;
+    }
+    if (!isWholeNumberInput(trimmedPrice)) {
+      alert("Ticket price must be a whole number");
       return;
     }
     if (isGuestListTicket && numericPrice < 0) {
@@ -131,23 +149,59 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave, initialTicket = nu
       alert("This ticket type must have a price greater than 0");
       return;
     }
-    if (!quantity) {
-      alert("Please enter the total quantity");
+    const trimmedQuantity = String(quantity).trim();
+    if (!isWholeNumberInput(trimmedQuantity) || Number(trimmedQuantity) <= 0) {
+      alert("Please enter a valid total quantity");
       return;
+    }
+
+    let resolvedGroupQuantity = groupQuantity || "1";
+    let resolvedTableQuantity = tableQuantity || "1";
+
+    if (ticketType === "group-pass") {
+      const trimmedGroupQuantity = String(groupQuantity).trim();
+      const numericGroupQuantity = Number(trimmedGroupQuantity);
+
+      if (
+        !isWholeNumberInput(trimmedGroupQuantity) ||
+        numericGroupQuantity < 1 ||
+        numericGroupQuantity > TABLE_GROUP_CAPACITY_LIMIT
+      ) {
+        alert(`Group size must be between 1 and ${TABLE_GROUP_CAPACITY_LIMIT}`);
+        return;
+      }
+
+      resolvedGroupQuantity = String(numericGroupQuantity);
+    }
+
+    if (ticketType === "table") {
+      const trimmedTableQuantity = String(tableQuantity).trim();
+      const numericTableQuantity = Number(trimmedTableQuantity);
+
+      if (
+        !isWholeNumberInput(trimmedTableQuantity) ||
+        numericTableQuantity < 1 ||
+        numericTableQuantity > TABLE_GROUP_CAPACITY_LIMIT
+      ) {
+        alert(`Table capacity must be between 1 and ${TABLE_GROUP_CAPACITY_LIMIT}`);
+        return;
+      }
+
+      resolvedTableQuantity = String(numericTableQuantity);
     }
 
     const data = {
       ticketName,
       ticketCategory,
       price: String(numericPrice),
-      quantity,
+      quantity: String(Number(trimmedQuantity)),
       description,
       maxPerCustomer: maxPerCustomer || "10", // Default to 10 if not set
       comingSoon,
       onsiteOnly,
       ticketEntryType,
-      groupQuantity: groupQuantity || "1",
-      tableQuantity: tableQuantity || "1",
+      groupQuantity: resolvedGroupQuantity,
+      tableQuantity: resolvedTableQuantity,
       type: ticketType,
       id: initialTicket?.id,
       publicId: initialTicket?.publicId,
@@ -218,11 +272,12 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave, initialTicket = nu
                       <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="groupQuantity"
-                        type="number"
-                        min="1"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder="e.g., 4"
                         value={groupQuantity}
-                        onChange={(e) => setGroupQuantity(e.target.value)}
+                        onChange={handleWholeNumberChange(setGroupQuantity)}
                         className="pl-10"
                       />
                     </div>
@@ -237,11 +292,12 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave, initialTicket = nu
                       <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="tableQuantity"
-                        type="number"
-                        min="1"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder="e.g., 10"
                         value={tableQuantity}
-                        onChange={(e) => setTableQuantity(e.target.value)}
+                        onChange={handleWholeNumberChange(setTableQuantity)}
                         className="pl-10"
                       />
                     </div>
@@ -255,12 +311,12 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave, initialTicket = nu
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
                     <Input
                       id="price"
-                      type="number"
-                      min={isGuestListTicket ? "0" : "1"}
-                      step="0.01"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       placeholder={isGuestListTicket ? "0" : "499"}
                       value={price}
-                      onChange={(e) => setPrice(e.target.value)}
+                      onChange={handleWholeNumberChange(setPrice)}
                       className="pl-8"
                     />
                   </div>
@@ -272,11 +328,12 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave, initialTicket = nu
                     <Ticket className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="quantity"
-                      type="number"
-                      min="1"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       placeholder="100"
                       value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
+                      onChange={handleWholeNumberChange(setQuantity)}
                       className="pl-10"
                     />
                   </div>
@@ -305,11 +362,12 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave, initialTicket = nu
                       <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="maxPerCustomer"
-                        type="number"
-                        min="1"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder="10"
                         value={maxPerCustomer}
-                        onChange={(e) => setMaxPerCustomer(e.target.value)}
+                        onChange={handleWholeNumberChange(setMaxPerCustomer)}
                         className="pl-10"
                       />
                     </div>
