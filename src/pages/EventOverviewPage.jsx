@@ -1,55 +1,162 @@
-import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Share2, ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import usePublicEventDetail from "@/hooks/usePublicEventDetail";
+import { resolveEventBannerImage } from "@/utils/eventBannerImage";
+import { formatEventPriceLabel } from "@/utils/priceFormatter";
 import overviewHero from "@/assets/overview-hero.png";
 import overviewAbout from "@/assets/overview-about.jpg";
 import expect1 from "@/assets/expect1.jpg";
 import expect2 from "@/assets/expect2.jpg";
 import expect3 from "@/assets/expect3.jpg";
 
+const fallbackExpectationImages = [expect1, expect2, expect3];
+
+const isPlaceholderImage = (value) =>
+  typeof value === "string" && value.includes("placeholder.com");
+
+const formatDateRange = (startDate, endDate) => {
+  if (!startDate) return "Date TBA";
+
+  const start = new Date(startDate);
+  if (Number.isNaN(start.getTime())) return "Date TBA";
+
+  const dateOptions = { month: "short", day: "numeric", year: "numeric" };
+  const timeOptions = { hour: "numeric", minute: "2-digit" };
+  const startLabel = `${start.toLocaleDateString(undefined, dateOptions)} at ${start.toLocaleTimeString(undefined, timeOptions)}`;
+
+  if (!endDate) return startLabel;
+
+  const end = new Date(endDate);
+  if (Number.isNaN(end.getTime())) return startLabel;
+
+  return `${startLabel} - ${end.toLocaleDateString(undefined, dateOptions)}`;
+};
+
+const truncateText = (value, maxLength = 180) => {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength).trim()}...`;
+};
+
+const getStartingPriceLabel = (tickets = []) => {
+  if (!Array.isArray(tickets) || tickets.length === 0) return null;
+
+  const prices = tickets
+    .map((ticket) => Number(ticket.price))
+    .filter((price) => Number.isFinite(price));
+
+  if (prices.length === 0) return null;
+
+  return formatEventPriceLabel(Math.min(...prices), { prefix: "From" });
+};
+
 const EventOverviewPage = () => {
   const { organizerSlug, eventSlug } = useParams();
   const navigate = useNavigate();
-  const [event, setEvent] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { event, loading, error } = usePublicEventDetail(organizerSlug, eventSlug);
   const [expectExpanded, setExpectExpanded] = useState([false, false, false]);
 
-  useEffect(() => {
-    // Use local dummy data for overview; no API calls required
-    const dummyEvent = {
-      organizerSlug,
-      eventSlug,
-      title: "Step Into the Pulse; Where Music, Light & Energy Collide",
-      description:
-        "Lose yourself in a night of electrifying rhythms, neon vibes, and pure energy. Experience top DJs, immersive visuals, and a crowd that moves as one. The pulse is calling; are you ready?",
-      cta: "Get Tickets Now",
-    };
+  const detailPath = `/events/${organizerSlug}/${eventSlug}`;
+  const title = event?.title || "Event";
+  const description =
+    event?.description ||
+    event?.about ||
+    "Event details will be available soon.";
+  const organizerName = event?.organizer?.name || "MapMyParty";
+  const categoryLabel = [event?.category, event?.subCategory].filter(Boolean).join(" / ") || "Event";
+  const venueLabel = event?.venue || event?.location || "Venue TBA";
+  const addressLabel = event?.address || event?.primaryVenue?.fullAddress || venueLabel;
+  const dateLabel = formatDateRange(event?.startDate, event?.endDate);
+  const priceLabel = getStartingPriceLabel(event?.tickets);
+  const heroImage = resolveEventBannerImage(event || {}, overviewHero);
 
-    setEvent(dummyEvent);
-    setLoading(false);
-  }, [organizerSlug, eventSlug]);
+  const galleryImages = useMemo(
+    () =>
+      Array.isArray(event?.gallery)
+        ? event.gallery.filter((image) => image && !isPlaceholderImage(image))
+        : [],
+    [event?.gallery],
+  );
+
+  const aboutImage = galleryImages[0] || heroImage || overviewAbout;
+
+  const expectationItems = useMemo(() => {
+    const artists = Array.isArray(event?.artists) ? event.artists : [];
+    const tickets = Array.isArray(event?.tickets) ? event.tickets : [];
+
+    return [
+      {
+        img: artists[0]?.image || galleryImages[1] || fallbackExpectationImages[0],
+        title: artists[0]?.name || "Featured Experience",
+        desc: artists[0]
+          ? `Featuring ${artists[0].name}${event?.subCategory ? ` for ${event.subCategory}` : ""}.`
+          : truncateText(description, 150),
+      },
+      {
+        img: galleryImages[2] || fallbackExpectationImages[1],
+        title: venueLabel,
+        desc: addressLabel || "Venue details are available on the event page.",
+      },
+      {
+        img: galleryImages[3] || fallbackExpectationImages[2],
+        title: tickets.length ? `${tickets.length} Ticket Option${tickets.length === 1 ? "" : "s"}` : "Ticketing",
+        desc: priceLabel
+          ? `${priceLabel}. Check live ticket availability before booking.`
+          : "Check live ticket availability on the event page.",
+      },
+    ];
+  }, [addressLabel, description, event?.artists, event?.subCategory, event?.tickets, galleryImages, priceLabel, venueLabel]);
+
+  const eventFacts = [
+    { label: "Organizer", value: organizerName },
+    { label: "When", value: dateLabel },
+    { label: "Where", value: venueLabel },
+    { label: "Category", value: categoryLabel },
+  ];
 
   const handleShare = () => {
+    const shareUrl = window.location.href.replace("/overview", "");
+
     if (navigator.share) {
       navigator.share({
-        title: event?.title || 'Event',
-        text: `Check out this event: ${event?.title}`,
-        url: window.location.href.replace('/overview', ''),
+        title,
+        text: `Check out this event: ${title}`,
+        url: shareUrl,
       }).catch(console.error);
     } else {
-      navigator.clipboard.writeText(window.location.href.replace('/overview', ''));
+      navigator.clipboard.writeText(shareUrl);
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0b1426] text-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#ff6a63]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#ff6a63]" />
       </div>
     );
-  };
+  }
+
+  if (error || !event) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0b1426] px-4 text-white">
+        <div className="max-w-md rounded-2xl border border-white/10 bg-white/8 p-6 text-center">
+          <p className="text-lg font-semibold">Event overview unavailable</p>
+          <p className="mt-2 text-sm text-white/70">
+            {error || "This event could not be found."}
+          </p>
+          <Button
+            className="mt-5 rounded-full bg-transparent px-5 font-semibold text-[#ff6a63] ring-1 ring-[#ff6a63] hover:bg-[#ff6a63] hover:text-white"
+            onClick={() => navigate("/browse-events")}
+          >
+            Browse Events
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0b1426] text-white">
@@ -72,7 +179,7 @@ const EventOverviewPage = () => {
             <div className="flex items-center gap-2">
               <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#ff5d6c] via-[#ff7c55] to-[#ff4f5c] shadow-lg shadow-[#ff5d6c]/30" />
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-[#ff6a63]">PulseFest</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-[#ff6a63]">{organizerName}</p>
                 <p className="text-sm text-white/80">Event Overview</p>
               </div>
             </div>
@@ -80,9 +187,9 @@ const EventOverviewPage = () => {
 
           <nav className="hidden items-center gap-8 text-sm font-semibold uppercase tracking-wide text-[#ff6a63] md:flex">
             <a href="#hero" className="hover:text-white">Home</a>
-            <a href="#about" className="hover:text-white">About Us</a>
+            <a href="#about" className="hover:text-white">About</a>
             <a href="#tickets" className="hover:text-white">Tickets</a>
-            <a href="#gallery" className="hover:text-white">Gallery</a>
+            <a href="#gallery" className="hover:text-white">Highlights</a>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -97,9 +204,9 @@ const EventOverviewPage = () => {
             </Button>
             <Button
               className="hidden rounded-full bg-transparent px-5 font-semibold text-[#ff6a63] ring-1 ring-[#ff6a63] hover:bg-[#ff6a63] hover:text-white md:inline-flex"
-              onClick={() => navigate(`/event/${event.id}`)}
+              onClick={() => navigate(detailPath)}
             >
-              Contact
+              Event Page
             </Button>
           </div>
         </div>
@@ -111,25 +218,24 @@ const EventOverviewPage = () => {
             <div className="absolute -left-10 -top-12 hidden h-28 w-48 bg-white/8 backdrop-blur-lg md:block" />
             <div className="inline-block rounded-lg bg-white/8 px-5 py-4 backdrop-blur-lg ring-1 ring-white/10">
               <p className="max-w-xs text-sm leading-relaxed text-white/70">
-                Every beat pulls you deeper into the electric moment.
-                Dance, connect, and let your pulse sync with the sound of the night.
+                {categoryLabel} by {organizerName}. {dateLabel}
               </p>
             </div>
 
             <div className="space-y-4">
               <h1 className="text-4xl font-bold leading-[1.05] text-white md:text-5xl lg:text-6xl">
-                {event.title}
+                {title}
               </h1>
-              <p className="max-w-2xl text-lg text-white/75">{event.description}</p>
+              <p className="max-w-2xl text-lg text-white/75">{description}</p>
             </div>
 
             <div className="flex flex-wrap items-center gap-5">
               <Button
                 size="lg"
                 className="group rounded-full border-2 border-[#ff6a63] bg-transparent px-7 text-lg font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#ff6a63]"
-                onClick={() => navigate(`/event/${event.id}#tickets`)}
+                onClick={() => navigate(`${detailPath}#ticket-section`)}
               >
-                {event.cta}
+                {priceLabel || "View Tickets"}
                 <ArrowRight className="ml-3 h-5 w-5 transition group-hover:translate-x-1" />
               </Button>
             </div>
@@ -146,9 +252,9 @@ const EventOverviewPage = () => {
 
           <div className="relative flex flex-col items-center gap-4 lg:items-end">
             <img
-              src={overviewHero}
-              alt="Event Hero"
-              className="mx-auto w-full max-w-[520px]"
+              src={heroImage}
+              alt={title}
+              className="mx-auto max-h-[520px] w-full max-w-[520px] rounded-[2rem] object-cover shadow-[0_30px_90px_-45px_rgba(0,0,0,0.75)]"
             />
           </div>
         </section>
@@ -157,83 +263,74 @@ const EventOverviewPage = () => {
           <div className="absolute inset-0 bg-[#101a2e]/80" />
           <div className="container relative flex justify-end">
             <p className="max-w-xs text-right text-xs leading-relaxed text-white/75">
-              Join the city's most electrifying night
-              of sound and sensation.
-              Lose control. Find your rhythm, and
-              become part of the pulse.
+              {venueLabel}. {addressLabel}
             </p>
           </div>
         </section>
 
-{/* //for more space */}
-<section className="container pb-8 pt-2"></section> 
+        <section className="container pb-8 pt-2" />
 
-        <section className="w-full bg-white text-[#0b1426]">
-          <div className="container flex flex-col items-center justify-between gap-6 py-6 md:flex-row">
-            <p className="text-sm font-medium text-[#2a2a2a]">Our trusted company and partners</p>
-            <div className="flex flex-wrap items-center gap-6 text-lg font-semibold uppercase">
-              <span className="text-[#d600aa]">Brand One</span>
-              <span className="text-[#1aa33c]">Brand Two</span>
-              <span className="text-[#1a4fa3]">Brand Three</span>
-              <span className="text-[#d60000]">Brand Four</span>
+        <section id="tickets" className="w-full bg-white text-[#0b1426]">
+          <div className="container flex flex-col items-start justify-between gap-6 py-6 md:flex-row md:items-center">
+            <p className="text-sm font-medium text-[#2a2a2a]">Event details from the live listing</p>
+            <div className="flex flex-wrap items-center gap-4 text-sm font-semibold uppercase">
+              {eventFacts.map((fact) => (
+                <span key={fact.label} className="rounded-full bg-[#0b1426]/5 px-4 py-2 text-[#0b1426]">
+                  {fact.label}: {fact.value}
+                </span>
+              ))}
             </div>
           </div>
         </section>
-        
-{/* //for more space */}
-<section className="container pb-8 pt-2"></section> 
 
-        <section className="w-full bg-[#0b1426] text-white pb-10 pt-6">
+        <section className="container pb-8 pt-2" />
+
+        <section id="about" className="w-full bg-[#0b1426] text-white pb-10 pt-6">
           <div className="container px-0 space-y-4">
-            <div className="flex flex-col gap-3 lg:items-end text-right px-10">
+            <div className="flex flex-col gap-3 px-10 text-right lg:items-end">
               <h3 className="text-3xl font-semibold text-[#f6cfc8]">About the Experience</h3>
-              <p className="text-sm leading-relaxed text-white/80 max-w-3xl">
-                This experience captures the perfect blend of energy, atmosphere, and emotion.
-                From the moment you step in, the environment pulls you into its rhythm,
-                setting a mood that feels immersive and unforgettable.
+              <p className="max-w-3xl text-sm leading-relaxed text-white/80">
+                {description}
               </p>
               <div className="flex justify-end">
-                <button className="text-xs uppercase tracking-wide text-white/70 hover:text-white inline-flex items-center gap-1">
-                  Show more
+                <button
+                  type="button"
+                  onClick={() => navigate(detailPath)}
+                  className="inline-flex items-center gap-1 text-xs uppercase tracking-wide text-white/70 hover:text-white"
+                >
+                  Open full event page
                 </button>
               </div>
             </div>
           </div>
 
-
-          {/* //for more space */}
-<section className="container pb-6 pt-4"></section> 
+          <section className="container pb-6 pt-4" />
 
           <div className="w-full">
             <img
-              src={overviewAbout}
-              alt="About the experience"
-              className="block w-full h-[220px] md:h-[280px] lg:h-[320px] object-cover"
+              src={aboutImage}
+              alt={`${title} overview`}
+              className="block h-[220px] w-full object-cover md:h-[280px] lg:h-[320px]"
             />
           </div>
         </section>
 
-        <section className="w-full bg-[#0b1426] text-white pb-12 pt-8">
+        <section id="gallery" className="w-full bg-[#0b1426] text-white pb-12 pt-8">
           <div className="container px-0 space-y-8">
-            <div className="space-y-3 text-center md:text-left md:px-10">
-              <h3 className="text-3xl font-semibold text-[#f6cfc8] uppercase tracking-[0.08em]">What to Expect</h3>
-              <p className="text-sm leading-relaxed text-white/80 max-w-3xl">
-                This experience captures the perfect blend of energy, atmosphere, and emotion. From the moment you step in,
-                the environment pulls you into its rhythm, setting a mood that feels immersive and unforgettable.
+            <div className="space-y-3 px-4 text-center md:px-10 md:text-left">
+              <h3 className="text-3xl font-semibold uppercase tracking-[0.08em] text-[#f6cfc8]">What to Expect</h3>
+              <p className="max-w-3xl text-sm leading-relaxed text-white/80">
+                Highlights are based on this event's current artists, venue, ticket options, and gallery data.
               </p>
             </div>
 
-            <div className="grid gap-8 md:grid-cols-3 px-4 md:px-6">
-              {[
-                { img: expect1, title: "Headliners & DJs", desc: "International & local DJs across two stages." },
-                { img: expect2, title: "Immersive Production", desc: "Light, lasers, and visuals that surround you." },
-                { img: expect3, title: "VIP Zones or Exclusive Experiences", desc: "Premium lounges and curated vibes." },
-              ].map((item, idx) => {
+            <div className="grid gap-8 px-4 md:grid-cols-3 md:px-6">
+              {expectationItems.map((item, idx) => {
                 const expanded = expectExpanded[idx];
                 return (
-                  <div key={item.title} className="relative flex flex-col">
+                  <div key={`${item.title}-${idx}`} className="relative flex flex-col">
                     <button
-                      className="absolute right-6 top-6 z-20 rounded-full bg-[#f7b7b0] ring-2 ring-white/50 shadow-lg hover:scale-105 transition-transform"
+                      className="absolute right-6 top-6 z-20 rounded-full bg-[#f7b7b0] ring-2 ring-white/50 shadow-lg transition-transform hover:scale-105"
                       style={{ width: "72px", height: "72px" }}
                       type="button"
                       aria-label={`More about ${item.title}`}
@@ -256,7 +353,7 @@ const EventOverviewPage = () => {
                     >
                       {expanded && (
                         <div className="px-5 pt-5 text-center text-white">
-                          <p className="text-base font-semibold mb-2">{item.desc}</p>
+                          <p className="mb-2 text-base font-semibold">{item.desc}</p>
                         </div>
                       )}
                       <img
@@ -264,7 +361,7 @@ const EventOverviewPage = () => {
                         alt={item.title}
                         className="h-[220px] w-full object-cover md:h-[240px]"
                       />
-                      <div className="bg-[#f7e0dc]/85 backdrop-blur-sm px-6 py-5 text-center text-[#1a0f18]">
+                      <div className="bg-[#f7e0dc]/85 px-6 py-5 text-center text-[#1a0f18] backdrop-blur-sm">
                         <p className="text-base font-semibold text-[#1f1a1d]">{item.title}</p>
                       </div>
                     </div>

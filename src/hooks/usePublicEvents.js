@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiFetch } from "@/config/api";
 
-const PUBLIC_EVENTS_STORAGE_KEY = "mapMyParty_events";
 const DEFAULT_LOCATION_RADIUS_KM = 50;
 
 const toFiniteNumber = (value) => {
@@ -52,14 +51,11 @@ const getDistanceKm = (originLatitude, originLongitude, targetLatitude, targetLo
   return earthRadiusKm * c;
 };
 
-const getFilterCacheKey = (filterParams = {}) => {
-  const params = new URLSearchParams();
-
-  if (filterParams.search) params.set("search", filterParams.search);
-
-  const query = params.toString();
-  return query ? `${PUBLIC_EVENTS_STORAGE_KEY}:${query}` : PUBLIC_EVENTS_STORAGE_KEY;
-};
+const getServerBackedFilters = (filterParams = {}) => ({
+  search: filterParams.search || null,
+  category: filterParams.category || null,
+  subCategory: filterParams.subCategory || null,
+});
 
 const extractEventsArray = (payload) => {
   const candidates = [
@@ -122,7 +118,7 @@ const isPubliclyVisibleEvent = (event) => {
 
 /**
  * Hook for fetching public published events
- * Shows events from localStorage until backend API is ready
+ * Uses the backend as the source of truth for public event listings.
  */
 export const usePublicEvents = (initialFilters = {}) => {
   const [sourceEvents, setSourceEvents] = useState([]);
@@ -224,7 +220,7 @@ export const usePublicEvents = (initialFilters = {}) => {
       const desired = filterParams.category.toUpperCase();
       filtered = filtered.filter((event) => {
         const primary = (event.category || event.mainCategory || "").toUpperCase();
-        const secondary = (event.subCategory || event.secondaryCategory || "").toUpperCase();
+        const secondary = (event.subCategory || event.subcategory || event.secondaryCategory || "").toUpperCase();
         const categoriesArray = Array.isArray(event.categories)
           ? event.categories.map((cat) => String(cat).toUpperCase())
           : [];
@@ -240,7 +236,7 @@ export const usePublicEvents = (initialFilters = {}) => {
     if (filterParams.subCategory) {
       const desiredSub = filterParams.subCategory.toUpperCase();
       filtered = filtered.filter((event) => {
-        const primarySub = (event.subCategory || event.secondaryCategory || "").toUpperCase();
+        const primarySub = (event.subCategory || event.subcategory || event.secondaryCategory || "").toUpperCase();
         const subCategoriesArray = Array.isArray(event.subCategories)
           ? event.subCategories.map((cat) => String(cat).toUpperCase())
           : [];
@@ -271,46 +267,23 @@ export const usePublicEvents = (initialFilters = {}) => {
   }, []);
 
   /**
-   * Fetch events from API or localStorage
+   * Fetch events from the API.
    */
   const fetchEvents = useCallback(async (filterParams = {}) => {
     try {
       setLoading(true);
       setError(null);
-      let sourceEvents = [];
 
-      try {
-        const params = new URLSearchParams();
-        if (filterParams.search) params.set("search", filterParams.search);
+      const params = new URLSearchParams();
+      if (filterParams.search) params.set("search", filterParams.search);
+      if (filterParams.category) params.set("category", filterParams.category);
+      if (filterParams.subCategory) params.set("subCategory", filterParams.subCategory);
 
-        const response = await apiFetch(`/api/event${params.toString() ? `?${params.toString()}` : ""}`, {
-          method: "GET",
-        });
+      const response = await apiFetch(`/api/event${params.toString() ? `?${params.toString()}` : ""}`, {
+        method: "GET",
+      });
 
-        sourceEvents = extractEventsArray(response);
-
-        try {
-          localStorage.setItem(getFilterCacheKey(filterParams), JSON.stringify(sourceEvents));
-
-          if (!filterParams.search) {
-            localStorage.setItem(PUBLIC_EVENTS_STORAGE_KEY, JSON.stringify(sourceEvents));
-          }
-        } catch (storageError) {
-          console.warn("⚠️ Unable to cache events in localStorage", storageError);
-        }
-      } catch (apiError) {
-        // Fallback to localStorage if API not ready
-        if (apiError.message?.includes("404") || apiError.message?.includes("Cannot GET")) {
-          console.warn("⚠️ Public events API not available yet. Using localStorage fallback.");
-
-          const queryScopedCache = localStorage.getItem(getFilterCacheKey(filterParams));
-          const stored = queryScopedCache || localStorage.getItem(PUBLIC_EVENTS_STORAGE_KEY);
-          sourceEvents = stored ? extractEventsArray(JSON.parse(stored)) : [];
-          setError(null);
-        } else {
-          throw apiError;
-        }
-      }
+      const sourceEvents = extractEventsArray(response);
 
       setSourceEvents(sourceEvents);
     } catch (err) {
@@ -460,8 +433,12 @@ export const usePublicEvents = (initialFilters = {}) => {
    * Refresh events
    */
   const refresh = useCallback(() => {
-    fetchEvents({ search: filters.search });
-  }, [fetchEvents, filters.search]);
+    fetchEvents(getServerBackedFilters({
+      search: filters.search,
+      category: filters.category,
+      subCategory: filters.subCategory,
+    }));
+  }, [fetchEvents, filters.search, filters.category, filters.subCategory]);
 
   useEffect(() => {
     const {
@@ -479,8 +456,12 @@ export const usePublicEvents = (initialFilters = {}) => {
 
   // Fetch source events when the server-backed query changes.
   useEffect(() => {
-    fetchEvents({ search: filters.search });
-  }, [filters.search, fetchEvents]);
+    fetchEvents(getServerBackedFilters({
+      search: filters.search,
+      category: filters.category,
+      subCategory: filters.subCategory,
+    }));
+  }, [filters.search, filters.category, filters.subCategory, fetchEvents]);
 
   return {
     events,

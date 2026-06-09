@@ -24,6 +24,12 @@ import Header from "@/components/Header";
 import { isAuthenticated as checkAuth } from "@/utils/auth";
 import { resolveEventBannerImage } from "@/utils/eventBannerImage";
 import { formatEventPriceLabel, normalizePriceLabel } from "@/utils/priceFormatter";
+import {
+  EVENT_CATEGORY_OPTIONS,
+  EVENT_SUBCATEGORY_OPTIONS_BY_KEY,
+  inferEventCategoryKeyFromSubCategory,
+  normalizeEventSubCategoryValue,
+} from "@/config/eventCategories";
 import { toast } from "sonner";
 
 const PAGE_SIZE = 20;
@@ -57,110 +63,9 @@ const KNOWN_CATEGORY_META = {
   workshop: { label: "Workshop", icon: Briefcase, color: "#f97316" },
 };
 
-const WORKSHOP_SUBCATEGORIES = [
-  "Comedy Shows",
-  "Theater Shows",
-  "Sports",
-  "Arts",
-  "Meeting",
-  "Conference",
-  "Seminar",
-  "Yoga",
-  "Cooking",
-  "Dance",
-  "Self Help",
-  "Consultation",
-  "Corporate Event",
-  "Communication",
-].map((label) => ({ label, value: label }));
+const KNOWN_SUBCATEGORY_OPTIONS = EVENT_SUBCATEGORY_OPTIONS_BY_KEY;
 
-const SPORTS_SUBCATEGORIES = [
-  "Live Sports",
-  "Stadium Matches",
-  "Esports",
-  "Fitness Events",
-  "Marathons",
-  "Tournaments",
-].map((label) => ({ label, value: label }));
-
-const MOVIES_SUBCATEGORIES = [
-  "Movie Screenings",
-  "Film Festivals",
-  "Premieres",
-  "Drive-In Cinema",
-  "Short Films",
-].map((label) => ({ label, value: label }));
-
-const PLAYS_SUBCATEGORIES = [
-  "Plays",
-  "Drama Shows",
-  "Musical Theatre",
-  "Stage Performances",
-  "Classical Drama",
-].map((label) => ({ label, value: label }));
-
-const CONCERTS_SUBCATEGORIES = [
-  "Live Concerts",
-  "Acoustic Concerts",
-  "Arena Shows",
-  "Orchestra Nights",
-  "DJ Concerts",
-  "Music Festival",
-].map((label) => ({ label, value: label }));
-
-const ACTIVITIES_SUBCATEGORIES = [
-  "Adventure Activities",
-  "Games Night",
-  "Family Activities",
-  "Community Events",
-  "Outdoor Activities",
-  "Experiences",
-].map((label) => ({ label, value: label }));
-
-const MUSIC_SUBCATEGORIES = [
-  "Live Concerts",
-  "Club Nights",
-  "Music Festivals",
-  "Bollywood",
-  "Hip Hop",
-  "Electronic",
-  "Melodic",
-  "Live Music",
-  "Metal",
-  "Rap",
-  "Music House",
-  "Techno",
-  "K-pop",
-  "Hollywood",
-  "POP",
-  "Punjabi",
-  "Disco",
-  "Rock",
-  "Afrobeat",
-  "Dance Hall",
-  "Thumri",
-  "Bolly Tech",
-].map((label) => ({ label, value: label }));
-
-const KNOWN_SUBCATEGORY_OPTIONS = {
-  music: MUSIC_SUBCATEGORIES,
-  concerts: CONCERTS_SUBCATEGORIES,
-  sports: SPORTS_SUBCATEGORIES,
-  movies: MOVIES_SUBCATEGORIES,
-  plays: PLAYS_SUBCATEGORIES,
-  activities: ACTIVITIES_SUBCATEGORIES,
-  workshop: WORKSHOP_SUBCATEGORIES,
-};
-
-const PINNED_CATEGORY_KEYS = [
-  "music",
-  "concerts",
-  "sports",
-  "movies",
-  "plays",
-  "activities",
-  "workshop",
-];
+const PINNED_CATEGORY_KEYS = EVENT_CATEGORY_OPTIONS.map((category) => category.toLowerCase());
 
 const normalizeBrowseValue = (value) => (typeof value === "string" ? value.trim() : "");
 
@@ -191,59 +96,6 @@ const parseBrowseRadius = (value) => {
 
 const parseBrowseNearby = (value) => value === "true" || value === "1";
 
-const normalizeSubCategoryValue = (value) => {
-  const normalized = normalizeBrowseValue(value);
-  if (!normalized) return null;
-
-  const knownOptions = [
-    ...WORKSHOP_SUBCATEGORIES,
-    ...MUSIC_SUBCATEGORIES,
-    ...CONCERTS_SUBCATEGORIES,
-    ...SPORTS_SUBCATEGORIES,
-    ...MOVIES_SUBCATEGORIES,
-    ...PLAYS_SUBCATEGORIES,
-    ...ACTIVITIES_SUBCATEGORIES,
-  ];
-  const match = knownOptions.find((option) => getLookupKey(option.value) === getLookupKey(normalized));
-
-  return match?.value || normalized;
-};
-
-const inferCategoryKeyFromSubCategory = (subCategory) => {
-  const normalized = getLookupKey(subCategory);
-  if (!normalized) return null;
-
-  if (MUSIC_SUBCATEGORIES.some((option) => getLookupKey(option.value) === normalized)) {
-    return "music";
-  }
-
-  if (CONCERTS_SUBCATEGORIES.some((option) => getLookupKey(option.value) === normalized)) {
-    return "concerts";
-  }
-
-  if (SPORTS_SUBCATEGORIES.some((option) => getLookupKey(option.value) === normalized)) {
-    return "sports";
-  }
-
-  if (MOVIES_SUBCATEGORIES.some((option) => getLookupKey(option.value) === normalized)) {
-    return "movies";
-  }
-
-  if (PLAYS_SUBCATEGORIES.some((option) => getLookupKey(option.value) === normalized)) {
-    return "plays";
-  }
-
-  if (ACTIVITIES_SUBCATEGORIES.some((option) => getLookupKey(option.value) === normalized)) {
-    return "activities";
-  }
-
-  if (WORKSHOP_SUBCATEGORIES.some((option) => getLookupKey(option.value) === normalized)) {
-    return "workshop";
-  }
-
-  return null;
-};
-
 const resolveCategoryMeta = (value, fallbackIndex = 0) => {
   const normalizedValue = normalizeBrowseValue(value) || "Other";
   const key = getLookupKey(normalizedValue) || "other";
@@ -272,10 +124,10 @@ const sortCategoryEntries = (left, right) => {
 };
 
 const getBrowseStateFromSearchParams = (searchParams) => {
-  const selectedSubCategory = normalizeSubCategoryValue(searchParams.get("subCategory")) || "all";
+  const selectedSubCategory = normalizeEventSubCategoryValue(searchParams.get("subCategory")) || "all";
   const selectedCategory =
     getLookupKey(searchParams.get("category")) ||
-    inferCategoryKeyFromSubCategory(selectedSubCategory) ||
+    inferEventCategoryKeyFromSubCategory(selectedSubCategory) ||
     "all";
   const parsedLatitude = parseBrowseCoordinate(searchParams.get("lat"));
   const parsedLongitude = parseBrowseCoordinate(searchParams.get("lng"));
@@ -340,7 +192,7 @@ const buildBrowseSearchParams = ({
 const getEventCategoryValue = (event) => normalizeBrowseValue(event.category || event.mainCategory);
 
 const getEventSubCategoryValue = (event) =>
-  normalizeSubCategoryValue(event.subCategory || event.secondaryCategory);
+  normalizeEventSubCategoryValue(event.subCategory || event.subcategory || event.secondaryCategory);
 
 const getEventTrendScore = (event) => {
   const soldTickets = Array.isArray(event.tickets)
@@ -380,7 +232,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
 
     if (nextState.selectedSubCategory !== "all" && nextState.selectedCategory === "all") {
       nextState.selectedCategory =
-        inferCategoryKeyFromSubCategory(nextState.selectedSubCategory) || "all";
+        inferEventCategoryKeyFromSubCategory(nextState.selectedSubCategory) || "all";
     }
 
     if (
@@ -744,9 +596,9 @@ export default function BrowseEvents({ showPublicHeader = false }) {
             </div>
           </div>
           <div className="flex flex-wrap gap-1.5 pt-1">
-            {event.subCategory && (
+            {(event.subCategory || event.subcategory) && (
               <Badge className="border-0 bg-white/[0.06] px-2 py-0.5 text-[10px] font-normal text-white/60">
-                {event.subCategory}
+                {event.subCategory || event.subcategory}
               </Badge>
             )}
             {event.eventStatus && (

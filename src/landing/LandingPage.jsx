@@ -23,16 +23,17 @@ import { apiFetch } from "@/config/api";
 import eventFallback from "@/assets/event-music.jpg";
 import { resolveEventBannerImage } from "@/utils/eventBannerImage";
 import { formatEventPriceLabel } from "@/utils/priceFormatter";
+import { createEventCategoryFilter } from "@/config/eventCategories";
 
 const EVENT_SECTION_CONFIG = [
   {
-    key: "live-concerts",
-    label: "Live Concerts",
-    eyebrow: "Music",
-    description: "Big-stage nights, headline acts, and live crowd energy.",
+    key: "concerts",
+    label: "Concerts",
+    eyebrow: "Live",
+    description: "Arena shows, acoustic nights, and high-energy concert moments.",
     icon: Music2,
-    image: "/images/ph2.jpg",
-    filters: { category: "Music", subCategory: "Live Concerts" },
+    image: "/images/ph1.jpg",
+    filters: createEventCategoryFilter("Concerts", "Live Concerts"),
   },
   {
     key: "club-nights",
@@ -41,7 +42,7 @@ const EVENT_SECTION_CONFIG = [
     description: "Late-night dance floors, DJs, and bottle-service energy.",
     icon: Sparkles,
     image: "/images/ph1.jpg",
-    filters: { category: "Music", subCategory: "Club Nights" },
+    filters: createEventCategoryFilter("Music", "Club Nights"),
   },
   {
     key: "music-festivals",
@@ -50,16 +51,7 @@ const EVENT_SECTION_CONFIG = [
     description: "Outdoor stages, immersive lineups, and all-day memories.",
     icon: Music2,
     image: "/images/ph3.jpg",
-    filters: { category: "Music", subCategory: "Music Festivals" },
-  },
-  {
-    key: "concerts",
-    label: "Concerts",
-    eyebrow: "Live",
-    description: "Arena shows, acoustic nights, and high-energy concert moments.",
-    icon: Music2,
-    image: "/images/ph1.jpg",
-    filters: { category: "Concerts", subCategory: "Live Concerts" },
+    filters: createEventCategoryFilter("Music", "Music Festivals"),
   },
   {
     key: "sports",
@@ -68,7 +60,8 @@ const EVENT_SECTION_CONFIG = [
     description: "Matches, tournaments, and crowd-pumping live sports events.",
     icon: Trophy,
     image: "/images/ph2.jpg",
-    filters: { category: "Sports", subCategory: "Live Sports" },
+    filters: createEventCategoryFilter("Sports", "Live Sports"),
+    showEventSection: false,
   },
   {
     key: "movies",
@@ -77,7 +70,8 @@ const EVENT_SECTION_CONFIG = [
     description: "Screenings, premieres, and film nights with a big-screen feel.",
     icon: Clapperboard,
     image: eventFallback,
-    filters: { category: "Movies", subCategory: "Movie Screenings" },
+    filters: createEventCategoryFilter("Movies", "Movie Screenings"),
+    showEventSection: false,
   },
   {
     key: "plays",
@@ -86,7 +80,8 @@ const EVENT_SECTION_CONFIG = [
     description: "Drama, theater, and live performance stories on stage.",
     icon: Ticket,
     image: "/images/ph2.jpg",
-    filters: { category: "Plays", subCategory: "Plays" },
+    filters: createEventCategoryFilter("Plays", "Plays"),
+    showEventSection: false,
   },
   {
     key: "activities",
@@ -95,7 +90,8 @@ const EVENT_SECTION_CONFIG = [
     description: "Adventures, meetups, and hands-on experiences worth planning for.",
     icon: PartyPopper,
     image: "/images/ph3.jpg",
-    filters: { category: "Activities", subCategory: "Activities" },
+    filters: createEventCategoryFilter("Activities", "Activities"),
+    showEventSection: false,
   },
   {
     key: "comedy-shows",
@@ -104,7 +100,7 @@ const EVENT_SECTION_CONFIG = [
     description: "Stand-up rooms, improv sets, and intimate comedy nights.",
     icon: Sparkles,
     image: eventFallback,
-    filters: { category: "Workshop", subCategory: "Comedy Shows" },
+    filters: createEventCategoryFilter("Workshop", "Comedy Shows"),
   },
   {
     key: "theater-shows",
@@ -114,12 +110,11 @@ const EVENT_SECTION_CONFIG = [
       "Stage productions, dramatic nights, and live performance craft.",
     icon: ShieldCheck,
     image: "/images/ph2.jpg",
-    filters: { category: "Workshop", subCategory: "Theater Shows" },
+    filters: createEventCategoryFilter("Workshop", "Theater Shows"),
   },
 ];
 
 const PICK_YOUR_VIBE_EXCLUDED_KEYS = new Set([
-  "movies",
   "plays",
   "activities",
   "comedy-shows",
@@ -128,6 +123,10 @@ const PICK_YOUR_VIBE_EXCLUDED_KEYS = new Set([
 
 const PICK_YOUR_VIBE_CONFIG = EVENT_SECTION_CONFIG.filter(
   (section) => !PICK_YOUR_VIBE_EXCLUDED_KEYS.has(section.key),
+);
+
+const EVENT_DATA_SECTION_CONFIG = EVENT_SECTION_CONFIG.filter(
+  (section) => section.showEventSection !== false,
 );
 
 const steps = [
@@ -666,7 +665,7 @@ const LandingPage = () => {
 
       try {
         const results = await Promise.all(
-          EVENT_SECTION_CONFIG.map(async (section) => {
+          EVENT_DATA_SECTION_CONFIG.map(async (section) => {
             const params = new URLSearchParams();
             if (section.filters.category)
               params.set("category", section.filters.category);
@@ -749,9 +748,9 @@ const LandingPage = () => {
     });
   };
 
-  const featuredVibe = EVENT_SECTION_CONFIG[0];
+  const featuredVibe = EVENT_DATA_SECTION_CONFIG[0];
   const featuredVibeEvents = eventSections[featuredVibe.key] || [];
-  const otherSections = EVENT_SECTION_CONFIG.filter(
+  const otherSections = EVENT_DATA_SECTION_CONFIG.filter(
     (section) => section.key !== featuredVibe.key,
   );
 

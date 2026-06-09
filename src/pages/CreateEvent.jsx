@@ -75,6 +75,7 @@ import {
   normalizeTenDigitPhoneNumber,
   sanitizeTenDigitPhoneInput,
 } from "@/utils/phone";
+import { EVENT_CATEGORY_HIERARCHY, EVENT_CATEGORY_OPTIONS } from "@/config/eventCategories";
 
 const DEFAULT_ARTIST_GENDER = "MALE";
 const ARTIST_GENDER_VALUES = ["MALE", "FEMALE", "OTHER"];
@@ -155,7 +156,7 @@ const CreateEvent = () => {
     "exclusive": "EXCLUSIVE",
     "non-exclusive": "NON_EXCLUSIVE",
   };
-  const { addEvent, events, updateEvent } = useEvents();
+  const { events } = useEvents();
   const [currentStep, setCurrentStep] = useState(1);
   const [eventType, setEventType] = useState("one-time");
   const [coverImage, setCoverImage] = useState(null);
@@ -693,87 +694,6 @@ const CreateEvent = () => {
       setIsSubmitting(false);
       setShowLoading(false);
     }
-  };
-
-  const categoryHierarchy = {
-    Music: [
-      "Live Concerts",
-      "Club Nights",
-      "Music Festivals",
-      "Bollywood",
-      "Hip Hop",
-      "Electronic",
-      "Melodic",
-      "Live Music",
-      "Metal",
-      "Rap",
-      "Music House",
-      "Techno",
-      "K-pop",
-      "Hollywood",
-      "POP",
-      "Punjabi",
-      "Disco",
-      "Rock",
-      "Afrobeat",
-      "Dance Hall",
-      "Thumri",
-      "Bolly Tech",
-    ],
-    Concerts: [
-      "Live Concerts",
-      "Acoustic Concerts",
-      "Arena Shows",
-      "Orchestra Nights",
-      "DJ Concerts",
-      "Music Festival",
-    ],
-    Sports: [
-      "Live Sports",
-      "Stadium Matches",
-      "Esports",
-      "Fitness Events",
-      "Marathons",
-      "Tournaments",
-    ],
-    Movies: [
-      "Movie Screenings",
-      "Film Festivals",
-      "Premieres",
-      "Drive-In Cinema",
-      "Short Films",
-    ],
-    Plays: [
-      "Plays",
-      "Drama Shows",
-      "Musical Theatre",
-      "Stage Performances",
-      "Classical Drama",
-    ],
-    Activities: [
-      "Adventure Activities",
-      "Games Night",
-      "Family Activities",
-      "Community Events",
-      "Outdoor Activities",
-      "Experiences",
-    ],
-    Workshop: [
-      "Comedy Shows",
-      "Theater Shows",
-      "Sports",
-      "Arts",
-      "Meeting",
-      "Conference",
-      "Seminar",
-      "Yoga",
-      "Cooking",
-      "Dance",
-      "Self Help",
-      "Consultation",
-      "Corporate Event",
-      "Communication"
-    ]
   };
 
   // Load saved tickets and venue data when component mounts or when backendEventId changes
@@ -1702,7 +1622,7 @@ const CreateEvent = () => {
               eventTitle,
               description: eventDescription,
               mainCategory,
-              subcategory: selectedCategories[0] || "",
+              subCategory: selectedCategories[0] || "",
               ...(currentEventType ? { eventType: currentEventType } : {}),
             };
 
@@ -1730,7 +1650,7 @@ const CreateEvent = () => {
             eventTitle,
             description: eventDescription,
             mainCategory,
-            subcategory: selectedCategories[0] || "",
+            subCategory: selectedCategories[0] || "",
             eventType: currentEventType || "",
           };
 
@@ -3359,56 +3279,6 @@ const CreateEvent = () => {
       // Success handling (no explicit status payloads)
       toast.success(isDraft ? "Event saved as draft!" : "Event updated successfully!");
       
-      // Save complete event to localStorage as fallback (until backend my-events endpoint is ready)
-      try {
-        const STORAGE_KEY = "mapMyParty_events";
-        const existingEvents = localStorage.getItem(STORAGE_KEY);
-        const eventsArray = existingEvents ? JSON.parse(existingEvents) : [];
-        
-        // Create complete event object
-        const completeEvent = {
-          id: backendEventId,
-          eventId: eventId,
-          eventTitle: eventTitle,
-          title: eventTitle, // Alias for compatibility
-          eventType: currentEventType, // Use backend enum value (GUESTLIST, EXCLUSIVE, NON_EXCLUSIVE) or undefined
-          mainCategory: mainCategory,
-          category: mainCategory, // Alias for compatibility
-          subcategory: selectedCategories[0] || "",
-          description: eventDescription,
-          publishStatus: isDraft ? "DRAFT" : "PUBLISHED",
-          startDate: startDate,
-          endDate: endDate,
-          date: startDate, // Alias for compatibility
-          flyerImage: coverImage,
-          flyerImageUrl: coverImage,
-          image: coverImage, // Alias for compatibility
-          galleryImages: galleryImages,
-          ticketsSold: 0,
-          totalTickets: savedTickets.reduce((sum, t) => sum + (t.available || 0), 0),
-          revenue: 0,
-          attendees: 0,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        
-        // Check if event already exists (update) or add new
-        const existingIndex = eventsArray.findIndex(e => e.id === backendEventId || e.eventId === eventId);
-        if (existingIndex >= 0) {
-          eventsArray[existingIndex] = completeEvent;
-          console.log("📝 Updated existing event in localStorage");
-        } else {
-          eventsArray.unshift(completeEvent); // Add to beginning
-          console.log("➕ Added new event to localStorage");
-        }
-        
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(eventsArray));
-        console.log("💾 Event saved to localStorage for fallback");
-      } catch (storageError) {
-        console.warn("⚠️ Could not save to localStorage:", storageError);
-        // Don't block the flow if localStorage fails
-      }
-      
       // Navigate to dashboard after successful submission
       navigate("/organizer/dashboard-v2");
     } catch (error) {
@@ -4112,13 +3982,11 @@ const CreateEvent = () => {
                           <SelectValue placeholder="Select main category" />
                         </SelectTrigger>
                         <SelectContent className={selectMenuClass}>
-                          <SelectItem value="Music">Music</SelectItem>
-                          <SelectItem value="Concerts">Concerts</SelectItem>
-                          <SelectItem value="Sports">Sports</SelectItem>
-                          <SelectItem value="Movies">Movies</SelectItem>
-                          <SelectItem value="Plays">Plays</SelectItem>
-                          <SelectItem value="Activities">Activities</SelectItem>
-                          <SelectItem value="Workshop">Workshop</SelectItem>
+                          {EVENT_CATEGORY_OPTIONS.map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -4134,7 +4002,7 @@ const CreateEvent = () => {
                             <SelectValue placeholder="Select subcategory" />
                           </SelectTrigger>
                           <SelectContent className={selectMenuClass}>
-                            {categoryHierarchy[mainCategory]?.map((subcat) => (
+                            {EVENT_CATEGORY_HIERARCHY[mainCategory]?.map((subcat) => (
                               <SelectItem key={subcat} value={subcat}>
                                 {subcat}
                               </SelectItem>

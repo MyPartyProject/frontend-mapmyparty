@@ -380,13 +380,14 @@ export async function persistGalleryUrls(eventId, images) {
  */
 export async function createEventStep1(eventData) {
   const url = buildUrl("/api/event/create-event");
+  const subCategory = eventData.subCategory ?? eventData.subcategory;
 
   // Backend only allows core fields: title, description, category, subCategory, type (optional)
   const jsonData = {
     title: eventData.eventTitle,
     description: eventData.description || "",
     category: eventData.mainCategory,
-    subCategory: eventData.subcategory,
+    subCategory,
   };
 
   if (eventData.eventType) {
@@ -414,6 +415,7 @@ export async function createEventStep1(eventData) {
  */
 export async function updateEventStep1(eventId, eventData) {
   const url = buildUrl(`/api/event/update-event/${eventId}`);
+  const subCategory = eventData.subCategory ?? eventData.subcategory;
   console.log("🔄 Updating Event Step 1 - Basic Details");
   console.log("📋 Event ID:", eventId);
   console.log("🔗 Request URL:", url);
@@ -440,7 +442,7 @@ export async function updateEventStep1(eventId, eventData) {
     formData.append("title", eventData.eventTitle.trim());
     formData.append("description", eventData.description || "");
     formData.append("category", eventData.mainCategory);
-    formData.append("subCategory", eventData.subcategory);
+    formData.append("subCategory", subCategory);
     if (eventData.eventType) {
       formData.append("type", eventData.eventType);
     }
@@ -471,7 +473,7 @@ export async function updateEventStep1(eventId, eventData) {
       title: eventData.eventTitle.trim(),
       description: eventData.description || "",
       category: eventData.mainCategory,
-      subCategory: eventData.subcategory,
+      subCategory,
       ...(eventData.eventType ? { type: eventData.eventType } : {}),
     };
 
