@@ -61,6 +61,7 @@ import { toast } from "sonner";
 import { useEvents } from "@/hooks/useEvents";
 import eventMusic from "@/assets/event-music.jpg";
 import TicketTypeModal from "@/components/TicketTypeModal";
+import FlyerCropDialog from "@/components/events/FlyerCropDialog";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { updateEventStep1, updateEventStep2, uploadFlyerImage, deleteFlyerImage, uploadGalleryImages, deleteGalleryImage, generateEventId, createTicket, updateTicket, deleteTicket, createVenue, updateVenue, updateEventStep6, uploadArtistImage, uploadSponsorLogo, deleteArtist, createEventStep1, persistFlyerUrl, uploadDraftImage, persistGalleryUrls, deleteDraftStorageObject } from "@/services/eventService";
@@ -76,9 +77,54 @@ import {
   sanitizeTenDigitPhoneInput,
 } from "@/utils/phone";
 import { EVENT_CATEGORY_HIERARCHY, EVENT_CATEGORY_OPTIONS } from "@/config/eventCategories";
+import {
+  FLYER_STANDARD_HEIGHT,
+  FLYER_STANDARD_WIDTH,
+  createStandardFlyerFile,
+  getImageFileDimensions,
+  isStandardFlyerDimensions,
+} from "@/utils/flyerImageCrop";
 
 const DEFAULT_ARTIST_GENDER = "MALE";
 const ARTIST_GENDER_VALUES = ["MALE", "FEMALE", "OTHER"];
+const INDIAN_STATE_OPTIONS = [
+  "Maharashtra",
+  "Delhi",
+  "Karnataka",
+  "Telangana",
+  "Tamil Nadu",
+  "West Bengal",
+  "Gujarat",
+  "Goa",
+  "Rajasthan",
+  "Uttar Pradesh",
+  "Haryana",
+  "Chandigarh",
+  "Andaman and Nicobar Islands",
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Dadra and Nagar Haveli and Daman and Diu",
+  "Himachal Pradesh",
+  "Jammu and Kashmir",
+  "Jharkhand",
+  "Kerala",
+  "Ladakh",
+  "Lakshadweep",
+  "Madhya Pradesh",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Puducherry",
+  "Punjab",
+  "Sikkim",
+  "Tripura",
+  "Uttarakhand",
+];
 
 const normalizeArtistGender = (gender) => {
   const normalized = (gender || "").toUpperCase();
@@ -162,6 +208,11 @@ const CreateEvent = () => {
   const [coverImage, setCoverImage] = useState(null);
   const [coverImageFile, setCoverImageFile] = useState(null);
   const [coverStorageKey, setCoverStorageKey] = useState(null);
+  const [pendingCoverFile, setPendingCoverFile] = useState(null);
+  const [pendingCoverPreview, setPendingCoverPreview] = useState(null);
+  const [pendingCoverDimensions, setPendingCoverDimensions] = useState(null);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [processingCoverCrop, setProcessingCoverCrop] = useState(false);
   const [existingGalleryUrls, setExistingGalleryUrls] = useState([]); // Existing images from backend (URLs)
   const [galleryImages, setGalleryImages] = useState([]); // All images (existing URLs + new previews)
   const [galleryImageFiles, setGalleryImageFiles] = useState([]); // Only NEW files to upload
@@ -223,6 +274,14 @@ const CreateEvent = () => {
   const currentAdditionalRef = useRef(null);
   const eventFetchInProgressRef = useRef(false);
   const coverImageInputRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (pendingCoverPreview) {
+        URL.revokeObjectURL(pendingCoverPreview);
+      }
+    };
+  }, [pendingCoverPreview]);
 
   const normalizeAdditionalFromState = () => ({
     tc: (termsAndConditions || "").trim(),
@@ -2421,13 +2480,31 @@ const CreateEvent = () => {
     }
   };
 
-  const handleCoverImageChange = async (e) => {
-    const file = e.target.files?.[0];
+  const resetCoverImageInput = () => {
+    if (coverImageInputRef.current) {
+      coverImageInputRef.current.value = "";
+    }
+  };
+
+  const clearPendingCoverCrop = () => {
+    if (pendingCoverPreview) {
+      URL.revokeObjectURL(pendingCoverPreview);
+    }
+
+    setPendingCoverFile(null);
+    setPendingCoverPreview(null);
+    setPendingCoverDimensions(null);
+    resetCoverImageInput();
+  };
+
+  const uploadCoverFileToDraft = async (file) => {
     if (!file) return;
+
+    let preview = null;
 
     setUploadingCover(true);
     try {
-      const preview = URL.createObjectURL(file);
+      preview = URL.createObjectURL(file);
       setCoverImage(preview);
       setCoverImageFile(file);
       setImagesChanged(true);
@@ -2447,7 +2524,61 @@ const CreateEvent = () => {
       setCoverImageFile(null);
       setDraftCoverStorageKey(null);
     } finally {
+      if (preview) {
+        URL.revokeObjectURL(preview);
+      }
       setUploadingCover(false);
+    }
+  };
+
+  const handleCoverImageChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const dimensions = await getImageFileDimensions(file);
+
+      if (isStandardFlyerDimensions(dimensions)) {
+        await uploadCoverFileToDraft(file);
+        resetCoverImageInput();
+        return;
+      }
+
+      if (pendingCoverPreview) {
+        URL.revokeObjectURL(pendingCoverPreview);
+      }
+
+      setPendingCoverFile(file);
+      setPendingCoverPreview(URL.createObjectURL(file));
+      setPendingCoverDimensions(dimensions);
+      setCropDialogOpen(true);
+    } catch (error) {
+      console.error("Failed to prepare cover image:", error);
+      toast.error(error.message || "Failed to prepare cover image.");
+      clearPendingCoverCrop();
+    }
+  };
+
+  const handleCancelCoverCrop = () => {
+    if (processingCoverCrop) return;
+    setCropDialogOpen(false);
+    clearPendingCoverCrop();
+  };
+
+  const handleConfirmCoverCrop = async (croppedAreaPixels) => {
+    if (!pendingCoverFile || !croppedAreaPixels) return;
+
+    setProcessingCoverCrop(true);
+    try {
+      const croppedFile = await createStandardFlyerFile(pendingCoverFile, croppedAreaPixels);
+      setCropDialogOpen(false);
+      clearPendingCoverCrop();
+      await uploadCoverFileToDraft(croppedFile);
+    } catch (error) {
+      console.error("Failed to crop cover image:", error);
+      toast.error(error.message || "Failed to crop cover image.");
+    } finally {
+      setProcessingCoverCrop(false);
     }
   };
 
@@ -4048,14 +4179,16 @@ const CreateEvent = () => {
                           accept="image/*" 
                           onChange={handleCoverImageChange}
                           className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
-                          disabled={uploadingCover || !basicDetailsFilled}
+                          disabled={uploadingCover || processingCoverCrop || !basicDetailsFilled}
                           ref={coverImageInputRef}
                         />
                           <div className="pointer-events-none flex flex-col items-center gap-2">
                             <Upload className="h-5 w-5 text-muted-foreground" />
                             <p className="text-sm text-foreground">Drag and drop your cover image</p>
                             <p className="text-sm text-muted-foreground">or click to upload</p>
-                            <p className="text-xs text-muted-foreground/80">Recommended size: 1920x1080</p>
+                            <p className="text-xs text-muted-foreground/80">
+                              Required size: {FLYER_STANDARD_WIDTH}x{FLYER_STANDARD_HEIGHT}
+                            </p>
                           </div>
                         </div>
                         {!basicDetailsFilled && (
@@ -4091,6 +4224,15 @@ const CreateEvent = () => {
                             </Button>
                           </div>
                         )}
+                        <FlyerCropDialog
+                          open={cropDialogOpen}
+                          imageSrc={pendingCoverPreview}
+                          imageName={pendingCoverFile?.name}
+                          imageDimensions={pendingCoverDimensions}
+                          processing={processingCoverCrop}
+                          onCancel={handleCancelCoverCrop}
+                          onConfirm={handleConfirmCoverCrop}
+                        />
                       </div>
                     </div>
 
@@ -4833,13 +4975,18 @@ const CreateEvent = () => {
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="state">State *</Label>
-                        <Input
-                          id="state"
-                          placeholder="Enter state"
-                          value={state}
-                          onChange={(e) => setState(e.target.value)}
-                          className={fieldClass}
-                        />
+                        <Select value={state || undefined} onValueChange={setState}>
+                          <SelectTrigger id="state" className={`${fieldClass} ${state ? "" : "text-muted-foreground"}`}>
+                            <SelectValue placeholder="Select state / union territory" />
+                          </SelectTrigger>
+                          <SelectContent className={selectMenuClass}>
+                            {INDIAN_STATE_OPTIONS.map((stateOption) => (
+                              <SelectItem key={stateOption} value={stateOption}>
+                                {stateOption}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="country">Country *</Label>

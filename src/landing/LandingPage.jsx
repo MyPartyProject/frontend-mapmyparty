@@ -490,8 +490,14 @@ const getRightAlignedGridOffsetClass = (count) => {
   return "";
 };
 
+const mobileHorizontalRowClass =
+  "flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 scroll-smooth scrollbar-hide sm:grid sm:overflow-visible sm:pb-0 sm:snap-none";
+
+const mobileHorizontalItemClass =
+  "w-[78vw] max-w-[20rem] shrink-0 snap-start sm:w-auto sm:max-w-none sm:shrink sm:snap-none";
+
 const getCategoryEventGridClass = (count, alignRight = false) => {
-  const baseClass = "grid w-full gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4";
+  const baseClass = `${mobileHorizontalRowClass} w-full sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4`;
   if (!alignRight) return baseClass;
   return `${baseClass} ${getRightAlignedGridOffsetClass(count)}`;
 };
@@ -518,7 +524,7 @@ const LandingEventCard = ({
       to={href || "/browse-events"}
       target={opensEventDetail ? "_blank" : undefined}
       rel={opensEventDetail ? "noopener noreferrer" : undefined}
-      className="group block h-full"
+      className={`group block h-full ${mobileHorizontalItemClass}`}
     >
       <article className="landing-event-card relative h-full min-h-[11.25rem] overflow-hidden rounded-lg border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1 hover:border-border hover:shadow-[var(--shadow-elegant)]">
         <div className="absolute inset-0 overflow-hidden">
@@ -624,14 +630,21 @@ const LandingDiscoverySection = ({
           >
             {sectionsLoading ? (
               Array.from({ length: 3 }).map((_, index) => (
-                <EventCardSkeleton key={`${section.key}-skeleton-${index}`} />
+                <div
+                  key={`${section.key}-skeleton-${index}`}
+                  className={mobileHorizontalItemClass}
+                >
+                  <EventCardSkeleton />
+                </div>
               ))
             ) : events.length > 0 ? (
               events.map((event) => (
                 <LandingEventCard key={event.id} {...event} />
               ))
             ) : (
-              <EmptyState>{emptyMessage}</EmptyState>
+              <div className={mobileHorizontalItemClass}>
+                <EmptyState>{emptyMessage}</EmptyState>
+              </div>
             )}
           </div>
         </div>
@@ -1029,7 +1042,7 @@ const LandingPage = () => {
                 </Link>
               </div>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+              <div className={`mt-6 ${mobileHorizontalRowClass} sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5`}>
                 {PICK_YOUR_VIBE_CONFIG.map((section, index) => {
                   const Icon = section.icon;
 
@@ -1037,7 +1050,7 @@ const LandingPage = () => {
                     <Link
                       key={section.key}
                       to={buildBrowseEventsPath(section.filters)}
-                      className="group landing-reveal block h-full text-left"
+                      className={`group landing-reveal block h-full text-left ${mobileHorizontalItemClass}`}
                       style={{ "--landing-delay": `${index * 70}ms` }}
                     >
                       <div className="relative flex h-full min-h-[16.75rem] flex-col overflow-hidden rounded-[1.5rem] border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-2 hover:border-border hover:shadow-[var(--shadow-elegant)]">

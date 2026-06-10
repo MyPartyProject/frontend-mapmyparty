@@ -39,9 +39,6 @@ const ClassicGridTemplate = ({
         <section className="bg-gradient-to-br from-primary to-primary-glow text-primary-foreground py-12">
           <div className="container">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Browse Events</h1>
-            <p className="text-xl text-primary-foreground/90">
-              Discover amazing events happening near you
-            </p>
           </div>
         </section>
 

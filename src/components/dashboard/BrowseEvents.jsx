@@ -3,11 +3,13 @@ import { Link, useLocation, useNavigate, useSearchParams } from "react-router-do
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  ArrowRight,
   Briefcase,
   Calendar,
   ChevronLeft,
   ChevronRight,
   Clapperboard,
+  Filter,
   Loader2,
   MapPin,
   Music,
@@ -15,7 +17,6 @@ import {
   Search,
   Ticket,
   Sparkles,
-  TrendingUp,
   Trophy,
   X,
 } from "lucide-react";
@@ -24,6 +25,7 @@ import Header from "@/components/Header";
 import { isAuthenticated as checkAuth } from "@/utils/auth";
 import { resolveEventBannerImage } from "@/utils/eventBannerImage";
 import { formatEventPriceLabel, normalizePriceLabel } from "@/utils/priceFormatter";
+import eventFallback from "@/assets/event-music.jpg";
 import {
   EVENT_CATEGORY_OPTIONS,
   EVENT_SUBCATEGORY_OPTIONS_BY_KEY,
@@ -33,6 +35,17 @@ import {
 import { toast } from "sonner";
 
 const PAGE_SIZE = 20;
+
+const MOBILE_EVENT_ROW_CLASS =
+  "flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 scroll-smooth scrollbar-hide sm:grid sm:overflow-visible sm:pb-0 sm:snap-none";
+
+const MOBILE_EVENT_ITEM_CLASS =
+  "w-[78vw] max-w-[20rem] shrink-0 snap-start sm:w-auto sm:max-w-none sm:shrink sm:snap-none";
+
+const MOBILE_CHIP_ROW_CLASS =
+  "flex snap-x gap-2 overflow-x-auto pb-1 scroll-smooth scrollbar-hide sm:flex-wrap sm:overflow-visible sm:pb-0 sm:snap-none";
+
+const MOBILE_CHIP_ITEM_CLASS = "shrink-0 snap-start whitespace-nowrap sm:shrink";
 
 const CATEGORY_ORDER = [
   "music",
@@ -213,6 +226,8 @@ export default function BrowseEvents({ showPublicHeader = false }) {
   const urlState = useMemo(() => getBrowseStateFromSearchParams(searchParams), [searchParams]);
   const [searchQuery, setSearchQuery] = useState(() => urlState.searchQuery);
   const [nearbyLoading, setNearbyLoading] = useState(false);
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [activeTrendingIndex, setActiveTrendingIndex] = useState(0);
 
   const updateBrowseState = useCallback((updates, options = {}) => {
     const nextState = {
@@ -426,6 +441,35 @@ export default function BrowseEvents({ showPublicHeader = false }) {
       .slice(0, 4);
   }, [filteredEvents]);
 
+  useEffect(() => {
+    setActiveTrendingIndex((currentIndex) => {
+      if (trendingEvents.length === 0) return 0;
+      return Math.min(currentIndex, trendingEvents.length - 1);
+    });
+  }, [trendingEvents.length]);
+
+  useEffect(() => {
+    if (trendingEvents.length <= 1) return undefined;
+
+    const intervalId = window.setInterval(() => {
+      setActiveTrendingIndex((currentIndex) => (currentIndex + 1) % trendingEvents.length);
+    }, 6000);
+
+    return () => window.clearInterval(intervalId);
+  }, [trendingEvents.length]);
+
+  const goToPreviousTrending = () => {
+    if (trendingEvents.length <= 1) return;
+    setActiveTrendingIndex(
+      (currentIndex) => (currentIndex - 1 + trendingEvents.length) % trendingEvents.length,
+    );
+  };
+
+  const goToNextTrending = () => {
+    if (trendingEvents.length <= 1) return;
+    setActiveTrendingIndex((currentIndex) => (currentIndex + 1) % trendingEvents.length);
+  };
+
   const groupedByCategory = useMemo(() => {
     const groups = new Map();
 
@@ -452,9 +496,25 @@ export default function BrowseEvents({ showPublicHeader = false }) {
     urlState.nearby ||
     Boolean(appliedSearchQuery);
 
+  const activeFilterCount = [
+    urlState.selectedCategory !== "all",
+    urlState.selectedSubCategory !== "all",
+    urlState.nearby,
+    Boolean(appliedSearchQuery),
+  ].filter(Boolean).length;
+  const activeTrendingSlideIndex =
+    trendingEvents.length > 0 ? activeTrendingIndex % trendingEvents.length : 0;
+
   const resultsStart =
     pagination.totalEvents > 0 ? (pagination.page - 1) * pagination.limit + 1 : 0;
   const resultsEnd = Math.min(pagination.page * pagination.limit, pagination.totalEvents);
+  const browseShellClass = `w-full bg-background text-foreground ${
+    showPublicHeader ? "min-h-screen" : "min-h-full"
+  }`;
+  const browseContentClass = showPublicHeader
+    ? "mx-auto max-w-7xl px-3 pb-8 pt-5 sm:px-6 sm:py-8 lg:px-8"
+    : "mx-auto max-w-7xl px-3 pb-3 pt-3 sm:px-6 sm:py-8 lg:px-8";
+  const categoryEventGridClass = `${MOBILE_EVENT_ROW_CLASS} sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`;
 
   const formatDate = (dateString) => {
     if (!dateString) return "Date TBA";
@@ -480,8 +540,11 @@ export default function BrowseEvents({ showPublicHeader = false }) {
     return event.location || "Location TBA";
   };
 
+  const getEventHref = (event) =>
+    `/events/${event.organizer?.slug || "events"}/${event.slug || event.id}`;
+
   const getEventImage = (event) => {
-    return resolveEventBannerImage(event, "https://via.placeholder.com/400x250?text=Event");
+    return resolveEventBannerImage(event, eventFallback);
   };
 
   const getEventPriceDisplay = (event) => {
@@ -564,106 +627,396 @@ export default function BrowseEvents({ showPublicHeader = false }) {
 
   const EventCard = ({ event }) => (
     <Link
-      to={`/events/${event.organizer?.slug || "events"}/${event.slug || event.id}`}
+      to={getEventHref(event)}
       target="_blank"
       rel="noopener noreferrer"
-      className="group block"
+      className={`group block h-full ${MOBILE_EVENT_ITEM_CLASS}`}
     >
-      <div className="h-full overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.03] transition-all duration-200 hover:border-white/[0.12] hover:bg-white/[0.05]">
-        <div className="relative h-44 overflow-hidden">
+      <article className="relative h-full min-h-[11.25rem] overflow-hidden rounded-lg border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1 hover:border-border hover:shadow-[var(--shadow-elegant)]">
+        <div className="absolute inset-0 overflow-hidden">
           <img
             src={getEventImage(event)}
             alt={event.title || event.eventTitle || "Event"}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-          <span className="absolute left-3 top-3 inline-flex min-w-[4.75rem] items-center justify-center rounded-lg bg-[#D60024] px-3.5 py-1.5 text-xs font-bold leading-none tabular-nums text-white">
-            {getEventPriceDisplay(event)}
-          </span>
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-background/5" />
+          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-background/55 to-transparent" />
+          <div className="theme-gradient-primary absolute inset-0 opacity-10 transition-opacity duration-500 group-hover:opacity-20" />
         </div>
-        <div className="space-y-2.5 p-4">
-          <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white transition-colors group-hover:text-[#D60024]">
-            {event.title || event.eventTitle}
-          </h3>
-          <div className="space-y-1.5 text-xs text-white/50">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
-              <span>{formatDate(event.startDate || event.date)}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-              <span className="line-clamp-1">{getEventLocation(event)}</span>
+
+        <div className="relative flex h-full min-h-[11.25rem] flex-col justify-between p-3">
+          <div className="flex items-start justify-between gap-2">
+            {(event.subCategory || event.subcategory || event.category) && (
+              <div className="max-w-[62%] truncate rounded-full border border-border/40 bg-card/85 px-2.5 py-1 text-[0.68rem] font-medium leading-none text-foreground shadow-[var(--shadow-card)] backdrop-blur-md">
+                {event.subCategory || event.subcategory || event.category}
+              </div>
+            )}
+            <div className="inline-flex min-w-[4.75rem] shrink-0 items-center justify-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-[0.68rem] font-bold leading-none tabular-nums text-accent shadow-[var(--shadow-card)] backdrop-blur-md">
+              {getEventPriceDisplay(event)}
             </div>
           </div>
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {(event.subCategory || event.subcategory) && (
-              <Badge className="border-0 bg-white/[0.06] px-2 py-0.5 text-[10px] font-normal text-white/60">
-                {event.subCategory || event.subcategory}
-              </Badge>
-            )}
-            {event.eventStatus && (
-              <Badge className="border-0 bg-[#60a5fa]/10 px-2 py-0.5 text-[10px] font-normal text-[#60a5fa]">
-                {event.eventStatus}
-              </Badge>
-            )}
+
+          <div className="mt-auto">
+            <h3 className="line-clamp-2 text-sm font-black leading-tight text-foreground drop-shadow-xl transition-colors group-hover:text-accent sm:text-base">
+              {event.title || event.eventTitle}
+            </h3>
+            <div className="mt-2 grid gap-1 text-[0.7rem] text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <Calendar className="h-3 w-3 shrink-0 text-accent" />
+                <span className="line-clamp-1">{formatDate(event.startDate || event.date)}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <MapPin className="h-3 w-3 shrink-0 text-accent" />
+                <span className="line-clamp-1">{getEventLocation(event)}</span>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center justify-between gap-2.5">
+              <span className="h-px flex-1 bg-gradient-to-r from-border/70 via-border/30 to-transparent" />
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/40 bg-card/75 px-3 py-1.5 text-[0.68rem] font-semibold text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition-all duration-300 group-hover:border-border group-hover:bg-primaryCTA group-hover:text-primary-foreground">
+                View Details
+                <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-1" />
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      </article>
     </Link>
   );
 
   return (
-    <div className="min-h-screen w-full text-white">
+    <div className={browseShellClass}>
       {showPublicHeader && <Header forceMainHeader />}
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="max-w-2xl">
-            <h1 className="text-2xl font-bold text-white sm:text-3xl">
-              Discover amazing events happening near you
-            </h1>
-          </div>
+      <div className={browseContentClass}>
+        {trendingEvents.length > 0 && (
+          <section className="relative mb-4 overflow-hidden rounded-[1.25rem] border border-border/50 bg-card shadow-[var(--shadow-elegant)] sm:mb-5 sm:rounded-[1.5rem]">
+            <div className="relative min-h-[18rem] overflow-hidden sm:min-h-[22rem] lg:min-h-[24rem]">
+              <div
+                className="flex min-h-[18rem] transition-transform duration-500 ease-out sm:min-h-[22rem] lg:min-h-[24rem]"
+                style={{ transform: `translateX(-${activeTrendingSlideIndex * 100}%)` }}
+              >
+                {trendingEvents.map((event, index) => {
+                  const isActive = index === activeTrendingSlideIndex;
+                  const eventHref = getEventHref(event);
 
-          <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
-            <input
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              className="h-11 w-full rounded-xl border-white/[0.08] bg-white/[0.05] pl-10 pr-4 text-sm text-white placeholder:text-white/30 focus:border-[#D60024]/50 focus:ring-1 focus:ring-[#D60024]/50"
-            />
+                  return (
+                    <div
+                      key={event.id || index}
+                      aria-hidden={!isActive}
+                      className={`relative min-w-full overflow-hidden ${
+                        isActive ? "" : "pointer-events-none"
+                      }`}
+                    >
+                      <img
+                        src={getEventImage(event)}
+                        alt={event.title || event.eventTitle || "Event"}
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-background/92 via-background/58 to-background/16" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+                      <div className="theme-gradient-primary absolute inset-0 opacity-15" />
+
+                      <div className="relative flex min-h-[18rem] max-w-3xl flex-col justify-end px-3.5 pb-16 pt-4 sm:min-h-[22rem] sm:px-6 sm:py-6 lg:min-h-[24rem] lg:px-7">
+                        <h1 className="line-clamp-2 max-w-2xl text-xl font-black leading-tight text-foreground drop-shadow-xl sm:text-4xl">
+                          {event.title || event.eventTitle}
+                        </h1>
+                        <div className="mt-2.5 flex flex-wrap gap-2 text-xs text-muted-foreground sm:mt-3 sm:text-sm">
+                          <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-full border border-border/40 bg-card/70 px-2.5 py-1.5 backdrop-blur-md">
+                            <Calendar className="h-3.5 w-3.5 text-accent" />
+                            <span className="min-w-0 truncate">{formatDate(event.startDate || event.date)}</span>
+                          </span>
+                          <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-full border border-border/40 bg-card/70 px-2.5 py-1.5 backdrop-blur-md">
+                            <MapPin className="h-3.5 w-3.5 text-accent" />
+                            <span className="min-w-0 truncate">{getEventLocation(event)}</span>
+                          </span>
+                        </div>
+                        <div className="mt-3 flex flex-col gap-2.5 sm:mt-4 sm:flex-row">
+                          <Button asChild variant="accent" className="h-9 rounded-full px-4 text-sm sm:h-10 sm:px-5">
+                            <Link to={eventHref} target="_blank" rel="noopener noreferrer">
+                              View Details
+                              <ArrowRight className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {trendingEvents.length > 1 && (
+              <>
+                <div className="absolute bottom-3 right-3 z-10 flex items-center gap-2 sm:bottom-4 sm:right-5">
+                  <button
+                    type="button"
+                    aria-label="Previous trending event"
+                    onClick={goToPreviousTrending}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/40 bg-card/65 text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition hover:-translate-y-0.5 hover:border-border hover:bg-primaryCTA hover:text-primary-foreground sm:h-9 sm:w-9"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Next trending event"
+                    onClick={goToNextTrending}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/40 bg-card/65 text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition hover:-translate-y-0.5 hover:border-border hover:bg-primaryCTA hover:text-primary-foreground sm:h-9 sm:w-9"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="absolute bottom-4 left-3 z-10 flex gap-1.5 sm:bottom-5 sm:left-6 sm:gap-2 lg:left-7">
+                  {trendingEvents.map((event, index) => (
+                    <button
+                      key={event.id || index}
+                      type="button"
+                      aria-label={`Show trending event ${index + 1}`}
+                      onClick={() => setActiveTrendingIndex(index)}
+                      className={`h-1.5 rounded-full transition-all duration-200 ${
+                        index === activeTrendingSlideIndex ? "w-7 bg-accent" : "w-3 bg-muted-foreground/35"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </section>
+        )}
+
+        <div className="mb-4 sm:mb-5">
+          <button
+            type="button"
+            onClick={() => setFiltersExpanded((current) => !current)}
+            className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-card/70 px-4 py-2 text-sm font-semibold text-foreground shadow-[var(--shadow-card)] backdrop-blur transition hover:-translate-y-0.5 hover:border-border hover:bg-primaryCTA hover:text-primary-foreground"
+            aria-expanded={filtersExpanded}
+          >
+            <Filter className="h-4 w-4" />
+            Filters
+            {activeFilterCount > 0 && (
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[0.68rem] font-bold leading-none text-accent-foreground">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+
+          <div
+            className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+              filtersExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+            }`}
+          >
+            <div className="overflow-hidden">
+              <div
+                className={`mt-3 max-h-[70vh] overflow-y-auto rounded-xl border border-border/40 bg-card/70 p-3 shadow-[var(--shadow-card)] backdrop-blur transition-all duration-200 sm:max-h-none sm:overflow-visible sm:p-4 ${
+                  filtersExpanded ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0"
+                }`}
+              >
+                <div className="grid gap-4 lg:grid-cols-[1fr_0.45fr]">
+                  <div>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                      Category
+                    </p>
+                    <div className={MOBILE_CHIP_ROW_CLASS}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateBrowseState({
+                            selectedCategory: "all",
+                            selectedSubCategory: "all",
+                            page: 1,
+                          })
+                        }
+                        className={`${MOBILE_CHIP_ITEM_CLASS} rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                          urlState.selectedCategory === "all"
+                            ? "bg-primaryCTA text-primary-foreground"
+                            : "border border-border/40 bg-muted/40 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                        }`}
+                      >
+                        All Events
+                      </button>
+                      {categoryOptions.map((category) => {
+                        const Icon = category.icon;
+                        const isActive = urlState.selectedCategory === category.key;
+
+                        return (
+                          <button
+                            key={category.key}
+                            type="button"
+                            onClick={() =>
+                              updateBrowseState({
+                                selectedCategory: category.key,
+                                selectedSubCategory: "all",
+                                page: 1,
+                              })
+                            }
+                            className={`${MOBILE_CHIP_ITEM_CLASS} flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                              isActive
+                                ? "bg-primaryCTA text-primary-foreground"
+                                : "border border-border/40 bg-muted/40 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                            }`}
+                          >
+                            <Icon className="h-3.5 w-3.5" />
+                            {category.label}
+                            <span className={`ml-0.5 text-[10px] ${isActive ? "text-primary-foreground/75" : "text-muted-foreground/70"}`}>
+                              ({category.count})
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {activeSubcategories.length > 0 && (
+                      <div className="mt-3 border-t border-border/25 pt-3">
+                        <div className={MOBILE_CHIP_ROW_CLASS}>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateBrowseState({
+                                selectedSubCategory: "all",
+                                page: 1,
+                              })
+                            }
+                            className={`${MOBILE_CHIP_ITEM_CLASS} rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
+                              urlState.selectedSubCategory === "all"
+                                ? "bg-muted text-foreground"
+                                : "bg-muted/35 text-muted-foreground hover:bg-muted/55 hover:text-foreground"
+                            }`}
+                          >
+                            All
+                          </button>
+                          {activeSubcategories.map((subCategory) => (
+                            <button
+                              key={subCategory.value}
+                              type="button"
+                              onClick={() =>
+                                updateBrowseState({
+                                  selectedSubCategory: subCategory.value,
+                                  page: 1,
+                                })
+                              }
+                              className={`${MOBILE_CHIP_ITEM_CLASS} rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
+                                urlState.selectedSubCategory === subCategory.value
+                                  ? "bg-primaryCTA text-primary-foreground"
+                                  : "bg-muted/35 text-muted-foreground hover:bg-muted/55 hover:text-foreground"
+                              }`}
+                            >
+                              {subCategory.label}
+                              {subCategory.count > 0 && (
+                                <span className="ml-1 text-[10px] opacity-70">({subCategory.count})</span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                      Location
+                    </p>
+                    <div className={MOBILE_CHIP_ROW_CLASS}>
+                      <button
+                        type="button"
+                        onClick={applyNearbyFilter}
+                        disabled={nearbyLoading || !isLocationSupported}
+                        className={`${MOBILE_CHIP_ITEM_CLASS} inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+                          urlState.nearby
+                            ? "bg-primaryCTA text-primary-foreground"
+                            : "border border-border/40 bg-muted/40 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                        }`}
+                        title={!isLocationSupported ? "Location not available" : "Use your current location"}
+                      >
+                        {nearbyLoading ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <MapPin className="h-3.5 w-3.5" />
+                        )}
+                        {urlState.nearby ? "Nearby selected" : "Nearby"}
+                      </button>
+                      {urlState.nearby && (
+                        <button
+                          type="button"
+                          onClick={clearNearbyFilter}
+                          className={`${MOBILE_CHIP_ITEM_CLASS} inline-flex w-fit items-center gap-1 rounded-full border border-border/30 bg-card/60 px-2.5 py-1 text-[11px] text-muted-foreground hover:text-foreground`}
+                        >
+                          <X className="h-3 w-3" /> Remove nearby
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {hasActiveFilters && (
+                  <div className="mt-3 border-t border-border/25 pt-3">
+                    <div className={MOBILE_CHIP_ROW_CLASS}>
+                      <span className={`${MOBILE_CHIP_ITEM_CLASS} text-[11px] text-muted-foreground`}>
+                        Filters:
+                      </span>
+                      {urlState.selectedCategory !== "all" && (
+                        <Badge className={`${MOBILE_CHIP_ITEM_CLASS} border-0 bg-muted/45 px-2 py-0.5 text-[11px] text-muted-foreground`}>
+                          {categoryLookup.get(urlState.selectedCategory)?.label || toDisplayLabel(urlState.selectedCategory)}
+                        </Badge>
+                      )}
+                      {urlState.selectedSubCategory !== "all" && (
+                        <Badge className={`${MOBILE_CHIP_ITEM_CLASS} border-0 bg-muted/45 px-2 py-0.5 text-[11px] text-muted-foreground`}>
+                          {urlState.selectedSubCategory}
+                        </Badge>
+                      )}
+                      {urlState.nearby && (
+                        <Badge className={`${MOBILE_CHIP_ITEM_CLASS} border-0 bg-accent/10 px-2 py-0.5 text-[11px] text-accent`}>
+                          Nearby
+                        </Badge>
+                      )}
+                      {appliedSearchQuery && (
+                        <Badge className={`${MOBILE_CHIP_ITEM_CLASS} border-0 bg-muted/45 px-2 py-0.5 text-[11px] text-muted-foreground`}>
+                          "{appliedSearchQuery}"
+                        </Badge>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={clearAllFilters}
+                      className="mt-2 inline-flex w-full items-center justify-center gap-1 rounded-full border border-border/30 bg-card/60 px-3 py-1.5 text-[11px] text-muted-foreground hover:text-foreground sm:w-auto sm:justify-start"
+                    >
+                      <X className="h-3 w-3" /> Clear all
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="mb-6 max-w-4xl space-y-3 rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-3 sm:px-4">
-          <div className="flex flex-col gap-2 md:flex-row md:items-center">
-            <span className="flex-shrink-0 text-[10px] font-medium uppercase tracking-[0.22em] text-white/35">
-              Category
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              <button
-                type="button"
-                onClick={() =>
-                  updateBrowseState({
-                    selectedCategory: "all",
-                    selectedSubCategory: "all",
-                    page: 1,
-                  })
-                }
-                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-                  urlState.selectedCategory === "all"
-                    ? "bg-[#D60024] text-white"
-                    : "border border-white/[0.06] bg-white/[0.05] text-white/60 hover:bg-white/[0.08] hover:text-white"
-                }`}
-              >
-                All Events
-              </button>
-              {categoryOptions.map((category) => {
-                const Icon = category.icon;
-                const isActive = urlState.selectedCategory === category.key;
+        {error && (
+          <div className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-foreground">
+            {error}
+          </div>
+        )}
 
-                return (
-                  <button
-                    key={category.key}
+        <div className="space-y-6 sm:space-y-8">
+          {groupedByCategory.map((category) => {
+            if (category.events.length === 0) return null;
+            const Icon = category.icon;
+
+            return (
+              <section key={category.key} className="space-y-3 border-t border-border/20 pt-4 sm:pt-5">
+                <div className="flex items-end justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/40 bg-card/70 text-accent shadow-[var(--shadow-card)] sm:h-10 sm:w-10">
+                      <Icon className="h-4.5 w-4.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="truncate text-xl font-black leading-tight text-foreground sm:text-2xl">
+                        {category.label}
+                      </h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {category.events.length} events on this page
+                      </p>
+                    </div>
+                  </div>
+                  <Button
                     type="button"
+                    variant="accent"
+                    className="h-9 shrink-0 rounded-full px-3 text-xs sm:h-10 sm:px-4 sm:text-sm"
                     onClick={() =>
                       updateBrowseState({
                         selectedCategory: category.key,
@@ -671,182 +1024,12 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                         page: 1,
                       })
                     }
-                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-                      isActive
-                        ? "bg-[#D60024] text-white"
-                        : "border border-white/[0.06] bg-white/[0.05] text-white/60 hover:bg-white/[0.08] hover:text-white"
-                    }`}
                   >
-                    <Icon className="h-3.5 w-3.5" />
-                    {category.label}
-                    <span className={`ml-0.5 text-[10px] ${isActive ? "text-white/70" : "text-white/30"}`}>
-                      ({category.count})
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {activeSubcategories.length > 0 && (
-            <div className="border-t border-white/[0.06] pt-3">
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() =>
-                    updateBrowseState({
-                      selectedSubCategory: "all",
-                      page: 1,
-                    })
-                  }
-                  className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
-                    urlState.selectedSubCategory === "all"
-                      ? "bg-white/[0.12] text-white"
-                      : "bg-white/[0.04] text-white/50 hover:bg-white/[0.06] hover:text-white/70"
-                  }`}
-                >
-                  All
-                </button>
-                {activeSubcategories.map((subCategory) => (
-                  <button
-                    key={subCategory.value}
-                    type="button"
-                    onClick={() =>
-                      updateBrowseState({
-                        selectedSubCategory: subCategory.value,
-                        page: 1,
-                      })
-                    }
-                    className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
-                      urlState.selectedSubCategory === subCategory.value
-                        ? "bg-[#D60024] text-white"
-                        : "bg-white/[0.04] text-white/50 hover:bg-white/[0.06] hover:text-white/70"
-                    }`}
-                  >
-                    {subCategory.label}
-                    {subCategory.count > 0 && (
-                      <span className="ml-1 text-[10px] opacity-70">({subCategory.count})</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="border-t border-white/[0.06] pt-3">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <span className="flex-shrink-0 text-[10px] font-medium uppercase tracking-[0.22em] text-white/35">
-                Location
-              </span>
-              <button
-                type="button"
-                onClick={applyNearbyFilter}
-                disabled={nearbyLoading || !isLocationSupported}
-                className={`inline-flex w-fit items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
-                  urlState.nearby
-                    ? "bg-[#38bdf8]/15 text-[#7dd3fc] ring-1 ring-[#38bdf8]/30"
-                    : "border border-white/[0.06] bg-white/[0.05] text-white/60 hover:bg-white/[0.08] hover:text-white"
-                }`}
-                title={!isLocationSupported ? "Location not available" : "Use your current location"}
-              >
-                {nearbyLoading ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <MapPin className="h-3.5 w-3.5" />
-                )}
-                {urlState.nearby ? "Nearby selected" : "Nearby"}
-              </button>
-              {urlState.nearby && (
-                <button
-                  type="button"
-                  onClick={clearNearbyFilter}
-                  className="inline-flex w-fit items-center gap-1 text-[11px] text-white/40 hover:text-white"
-                >
-                  <X className="h-3 w-3" /> Remove nearby
-                </button>
-              )}
-            </div>
-          </div>
-
-          {hasActiveFilters && (
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <span className="text-[11px] text-white/30">Filters:</span>
-              {urlState.selectedCategory !== "all" && (
-                <Badge className="border-0 bg-white/[0.06] px-2 py-0.5 text-[11px] text-white/60">
-                  {categoryLookup.get(urlState.selectedCategory)?.label || toDisplayLabel(urlState.selectedCategory)}
-                </Badge>
-              )}
-              {urlState.selectedSubCategory !== "all" && (
-                <Badge className="border-0 bg-white/[0.06] px-2 py-0.5 text-[11px] text-white/60">
-                  {urlState.selectedSubCategory}
-                </Badge>
-              )}
-              {urlState.nearby && (
-                <Badge className="border-0 bg-[#38bdf8]/10 px-2 py-0.5 text-[11px] text-[#7dd3fc]">
-                  Nearby
-                </Badge>
-              )}
-              {appliedSearchQuery && (
-                <Badge className="border-0 bg-white/[0.06] px-2 py-0.5 text-[11px] text-white/60">
-                  "{appliedSearchQuery}"
-                </Badge>
-              )}
-              <button
-                type="button"
-                onClick={clearAllFilters}
-                className="ml-auto flex items-center gap-1 text-[11px] text-white/40 hover:text-white"
-              >
-                <X className="h-3 w-3" /> Clear all
-              </button>
-            </div>
-          )}
-        </div>
-
-        {error && (
-          <div className="mb-6 rounded-xl border border-rose-300/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
-            {error}
-          </div>
-        )}
-
-        {trendingEvents.length > 0 && (
-          <section className="mb-10">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="flex items-center gap-2 text-lg font-bold text-white">
-                <TrendingUp className="h-5 w-5 text-[#D60024]" />
-                Trending Now
-              </h2>
-              <span className="text-xs text-white/30">{trendingEvents.length} events</span>
-            </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {trendingEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        <div className="space-y-10">
-          {groupedByCategory.map((category) => {
-            if (category.events.length === 0) return null;
-            const Icon = category.icon;
-
-            return (
-              <section key={category.key} className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="flex h-9 w-9 items-center justify-center rounded-lg"
-                      style={{ backgroundColor: `${category.color}18` }}
-                    >
-                      <Icon className="h-4.5 w-4.5" style={{ color: category.color }} />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-bold text-white">{category.label}</h3>
-                      <p className="text-xs text-white/30">{category.events.length} events on this page</p>
-                    </div>
-                  </div>
+                    Browse All
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
                 </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className={categoryEventGridClass}>
                   {category.events.map((event) => (
                     <EventCard key={event.id} event={event} />
                   ))}
@@ -857,14 +1040,16 @@ export default function BrowseEvents({ showPublicHeader = false }) {
         </div>
 
         {loading && (
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className={`mt-6 ${categoryEventGridClass}`}>
             {[1, 2, 3, 4, 5, 6].map((index) => (
-              <div key={index} className="animate-pulse rounded-xl border border-white/[0.06] bg-white/[0.04]">
-                <div className="h-44 rounded-t-xl bg-white/[0.06]" />
-                <div className="space-y-3 p-4">
-                  <div className="h-4 w-3/4 rounded bg-white/[0.08]" />
-                  <div className="h-3 w-1/2 rounded bg-white/[0.06]" />
-                  <div className="h-3 w-1/3 rounded bg-white/[0.06]" />
+              <div key={index} className={MOBILE_EVENT_ITEM_CLASS}>
+                <div className="animate-pulse rounded-lg border border-border/40 bg-card/70">
+                  <div className="h-44 rounded-t-lg bg-muted/40" />
+                  <div className="space-y-3 p-4">
+                    <div className="h-4 w-3/4 rounded bg-muted/50" />
+                    <div className="h-3 w-1/2 rounded bg-muted/40" />
+                    <div className="h-3 w-1/3 rounded bg-muted/40" />
+                  </div>
                 </div>
               </div>
             ))}
@@ -872,10 +1057,10 @@ export default function BrowseEvents({ showPublicHeader = false }) {
         )}
 
         {!loading && visibleEvents.length === 0 && (
-          <div className="mt-6 rounded-xl border border-white/[0.06] bg-white/[0.03] p-12 text-center">
-            <Search className="mx-auto mb-4 h-12 w-12 text-white/15" />
-            <h3 className="mb-1 text-base font-semibold text-white">No events found</h3>
-            <p className="mb-5 text-sm text-white/40">
+          <div className="mt-6 rounded-xl border border-border/40 bg-card/70 p-7 text-center shadow-[var(--shadow-card)] sm:p-12">
+            <Search className="mx-auto mb-3 h-10 w-10 text-muted-foreground/45 sm:mb-4 sm:h-12 sm:w-12" />
+            <h3 className="mb-1 text-base font-semibold text-foreground">No events found</h3>
+            <p className="mb-5 text-sm text-muted-foreground">
               {appliedSearchQuery
                 ? "Try adjusting your search or filters"
                 : "No events are available for this category yet"}
@@ -890,16 +1075,16 @@ export default function BrowseEvents({ showPublicHeader = false }) {
         )}
 
         {!loading && pagination.totalPages > 1 && visibleEvents.length > 0 && (
-          <div className="mt-10 flex flex-col gap-4 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-sm text-white/45">
+          <div className="mt-8 flex flex-col gap-3 rounded-xl border border-border/40 bg-card/70 px-3 py-4 shadow-[var(--shadow-card)] sm:mt-10 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+            <div className="text-center text-sm text-muted-foreground sm:text-left">
               {`Showing ${resultsStart}-${resultsEnd} of ${pagination.totalEvents} events`}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
               <button
                 type="button"
                 onClick={() => updateBrowseState({ page: pagination.page - 1 })}
                 disabled={pagination.page <= 1}
-                className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.04] px-4 text-sm text-white transition hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border/40 bg-muted/40 px-4 text-sm text-foreground transition hover:bg-muted/60 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Prev
@@ -908,7 +1093,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                 type="button"
                 onClick={() => updateBrowseState({ page: pagination.page + 1 })}
                 disabled={pagination.page >= pagination.totalPages}
-                className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.04] px-4 text-sm text-white transition hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border/40 bg-muted/40 px-4 text-sm text-foreground transition hover:bg-muted/60 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Next
                 <ChevronRight className="h-4 w-4" />
