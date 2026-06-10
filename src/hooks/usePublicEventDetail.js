@@ -212,14 +212,28 @@ function mergeTickets(tickets) {
           ? Number(t.totalQty) - Number(t.soldQty || 0)
           : 0;
     const availableQty = Number.isFinite(remainingQty) ? remainingQty : 0;
+    const comingSoon = Boolean(t.comingSoon);
+    const isSoldOut = Boolean(t.isSoldOut) || availableQty <= 0;
+    const isPurchaseClosed = Boolean(t.isPurchaseClosed);
+    const isAvailable =
+      t.isAvailable != null
+        ? Boolean(t.isAvailable)
+        : !comingSoon && !isSoldOut && !isPurchaseClosed;
 
     return {
       id: t.id,
       name: t.name || "Ticket",
+      type: t.type,
+      entryType: t.entryType,
       description: t.info || t.description || "",
       price: Number(t.price) || 0,
       available: Math.max(0, availableQty),
       maxPerUser: t.maxPerUser != null ? Number(t.maxPerUser) : null,
+      comingSoon,
+      onGroundOnly: Boolean(t.onGroundOnly),
+      isSoldOut,
+      isPurchaseClosed,
+      isAvailable,
     };
   });
 }

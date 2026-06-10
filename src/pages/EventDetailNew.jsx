@@ -85,6 +85,20 @@ const decodeHtmlEntities = (value) => {
   return textarea.value;
 };
 
+const getTicketCap = (ticket) => {
+  if (!ticket) return 0;
+  const availabilityCap = ticket.available ?? Infinity;
+  const perUserCap = ticket.maxPerUser ?? Infinity;
+  return Math.min(availabilityCap, perUserCap);
+};
+
+const isTicketBookable = (ticket) => {
+  if (!ticket) return false;
+  if (ticket.comingSoon || ticket.isPurchaseClosed) return false;
+  if (ticket.isAvailable === false) return false;
+  return getTicketCap(ticket) > 0;
+};
+
 const galleryMosaicLayouts = {
   1: [{ mobile: [4, 4], desktop: [5, 4] }],
   2: [
@@ -689,28 +703,33 @@ const EventDetailNew = () => {
   const handleQuantityChange = (ticketId, change) => {
     setTicketQuantities((prev) => {
       const ticket = event?.tickets?.find((t) => t.id === ticketId);
+
+      if (!isTicketBookable(ticket)) {
+        return { ...prev, [ticketId]: 0 };
+      }
+
       const current = prev[ticketId] || 0;
       const next = Math.max(0, current + change);
-
-      if (!ticket) return { ...prev, [ticketId]: next };
-
-      const availabilityCap = ticket.available ?? Infinity;
-      const perUserCap = ticket.maxPerUser ?? Infinity;
-      const cap = Math.min(availabilityCap, perUserCap);
-      const capped = Math.min(next, cap);
+      const capped = Math.min(next, getTicketCap(ticket));
 
       return { ...prev, [ticketId]: capped };
     });
   };
 
   const totalTickets = useMemo(() => {
-    return Object.values(ticketQuantities).reduce((sum, qty) => sum + qty, 0);
-  }, [ticketQuantities]);
+    if (!event) return 0;
+    const tickets = Array.isArray(event.tickets) ? event.tickets : [];
+    return tickets.reduce((sum, ticket) => {
+      if (!isTicketBookable(ticket)) return sum;
+      return sum + (ticketQuantities[ticket.id] || 0);
+    }, 0);
+  }, [ticketQuantities, event]);
 
   const totalAmount = useMemo(() => {
     if (!event) return 0;
     const tickets = Array.isArray(event.tickets) ? event.tickets : [];
     return tickets.reduce((sum, ticket) => {
+      if (!isTicketBookable(ticket)) return sum;
       const qty = ticketQuantities[ticket.id] || 0;
       return sum + ticket.price * qty;
     }, 0);
@@ -726,30 +745,49 @@ const EventDetailNew = () => {
     })}`;
   };
 
-  const getTicketCap = (ticket) => {
-    if (!ticket) return Infinity;
-    const availabilityCap = ticket.available ?? Infinity;
-    const perUserCap = ticket.maxPerUser ?? Infinity;
-    return Math.min(availabilityCap, perUserCap);
-  };
-
   const isSalesClosed = useMemo(() => {
     const status = (event?.eventStatus || "").toUpperCase();
     const publish = (event?.publishStatus || "").toUpperCase();
     return ["COMPLETED", "CANCELLED"].includes(status) || publish === "DRAFT";
   }, [event?.eventStatus, event?.publishStatus]);
 
-  const isSoldOut = useMemo(() => {
-    if (!event?.tickets?.length) return false;
-    return event.tickets.every((t) => (t.available || 0) === 0);
+  const hasTickets = useMemo(() => {
+    return Array.isArray(event?.tickets) && event.tickets.length > 0;
   }, [event?.tickets]);
+
+  const hasBookableTickets = useMemo(() => {
+    if (!hasTickets) return false;
+    return event.tickets.some((ticket) => isTicketBookable(ticket));
+  }, [event?.tickets, hasTickets]);
+
+  const allTicketsComingSoon = useMemo(() => {
+    if (!hasTickets) return false;
+    return event.tickets.every((ticket) => Boolean(ticket.comingSoon));
+  }, [event?.tickets, hasTickets]);
+
+  const isSoldOut = useMemo(() => {
+    if (!hasTickets) return false;
+    return event.tickets.every((t) => (t.available || 0) === 0);
+  }, [event?.tickets, hasTickets]);
 
   const bookingDisabledReason = useMemo(() => {
     if (isPreviewMode) return "Preview only";
     if (isSalesClosed) return "Sales closed";
+    if (allTicketsComingSoon) return "Coming Soon";
     if (isSoldOut) return "Sold out";
+    if (hasTickets && !hasBookableTickets) return "Unavailable";
     return "";
-  }, [isPreviewMode, isSalesClosed, isSoldOut]);
+  }, [
+    isPreviewMode,
+    isSalesClosed,
+    allTicketsComingSoon,
+    isSoldOut,
+    hasTickets,
+    hasBookableTickets,
+  ]);
+
+  const isBookingUnavailable =
+    isPreviewMode || isSalesClosed || (hasTickets && !hasBookableTickets);
 
   const ensureSession = async (forceRefresh = false) => {
     setAuthLoading(true);
@@ -778,8 +816,12 @@ const EventDetailNew = () => {
   };
 
   const handleBookNow = async () => {
-    if (isPreviewMode) {
-      toast.info("Booking is disabled in organizer preview.");
+    if (isBookingUnavailable) {
+      toast.info(
+        isPreviewMode
+          ? "Booking is disabled in organizer preview."
+          : bookingDisabledReason || "Booking unavailable",
+      );
       return;
     }
 
@@ -806,7 +848,7 @@ const EventDetailNew = () => {
         ...ticket,
         quantity: ticketQuantities[ticket.id] || 0,
       }))
-      .filter((t) => t.quantity > 0);
+      .filter((t) => t.quantity > 0 && isTicketBookable(t));
 
     const payload = {
       eventId: event.id || event.eventId || id,
@@ -1137,17 +1179,17 @@ const EventDetailNew = () => {
                 {/* Book Now Button */}
                 <Button
                   onClick={() => {
-                    if (isPreviewMode) return;
+                    if (isBookingUnavailable) return;
                     const ticketSection = document.getElementById('ticket-section');
                     if (ticketSection) {
                       ticketSection.scrollIntoView({ behavior: 'smooth' });
                     }
                   }}
-                  disabled={isPreviewMode}
+                  disabled={isBookingUnavailable}
                   className="mt-auto h-10 w-full rounded-lg bg-primaryCTA text-sm font-semibold text-primary-foreground shadow-[0_16px_38px_-24px_hsl(var(--primary)/0.86)] transition-all hover:-translate-y-0.5 hover:bg-primaryCTA-hover hover:shadow-[0_20px_46px_-26px_hsl(var(--primary)/0.9)] active:translate-y-0 active:bg-primaryCTA-active"
                   size="lg"
                 >
-                  {isPreviewMode ? 'Preview Only' : isSoldOut ? 'SOLD OUT' : isSalesClosed ? 'Sales Closed' : 'Book Now'}
+                  {bookingDisabledReason || 'Book Now'}
                 </Button>
               </div>
             </aside>
@@ -2152,19 +2194,39 @@ const EventDetailNew = () => {
                 <div className="space-y-3">
                   {event.tickets.map((ticket) => {
                     const cap = getTicketCap(ticket);
-                    const qty = ticketQuantities[ticket.id] || 0;
+                    const selectable = isTicketBookable(ticket);
+                    const isComingSoon = Boolean(ticket.comingSoon);
+                    const isPurchaseClosed = Boolean(ticket.isPurchaseClosed);
+                    const isTicketSoldOut =
+                      Boolean(ticket.isSoldOut) || ticket.available === 0;
+                    const qty = selectable ? ticketQuantities[ticket.id] || 0 : 0;
                     return (
                       <div
                         key={ticket.id}
-                        className={`p-4 rounded-xl border border-gray-700/50 bg-transparent ${ticket.available === 0 ? "opacity-60" : ""}`}
+                        className={`p-4 rounded-xl border border-gray-700/50 bg-transparent ${!selectable ? "opacity-60" : ""}`}
                       >
                         <div className="flex justify-between items-start mb-1">
                           <h4 className="font-bold text-white text-xl">
                             {ticket.name}
                           </h4>
-                          <span className="text-xl font-bold text-red-600">
-                            {formatCurrency(ticket.price)}
-                          </span>
+                          <div className="flex flex-col items-end gap-1">
+                            {isComingSoon ? (
+                              <span className="rounded-full border border-yellow-500/40 bg-yellow-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-yellow-300">
+                                Coming Soon
+                              </span>
+                            ) : isPurchaseClosed ? (
+                              <span className="rounded-full border border-gray-600 bg-gray-800/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-400">
+                                Sales Closed
+                              </span>
+                            ) : isTicketSoldOut ? (
+                              <span className="rounded-full border border-gray-600 bg-gray-800/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-400">
+                                Sold Out
+                              </span>
+                            ) : null}
+                            <span className="text-xl font-bold text-red-600">
+                              {formatCurrency(ticket.price)}
+                            </span>
+                          </div>
                         </div>
                         <p className="text-[11px] text-gray-500 mb-3">
                           {ticket.description}
@@ -2172,8 +2234,14 @@ const EventDetailNew = () => {
 
                         <div className="flex items-center justify-between">
                           <div className="text-[10px] text-gray-500">
-                            <p>{ticket.available} available</p>
-                            {Number.isFinite(cap) && cap < Infinity && (
+                            {isComingSoon ? (
+                              <p className="text-yellow-300">Coming soon</p>
+                            ) : isPurchaseClosed ? (
+                              <p>Sales closed</p>
+                            ) : (
+                              <p>{ticket.available} available</p>
+                            )}
+                            {selectable && Number.isFinite(cap) && cap < Infinity && (
                               <p className="text-gray-600 mt-0.5">
                                 Max {cap} per user
                               </p>
@@ -2188,7 +2256,7 @@ const EventDetailNew = () => {
                                 !qty ||
                                 isPreviewMode ||
                                 isSalesClosed ||
-                                ticket.available === 0
+                                !selectable
                               }
                               className="h-7 w-7 rounded-full border border-gray-600 flex items-center justify-center text-white hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
                             >
@@ -2202,7 +2270,7 @@ const EventDetailNew = () => {
                               disabled={
                                 isPreviewMode ||
                                 isSalesClosed ||
-                                ticket.available === 0 ||
+                                !selectable ||
                                 qty >= cap
                               }
                               className="h-7 w-7 rounded-full border border-gray-600 flex items-center justify-center text-white hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
@@ -2212,10 +2280,18 @@ const EventDetailNew = () => {
                           </div>
                         </div>
 
-                        {ticket.available === 0 && (
+                        {isComingSoon ? (
+                          <p className="text-yellow-300 text-xs mt-2">
+                            Coming soon
+                          </p>
+                        ) : isPurchaseClosed ? (
+                          <p className="text-gray-500 text-xs mt-2">
+                            Sales closed
+                          </p>
+                        ) : isTicketSoldOut ? (
                           <p className="text-gray-500 text-xs mt-2">Sold out</p>
-                        )}
-                        {ticket.available > 0 &&
+                        ) : null}
+                        {selectable &&
                           Number.isFinite(cap) &&
                           cap < Infinity &&
                           qty >= cap && (
@@ -2238,10 +2314,8 @@ const EventDetailNew = () => {
                 <Button
                   onClick={handleBookNow}
                   disabled={
-                    isPreviewMode ||
-                    totalTickets === 0 ||
-                    isSalesClosed ||
-                    isSoldOut
+                    isBookingUnavailable ||
+                    totalTickets === 0
                   }
                   className="w-full bg-primaryCTA hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-primary-foreground font-semibold transition-all text-sm py-4 rounded-lg"
                 >
