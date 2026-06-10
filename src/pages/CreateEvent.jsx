@@ -981,6 +981,10 @@ const CreateEvent = () => {
       setMainCategory(eventToEdit.category || "");
       setSelectedCategories([eventToEdit.subCategory || eventToEdit.subcategory || ""]);
       setCoverImage(eventToEdit.flyerImage || eventToEdit.image || eventToEdit.flyer);
+      setCoverStorageKey(eventToEdit.flyerStorageKey || null);
+      setDraftCoverStorageKey(null);
+      setCoverImageFile(null);
+      setRemoveFlyerImage(false);
       hydrateGallery(eventToEdit.images);
       setAdditionalFromEvent(eventToEdit);
       const startDateStr = toDateStr(start);
@@ -1605,12 +1609,25 @@ const CreateEvent = () => {
                 try {
                   // If we have a draft key, persist it; otherwise upload file
                   if (draftCoverStorageKey) {
-                    await persistFlyerUrl(backendEventId, { url: coverImage, publicId: draftCoverStorageKey });
+                    const coverPersistRes = await persistFlyerUrl(backendEventId, { url: coverImage, publicId: draftCoverStorageKey });
+                    const coverData = coverPersistRes?.data || coverPersistRes || {};
+                    const imageUrl = coverData.flyerImage || coverData.url || coverImage;
+                    const storageKey = coverData.storageKey || coverData.key || coverData.publicId || null;
+                    if (imageUrl) setCoverImage(imageUrl);
+                    setCoverStorageKey(storageKey);
+                    setDraftCoverStorageKey(null);
+                    setCoverImageFile(null);
+                    rememberSavedCover({ url: imageUrl, storageKey });
                   } else {
                     const coverResp = await uploadFlyerImage(backendEventId, coverImageFile);
                     const coverData = coverResp.data || coverResp;
                     const imageUrl = coverData.flyerImage || coverData.url;
+                    const storageKey = coverData.storageKey || coverData.key || coverData.publicId || null;
                     if (imageUrl) setCoverImage(imageUrl);
+                    setCoverStorageKey(storageKey);
+                    setDraftCoverStorageKey(null);
+                    setCoverImageFile(null);
+                    rememberSavedCover({ url: imageUrl, storageKey });
                   }
                 } catch (err) {
                   console.error("❌ Failed to persist flyer image during edit:", err);
@@ -1731,16 +1748,29 @@ const CreateEvent = () => {
               setShowLoading(true);
               setLoadingMessage("Saving cover image...");
               if (draftCoverStorageKey) {
-                await persistFlyerUrl(backendId, { url: coverImage, publicId: draftCoverStorageKey });
+                const coverPersistRes = await persistFlyerUrl(backendId, { url: coverImage, publicId: draftCoverStorageKey });
+                const coverData = coverPersistRes?.data || coverPersistRes || {};
+                const imageUrl = coverData.flyerImage || coverData.url || coverImage;
+                const storageKey = coverData.storageKey || coverData.key || coverData.publicId || null;
+                if (imageUrl) setCoverImage(imageUrl);
+                setCoverStorageKey(storageKey);
+                setDraftCoverStorageKey(null);
+                setCoverImageFile(null);
+                rememberSavedCover({ url: imageUrl, storageKey });
                 toast.success("Cover image saved to event.");
               } else {
                 const coverResp = await uploadFlyerImage(backendId, coverImageFile);
                 const coverData = coverResp.data || coverResp;
                 const imageUrl = coverData.flyerImage || coverData.url;
+                const storageKey = coverData.storageKey || coverData.key || coverData.publicId || null;
                 if (imageUrl) {
                   setCoverImage(imageUrl);
                   toast.success("Cover image saved to event.");
                 }
+                setCoverStorageKey(storageKey);
+                setDraftCoverStorageKey(null);
+                setCoverImageFile(null);
+                rememberSavedCover({ url: imageUrl, storageKey });
               }
             } catch (err) {
               console.error("Failed to persist cover image after create:", err);
@@ -2497,10 +2527,40 @@ const CreateEvent = () => {
     resetCoverImageInput();
   };
 
+  const getSavedCoverImageFromCache = () => {
+    const cachedEvent = eventCacheRef.current;
+    return cachedEvent?.flyerImage || cachedEvent?.image || cachedEvent?.flyer || null;
+  };
+
+  const getSavedCoverStorageKeyFromCache = () => eventCacheRef.current?.flyerStorageKey || null;
+
+  const rememberSavedCover = ({ url, storageKey }) => {
+    if (!eventCacheRef.current) return;
+
+    eventCacheRef.current = {
+      ...eventCacheRef.current,
+      flyerImage: url || null,
+      flyerStorageKey: storageKey || null,
+    };
+  };
+
+  const deleteDraftCoverByKey = async (storageKey, context = "draft cover") => {
+    if (!storageKey) return;
+
+    try {
+      await deleteDraftStorageObject(storageKey, "EVENT_FLYER");
+    } catch (err) {
+      console.warn(`Failed to delete ${context} from storage`, err?.message);
+    }
+  };
+
   const uploadCoverFileToDraft = async (file) => {
     if (!file) return;
 
     let preview = null;
+    const previousDraftCoverKey = draftCoverStorageKey;
+    const previousCoverImage = coverImage;
+    const previousCoverStorageKey = coverStorageKey;
 
     setUploadingCover(true);
     try {
@@ -2512,6 +2572,9 @@ const CreateEvent = () => {
 
       // Upload immediately to storage draft
       const { url, publicId } = await uploadDraftImage(file, 'flyers');
+      if (previousDraftCoverKey && previousDraftCoverKey !== publicId) {
+        await deleteDraftCoverByKey(previousDraftCoverKey, "previous draft cover");
+      }
       setCoverImage(url);
       setDraftCoverStorageKey(publicId);
       setCoverStorageKey(publicId);
@@ -2520,9 +2583,10 @@ const CreateEvent = () => {
       console.error("Failed to upload cover image:", error);
       toast.error(error.message || "Failed to upload cover image.");
       // Reset on error
-      setCoverImage(null);
+      setCoverImage(previousCoverImage || null);
       setCoverImageFile(null);
-      setDraftCoverStorageKey(null);
+      setDraftCoverStorageKey(previousDraftCoverKey || null);
+      setCoverStorageKey(previousCoverStorageKey || null);
     } finally {
       if (preview) {
         URL.revokeObjectURL(preview);
@@ -2584,14 +2648,44 @@ const CreateEvent = () => {
 
   const handleRemoveCoverImage = async () => {
     const deleteDraftCoverIfAny = async () => {
-      if (draftCoverStorageKey) {
-        try {
-          await deleteDraftStorageObject(draftCoverStorageKey, "EVENT_FLYER");
-        } catch (err) {
-          console.warn("Failed to delete draft cover from storage", err?.message);
-        }
-      }
+      await deleteDraftCoverByKey(draftCoverStorageKey);
     };
+
+    if (draftCoverStorageKey) {
+      try {
+        setLoadingMessage("Removing selected cover image...");
+        setShowLoading(true);
+
+        await deleteDraftCoverIfAny();
+
+        const savedCoverImage = backendEventId ? getSavedCoverImageFromCache() : null;
+        const savedCoverStorageKey = backendEventId ? getSavedCoverStorageKeyFromCache() : null;
+
+        setCoverImage(savedCoverImage);
+        setCoverImageFile(null);
+        setDraftCoverStorageKey(null);
+        setCoverStorageKey(savedCoverStorageKey);
+        setRemoveFlyerImage(false);
+        setImagesChanged(
+          draftGalleryUploads.length > 0 ||
+          galleryImageFiles.length > 0 ||
+          removeGalleryIds.length > 0
+        );
+
+        if (coverImageInputRef.current) {
+          coverImageInputRef.current.value = '';
+        }
+
+        toast.success(savedCoverImage ? "Selected cover replacement removed." : "Cover image removed.");
+      } catch (error) {
+        console.error("Failed to remove draft flyer image:", error);
+        toast.error("Failed to remove selected image");
+      } finally {
+        setShowLoading(false);
+      }
+
+      return;
+    }
 
     // If editing existing event with backend ID and has existing cover image
     if (backendEventId && coverImage && typeof coverImage === 'string' && !coverImage.startsWith('data:')) {
@@ -2604,12 +2698,8 @@ const CreateEvent = () => {
         
         console.log("✅ Flyer image deleted from backend successfully!");
 
-        if (coverStorageKey) {
-          await deleteDraftStorageObject(coverStorageKey, "EVENT_FLYER");
-        }
-        await deleteDraftCoverIfAny();
-
         // Remove from UI immediately after successful backend deletion
+        rememberSavedCover({ url: null, storageKey: null });
         setCoverImage(null);
         setCoverImageFile(null);
         setRemoveFlyerImage(true);
