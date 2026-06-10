@@ -54,6 +54,7 @@ import {
 import { toast } from "sonner";
 import { apiFetch, buildUrl } from "@/config/api";
 import usePublicEventDetail from "@/hooks/usePublicEventDetail";
+import { shareEventInvite } from "@/utils/eventShare";
 import {
   fetchSession,
   resetSessionCache,
@@ -967,16 +968,20 @@ const EventDetailNew = () => {
     window.location.href = googleAuthUrl;
   };
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: event?.title,
-        text: `Check out ${event?.title}`,
-        url: window.location.href,
+  const handleShare = async () => {
+    try {
+      const result = await shareEventInvite(event, {
+        organizerSlug,
+        eventSlug,
+        currentUrl: window.location.href,
       });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast.success("Link copied to clipboard!");
+
+      if (result.action === "copied") {
+        toast.success("Event invite copied to clipboard!");
+      }
+    } catch (shareError) {
+      console.error("Failed to share event:", shareError);
+      toast.error("Unable to share this event. Please try again.");
     }
   };
 
@@ -1057,9 +1062,6 @@ const EventDetailNew = () => {
             alt={event.title}
             className="h-full w-full scale-[1.02] object-cover object-center"
           />
-          <div className="absolute inset-0 bg-background/35" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/35 to-background/70" />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-transparent to-background" />
           <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-b from-transparent via-background/75 to-background" />
         </div>
 
@@ -1071,7 +1073,7 @@ const EventDetailNew = () => {
                 <Button
                   variant="ghost"
                   onClick={handleShare}
-                  className="h-11 w-11 rounded-full border border-border/45 bg-card/70 p-0 text-foreground shadow-[0_18px_48px_-28px_hsl(var(--background)/0.95)] backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-card/90 hover:text-foreground"
+                  className="h-11 w-11 rounded-full border border-white/55 bg-background/80 p-0 text-white shadow-[0_18px_48px_-28px_hsl(var(--background)/0.95)] ring-1 ring-white/20 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-background/90 hover:text-white"
                   title="Share event"
                 >
                   <Share2 className="h-5 w-5" />

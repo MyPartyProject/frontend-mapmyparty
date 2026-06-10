@@ -2,9 +2,11 @@ import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Share2, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 import usePublicEventDetail from "@/hooks/usePublicEventDetail";
 import { resolveEventBannerImage } from "@/utils/eventBannerImage";
 import { formatEventPriceLabel } from "@/utils/priceFormatter";
+import { shareEventInvite } from "@/utils/eventShare";
 import overviewHero from "@/assets/overview-hero.png";
 import overviewAbout from "@/assets/overview-about.jpg";
 import expect1 from "@/assets/expect1.jpg";
@@ -117,17 +119,20 @@ const EventOverviewPage = () => {
     { label: "Category", value: categoryLabel },
   ];
 
-  const handleShare = () => {
-    const shareUrl = window.location.href.replace("/overview", "");
+  const handleShare = async () => {
+    try {
+      const result = await shareEventInvite(event, {
+        organizerSlug,
+        eventSlug,
+        currentUrl: `${window.location.origin}${detailPath}`,
+      });
 
-    if (navigator.share) {
-      navigator.share({
-        title,
-        text: `Check out this event: ${title}`,
-        url: shareUrl,
-      }).catch(console.error);
-    } else {
-      navigator.clipboard.writeText(shareUrl);
+      if (result.action === "copied") {
+        toast.success("Event invite copied to clipboard!");
+      }
+    } catch (shareError) {
+      console.error("Failed to share event:", shareError);
+      toast.error("Unable to share this event. Please try again.");
     }
   };
 
@@ -194,15 +199,6 @@ const EventOverviewPage = () => {
 
           <div className="flex items-center gap-3">
             <Button
-              variant="ghost"
-              size="icon"
-              className="text-white/80 hover:bg-white/10"
-              onClick={handleShare}
-            >
-              <Share2 className="h-5 w-5" />
-              <span className="sr-only">Share</span>
-            </Button>
-            <Button
               className="hidden rounded-full bg-transparent px-5 font-semibold text-[#ff6a63] ring-1 ring-[#ff6a63] hover:bg-[#ff6a63] hover:text-white md:inline-flex"
               onClick={() => navigate(detailPath)}
             >
@@ -251,11 +247,23 @@ const EventOverviewPage = () => {
           </div>
 
           <div className="relative flex flex-col items-center gap-4 lg:items-end">
-            <img
-              src={heroImage}
-              alt={title}
-              className="mx-auto max-h-[520px] w-full max-w-[520px] rounded-[2rem] object-cover shadow-[0_30px_90px_-45px_rgba(0,0,0,0.75)]"
-            />
+            <div className="relative w-full max-w-[520px]">
+              <img
+                src={heroImage}
+                alt={title}
+                className="mx-auto max-h-[520px] w-full rounded-[2rem] object-cover shadow-[0_30px_90px_-45px_rgba(0,0,0,0.75)]"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-4 top-4 h-11 w-11 rounded-full border border-white/55 bg-[#0b1426]/80 text-white shadow-[0_18px_48px_-28px_rgba(0,0,0,0.95)] ring-1 ring-white/20 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-[#0b1426]/90 hover:text-white"
+                onClick={handleShare}
+                aria-label="Share event"
+                title="Share event"
+              >
+                <Share2 className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </section>
 
