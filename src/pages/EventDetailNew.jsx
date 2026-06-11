@@ -1021,6 +1021,14 @@ const EventDetailNew = () => {
     }
   };
 
+  const scrollToTicketSection = () => {
+    if (isBookingUnavailable) return;
+    const ticketSection = document.getElementById("ticket-section");
+    if (ticketSection) {
+      ticketSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   if (loading) {
     return (
       <div className="event-detail-theme min-h-screen bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] flex items-center justify-center">
@@ -1091,16 +1099,16 @@ const EventDetailNew = () => {
       )}
 
       {/* Hero Section - immersive event detail experience */}
-      <section className="relative isolate overflow-hidden pb-8 pt-6 lg:pb-12 lg:pt-10">
-        <div className="absolute inset-0 min-h-[640px] overflow-hidden">
+      <section className="relative isolate overflow-hidden pb-0 pt-0 lg:pb-12 lg:pt-10">
+        <div className="relative overflow-hidden bg-black lg:absolute lg:inset-0 lg:min-h-[640px]">
           <img
             src={event.image || FALLBACK_IMAGE}
             alt={event.title}
-            className="h-full w-full scale-[1.02] object-cover object-center"
+            className="block aspect-video w-full object-contain lg:aspect-auto lg:h-full lg:scale-[1.02] lg:object-cover lg:object-center"
           />
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-6 lg:px-12">
+        <div className="relative mx-auto hidden max-w-7xl px-6 lg:block lg:px-12">
           <div className="grid min-h-[560px] items-center gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.45fr)]">
             {/* Banner interaction layer */}
             <div className="relative min-h-[320px] lg:min-h-[520px]">
@@ -1171,13 +1179,7 @@ const EventDetailNew = () => {
 
                 {/* Book Now Button */}
                 <Button
-                  onClick={() => {
-                    if (isBookingUnavailable) return;
-                    const ticketSection = document.getElementById('ticket-section');
-                    if (ticketSection) {
-                      ticketSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
+                  onClick={scrollToTicketSection}
                   disabled={isBookingUnavailable}
                   className="mt-auto h-10 w-full rounded-lg bg-primaryCTA text-sm font-semibold text-primary-foreground shadow-[0_16px_38px_-24px_hsl(var(--primary)/0.86)] transition-all hover:-translate-y-0.5 hover:bg-primaryCTA-hover hover:shadow-[0_20px_46px_-26px_hsl(var(--primary)/0.9)] active:translate-y-0 active:bg-primaryCTA-active"
                   size="lg"
@@ -1188,6 +1190,79 @@ const EventDetailNew = () => {
             </aside>
           </div>
         </div>
+      </section>
+
+      {/* Mobile Event Information Section */}
+      <section className="px-4 pt-4 lg:hidden">
+        <aside className="event-glass-panel relative mx-auto flex w-full max-w-md flex-col overflow-hidden rounded-[var(--radius)] p-4">
+          <div className="relative z-10 flex flex-col">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <h1 className="text-xl font-semibold leading-tight text-foreground">
+                  {event.title}
+                </h1>
+                <div className="flex flex-wrap items-center gap-1.5 text-[9px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                  {event.category && <span>{event.category}</span>}
+                  {event.category && event.subCategory && <span>&middot;</span>}
+                  {event.subCategory && <span>{event.subCategory}</span>}
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                onClick={handleShare}
+                className="h-9 w-9 shrink-0 rounded-full border border-white/45 bg-background/65 p-0 text-white shadow-[0_14px_36px_-26px_hsl(var(--background)/0.95)] ring-1 ring-white/15 backdrop-blur-md transition hover:bg-background/80 hover:text-white"
+                title="Share event"
+              >
+                <Share2 className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="mt-4 space-y-2.5">
+              <div className="event-info-block flex items-start gap-2.5 rounded-lg p-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border/30 bg-primaryCTA/15 text-accent shadow-inner">
+                  <Calendar className="h-3.5 w-3.5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Date & Time
+                  </p>
+                  <p className="text-xs font-semibold leading-snug text-foreground">
+                    {formatDate(event.startDate)}
+                  </p>
+                  <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                    {formatTime(event.startDate)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="event-info-block flex items-start gap-2.5 rounded-lg p-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border/30 bg-primaryCTA/15 text-accent shadow-inner">
+                  <MapPin className="h-3.5 w-3.5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Venue
+                  </p>
+                  <p className="text-xs font-semibold leading-snug text-foreground">
+                    {event.venue}
+                  </p>
+                  <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                    {event.address}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <Button
+              onClick={scrollToTicketSection}
+              disabled={isBookingUnavailable}
+              className="mt-4 h-9 w-full rounded-lg bg-primaryCTA text-xs font-semibold text-primary-foreground shadow-[0_16px_38px_-24px_hsl(var(--primary)/0.86)] transition-all hover:bg-primaryCTA-hover active:bg-primaryCTA-active"
+              size="lg"
+            >
+              {bookingDisabledReason || "Book Now"}
+            </Button>
+          </div>
+        </aside>
       </section>
 
       {/* Sponsor Strip Section */}
@@ -1266,11 +1341,11 @@ const EventDetailNew = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-16 py-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Main Content */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="order-2 flex flex-col gap-4 lg:order-none lg:col-span-2">
             {/* About Section */}
-            <div className="space-y-3">
+            <div className="order-[10] space-y-3 lg:order-none">
               <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-white">
+                <h2 className="text-xl font-bold text-white lg:text-2xl">
                   About This Event
                 </h2>
                 <div
@@ -1301,12 +1376,12 @@ const EventDetailNew = () => {
               </div>
             </div>
 
-            <div className="h-px bg-gray-700 my-6"></div>
+            <div className="order-[11] h-px bg-gray-700 my-6 lg:order-none"></div>
 
             {/* Event Guide Section */}
-            <div className="space-y-3">
+            <div className="order-[60] space-y-3 lg:order-none">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-white">Event Guide</h2>
+                <h2 className="text-xl font-bold text-white lg:text-2xl">Event Guide</h2>
                 {event.advisoryItems?.length > 4 && (
                   <button
                     type="button"
@@ -1530,13 +1605,13 @@ const EventDetailNew = () => {
               )}
             </div>
 
-            <div className="h-px bg-gray-700 my-6"></div>
+            <div className="order-[61] h-px bg-gray-700 my-6 lg:order-none"></div>
 
             {/* Artist Section */}
             {event.artists?.length > 0 && (
-              <div className="space-y-3">
+              <div className="order-[20] space-y-3 lg:order-none">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-bold text-white">Artists</h2>
+                  <h2 className="text-xl font-bold text-white lg:text-2xl">Artists</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {event.artists.map((artist) => (
@@ -1582,12 +1657,12 @@ const EventDetailNew = () => {
               </div>
             )}
 
-            <div className="h-px bg-gray-700 my-6"></div>
+            <div className="order-[21] h-px bg-gray-700 my-6 lg:order-none"></div>
 
             {/* Gallery Section */}
-            <div className="space-y-3">
+            <div className="order-[30] space-y-3 lg:order-none">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="text-2xl font-bold text-white">Event Gallery</h2>
+                <h2 className="text-xl font-bold text-white lg:text-2xl">Event Gallery</h2>
                 {galleryImages.length > 1 && (
                   <div className="flex items-center gap-1 rounded-full border border-gray-700/80 bg-gray-900/80 p-1 shadow-lg shadow-black/20 backdrop-blur">
                     <Button
@@ -1701,17 +1776,17 @@ const EventDetailNew = () => {
               `}</style>
             </div>
 
-            <div className="h-px bg-gray-700 my-6"></div>
+            <div className="order-[31] h-px bg-gray-700 my-6 lg:order-none"></div>
 
             {/* Location Section */}
-            <div className="space-y-3">
+            <div className="order-[40] space-y-3 lg:order-none">
               <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-bold text-white">Venue</h2>
+                <h2 className="text-xl font-bold text-white lg:text-2xl">Venue</h2>
               </div>
 
-              <div className="flex items-center justify-between p-4 rounded-xl bg-transparent border border-gray-700/50">
+              <div className="flex flex-col items-start gap-3 rounded-xl border border-gray-700/50 bg-transparent p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex-1">
-                  <p className="text-white font-semibold text-lg">
+                  <p className="text-white font-semibold text-base lg:text-lg">
                     {event.venue}
                   </p>
                   <p className="text-gray-400 text-sm mt-0.5">
@@ -1720,7 +1795,7 @@ const EventDetailNew = () => {
                 </div>
                 <Button
                   variant="outline"
-                  className="border-gray-700 text-white hover:bg-gray-800 hover:text-white flex items-center gap-2"
+                  className="flex w-full items-center justify-center gap-2 border-gray-700 text-white hover:bg-gray-800 hover:text-white sm:w-auto"
                   onClick={() =>
                     window.open(
                       `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address)}`,
@@ -1817,15 +1892,15 @@ const EventDetailNew = () => {
               </div>
             </div> */}
 
-            <div className="h-px bg-gray-700 my-6"></div>
+            <div className="order-[41] h-px bg-gray-700 my-6 lg:order-none"></div>
 
             {/* Organizer Note Section */}
             {event.organizerNote?.trim?.() && (
-              <div className="space-y-3">
+              <div className="order-[70] space-y-3 lg:order-none">
                 <div className="rounded-xl bg-transparent border border-gray-700/50 p-4">
                   <div className="flex items-start gap-3">
                     <div className="flex-1">
-                      <h2 className="text-2xl font-bold text-white mb-2">
+                      <h2 className="text-xl font-bold text-white mb-2 lg:text-2xl">
                         Organizer Note
                       </h2>
                       <div
@@ -1860,17 +1935,17 @@ const EventDetailNew = () => {
               </div>
             )}
 
-            <div className="h-px bg-gray-700 my-6"></div>
+            <div className="order-[71] h-px bg-gray-700 my-6 lg:order-none"></div>
 
-            {/* FAQ & Terms & Conditions Section */}
-            <div className="space-y-3">
-              {normalizedFaqs.length > 0 && (
+            {/* FAQ Section */}
+            {normalizedFaqs.length > 0 && (
+              <div className="order-[50] space-y-3 lg:order-none">
                 <div className="rounded-xl border border-gray-700/50 overflow-hidden bg-transparent">
                   <button
                     className="w-full flex items-center justify-between gap-2 text-left px-5 py-4 transition"
                     onClick={() => setFaqOpen((prev) => !prev)}
                   >
-                    <span className="text-white font-semibold text-lg">
+                    <span className="text-white font-semibold text-base lg:text-lg">
                       Frequently Asked Questions
                     </span>
                     <ChevronDown
@@ -1901,8 +1976,11 @@ const EventDetailNew = () => {
                     </div>
                   )}
                 </div>
-              )}
+              </div>
+            )}
 
+            {/* Terms & Conditions Section */}
+            <div className={`order-[80] space-y-3 lg:order-none ${normalizedFaqs.length > 0 ? "lg:-mt-1" : ""}`}>
               <div className="rounded-xl border border-gray-700/50 overflow-hidden bg-transparent">
                 <button
                   className="w-full flex items-center justify-between gap-2 text-left px-5 py-4 transition"
@@ -2176,10 +2254,10 @@ const EventDetailNew = () => {
           </div>
 
           {/* Right Column - Booking Section */}
-          <div className="lg:col-span-1" id="ticket-section">
+          <div className="order-1 lg:order-none lg:col-span-1" id="ticket-section">
             <div className="space-y-3">
-              <div className="rounded-xl border border-gray-700/50 p-4 space-y-3 bg-transparent">
-                <h1 className="text-2xl font-bold text-white mb-3 flex items-center gap-2">
+              <div className="rounded-xl border border-gray-700/50 p-3 space-y-3 bg-transparent lg:p-4">
+                <h1 className="text-xl font-bold text-white mb-3 flex items-center gap-2 lg:text-2xl">
                   <Ticket className="h-5 w-5 text-red-600" />
                   Select Tickets
                 </h1>
@@ -2196,10 +2274,10 @@ const EventDetailNew = () => {
                     return (
                       <div
                         key={ticket.id}
-                        className={`p-4 rounded-xl border border-gray-700/50 bg-transparent ${!selectable ? "opacity-60" : ""}`}
+                        className={`p-3 rounded-xl border border-gray-700/50 bg-transparent lg:p-4 ${!selectable ? "opacity-60" : ""}`}
                       >
                         <div className="flex justify-between items-start mb-1">
-                          <h4 className="font-bold text-white text-xl">
+                          <h4 className="font-bold text-white text-base lg:text-xl">
                             {ticket.name}
                           </h4>
                           <div className="flex flex-col items-end gap-1">
@@ -2216,7 +2294,7 @@ const EventDetailNew = () => {
                                 Sold Out
                               </span>
                             ) : null}
-                            <span className="text-xl font-bold text-red-600">
+                            <span className="text-lg font-bold text-red-600 lg:text-xl">
                               {formatCurrency(ticket.price)}
                             </span>
                           </div>
@@ -2255,7 +2333,7 @@ const EventDetailNew = () => {
                             >
                               <Minus className="h-3 w-3" />
                             </button>
-                            <span className="w-6 text-center text-lg font-bold text-white">
+                            <span className="w-6 text-center text-base font-bold text-white lg:text-lg">
                               {qty}
                             </span>
                             <button
@@ -2310,7 +2388,7 @@ const EventDetailNew = () => {
                     isBookingUnavailable ||
                     totalTickets === 0
                   }
-                  className="w-full bg-primaryCTA hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-primary-foreground font-semibold transition-all text-sm py-4 rounded-lg"
+                  className="w-full bg-primaryCTA hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-primary-foreground font-semibold transition-all text-sm py-3 rounded-lg lg:py-4"
                 >
                   <Ticket className="h-4 w-4 mr-2" />
                   {bookingDisabledReason || "Book Now"}
