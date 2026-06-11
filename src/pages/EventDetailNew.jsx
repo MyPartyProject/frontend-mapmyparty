@@ -347,12 +347,7 @@ const EventDetailNew = () => {
       `
       @keyframes tabFadeSlide {0%{opacity:0;transform:translateY(10px);}100%{opacity:1;transform:translateY(0);}}
       @keyframes sponsorMarquee {0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
-      @keyframes eventHeroFadeIn {0%{opacity:0;transform:translateY(18px) scale(0.99);}100%{opacity:1;transform:translateY(0) scale(1);}}
       @keyframes eventGlassSheen {0%,18%{transform:translateX(-70%) rotate(10deg);opacity:0;}35%{opacity:1;}58%,100%{transform:translateX(70%) rotate(10deg);opacity:0;}}
-
-      .event-hero-enter {
-        animation: eventHeroFadeIn 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
-      }
 
       .event-glass-panel {
         background:
@@ -394,7 +389,6 @@ const EventDetailNew = () => {
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .event-hero-enter,
         .event-glass-panel::before {
           animation: none;
         }
@@ -1104,11 +1098,10 @@ const EventDetailNew = () => {
             alt={event.title}
             className="h-full w-full scale-[1.02] object-cover object-center"
           />
-          <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-b from-transparent via-background/75 to-background" />
         </div>
 
         <div className="relative mx-auto max-w-7xl px-6 lg:px-12">
-          <div className="event-hero-enter grid min-h-[560px] items-center gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.45fr)]">
+          <div className="grid min-h-[560px] items-center gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.45fr)]">
             {/* Banner interaction layer */}
             <div className="relative min-h-[320px] lg:min-h-[520px]">
               <div className="absolute right-0 top-0">
