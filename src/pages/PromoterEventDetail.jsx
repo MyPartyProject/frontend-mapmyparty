@@ -217,7 +217,7 @@ const PromoterEventDetail = () => {
                   </div>
                   <div className="rounded-xl border border-border/60 bg-card/80 px-4 py-2">
                     <p className="text-xs text-muted-foreground">Event ID</p>
-                    <p className="text-sm font-mono">{event.publicId || event.id}</p>
+                    <p className="text-sm">{event.publicId || event.id}</p>
                   </div>
                 </div>
               </CardHeader>

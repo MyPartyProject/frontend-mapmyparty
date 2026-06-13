@@ -139,7 +139,7 @@ const OrganizerCard = ({ org }) => {
         {/* GST + Joined Date Row */}
         <div className="flex items-center justify-between flex-wrap gap-2">
           {org.gstNumber && (
-            <Badge variant="outline" className="text-xs font-mono border-border/60 px-2.5 py-1">
+            <Badge variant="outline" className="text-xs border-border/60 px-2.5 py-1">
               GST: {org.gstNumber}
             </Badge>
           )}

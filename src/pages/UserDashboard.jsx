@@ -26,6 +26,7 @@ import { apiFetch } from "@/config/api";
 import { fetchSession, resetSessionCache } from "@/utils/auth";
 import { toast } from "sonner";
 import { resolveEventBannerImage } from "@/utils/eventBannerImage";
+import { registerAmikoPdfFonts } from "@/utils/pdfFonts";
 
 const UserDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -236,6 +237,7 @@ const UserDashboard = () => {
   const handleDownloadTicket = async (ticket) => {
     try {
       const doc = new jsPDF({ unit: "pt", format: "a4" });
+      await registerAmikoPdfFonts(doc);
 
       // Build QR text (include booking id and event title)
       const qrText = `EVENT:${ticket.eventTitle} | EVENT_ID:${ticket.eventId || "N/A"} | BOOKING:${ticket.id}`;
@@ -246,11 +248,11 @@ const UserDashboard = () => {
 
       // Ticket header (right side)
       doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
+      doc.setFont("Amiko", "bold");
       doc.text(ticket.eventTitle || "Event", 180, 60, { maxWidth: 340 });
 
       doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
+      doc.setFont("Amiko", "normal");
       const details = [
         ticket.eventDate ? `Date: ${ticket.eventDate}` : null,
         ticket.eventTime ? `Time: ${ticket.eventTime}` : null,

@@ -166,11 +166,11 @@ const PayoutDetailModal = ({ payout, loading, onOpenChange }) => {
                     </div>
                     <div className="flex justify-between gap-4">
                       <span>Payout ID</span>
-                      <span className="font-mono text-foreground">{payout.publicId || compactId(payout.id)}</span>
+                      <span className="text-foreground">{payout.publicId || compactId(payout.id)}</span>
                     </div>
                     <div className="flex justify-between gap-4">
                       <span>Invoice</span>
-                      <span className="font-mono text-foreground">{payout.invoiceNumber || "Not issued"}</span>
+                      <span className="text-foreground">{payout.invoiceNumber || "Not issued"}</span>
                     </div>
                     <div className="flex justify-between gap-4">
                       <span>Created</span>
@@ -260,8 +260,8 @@ const PayoutDetailModal = ({ payout, loading, onOpenChange }) => {
                 <div className="mt-3 grid gap-2 text-sm text-muted-foreground md:grid-cols-2">
                   <div>Provider: <span className="text-foreground">{payout.provider || "MANUAL"}</span></div>
                   <div>Provider status: <span className="text-foreground">{payout.providerStatus || "Not started"}</span></div>
-                  <div>Batch ID: <span className="font-mono text-foreground">{payout.providerBatchId || "Not set"}</span></div>
-                  <div>Payout ID: <span className="font-mono text-foreground">{payout.providerPayoutId || "Not set"}</span></div>
+                  <div>Batch ID: <span className="text-foreground">{payout.providerBatchId || "Not set"}</span></div>
+                  <div>Payout ID: <span className="text-foreground">{payout.providerPayoutId || "Not set"}</span></div>
                   <div>Failure code: <span className="text-foreground">{payout.providerFailureCode || "None"}</span></div>
                   <div>Failure reason: <span className="text-foreground">{payout.failureReason || payout.blockedReason || "None"}</span></div>
                 </div>
@@ -734,7 +734,7 @@ const PromoterPayouts = () => {
                         <p className="text-xs text-muted-foreground">Created</p>
                         <p className="font-medium">{formatDate(payout.createdAt)}</p>
                         <p className="text-xs text-muted-foreground">Provider</p>
-                        <p className="font-mono text-xs">{payout.providerStatus || payout.provider || "Manual review"}</p>
+                        <p className="text-xs">{payout.providerStatus || payout.provider || "Manual review"}</p>
                         <Button variant="outline" size="sm" onClick={() => openDetail(payout.id)}>
                           <Eye className="h-4 w-4" />
                           View details

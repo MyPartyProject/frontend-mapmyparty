@@ -112,7 +112,7 @@ const PayoutDetail = ({ payoutId, onBack }) => {
           </button>
           <div>
             <h1 className="text-2xl font-bold text-white">Payout Detail</h1>
-            <p className="text-xs text-white/40 mt-0.5 font-mono">
+            <p className="text-xs text-white/40 mt-0.5">
               {payout.invoiceNumber || payout.publicId || payout.id}
             </p>
           </div>

@@ -234,7 +234,7 @@ const ProfileHeader = ({
               </div>
             )}
             {profile.gstNumber && (
-              <Badge variant="outline" className="text-xs font-mono border-border/60 px-2.5 py-1">
+              <Badge variant="outline" className="text-xs border-border/60 px-2.5 py-1">
                 GST: {profile.gstNumber}
               </Badge>
             )}

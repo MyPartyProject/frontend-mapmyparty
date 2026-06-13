@@ -154,7 +154,7 @@ const EventRefunds = () => {
                     <td className="px-6 py-4 text-sm text-white/60">
                       {refund.payment?.booking?.user?.email || "—"}
                     </td>
-                    <td className="px-6 py-4 text-xs text-white/40 font-mono">
+                    <td className="px-6 py-4 text-xs text-white/40">
                       {refund.payment?.booking?.id?.substring(0, 8)}...
                     </td>
                     <td className="px-6 py-4 text-sm text-white/60">

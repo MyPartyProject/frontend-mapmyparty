@@ -23,6 +23,7 @@ import StarRating from "@/components/StarRating";
 import { buildCanonicalQrPayload } from "@/utils/qrPayload";
 import { resolveEventBannerImage } from "@/utils/eventBannerImage";
 import { formatIndianRupee } from "@/utils/priceFormatter";
+import { registerAmikoPdfFonts } from "@/utils/pdfFonts";
 
 const MyBookings = ({
   browseEventsPath = "/dashboard/browse-events",
@@ -224,18 +225,19 @@ const MyBookings = ({
     if (!ticket) return;
     try {
       const doc = new jsPDF();
+      await registerAmikoPdfFonts(doc);
       const pageWidth = doc.internal.pageSize.getWidth();
       doc.setFillColor(119, 34, 86);
       doc.rect(0, 0, pageWidth, 45, 'F');
       doc.setTextColor(201, 151, 116);
       doc.setFontSize(28);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont("Amiko", "bold");
       doc.text('EVENT TICKET', pageWidth / 2, 28, { align: 'center' });
       doc.setTextColor(72, 40, 93);
       doc.setFontSize(18);
       doc.text(ticket.eventTitle || 'Event', 20, 65);
       doc.setFontSize(11);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont("Amiko", "normal");
       doc.setTextColor(119, 34, 86);
       doc.text(`Ticket Type: ${ticket.ticketName}`, 20, 80);
       doc.text(`Quantity: ${ticket.quantity || 1}`, 20, 90);
@@ -485,7 +487,7 @@ const MyBookings = ({
                     </div>
                   </div>
                   <div className="flex items-center justify-between pt-2.5 border-t border-white/[0.06]">
-                    <span className="text-xs font-mono text-white/40">{getBookingDisplayId(booking)}</span>
+                    <span className="text-xs text-white/40">{getBookingDisplayId(booking)}</span>
                     <span className="text-sm font-bold text-[#D60024]">{formatIndianRupee(booking.totalPrice || 0)}</span>
                   </div>
                 </div>
@@ -528,7 +530,7 @@ const MyBookings = ({
                 {/* Header bar */}
                 <div className="px-4 py-2.5 border-b border-white/[0.04] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div className="flex items-center gap-2 text-xs text-white/40">
-                    <span className="font-mono text-white/70">{getBookingDisplayId(booking)}</span>
+                    <span className="text-white/70">{getBookingDisplayId(booking)}</span>
                     <span className="text-white/15">|</span>
                     <span>{formatBookingDate(booking.bookingDate)}</span>
                   </div>

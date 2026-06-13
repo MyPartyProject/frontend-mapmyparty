@@ -75,9 +75,11 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
+        sans: ['"Amiko"', 'sans-serif'],
+        serif: ['"Amiko"', 'sans-serif'],
+        mono: ['"Amiko"', 'sans-serif'],
         heading: ['"Amiko"', 'sans-serif'],
-        body: ['"Josefin Sans"', 'sans-serif'],
-        'league-gothic': ['"Josefin Sans"', 'sans-serif'],
+        body: ['"Amiko"', 'sans-serif'],
       },
       keyframes: {
         "accordion-down": {

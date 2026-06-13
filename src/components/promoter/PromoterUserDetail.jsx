@@ -224,7 +224,7 @@ const PromoterUserDetail = () => {
                 </div>
                 <div className="rounded-xl border border-border/60 bg-card/80 px-4 py-2">
                   <p className="text-xs text-muted-foreground">User ID</p>
-                  <p className="text-sm font-mono">{user?.id || "N/A"}</p>
+                  <p className="text-sm">{user?.id || "N/A"}</p>
                 </div>
               </div>
             </CardHeader>

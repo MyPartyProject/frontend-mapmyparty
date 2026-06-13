@@ -6,8 +6,9 @@
 @layer base {
   :root {
     /* Premium party theme: Midnight Plum (#48285D), Royal Mulberry (#772256), Antique Gold (#C99774) */
-    --font-body: "Josefin Sans", sans-serif;
-    --font-heading: "Amiko", sans-serif;
+    --font-sans: "Amiko", sans-serif;
+    --font-body: var(--font-sans);
+    --font-heading: var(--font-sans);
 
     --background: 275 31% 6%; /* #0F0A13 */
     --foreground: 274 26% 95%; /* #F2EEF5 */
@@ -181,6 +182,11 @@
     background: hsl(var(--background) / 0.6);
   }
 
+  .create-event-shell .quill,
+  .create-event-shell .quill * {
+    font-family: var(--font-sans) !important;
+  }
+
   .host-events-page {
     overflow-x: clip;
   }
@@ -318,13 +324,13 @@
   }
 
   html {
-    font-family: var(--font-body);
+    font-family: var(--font-sans);
     font-size: clamp(16px, 0.45vw + 14px, 19px);
   }
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: var(--font-body);
+    font-family: var(--font-sans);
     font-size: 1.1rem;
     line-height: 1.65;
   }
@@ -372,8 +378,14 @@
   button,
   input,
   textarea,
-  select {
-    font-family: var(--font-body);
+  select,
+  optgroup,
+  option,
+  code,
+  pre,
+  kbd,
+  samp {
+    font-family: var(--font-sans);
   }
 
   .highlight-text {

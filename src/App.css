@@ -1,5 +1,5 @@
 :root {
-  font-family: "Josefin Sans", sans-serif;
+  font-family: var(--font-sans, "Amiko", sans-serif);
 }
 
 body {

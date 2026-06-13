@@ -111,7 +111,7 @@ const TicketModal = ({ isOpen, onClose, ticket }) => {
               <Hash className="w-5 h-5 text-[#D60024] mt-0.5 flex-shrink-0" />
               <div className="flex-1">
                 <p className="font-semibold text-white text-sm mb-1">Ticket ID</p>
-                <p className="text-[rgba(255,255,255,0.75)] text-sm font-mono">
+                <p className="text-[rgba(255,255,255,0.75)] text-sm">
                   {ticket.id || ticket.orderId}
                 </p>
               </div>

@@ -1065,9 +1065,9 @@
 //       ctx.fillRect(cardX, cardY, cardWidth, headerHeight);
 
 //       ctx.fillStyle = "#ffffff";
-//       ctx.font = "bold 40px 'Segoe UI', sans-serif";
+//       ctx.font = "bold 40px 'Amiko', sans-serif";
 //       ctx.fillText(eventTitle, cardX + 36, cardY + 76);
-//       ctx.font = "20px 'Segoe UI', sans-serif";
+//       ctx.font = "20px 'Amiko', sans-serif";
 //       ctx.fillText(`Date: ${eventDate}`, cardX + 36, cardY + 120);
 //       ctx.fillText(`Venue: ${eventVenue}`, cardX + 36, cardY + 152);
 
@@ -1077,20 +1077,20 @@
 
 //       let cursorY = cardY + headerHeight + 40;
 //       ctx.fillStyle = "#0f172a";
-//       ctx.font = "bold 26px 'Segoe UI', sans-serif";
+//       ctx.font = "bold 26px 'Amiko', sans-serif";
 //       ctx.fillText("Ticket Holder", cardX + 36, cursorY);
-//       ctx.font = "20px 'Segoe UI', sans-serif";
+//       ctx.font = "20px 'Amiko', sans-serif";
 //       ctx.fillText(holderName, cardX + 36, cursorY + 36);
 //       ctx.fillText(holderEmail, cardX + 36, cursorY + 66);
 
 //       // Order summary
 //       cursorY += 110;
 //       ctx.fillStyle = "#0f172a";
-//       ctx.font = "bold 26px 'Segoe UI', sans-serif";
+//       ctx.font = "bold 26px 'Amiko', sans-serif";
 //       ctx.fillText("Order Summary", cardX + 36, cursorY);
 //       cursorY += 30;
 
-//       ctx.font = "20px 'Segoe UI', sans-serif";
+//       ctx.font = "20px 'Amiko', sans-serif";
 //       receiptItems.forEach((item) => {
 //         ctx.fillStyle = "#1f2937";
 //         ctx.fillText(`${item.name} × ${item.quantity}`, cardX + 36, cursorY + 32);
@@ -1123,7 +1123,7 @@
 //       cursorY += 48;
 
 //       ctx.fillStyle = "#0f172a";
-//       ctx.font = "bold 24px 'Segoe UI', sans-serif";
+//       ctx.font = "bold 24px 'Amiko', sans-serif";
 //       ctx.fillText("Total Paid", cardX + 36, cursorY + 26);
 //       ctx.fillStyle = "#4f46e5";
 //       ctx.fillText(formatCurrencyValue(bookingGrandTotal), cardX + cardWidth - 220, cursorY + 26);
@@ -1160,12 +1160,12 @@
 //       }
 
 //       ctx.fillStyle = "#64748b";
-//       ctx.font = "14px 'Segoe UI', sans-serif";
+//       ctx.font = "14px 'Amiko', sans-serif";
 //       ctx.fillText(bookingRef, barcodeX + 20, barcodeY + barcodeHeight - 12);
 
 //       // Footer note
 //       ctx.fillStyle = "#64748b";
-//       ctx.font = "18px 'Segoe UI', sans-serif";
+//       ctx.font = "18px 'Amiko', sans-serif";
 //       ctx.fillText(
 //         "Present this ticket (digital or printed) with the barcode at the venue entrance.",
 //         cardX + 36,
@@ -1706,7 +1706,7 @@
 //                       <CardContent className="p-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 //                         <div>
 //                           <p className="text-sm text-muted-foreground">Booking Reference</p>
-//                           <p className="font-mono text-sm break-all">{bookingId || "—"}</p>
+//                           <p className="text-sm break-all">{bookingId || "—"}</p>
 //                         </div>
 //                         {bookingStatus && (
 //                           <Badge variant="outline" className="uppercase tracking-wide">

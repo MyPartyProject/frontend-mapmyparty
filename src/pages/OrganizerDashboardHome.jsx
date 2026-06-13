@@ -219,7 +219,7 @@ const OrganizerDashboardHome = ({ user, handleLogout, setActiveTab, activeTab })
                         </p>
                       </td>
                       <td className="px-5 py-4">
-                        <p className="text-sm font-mono text-muted-foreground">#{booking.id.slice(0, 8)}</p>
+                        <p className="text-sm text-muted-foreground">#{booking.id.slice(0, 8)}</p>
                       </td>
                       <td className="px-5 py-4">
                         <p className="text-sm font-semibold">{formatCurrency(booking.totalAmount || booking.payment?.amount || 0)}</p>

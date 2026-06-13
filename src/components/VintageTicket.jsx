@@ -249,7 +249,7 @@ const VintageTicket = ({ ticket, index = 0, onClick, compact = false }) => {
                 {ticket.manualCheckInCode && (
                   <div className="mt-2 text-center">
                     <span className="text-[8px] text-[#772256]/60 uppercase tracking-wider block">Code</span>
-                    <span className={`text-xs font-mono font-bold text-[#48285D] tracking-widest
+                    <span className={`text-xs font-bold text-[#48285D] tracking-widest
                       ${!isQRVisible && !ticket.checkedIn ? 'blur-sm select-none' : ''}`}>
                       {ticket.manualCheckInCode.toUpperCase()}
                     </span>
