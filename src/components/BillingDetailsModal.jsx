@@ -130,7 +130,7 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                   value={formData.fullName}
                   onChange={handleChange}
                   placeholder="John Doe"
-                  className="bg-white/5 border-white/20 text-white placeholder:text-white/40"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
                   required
                 />
               </div>
@@ -146,7 +146,7 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="john@example.com"
-                  className="bg-white/5 border-white/20 text-white placeholder:text-white/40"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
                   required
                 />
               </div>
@@ -163,7 +163,7 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="9876543210"
-                className="bg-white/5 border-white/20 text-white placeholder:text-white/40"
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
                 required
               />
             </div>
@@ -185,7 +185,7 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                 value={formData.addressLine1}
                 onChange={handleChange}
                 placeholder="Street address, P.O. box"
-                className="bg-white/5 border-white/20 text-white placeholder:text-white/40"
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
                 required
               />
             </div>
@@ -200,7 +200,7 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                 value={formData.addressLine2}
                 onChange={handleChange}
                 placeholder="Apartment, suite, unit, building, floor, etc."
-                className="bg-white/5 border-white/20 text-white placeholder:text-white/40"
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
               />
             </div>
 
@@ -215,7 +215,7 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                   value={formData.city}
                   onChange={handleChange}
                   placeholder="Mumbai"
-                  className="bg-white/5 border-white/20 text-white placeholder:text-white/40"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
                   required
                 />
               </div>
@@ -230,7 +230,7 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                   value={formData.state}
                   onChange={handleChange}
                   placeholder="Maharashtra"
-                  className="bg-white/5 border-white/20 text-white placeholder:text-white/40"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
                   required
                 />
               </div>
@@ -245,7 +245,7 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                   value={formData.pincode}
                   onChange={handleChange}
                   placeholder="400001"
-                  className="bg-white/5 border-white/20 text-white placeholder:text-white/40"
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
                   required
                 />
               </div>

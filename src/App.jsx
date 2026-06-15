@@ -2,7 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import Index from "./pages/Index";
 import Events from "./pages/Events";
 import EventDetail from "./pages/EventDetailNew";
@@ -75,6 +76,18 @@ const PublicShell = () => (
   </div>
 );
 
+const ScrollToTop = () => {
+  const { pathname, hash } = useLocation();
+
+  useEffect(() => {
+    if (hash) return;
+
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [pathname, hash]);
+
+  return null;
+};
+
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
@@ -84,7 +97,8 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <AuthProvider>
-            <Routes>
+              <ScrollToTop />
+              <Routes>
               <Route element={<PublicShell />}>
                 <Route path="/" element={<Index />} />
                 <Route path="/landing/homepage" element={<Index />} />
