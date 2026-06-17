@@ -14,6 +14,7 @@ import {
 import {
   AlertCircle,
   Banknote,
+  Ban,
   CalendarDays,
   CheckCircle2,
   Clock3,
@@ -21,6 +22,7 @@ import {
   FileText,
   Loader,
   PauseCircle,
+  Plus,
   RefreshCw,
   Search,
   ShieldCheck,
@@ -33,7 +35,10 @@ import { useAdminPayouts } from "@/hooks/useAdminPayouts";
 import {
   approveEventPayout,
   calculateEventPayout,
+  cancelAdminBalanceAdjustment,
+  createAdminOrganizerBalanceAdjustment,
   createEventPayout,
+  fetchAdminOrganizerBalanceAdjustments,
   fetchAdminEvents,
   fetchAdminPayoutDetail,
   holdEventPayout,
@@ -128,6 +133,7 @@ const SummaryTile = ({ label, value, tone = "text-foreground" }) => (
 
 const PayoutDetailModal = ({ payout, loading, onOpenChange }) => {
   const lineItems = payout?.lineItems || [];
+  const adjustmentAmount = Number(payout?.organizerBalanceAdjustmentCents || 0) / 100;
 
   return (
     <Dialog open={Boolean(payout) || loading} onOpenChange={onOpenChange}>
@@ -154,6 +160,9 @@ const PayoutDetailModal = ({ payout, loading, onOpenChange }) => {
                 <SummaryTile label="Gross sales" value={formatMoney(payout.grossTicketSales, 2)} />
                 <SummaryTile label="Platform fee" value={formatMoney(payout.platformFeeAmount, 2)} />
                 <SummaryTile label="GST deducted" value={formatMoney(payout.gstTotal, 2)} />
+                {adjustmentAmount > 0 && (
+                  <SummaryTile label="Balance recovered" value={formatMoney(adjustmentAmount, 2)} tone="text-amber-300" />
+                )}
               </div>
 
               <div className="grid gap-4 lg:grid-cols-2">
@@ -274,6 +283,151 @@ const PayoutDetailModal = ({ payout, loading, onOpenChange }) => {
   );
 };
 
+const AdjustmentStatusBadge = ({ status }) => (
+  <Badge className={`${statusClass(status)} border`}>{formatStatus(status)}</Badge>
+);
+
+const BalanceAdjustmentsModal = ({
+  organizer,
+  data,
+  loading,
+  form,
+  onFormChange,
+  creating,
+  cancellingId,
+  onCreate,
+  onCancel,
+  onOpenChange,
+}) => {
+  const items = data?.items || [];
+  const summary = data?.summary || {};
+
+  return (
+    <Dialog open={Boolean(organizer)} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[88vh] max-w-5xl overflow-y-auto border-border/70 bg-background/95">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Wallet2 className="h-5 w-5 text-primary" />
+            Organizer balance adjustments
+          </DialogTitle>
+          <DialogDescription>
+            Chargebacks and corrections are deducted from future payouts until recovered or cancelled.
+          </DialogDescription>
+        </DialogHeader>
+
+        {organizer && (
+          <div className="space-y-5">
+            <div className="grid gap-3 md:grid-cols-3">
+              <SummaryTile label="Organizer" value={organizer.name || "Organizer"} />
+              <SummaryTile
+                label="Open balance"
+                value={formatMoney((summary.openRemainingAmountCents || 0) / 100, 2)}
+                tone={summary.openRemainingAmountCents > 0 ? "text-amber-300" : "text-emerald-300"}
+              />
+              <SummaryTile label="Open adjustments" value={summary.openAdjustmentCount || 0} />
+            </div>
+
+            <form className="rounded-xl border border-border/60 bg-card/70 p-4" onSubmit={onCreate}>
+              <div className="grid gap-3 lg:grid-cols-[180px_160px_1fr_1fr_auto]">
+                <select
+                  className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  value={form.adjustmentType}
+                  onChange={(event) => onFormChange({ adjustmentType: event.target.value })}
+                >
+                  <option value="CHARGEBACK">Chargeback</option>
+                  <option value="POST_PAYOUT_REFUND">Post payout refund</option>
+                  <option value="MANUAL_CORRECTION">Manual correction</option>
+                </select>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="Amount"
+                  value={form.amount}
+                  onChange={(event) => onFormChange({ amount: event.target.value })}
+                />
+                <Input
+                  placeholder="Reference, optional"
+                  value={form.chargebackReference}
+                  onChange={(event) => onFormChange({ chargebackReference: event.target.value })}
+                />
+                <Input
+                  placeholder="Reason"
+                  value={form.reason}
+                  onChange={(event) => onFormChange({ reason: event.target.value })}
+                />
+                <Button type="submit" disabled={creating}>
+                  <Plus className="h-4 w-4" />
+                  {creating ? "Adding..." : "Add"}
+                </Button>
+              </div>
+            </form>
+
+            <div className="rounded-xl border border-border/60 bg-card/70">
+              <div className="border-b border-border/60 px-4 py-3">
+                <h3 className="text-sm font-semibold">Adjustment history</h3>
+              </div>
+              {loading ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : items.length === 0 ? (
+                <div className="px-4 py-10 text-center text-sm text-muted-foreground">
+                  No balance adjustments found for this organizer.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="text-xs uppercase text-muted-foreground">
+                      <tr className="border-b border-border/60">
+                        <th className="px-4 py-3 text-left">Type</th>
+                        <th className="px-4 py-3 text-left">Status</th>
+                        <th className="px-4 py-3 text-right">Original</th>
+                        <th className="px-4 py-3 text-right">Remaining</th>
+                        <th className="px-4 py-3 text-left">Reference</th>
+                        <th className="px-4 py-3 text-left">Reason</th>
+                        <th className="px-4 py-3 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {items.map((adjustment) => (
+                        <tr key={adjustment.id} className="border-b border-border/40 last:border-0">
+                          <td className="px-4 py-3">{formatStatus(adjustment.adjustmentType)}</td>
+                          <td className="px-4 py-3"><AdjustmentStatusBadge status={adjustment.status} /></td>
+                          <td className="px-4 py-3 text-right">{formatMoney(adjustment.amountCents / 100, 2)}</td>
+                          <td className="px-4 py-3 text-right font-semibold">{formatMoney(adjustment.remainingAmountCents / 100, 2)}</td>
+                          <td className="px-4 py-3">{adjustment.chargebackReference || adjustment.payment?.providerPaymentId || "-"}</td>
+                          <td className="max-w-[260px] truncate px-4 py-3">{adjustment.reason || "-"}</td>
+                          <td className="px-4 py-3 text-right">
+                            {["OPEN", "PARTIALLY_RECOVERED"].includes(adjustment.status) ? (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onCancel(adjustment)}
+                                disabled={cancellingId === adjustment.id}
+                              >
+                                <Ban className="h-4 w-4" />
+                                {cancellingId === adjustment.id ? "Cancelling..." : "Cancel"}
+                              </Button>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">No action</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const PromoterPayouts = () => {
   const { items, statistics, filters, loading, isFetching, error, updateFilters, refresh } = useAdminPayouts();
   const [events, setEvents] = useState([]);
@@ -286,6 +440,17 @@ const PromoterPayouts = () => {
   const [updatingId, setUpdatingId] = useState(null);
   const [detailPayout, setDetailPayout] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [adjustmentOrganizer, setAdjustmentOrganizer] = useState(null);
+  const [adjustmentData, setAdjustmentData] = useState(null);
+  const [adjustmentLoading, setAdjustmentLoading] = useState(false);
+  const [adjustmentCreating, setAdjustmentCreating] = useState(false);
+  const [adjustmentCancellingId, setAdjustmentCancellingId] = useState(null);
+  const [adjustmentForm, setAdjustmentForm] = useState({
+    adjustmentType: "CHARGEBACK",
+    amount: "",
+    chargebackReference: "",
+    reason: "",
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -473,6 +638,93 @@ const PromoterPayouts = () => {
       toast.error(detailError.message || "Failed to load payout detail.");
     } finally {
       setDetailLoading(false);
+    }
+  };
+
+  const loadBalanceAdjustments = async (organizer) => {
+    if (!organizer?.id) return;
+
+    setAdjustmentLoading(true);
+    try {
+      const data = await fetchAdminOrganizerBalanceAdjustments(organizer.id, { limit: 50 });
+      setAdjustmentData(data);
+    } catch (loadError) {
+      toast.error(loadError.message || "Failed to load balance adjustments.");
+    } finally {
+      setAdjustmentLoading(false);
+    }
+  };
+
+  const openBalanceAdjustments = async (organizer) => {
+    setAdjustmentOrganizer(organizer);
+    setAdjustmentData(null);
+    setAdjustmentForm({
+      adjustmentType: "CHARGEBACK",
+      amount: "",
+      chargebackReference: "",
+      reason: "",
+    });
+    await loadBalanceAdjustments(organizer);
+  };
+
+  const updateAdjustmentForm = (updates) => {
+    setAdjustmentForm((current) => ({ ...current, ...updates }));
+  };
+
+  const handleCreateAdjustment = async (event) => {
+    event.preventDefault();
+    if (!adjustmentOrganizer?.id) return;
+
+    const amountCents = Math.round(Number(adjustmentForm.amount || 0) * 100);
+    if (!Number.isInteger(amountCents) || amountCents <= 0) {
+      toast.error("Enter a valid adjustment amount.");
+      return;
+    }
+
+    if (!adjustmentForm.reason.trim()) {
+      toast.error("Add a reason for the adjustment.");
+      return;
+    }
+
+    setAdjustmentCreating(true);
+    try {
+      await createAdminOrganizerBalanceAdjustment(adjustmentOrganizer.id, {
+        adjustmentType: adjustmentForm.adjustmentType,
+        amountCents,
+        chargebackReference: adjustmentForm.chargebackReference.trim() || undefined,
+        reason: adjustmentForm.reason.trim(),
+      });
+      toast.success("Balance adjustment recorded.");
+      setAdjustmentForm({
+        adjustmentType: "CHARGEBACK",
+        amount: "",
+        chargebackReference: "",
+        reason: "",
+      });
+      await loadBalanceAdjustments(adjustmentOrganizer);
+      refresh();
+    } catch (createError) {
+      toast.error(createError.message || "Failed to create balance adjustment.");
+    } finally {
+      setAdjustmentCreating(false);
+    }
+  };
+
+  const handleCancelAdjustment = async (adjustment) => {
+    if (!adjustment?.id) return;
+    const reason = window.prompt("Reason for cancelling this adjustment");
+    if (!reason?.trim()) return;
+
+    setAdjustmentCancellingId(adjustment.id);
+    try {
+      await cancelAdminBalanceAdjustment(adjustment.id, { reason: reason.trim() });
+      toast.success("Balance adjustment cancelled.");
+      await loadBalanceAdjustments(adjustmentOrganizer);
+      refresh();
+    } catch (cancelError) {
+      toast.error(cancelError.message || "Failed to cancel balance adjustment.");
+    } finally {
+      setAdjustmentCancellingId(null);
     }
   };
 
@@ -735,10 +987,18 @@ const PromoterPayouts = () => {
                         <p className="font-medium">{formatDate(payout.createdAt)}</p>
                         <p className="text-xs text-muted-foreground">Provider</p>
                         <p className="text-xs">{payout.providerStatus || payout.provider || "Manual review"}</p>
-                        <Button variant="outline" size="sm" onClick={() => openDetail(payout.id)}>
-                          <Eye className="h-4 w-4" />
-                          View details
-                        </Button>
+                        <div className="flex flex-wrap gap-2 xl:justify-end">
+                          <Button variant="outline" size="sm" onClick={() => openDetail(payout.id)}>
+                            <Eye className="h-4 w-4" />
+                            View details
+                          </Button>
+                          {payout.organizer?.id && (
+                            <Button variant="outline" size="sm" onClick={() => openBalanceAdjustments(payout.organizer)}>
+                              <Wallet2 className="h-4 w-4" />
+                              Adjustments
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -830,6 +1090,24 @@ const PromoterPayouts = () => {
           if (!open) {
             setDetailPayout(null);
             setDetailLoading(false);
+          }
+        }}
+      />
+      <BalanceAdjustmentsModal
+        organizer={adjustmentOrganizer}
+        data={adjustmentData}
+        loading={adjustmentLoading}
+        form={adjustmentForm}
+        onFormChange={updateAdjustmentForm}
+        creating={adjustmentCreating}
+        cancellingId={adjustmentCancellingId}
+        onCreate={handleCreateAdjustment}
+        onCancel={handleCancelAdjustment}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAdjustmentOrganizer(null);
+            setAdjustmentData(null);
+            setAdjustmentLoading(false);
           }
         }}
       />

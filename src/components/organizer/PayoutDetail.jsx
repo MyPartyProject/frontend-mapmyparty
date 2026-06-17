@@ -238,6 +238,14 @@ const PayoutDetail = ({ payoutId, onBack }) => {
             <p className="text-xs text-white/40">Net payable</p>
             <p className="mt-1 font-semibold text-primary">Rs. {formatAmount(summary.netPayoutAmount)}</p>
           </div>
+          {Number(summary.organizerBalanceAdjustmentCents || 0) > 0 && (
+            <div className="bg-white/5 border border-yellow-500/20 rounded-xl p-4">
+              <p className="text-xs text-white/40">Balance recovered</p>
+              <p className="mt-1 font-semibold text-yellow-300">
+                Rs. {formatAmount(Number(summary.organizerBalanceAdjustmentCents || 0) / 100)}
+              </p>
+            </div>
+          )}
         </div>
       )}
 

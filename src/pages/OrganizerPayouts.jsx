@@ -8,6 +8,7 @@ import {
   DollarSign,
   Calendar,
   Filter,
+  Wallet2,
 } from "lucide-react";
 import PayoutDetail from "@/components/organizer/PayoutDetail";
 
@@ -47,6 +48,8 @@ const OrganizerPayouts = () => {
   const [total, setTotal] = useState(0);
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedPayoutId, setSelectedPayoutId] = useState(null);
+  const [balanceAdjustments, setBalanceAdjustments] = useState({ items: [], summary: null });
+  const [balanceLoading, setBalanceLoading] = useState(true);
   const limit = 20;
 
   const fetchPayouts = async () => {
@@ -67,9 +70,30 @@ const OrganizerPayouts = () => {
     }
   };
 
+  const fetchBalanceAdjustments = async () => {
+    setBalanceLoading(true);
+    try {
+      const res = await apiFetch("organizer/me/balance-adjustments?limit=5");
+      if (res.success) {
+        setBalanceAdjustments({
+          items: res.data?.items || [],
+          summary: res.data?.summary || null,
+        });
+      }
+    } catch (err) {
+      console.error("Failed to fetch balance adjustments:", err);
+    } finally {
+      setBalanceLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchPayouts();
   }, [page, statusFilter]);
+
+  useEffect(() => {
+    fetchBalanceAdjustments();
+  }, []);
 
   if (selectedPayoutId) {
     return (
@@ -112,6 +136,47 @@ const OrganizerPayouts = () => {
             <option value="CANCELLED">Cancelled</option>
           </select>
         </div>
+      </div>
+
+      <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <Wallet2 className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold text-white">Balance adjustments</h2>
+            </div>
+            <p className="mt-1 text-sm text-white/50">
+              Chargebacks or post-payout corrections are recovered from future payouts.
+            </p>
+          </div>
+          <div className="text-left lg:text-right">
+            <p className="text-xs text-white/40">Open balance</p>
+            <p className={`text-2xl font-bold ${balanceAdjustments.summary?.openRemainingAmountCents > 0 ? "text-yellow-300" : "text-green-300"}`}>
+              Rs. {((balanceAdjustments.summary?.openRemainingAmountCents || 0) / 100).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+            </p>
+            <p className="text-xs text-white/40">
+              {balanceAdjustments.summary?.openAdjustmentCount || 0} open adjustment(s)
+            </p>
+          </div>
+        </div>
+        {!balanceLoading && balanceAdjustments.items.length > 0 && (
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {balanceAdjustments.items.slice(0, 3).map((adjustment) => (
+              <div key={adjustment.id} className="rounded-lg border border-white/10 bg-black/10 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-medium text-white">{formatStatus(adjustment.adjustmentType)}</p>
+                  <Badge className={`${statusColors[adjustment.status] || "bg-white/10 text-white/60 border-white/10"} border text-xs`}>
+                    {formatStatus(adjustment.status)}
+                  </Badge>
+                </div>
+                <p className="mt-2 text-sm text-white/60">
+                  Remaining Rs. {(Number(adjustment.remainingAmountCents || 0) / 100).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </p>
+                <p className="mt-1 truncate text-xs text-white/40">{adjustment.reason || adjustment.chargebackReference || "Adjustment"}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Table */}

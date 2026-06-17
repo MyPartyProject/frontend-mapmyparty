@@ -99,6 +99,33 @@ export async function fetchAdminPayoutDetail(payoutId) {
   return response.data;
 }
 
+export async function fetchAdminOrganizerBalanceAdjustments(organizerId, params = {}) {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== null && value !== undefined && value !== "") {
+      query.append(key, value);
+    }
+  });
+  const response = await apiFetch(`admin/organizers/${organizerId}/balance-adjustments${query.toString() ? `?${query.toString()}` : ""}`);
+  return response.data;
+}
+
+export async function createAdminOrganizerBalanceAdjustment(organizerId, payload) {
+  const response = await apiFetch(`admin/organizers/${organizerId}/balance-adjustments`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return response.data;
+}
+
+export async function cancelAdminBalanceAdjustment(adjustmentId, payload) {
+  const response = await apiFetch(`admin/balance-adjustments/${adjustmentId}/cancel`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+  return response.data;
+}
+
 export async function calculateEventPayout(eventId) {
   const response = await apiFetch(`admin/events/${eventId}/payouts/calculate`, {
     method: "POST",
