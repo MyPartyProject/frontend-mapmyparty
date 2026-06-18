@@ -228,6 +228,9 @@ export default function BrowseEvents({ showPublicHeader = false }) {
   const [nearbyLoading, setNearbyLoading] = useState(false);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [activeTrendingIndex, setActiveTrendingIndex] = useState(0);
+  const [touchStartX, setTouchStartX] = useState(null);
+  const [touchEndX, setTouchEndX] = useState(null);
+  const [isAutoplayPaused, setIsAutoplayPaused] = useState(false);
 
   const updateBrowseState = useCallback((updates, options = {}) => {
     const nextState = {
@@ -449,14 +452,14 @@ export default function BrowseEvents({ showPublicHeader = false }) {
   }, [trendingEvents.length]);
 
   useEffect(() => {
-    if (trendingEvents.length <= 1) return undefined;
+    if (trendingEvents.length <= 1 || isAutoplayPaused) return undefined;
 
     const intervalId = window.setInterval(() => {
       setActiveTrendingIndex((currentIndex) => (currentIndex + 1) % trendingEvents.length);
     }, 6000);
 
     return () => window.clearInterval(intervalId);
-  }, [trendingEvents.length]);
+  }, [trendingEvents.length, isAutoplayPaused]);
 
   const goToPreviousTrending = () => {
     if (trendingEvents.length <= 1) return;
@@ -468,6 +471,38 @@ export default function BrowseEvents({ showPublicHeader = false }) {
   const goToNextTrending = () => {
     if (trendingEvents.length <= 1) return;
     setActiveTrendingIndex((currentIndex) => (currentIndex + 1) % trendingEvents.length);
+  };
+
+  const handleTouchStart = (e) => {
+    setIsAutoplayPaused(true);
+    setTouchStartX(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEndX(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartX || !touchEndX) return;
+    const distance = touchStartX - touchEndX;
+    const minSwipeDistance = 50;
+
+    if (distance > minSwipeDistance) {
+      goToNextTrending();
+    } else if (distance < -minSwipeDistance) {
+      goToPreviousTrending();
+    }
+    setTouchStartX(null);
+    setTouchEndX(null);
+    setIsAutoplayPaused(false);
+  };
+
+  const handleMouseEnter = () => {
+    setIsAutoplayPaused(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsAutoplayPaused(false);
   };
 
   const groupedByCategory = useMemo(() => {
@@ -512,8 +547,8 @@ export default function BrowseEvents({ showPublicHeader = false }) {
     showPublicHeader ? "min-h-screen" : "min-h-full"
   }`;
   const browseContentClass = showPublicHeader
-    ? "mx-auto max-w-7xl px-3 pb-8 pt-5 sm:px-6 sm:py-8 lg:px-8"
-    : "mx-auto max-w-7xl px-3 pb-3 pt-3 sm:px-6 sm:py-8 lg:px-8";
+    ? "mx-auto max-w-7xl px-4 pb-8 pt-5 sm:px-6 sm:py-8 lg:px-8"
+    : "mx-auto max-w-7xl px-4 pb-4 pt-4 sm:px-6 sm:py-8 lg:px-8";
   const categoryEventGridClass = `${MOBILE_EVENT_ROW_CLASS} sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`;
 
   const formatDate = (dateString) => {
@@ -688,98 +723,152 @@ export default function BrowseEvents({ showPublicHeader = false }) {
       {showPublicHeader && <Header forceMainHeader />}
       <div className={browseContentClass}>
         {trendingEvents.length > 0 && (
-          <section className="relative mb-4 overflow-hidden rounded-[1.25rem] border border-border/50 bg-card shadow-[var(--shadow-elegant)] sm:mb-5 sm:rounded-[1.5rem]">
-            <div className="relative min-h-[18rem] overflow-hidden sm:min-h-[22rem] lg:min-h-[24rem]">
-              <div
-                className="flex min-h-[18rem] transition-transform duration-500 ease-out sm:min-h-[22rem] lg:min-h-[24rem]"
-                style={{ transform: `translateX(-${activeTrendingSlideIndex * 100}%)` }}
-              >
-                {trendingEvents.map((event, index) => {
-                  const isActive = index === activeTrendingSlideIndex;
-                  const eventHref = getEventHref(event);
+          <div className="mb-6">
+            <section className="relative mx-auto w-[calc(100vw-32px)] max-w-[420px] overflow-hidden rounded-[16px] border border-accent/15 bg-card/45 shadow-[0_0_15px_rgba(168,85,247,0.05)] sm:w-auto sm:max-w-none sm:mx-0 sm:mb-5 sm:rounded-[1.5rem] sm:border-border/50 sm:bg-card sm:shadow-[var(--shadow-elegant)]">
+              {/* Mobile Swipe Buttons (Over image) */}
+              {trendingEvents.length > 1 && (
+                <div className="absolute left-2 right-2 top-[75px] xs:top-[85px] -translate-y-1/2 z-20 flex justify-between pointer-events-none sm:hidden">
+                  <button
+                    type="button"
+                    aria-label="Previous event"
+                    disabled={activeTrendingSlideIndex === 0}
+                    onClick={goToPreviousTrending}
+                    className="pointer-events-auto inline-flex h-[32px] w-[32px] items-center justify-center rounded-full border border-white/10 bg-black/60 text-white backdrop-blur-sm transition-all duration-200 active:scale-95 disabled:opacity-30 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-accent"
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Next event"
+                    disabled={activeTrendingSlideIndex === trendingEvents.length - 1}
+                    onClick={goToNextTrending}
+                    className="pointer-events-auto inline-flex h-[32px] w-[32px] items-center justify-center rounded-full border border-white/10 bg-black/60 text-white backdrop-blur-sm transition-all duration-200 active:scale-95 disabled:opacity-30 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-accent"
+                  >
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
 
-                  return (
-                    <div
-                      key={event.id || index}
-                      aria-hidden={!isActive}
-                      className={`relative min-w-full overflow-hidden ${
-                        isActive ? "" : "pointer-events-none"
-                      }`}
-                    >
-                      <img
-                        src={getEventImage(event)}
-                        alt={event.title || event.eventTitle || "Event"}
-                        className="absolute inset-0 h-full w-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-r from-background/92 via-background/58 to-background/16" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
-                      <div className="theme-gradient-primary absolute inset-0 opacity-15" />
+              <div className="relative overflow-hidden">
+                <div
+                  className="flex transition-transform duration-300 ease-out sm:min-h-[22rem] lg:min-h-[24rem] motion-reduce:transition-none"
+                  style={{ transform: `translateX(-${activeTrendingSlideIndex * 100}%)` }}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  {trendingEvents.map((event, index) => {
+                    const isActive = index === activeTrendingSlideIndex;
+                    const eventHref = getEventHref(event);
 
-                      <div className="relative flex min-h-[18rem] max-w-3xl flex-col justify-end px-3.5 pb-16 pt-4 sm:min-h-[22rem] sm:px-6 sm:py-6 lg:min-h-[24rem] lg:px-7">
-                        <h1 className="line-clamp-2 max-w-2xl text-xl font-black leading-tight text-foreground drop-shadow-xl sm:text-4xl">
-                          {event.title || event.eventTitle}
-                        </h1>
-                        <div className="mt-2.5 flex flex-wrap gap-2 text-xs text-muted-foreground sm:mt-3 sm:text-sm">
-                          <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-full border border-border/40 bg-card/70 px-2.5 py-1.5 backdrop-blur-md">
-                            <Calendar className="h-3.5 w-3.5 text-accent" />
-                            <span className="min-w-0 truncate">{formatDate(event.startDate || event.date)}</span>
-                          </span>
-                          <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-full border border-border/40 bg-card/70 px-2.5 py-1.5 backdrop-blur-md">
-                            <MapPin className="h-3.5 w-3.5 text-accent" />
-                            <span className="min-w-0 truncate">{getEventLocation(event)}</span>
-                          </span>
+                    return (
+                      <div
+                        key={event.id || index}
+                        aria-hidden={!isActive}
+                        className={`relative min-w-full overflow-hidden flex flex-col sm:block ${
+                          isActive ? "" : "pointer-events-none"
+                        }`}
+                      >
+                        {/* Image Wrapper */}
+                        <div className="relative w-full aspect-[16/9] min-h-[150px] max-h-[190px] overflow-hidden rounded-t-[16px] sm:absolute sm:inset-0 sm:h-full sm:w-full sm:aspect-none sm:rounded-none">
+                          <img
+                            src={getEventImage(event)}
+                            alt={event.title || event.eventTitle || "Event"}
+                            className="h-full w-full object-cover object-center"
+                          />
+                          {/* Compact price badge on top-left of the flyer image */}
+                          <div className="absolute top-3 left-3 z-10 sm:hidden">
+                            <span className="inline-flex items-center justify-center rounded-full border border-accent/30 bg-black/60 px-2.5 py-1 text-[10px] font-bold leading-none text-accent backdrop-blur-md">
+                              {getEventPriceDisplay(event)}
+                            </span>
+                          </div>
+
+                          {/* Desktop Overlays (hidden on mobile) */}
+                          <div className="hidden sm:block absolute inset-0 bg-gradient-to-r from-background/92 via-background/58 to-background/16" />
+                          <div className="hidden sm:block absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+                          <div className="hidden sm:block theme-gradient-primary absolute inset-0 opacity-15" />
                         </div>
-                        <div className="mt-3 flex flex-col gap-2.5 sm:mt-4 sm:flex-row">
-                          <Button asChild variant="accent" className="h-9 rounded-full px-4 text-sm sm:h-10 sm:px-5">
-                            <Link to={eventHref} target="_blank" rel="noopener noreferrer">
-                              View Details
-                              <ArrowRight className="h-4 w-4" />
-                            </Link>
-                          </Button>
+
+                        {/* Event Information Section */}
+                        <div className="relative flex flex-col justify-between bg-card/95 border-t border-border/10 p-4 sm:absolute sm:inset-0 sm:bg-transparent sm:border-t-0 sm:flex-col sm:justify-end sm:px-6 sm:py-6 lg:px-7">
+                          <div className="flex flex-col gap-2.5 sm:max-w-2xl">
+                            <h1 className="line-clamp-2 text-[17px] font-semibold leading-snug text-foreground sm:text-4xl sm:font-black sm:leading-tight sm:drop-shadow-xl">
+                              {event.title || event.eventTitle}
+                            </h1>
+                            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-muted-foreground sm:mt-3 sm:gap-2 sm:text-sm">
+                              {/* On mobile: simple text with icon. On desktop: rounded-full border bg-card/70 px-2.5 py-1.5 */}
+                              <span className="flex items-center gap-1.5 sm:inline-flex sm:items-center sm:gap-1.5 sm:rounded-full sm:border sm:border-border/40 sm:bg-card/70 sm:px-2.5 sm:py-1.5 sm:backdrop-blur-md">
+                                <Calendar className="h-3.5 w-3.5 text-accent shrink-0" />
+                                <span className="text-[12px] sm:text-xs sm:font-normal">{formatDate(event.startDate || event.date)}</span>
+                              </span>
+                              <span className="flex items-center gap-1.5 sm:inline-flex sm:items-center sm:gap-1.5 sm:rounded-full sm:border sm:border-border/40 sm:bg-card/70 sm:px-2.5 sm:py-1.5 sm:backdrop-blur-md">
+                                <MapPin className="h-3.5 w-3.5 text-accent shrink-0" />
+                                <span className="text-[12px] sm:text-xs sm:font-normal truncate max-w-[180px] sm:max-w-none">{getEventLocation(event)}</span>
+                              </span>
+                            </div>
+                            <div className="mt-2.5 flex sm:mt-4 sm:flex-row">
+                              <Button
+                                asChild
+                                variant="accent"
+                                className="h-10 rounded-[10px] px-[18px] text-[13px] font-semibold w-fit transition-all duration-200 active:scale-[0.97] hover:opacity-90 sm:h-10 sm:rounded-full sm:px-5 sm:text-sm"
+                              >
+                                <Link to={eventHref} target="_blank" rel="noopener noreferrer">
+                                  View Details
+                                  <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+                                </Link>
+                              </Button>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
 
-            {trendingEvents.length > 1 && (
-              <>
-                <div className="absolute bottom-3 right-3 z-10 flex items-center gap-2 sm:bottom-4 sm:right-5">
-                  <button
-                    type="button"
-                    aria-label="Previous trending event"
-                    onClick={goToPreviousTrending}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/40 bg-card/65 text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition hover:-translate-y-0.5 hover:border-border hover:bg-primaryCTA hover:text-primary-foreground sm:h-9 sm:w-9"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Next trending event"
-                    onClick={goToNextTrending}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/40 bg-card/65 text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition hover:-translate-y-0.5 hover:border-border hover:bg-primaryCTA hover:text-primary-foreground sm:h-9 sm:w-9"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-                <div className="absolute bottom-4 left-3 z-10 flex gap-1.5 sm:bottom-5 sm:left-6 sm:gap-2 lg:left-7">
-                  {trendingEvents.map((event, index) => (
+              {/* Desktop controls */}
+              {trendingEvents.length > 1 && (
+                <>
+                  <div className="hidden sm:flex absolute bottom-4 right-5 z-10 items-center gap-2">
                     <button
-                      key={event.id || index}
                       type="button"
-                      aria-label={`Show trending event ${index + 1}`}
-                      onClick={() => setActiveTrendingIndex(index)}
-                      className={`h-1.5 rounded-full transition-all duration-200 ${
-                        index === activeTrendingSlideIndex ? "w-7 bg-accent" : "w-3 bg-muted-foreground/35"
-                      }`}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-          </section>
+                      aria-label="Previous event"
+                      onClick={goToPreviousTrending}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/40 bg-card/65 text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition hover:-translate-y-0.5 hover:border-border hover:bg-primaryCTA hover:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Next event"
+                      onClick={goToNextTrending}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/40 bg-card/65 text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition hover:-translate-y-0.5 hover:border-border hover:bg-primaryCTA hover:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                  {/* Desktop indicators */}
+                  <div className="hidden sm:flex absolute bottom-5 left-6 gap-2 lg:left-7 z-10">
+                    {trendingEvents.map((event, index) => (
+                      <button
+                        key={event.id || index}
+                        type="button"
+                        aria-label={`Go to slide ${index + 1}`}
+                        onClick={() => setActiveTrendingIndex(index)}
+                        className={`h-1.5 rounded-full transition-all duration-200 ${
+                          index === activeTrendingSlideIndex ? "w-7 bg-accent" : "w-3 bg-muted-foreground/35"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </section>
+
+
+          </div>
         )}
 
         <div className="mb-4 sm:mb-5">
