@@ -20,7 +20,7 @@ const formatCurrency = (value) => {
 const TicketSection = ({ tickets = [] }) => {
   return (
     <div className="space-y-6 animate-fade-in">
-      <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+      <h2 className="text-3xl font-bold text-foreground">
         Get Your Tickets
       </h2>
 
@@ -36,7 +36,7 @@ const TicketSection = ({ tickets = [] }) => {
             <CardContent className="p-6 space-y-4">
               {/* Header */}
               <div className="flex items-start justify-between">
-                <div className="p-3 rounded-lg bg-gradient-to-br from-primary/10 to-accent/10 group-hover:scale-110 transition-transform">
+                <div className="p-3 rounded-lg border border-border/60 bg-muted/60 group-hover:scale-110 transition-transform">
                   <Ticket className="w-6 h-6 text-primary" />
                 </div>
                 {ticket.comingSoon ? (

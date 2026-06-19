@@ -3,9 +3,9 @@ import logo from "../assets/MMP logo.svg";
 
 const PrivacyPolicy = () => {
   return (
-    <div className="min-h-screen bg-[#090d1a] text-white">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#090d1a]/95 backdrop-blur-sm border-b border-white/10">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/70">
         <div className="max-w-5xl mx-auto px-8 py-4">
           <Link to="/" className="flex items-center gap-3">
             <img src={logo} alt="MapMyParty" className="h-10 w-auto" />
@@ -24,7 +24,7 @@ const PrivacyPolicy = () => {
         </div>
 
         {/* Content */}
-        <div className="space-y-8 text-white/80 leading-relaxed text-sm">
+        <div className="space-y-8 text-muted-foreground leading-relaxed text-sm">
           <p>
             MapMyParty ("MapMyParty", "we", "our") respect your privacy and are committed to protecting your Personal Data. This policy describes:
           </p>
@@ -47,13 +47,13 @@ const PrivacyPolicy = () => {
           </p>
 
           {/* Definitions */}
-          <div className="pt-6 border-t border-white/10">
-            <h2 className="text-lg font-semibold text-white mb-4">Definitions</h2>
+          <div className="pt-6 border-t border-border/70">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Definitions</h2>
             <ul className="list-disc list-inside space-y-2 ml-2">
-              <li><strong className="text-white">"Curator":</strong> Event organisers or creators using MapMyParty's SaaS platform.</li>
-              <li><strong className="text-white">"Customer":</strong> Individuals attending events or interacting with event-related content.</li>
-              <li><strong className="text-white">"User / You":</strong> Curators, Customers, and any individual using our services.</li>
-              <li><strong className="text-white">"Personal Data":</strong> Any data that identifies or relates to an identifiable individual, as defined under the DPDP Act and GDPR.</li>
+              <li><strong className="text-foreground">"Curator":</strong> Event organisers or creators using MapMyParty's SaaS platform.</li>
+              <li><strong className="text-foreground">"Customer":</strong> Individuals attending events or interacting with event-related content.</li>
+              <li><strong className="text-foreground">"User / You":</strong> Curators, Customers, and any individual using our services.</li>
+              <li><strong className="text-foreground">"Personal Data":</strong> Any data that identifies or relates to an identifiable individual, as defined under the DPDP Act and GDPR.</li>
             </ul>
           </div>
 

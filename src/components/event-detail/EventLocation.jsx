@@ -9,7 +9,7 @@ const EventLocation = ({ venue, address, phone }) => {
 
   return (
     <div id="location-section" className="space-y-6 animate-fade-in">
-      <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+      <h2 className="text-3xl font-bold text-foreground">
         Location & Venue
       </h2>
 
@@ -17,7 +17,7 @@ const EventLocation = ({ venue, address, phone }) => {
         <CardContent className="p-0">
           {/* Map */}
           <div className="relative h-[400px] bg-muted">
-            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
+            <div className="absolute inset-0 flex items-center justify-center bg-muted/65">
               <div className="text-center space-y-3 p-6">
                 <MapPin className="w-16 h-16 mx-auto text-primary animate-pulse" />
                 <div>
@@ -26,7 +26,7 @@ const EventLocation = ({ venue, address, phone }) => {
                     Map integration showing exact event location
                   </p>
                 </div>
-                <div className="text-xs text-muted-foreground bg-background/80 backdrop-blur-sm px-3 py-2 rounded">
+                <div className="text-xs text-muted-foreground bg-background px-3 py-2 rounded-md border border-border/60">
                   {address}
                 </div>
               </div>
@@ -34,7 +34,7 @@ const EventLocation = ({ venue, address, phone }) => {
           </div>
 
           {/* Venue Details */}
-          <div className="p-6 space-y-4 bg-gradient-to-br from-primary/5 to-accent/5">
+          <div className="p-6 space-y-4 bg-card border-t border-border/60">
             <div>
               <h3 className="text-2xl font-bold mb-2">{venue}</h3>
               <p className="text-muted-foreground flex items-start gap-2">

@@ -12,14 +12,14 @@ const EventSchedule = ({ schedule, highlights }) => {
       {/* Highlights Section */}
       {highlights && highlights.length > 0 && (
         <div>
-          <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <h2 className="text-3xl font-bold mb-6 text-foreground">
             Event Highlights
           </h2>
           <div className="grid md:grid-cols-2 gap-4">
             {highlights.map((highlight, index) => (
               <div
                 key={index}
-                className="flex items-start gap-3 p-4 rounded-lg bg-gradient-to-br from-primary/5 to-accent/5 hover:from-primary/10 hover:to-accent/10 transition-all group hover-scale"
+                className="flex items-start gap-3 p-4 rounded-lg border border-border/60 bg-muted/55 transition-all group hover-scale"
               >
                 <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 group-hover:scale-110 transition-transform" />
                 <span className="text-muted-foreground">{highlight}</span>
@@ -32,7 +32,7 @@ const EventSchedule = ({ schedule, highlights }) => {
       {/* Schedule Timeline */}
       {schedule && schedule.length > 0 && (
         <div>
-          <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <h2 className="text-3xl font-bold mb-6 text-foreground">
             Event Schedule
           </h2>
           <Accordion type="single" collapsible className="space-y-4">

@@ -3,9 +3,9 @@ import logo from "../assets/MMP logo.svg";
 
 const CookiePolicy = () => {
   return (
-    <div className="min-h-screen bg-[#090d1a] text-white">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#090d1a]/95 backdrop-blur-sm border-b border-white/10">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/70">
         <div className="max-w-5xl mx-auto px-8 py-4">
           <Link to="/" className="flex items-center gap-3">
             <img src={logo} alt="MapMyParty" className="h-10 w-auto" />
@@ -24,28 +24,28 @@ const CookiePolicy = () => {
         </div>
 
         {/* Content */}
-        <div className="space-y-8 text-white/80 leading-relaxed text-sm">
+        <div className="space-y-8 text-muted-foreground leading-relaxed text-sm">
           <p>
             This Cookie Policy explains how MapMyParty ("MapMyParty", "we", "our", "us") uses cookies and similar technologies when you visit our website, mobile application, or use our services (collectively, the "Platform").
           </p>
 
-          <p className="text-white/60">
-            <strong className="text-white">Note:</strong> This policy should be read together with our{" "}
+          <p className="text-muted-foreground">
+            <strong className="text-foreground">Note:</strong> This policy should be read together with our{" "}
             <Link to="/privacy-policy" className="text-[#D60024] hover:underline">
               Privacy Policy
             </Link>.
           </p>
 
           {/* Section 1 */}
-          <div className="pt-6 border-t border-white/10">
-            <h2 className="text-lg font-semibold text-white mb-4">1. What Are Cookies?</h2>
+          <div className="pt-6 border-t border-border/70">
+            <h2 className="text-lg font-semibold text-foreground mb-4">1. What Are Cookies?</h2>
             <p className="mb-4">
               Cookies are small text files that are placed on your device (computer, smartphone, tablet) when you visit a website. They help websites recognise your device, remember preferences, improve functionality, and analyse usage.
             </p>
             <p className="mb-2">Cookies may be:</p>
             <ul className="list-disc list-inside space-y-1 ml-2">
-              <li><strong className="text-white">Session cookies</strong> (deleted when you close your browser)</li>
-              <li><strong className="text-white">Persistent cookies</strong> (stored on your device for a defined period or until deleted)</li>
+              <li><strong className="text-foreground">Session cookies</strong> (deleted when you close your browser)</li>
+              <li><strong className="text-foreground">Persistent cookies</strong> (stored on your device for a defined period or until deleted)</li>
             </ul>
           </div>
 

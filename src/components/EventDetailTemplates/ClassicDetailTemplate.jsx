@@ -31,7 +31,7 @@ const ClassicDetailTemplate = ({
   handleBulkModalChange,
 }) => {
   return (
-    <main className="flex-1 bg-gradient-to-b from-background to-background">
+    <main className="flex-1 bg-background">
         {/* Hero Section - Full width starting from top */}
         <div className="w-full">
           <img 
@@ -71,7 +71,7 @@ const ClassicDetailTemplate = ({
                 {(hasTicketData || bookingTicketsLoading) && (
                   <Button
                     size="lg"
-                    className="mt-6 md:mt-0 px-8 py-6 text-base font-semibold bg-gradient-to-r from-primary to-accent shadow-lg hover:shadow-xl"
+                    className="mt-6 md:mt-0 px-8 py-6 text-base font-semibold"
                     onClick={() => handleBulkModalChange(true)}
                     disabled={!hasPurchasableTickets && !bookingTicketsLoading}
                   >

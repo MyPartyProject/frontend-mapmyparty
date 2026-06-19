@@ -291,11 +291,11 @@ const EventAnalyticsPage = () => {
 
   if (!organizerId || !eventId) {
     return (
-      <div className="min-h-screen bg-[#040712] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-3" />
-          <p className="text-sm text-white/60">Missing event or organizer information.</p>
-          <p className="text-xs text-white/30 mt-1">Please navigate from My Events.</p>
+          <p className="text-sm text-muted-foreground">Missing event or organizer information.</p>
+          <p className="text-xs text-muted-foreground mt-1">Please navigate from My Events.</p>
         </div>
       </div>
     );
@@ -324,7 +324,7 @@ const EventAnalyticsPage = () => {
   const checkins = checkinStats.data || {};
 
   return (
-    <div className="min-h-screen bg-[#040712] text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         {/* ── Header ───────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between flex-wrap gap-3">

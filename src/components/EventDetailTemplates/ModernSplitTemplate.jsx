@@ -38,7 +38,7 @@ const ModernSplitTemplate = ({
             alt={eventTitle}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
+          <div className="absolute inset-0 bg-background/72" />
           
           {/* Content Overlay */}
           <div className="absolute inset-0 flex items-end">
@@ -67,7 +67,7 @@ const ModernSplitTemplate = ({
                 <div className="flex flex-wrap gap-3">
                   <Button
                     size="lg"
-                    className="px-8 py-6 text-base font-semibold bg-gradient-to-r from-primary to-accent shadow-lg hover:shadow-xl"
+                    className="px-8 py-6 text-base font-semibold"
                     onClick={() => handleBulkModalChange(true)}
                     disabled={!hasPurchasableTickets && !bookingTicketsLoading}
                   >

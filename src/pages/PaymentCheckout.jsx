@@ -299,17 +299,17 @@ const PaymentCheckout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0b1220] via-[#0c1120] to-[#05070f] text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" className="text-white/80" onClick={() => navigate(-1)}>
+          <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-muted" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5 mr-1" /> Back
           </Button>
-          <Badge className="bg-white/10 border-white/20 text-xs">Secure Checkout</Badge>
+          <Badge className="bg-muted/70 border-border/70 text-xs text-foreground">Secure Checkout</Badge>
         </div>
 
         {summary && (
-          <Card className="bg-white/5 border-white/10 shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
+          <Card className="bg-card border-border/70 shadow-[var(--shadow-elegant)]">
             <CardContent className="p-5 grid md:grid-cols-[1.5fr,1fr] gap-4">
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
@@ -363,7 +363,7 @@ const PaymentCheckout = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/5 border-white/10 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+          <Card className="bg-card border-border/70 shadow-[var(--shadow-card)]">
             <CardHeader>
               <CardTitle className="text-lg">Order summary</CardTitle>
             </CardHeader>

@@ -3,9 +3,9 @@ import logo from "../assets/MMP logo.svg";
 
 const TermsConditions = () => {
   return (
-    <div className="min-h-screen bg-[#090d1a] text-white">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#090d1a]/95 backdrop-blur-sm border-b border-white/10">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/70">
         <div className="max-w-5xl mx-auto px-8 py-4">
           <Link to="/" className="flex items-center gap-3">
             <img src={logo} alt="MapMyParty" className="h-10 w-auto" />
@@ -24,8 +24,8 @@ const TermsConditions = () => {
         </div>
 
         {/* Content */}
-        <div className="space-y-8 text-white/80 leading-relaxed text-sm">
-          <p className="font-semibold text-white">
+        <div className="space-y-8 text-muted-foreground leading-relaxed text-sm">
+          <p className="font-semibold text-foreground">
             IMPORTANT: Clause 12 contains exclusions of warranties and limitations of liability.
           </p>
 
@@ -38,22 +38,22 @@ const TermsConditions = () => {
           </div>
 
           {/* Section 2 */}
-          <div className="pt-6 border-t border-white/10">
-            <h2 className="text-lg font-semibold text-white mb-4">2. Definitions</h2>
+          <div className="pt-6 border-t border-border/70">
+            <h2 className="text-lg font-semibold text-foreground mb-4">2. Definitions</h2>
             <p className="mb-4">In these Terms, unless the context otherwise requires, the following expressions shall have the meanings set out below:</p>
             
             <ul className="list-disc list-inside space-y-2 ml-2">
-              <li><strong className="text-white">Accept:</strong> means either (i) registering to use the Service; or (ii) using the Service, and thereby agreeing to be bound by these Terms.</li>
-              <li><strong className="text-white">App:</strong> means any mobile application developed and made available by MapMyParty.</li>
-              <li><strong className="text-white">Content:</strong> means all information, software, text, images, graphics, audio, video or other material available on the Website or through the Service.</li>
-              <li><strong className="text-white">Customer:</strong> means any User who purchases Tickets, Vouchers, or registers for Events or Offers.</li>
-              <li><strong className="text-white">Event:</strong> means any event for which Tickets are sold or registrations are accepted through the Service.</li>
-              <li><strong className="text-white">MapMyParty:</strong> means Bespoke Web Pvt Ltd, a company incorporated under the laws of India.</li>
-              <li><strong className="text-white">Offer / Voucher:</strong> means a prepaid item exchangeable for goods or services within a defined validity period.</li>
-              <li><strong className="text-white">Service:</strong> means ticketing, event listings, advertisements, promotions, payment facilitation, and related services provided through the Website, App, or SMS.</li>
-              <li><strong className="text-white">Ticket:</strong> means a digital or physical entry pass purchased for an Event.</li>
-              <li><strong className="text-white">User:</strong> means any individual or legal entity using the Service, including Customers, Promoters, Partners, Reps, and Resellers.</li>
-              <li><strong className="text-white">Website:</strong> means www.mapmyparty.com or any successor domain.</li>
+              <li><strong className="text-foreground">Accept:</strong> means either (i) registering to use the Service; or (ii) using the Service, and thereby agreeing to be bound by these Terms.</li>
+              <li><strong className="text-foreground">App:</strong> means any mobile application developed and made available by MapMyParty.</li>
+              <li><strong className="text-foreground">Content:</strong> means all information, software, text, images, graphics, audio, video or other material available on the Website or through the Service.</li>
+              <li><strong className="text-foreground">Customer:</strong> means any User who purchases Tickets, Vouchers, or registers for Events or Offers.</li>
+              <li><strong className="text-foreground">Event:</strong> means any event for which Tickets are sold or registrations are accepted through the Service.</li>
+              <li><strong className="text-foreground">MapMyParty:</strong> means Bespoke Web Pvt Ltd, a company incorporated under the laws of India.</li>
+              <li><strong className="text-foreground">Offer / Voucher:</strong> means a prepaid item exchangeable for goods or services within a defined validity period.</li>
+              <li><strong className="text-foreground">Service:</strong> means ticketing, event listings, advertisements, promotions, payment facilitation, and related services provided through the Website, App, or SMS.</li>
+              <li><strong className="text-foreground">Ticket:</strong> means a digital or physical entry pass purchased for an Event.</li>
+              <li><strong className="text-foreground">User:</strong> means any individual or legal entity using the Service, including Customers, Promoters, Partners, Reps, and Resellers.</li>
+              <li><strong className="text-foreground">Website:</strong> means www.mapmyparty.com or any successor domain.</li>
             </ul>
           </div>
 

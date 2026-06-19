@@ -336,7 +336,7 @@ const Auth = () => {
             </div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2.5">
               Welcome to{" "}
-              <span className="bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">
+              <span className="text-foreground">
                 MapMyParty
               </span>
             </h1>

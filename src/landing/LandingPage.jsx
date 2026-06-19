@@ -984,7 +984,7 @@ const LandingPage = () => {
               <div className="landing-reveal max-w-[30rem]">
                 <h1 className="mt-4 max-w-[26rem] text-left text-2xl font-black leading-[1.02] tracking-tight text-foreground drop-shadow-2xl text-pretty sm:max-w-[28rem] sm:text-3xl md:text-[3.1rem] lg:text-[2.55rem] xl:text-[2.85rem]">
                   Find your{" "}
-                  <span className="theme-gradient-primary bg-clip-text text-transparent">
+                  <span className="text-foreground">
                     vibe.
                   </span>
                 </h1>
@@ -1269,7 +1269,7 @@ const LandingPage = () => {
               <div className="relative space-y-6">
                 <h2 className="text-3xl font-black text-foreground md:text-5xl">
                   Find your{" "}
-                  <span className="theme-gradient-primary bg-clip-text text-transparent">
+                  <span className="text-foreground">
                     vibe.
                   </span>
                 </h2>

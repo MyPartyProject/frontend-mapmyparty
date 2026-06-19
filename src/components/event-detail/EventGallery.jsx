@@ -17,7 +17,7 @@ const EventGallery = ({ images }) => {
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+      <h2 className="text-3xl font-bold text-foreground">
         Gallery
       </h2>
 
@@ -29,7 +29,7 @@ const EventGallery = ({ images }) => {
             alt={`Event gallery ${currentIndex + 1}`}
             className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
 
         {/* Navigation Buttons */}
@@ -39,7 +39,7 @@ const EventGallery = ({ images }) => {
               variant="secondary"
               size="icon"
               onClick={prevImage}
-              className="absolute left-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm bg-white/20 hover:bg-white/30 text-white border-white/30 hover-scale"
+              className="absolute left-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all bg-background/95 hover:bg-muted text-foreground border-border hover-scale"
             >
               <ChevronLeft className="w-6 h-6" />
             </Button>
@@ -47,7 +47,7 @@ const EventGallery = ({ images }) => {
               variant="secondary"
               size="icon"
               onClick={nextImage}
-              className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm bg-white/20 hover:bg-white/30 text-white border-white/30 hover-scale"
+              className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all bg-background/95 hover:bg-muted text-foreground border-border hover-scale"
             >
               <ChevronRight className="w-6 h-6" />
             </Button>

@@ -156,7 +156,7 @@ const EventDetailModal = ({ isOpen, onClose, event }) => {
       <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-300">
         <DialogHeader className="animate-in slide-in-from-top-4 duration-500">
           <div>
-            <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent">
+            <DialogTitle className="text-3xl font-bold text-foreground">
               Event Analytics
             </DialogTitle>
             <DialogDescription className="text-base mt-2">

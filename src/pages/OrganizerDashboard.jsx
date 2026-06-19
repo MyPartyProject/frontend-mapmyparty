@@ -1559,7 +1559,7 @@ const OrganizerDashboard = () => {
             className={`${sidebarOpen ? "block" : "hidden"} hover:opacity-80 transition flex items-center gap-3`}
           >
             <img src={Logo} alt="MapMyParty" className="h-10 w-auto" />
-            <span className="font-sans text-xl font-bold text-white tracking-[0.02em] leading-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">MapMyParty</span>
+            <span className="font-sans text-xl font-bold text-foreground tracking-[0.02em] leading-tight">MapMyParty</span>
           </button>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}

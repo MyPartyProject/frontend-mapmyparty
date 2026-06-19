@@ -10,40 +10,40 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }) {
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn(
-        "relative w-[280px] md:w-[300px] p-3 bg-[#0b1224]/95 backdrop-blur-2xl rounded-2xl border border-white/20 shadow-[0_18px_90px_rgba(0,0,0,0.65)] text-white overflow-hidden",
+        "relative w-[280px] md:w-[300px] p-3 bg-card rounded-2xl border border-border shadow-[var(--shadow-elegant)] text-foreground overflow-hidden",
         className
       )}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-3 px-2",
-        caption: "relative flex items-center justify-center px-6 pt-1 text-white",
+        caption: "relative flex items-center justify-center px-6 pt-1 text-foreground",
         caption_label: "text-base font-semibold tracking-[0.08em] uppercase whitespace-nowrap",
         nav: "absolute inset-0 flex items-center justify-between px-2 pointer-events-none",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
-          "pointer-events-auto h-8 w-8 bg-white/10 border-white/25 text-white hover:bg-white/20 hover:border-white/40 p-0 rounded-lg transition shadow-sm"
+          "pointer-events-auto h-8 w-8 bg-muted border-border text-foreground hover:bg-muted/80 hover:border-border p-0 rounded-lg transition shadow-sm"
         ),
         nav_button_previous: "",
         nav_button_next: "",
         table: "w-full border-collapse space-y-1 mt-2",
-        head_row: "grid grid-cols-7 text-white/80",
+        head_row: "grid grid-cols-7 text-muted-foreground",
         head_cell:
-          "text-white/70 rounded-md text-center font-semibold text-[0.8rem] uppercase tracking-[0.08em] py-1",
-        row: "grid grid-cols-7 mt-2 gap-2.5",
-        cell: "aspect-square min-h-[48px] text-center text-base p-0 relative rounded-xl overflow-hidden [&:has([aria-selected].day-range-end)]:rounded-r-xl [&:has([aria-selected].day-outside)]:bg-white/5 [&:has([aria-selected])]:bg-gradient-to-br from-[#2563eb]/80 via-[#2b60d6]/70 to-[#e11d48]/80 focus-within:relative focus-within:z-20 border border-transparent hover:border-white/10 transition-all duration-150",
+          "text-muted-foreground rounded-md text-center font-semibold text-[0.8rem] uppercase tracking-[0.08em] py-1",
+        row: "grid grid-cols-7 mt-2 gap-2",
+        cell: "aspect-square min-h-[48px] text-center text-base p-0 relative rounded-xl overflow-hidden [&:has([aria-selected].day-range-end)]:rounded-r-xl [&:has([aria-selected].day-outside)]:bg-muted/55 [&:has([aria-selected])]:bg-primary/8 focus-within:relative focus-within:z-20 border border-transparent hover:border-border transition-all duration-150",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "w-full h-full p-0 font-semibold text-white/90 hover:bg-white/10 hover:text-white transition aria-selected:opacity-100 flex items-center justify-center"
+          "w-full h-full p-0 font-semibold text-foreground hover:bg-muted hover:text-foreground transition aria-selected:opacity-100 flex items-center justify-center"
         ),
         day_range_end: "day-range-end",
         day_selected:
-          "bg-gradient-to-br from-[#2563eb] via-[#4759ff] to-[#e11d48] text-white shadow-lg shadow-[#2563eb]/35 hover:brightness-110 ring-2 ring-white/30",
-        day_today: "border border-white/40 text-white font-bold",
+          "bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primaryCTA-hover ring-2 ring-ring/25",
+        day_today: "border border-ring/40 text-foreground font-bold",
         day_outside:
-          "day-outside text-white/40 opacity-60 aria-selected:bg-white/10 aria-selected:text-white/70 aria-selected:opacity-50",
-        day_disabled: "text-white/25 opacity-30 line-through",
+          "day-outside text-muted-foreground opacity-60 aria-selected:bg-muted aria-selected:text-muted-foreground aria-selected:opacity-50",
+        day_disabled: "text-muted-foreground opacity-30 line-through",
         day_range_middle:
-          "aria-selected:bg-white/10 aria-selected:text-white",
+          "aria-selected:bg-primary/10 aria-selected:text-foreground",
         day_hidden: "invisible",
         ...classNames,
       }}

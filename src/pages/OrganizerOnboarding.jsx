@@ -389,22 +389,22 @@ const OrganizerOnboarding = () => {
 
   if (loadingStatus) {
     return (
-      <div className="min-h-screen bg-[#040712] flex items-center justify-center text-white">
+      <div className="min-h-screen bg-background flex items-center justify-center text-foreground">
         <div className="flex items-center gap-3">
           <Loader2 className="w-5 h-5 animate-spin text-red-400" />
-          <span className="text-sm text-white/80">Preparing organizer onboarding...</span>
+          <span className="text-sm text-muted-foreground">Preparing organizer onboarding...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#040712] text-white p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-background text-foreground p-4 sm:p-6 lg:p-8">
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/50">Organizer Onboarding</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Organizer Onboarding</p>
           <h1 className="text-2xl sm:text-3xl font-bold">Complete setup to continue</h1>
-          <p className="text-sm text-white/70">
+          <p className="text-sm text-muted-foreground">
             Step 1: Create organizer profile. Step 2: Add bank details.
           </p>
         </div>

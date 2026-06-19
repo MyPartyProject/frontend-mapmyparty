@@ -34,7 +34,7 @@ const EventHero = ({ title, date, location, image, onLocationClick }) => {
     {
       name: "Instagram",
       url: "#",
-      color: "hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-500",
+      color: "hover:bg-primaryCTA-hover",
       icon: "IG",
     },
     {
@@ -66,7 +66,7 @@ const EventHero = ({ title, date, location, image, onLocationClick }) => {
       </div>
 
       {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-background" />
+      <div className="absolute inset-0 bg-black/35" />
 
       {/* Content */}
       <div className="relative h-full container flex flex-col justify-end pb-16 pt-32">
@@ -96,7 +96,7 @@ const EventHero = ({ title, date, location, image, onLocationClick }) => {
             <Button
               variant="secondary"
               size="lg"
-              className="backdrop-blur-sm bg-white/20 hover:bg-white/30 text-white border-white/30 hover-scale"
+              className="bg-background/95 hover:bg-muted text-foreground border-border hover-scale"
               onClick={() => navigate(`/events/${organizerSlug}/${eventSlug}/overview`)}
             >
               <BookOpen className="w-4 h-4 mr-2" />
@@ -108,7 +108,7 @@ const EventHero = ({ title, date, location, image, onLocationClick }) => {
                 <Button
                   variant="secondary"
                   size="lg"
-                  className="backdrop-blur-sm bg-white/20 hover:bg-white/30 text-white border-white/30 hover-scale"
+                  className="bg-background/95 hover:bg-muted text-foreground border-border hover-scale"
                 >
 <Share2 className="w-4 h-4 mr-2" />
                   Share
@@ -149,7 +149,7 @@ const EventHero = ({ title, date, location, image, onLocationClick }) => {
                   href={social.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center transition-all hover:scale-110 hover:bg-white/20 text-white font-semibold"
+                  className="w-10 h-10 rounded-full bg-background/95 border border-border flex items-center justify-center transition-all hover:scale-110 hover:bg-muted text-foreground font-semibold"
                   aria-label={`Share on ${social.name}`}
                   onClick={(e) => {
                     if (social.name === "Instagram") {

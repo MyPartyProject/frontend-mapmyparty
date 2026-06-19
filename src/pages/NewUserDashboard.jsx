@@ -415,7 +415,7 @@ const NewUserDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#050510]">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="animate-spin rounded-full h-10 w-10 border-2 border-white/10 border-t-[#D60024]"></div>
       </div>
     );
@@ -454,9 +454,9 @@ const NewUserDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#050510] text-white">
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
       {/* ── Desktop Header ── */}
-      <header className="hidden lg:flex items-center justify-between h-16 px-6 bg-[#0a0a12]/80 backdrop-blur-lg border-b border-white/[0.06] fixed top-0 left-0 right-0 z-40">
+      <header className="hidden lg:flex items-center justify-between h-16 px-6 bg-background/95 backdrop-blur-lg border-b border-border/70 fixed top-0 left-0 right-0 z-40">
         <div className="flex items-center gap-8">
           <Link to="/" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity">
             <div className="w-9 h-9 rounded-lg bg-white/[0.06] border border-white/[0.08] flex items-center justify-center">
