@@ -375,18 +375,6 @@ const EventCardSkeleton = () => (
   </div>
 );
 
-const EmptyState = ({ children }) => (
-  <div className="relative flex min-h-[11.25rem] overflow-hidden rounded-lg border border-border/40 bg-card/70 px-3.5 py-3 text-xs text-muted-foreground shadow-[var(--shadow-card)]">
-    <div className="theme-gradient-primary absolute inset-0 opacity-10" />
-    <div className="relative mt-auto flex items-center gap-2.5">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/40 bg-muted/50 text-accent shadow-[var(--shadow-card)]">
-        <Sparkles className="h-3.5 w-3.5" />
-      </div>
-      <p className="leading-5">{children}</p>
-    </div>
-  </div>
-);
-
 const formatDate = (value) => {
   if (!value) return "Date TBA";
 
@@ -585,12 +573,11 @@ const LandingDiscoverySection = ({
   section,
   events,
   sectionsLoading,
-  emptyMessage,
   isReversed = false,
   className = "relative bg-background py-3 sm:py-4",
   headerDelay = "0ms",
 }) => {
-  const itemCount = sectionsLoading ? 3 : Math.max(events.length, 1);
+  const itemCount = sectionsLoading ? 3 : events.length;
 
   return (
     <section className={className}>
@@ -641,11 +628,7 @@ const LandingDiscoverySection = ({
               events.map((event) => (
                 <LandingEventCard key={event.id} {...event} />
               ))
-            ) : (
-              <div className={mobileHorizontalItemClass}>
-                <EmptyState>{emptyMessage}</EmptyState>
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
@@ -892,7 +875,15 @@ const LandingPage = () => {
 
   const featuredVibe = EVENT_DATA_SECTION_CONFIG[0];
   const featuredVibeEvents = eventSections[featuredVibe.key] || [];
-  const otherSections = EVENT_DATA_SECTION_CONFIG.filter(
+  const visibleSections = sectionsLoading
+    ? EVENT_DATA_SECTION_CONFIG
+    : EVENT_DATA_SECTION_CONFIG.filter(
+        (section) => (eventSections[section.key] || []).length > 0,
+      );
+  const visibleFeaturedVibe = visibleSections.find(
+    (section) => section.key === featuredVibe.key,
+  );
+  const visibleOtherSections = visibleSections.filter(
     (section) => section.key !== featuredVibe.key,
   );
 
@@ -1092,22 +1083,20 @@ const LandingPage = () => {
           </div>
         </section>
 
-        <LandingDiscoverySection
-          section={featuredVibe}
-          events={featuredVibeEvents}
-          sectionsLoading={sectionsLoading}
-          emptyMessage={
-            "No live events are available in this vibe yet. Try another vibe or browse the full catalog."
-          }
-        />
+        {visibleFeaturedVibe ? (
+          <LandingDiscoverySection
+            section={featuredVibe}
+            events={featuredVibeEvents}
+            sectionsLoading={sectionsLoading}
+          />
+        ) : null}
 
-        {otherSections.map((section, index) => (
+        {visibleOtherSections.map((section, index) => (
           <LandingDiscoverySection
             key={section.key}
             section={section}
             events={eventSections[section.key] || []}
             sectionsLoading={sectionsLoading}
-            emptyMessage={"No live events are available in this section yet."}
             isReversed={(index + 1) % 2 === 1}
           />
         ))}
