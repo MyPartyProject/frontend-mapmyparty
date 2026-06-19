@@ -5,6 +5,7 @@ import {
   Building2,
   CalendarClock,
   CreditCard,
+  LifeBuoy,
   RefreshCw,
   ShieldAlert,
   Users,
@@ -61,6 +62,13 @@ const PromoterOverview = () => {
       description: "Bank records blocking payout readiness.",
       to: "/promoter/billing",
       icon: ShieldAlert,
+    },
+    {
+      title: "Unassigned support tickets",
+      value: summary?.support?.unassigned || 0,
+      description: "New support work waiting for staff assignment.",
+      to: "/promoter/support",
+      icon: LifeBuoy,
     },
   ];
 

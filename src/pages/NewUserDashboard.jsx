@@ -11,6 +11,7 @@ import {
   Ticket,
   LogOut,
   Compass,
+  LifeBuoy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -445,6 +446,7 @@ const NewUserDashboard = () => {
     { name: 'Home', icon: Home, path: '/dashboard' },
     { name: 'Explore', icon: Compass, path: '/dashboard/browse-events' },
     { name: 'Bookings', icon: Ticket, path: '/dashboard/bookings' },
+    { name: 'Support', icon: LifeBuoy, path: '/dashboard/support' },
     { name: 'Profile', icon: UserIcon, path: '/dashboard/profile' },
   ];
 
@@ -614,6 +616,10 @@ const NewUserDashboard = () => {
               <DropdownMenuItem onClick={() => navigate("/dashboard/bookings")} className="cursor-pointer text-white/70 hover:text-white focus:text-white focus:bg-white/[0.06] px-3 py-2">
                 <Ticket className="mr-2.5 h-4 w-4" />
                 My Bookings
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/dashboard/support")} className="cursor-pointer text-white/70 hover:text-white focus:text-white focus:bg-white/[0.06] px-3 py-2">
+                <LifeBuoy className="mr-2.5 h-4 w-4" />
+                Support
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-white/[0.06]" />
               <DropdownMenuItem

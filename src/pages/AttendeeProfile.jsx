@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Building2, Calendar, Loader2, Mail, Phone, ShieldCheck, User } from "lucide-react";
+import { AlertCircle, Building2, Calendar, LifeBuoy, Loader2, Mail, Phone, ShieldCheck, User } from "lucide-react";
 import { apiFetch } from "@/config/api";
 
 const formatDate = (value) => {
@@ -102,6 +103,21 @@ export default function AttendeeProfile() {
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold">My Profile</h1>
         <p className="text-sm text-white/45 mt-1">Attendee profile information</p>
+      </div>
+
+      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 sm:p-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-white">Account issue or profile access problem?</p>
+          <p className="text-xs text-white/40 mt-1">
+            Open a support ticket for login, profile, technical, or account access issues.
+          </p>
+        </div>
+        <Link to="/dashboard/support?sourceSurface=ATTENDEE_PROFILE&category=ACCOUNT_ACCESS">
+          <Button className="h-9 text-sm">
+            <LifeBuoy className="h-4 w-4" />
+            Get support
+          </Button>
+        </Link>
       </div>
 
       <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 sm:p-6">

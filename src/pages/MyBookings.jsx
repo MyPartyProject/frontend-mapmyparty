@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useMemo, useCallback } from "react";
-import { Ticket, Calendar, MapPin, Loader2, AlertCircle, Receipt, CreditCard, User, Download, Hash, Clock, CheckCircle2, XCircle, Search, Filter, ChevronRight, Star, TrendingUp, Mail, Eye, X } from "lucide-react";
+import { Ticket, Calendar, MapPin, Loader2, AlertCircle, Receipt, CreditCard, User, Download, Hash, Clock, CheckCircle2, XCircle, Search, Filter, ChevronRight, Star, TrendingUp, Mail, Eye, X, LifeBuoy } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -392,6 +392,23 @@ const MyBookings = ({
         <p className="text-sm text-white/40 mt-1">View and manage all your event bookings</p>
       </div>
 
+      <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-4 sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-white">Need help with a booking?</p>
+            <p className="text-xs text-white/40 mt-1">
+              Raise a support ticket for payment issues, missing tickets, refunds, or access problems.
+            </p>
+          </div>
+          <Link to="/dashboard/support?sourceSurface=ATTENDEE_BOOKINGS&category=BOOKING_PAYMENT">
+            <Button className="h-9 text-sm">
+              <LifeBuoy className="h-4 w-4" />
+              Contact support
+            </Button>
+          </Link>
+        </div>
+      </div>
+
       {/* Stats */}
       {showSummarySections && <div className="grid grid-cols-3 gap-3">
         {[
@@ -612,6 +629,18 @@ const MyBookings = ({
                           {booking.review ? "Edit Feedback" : "Feedback"}
                         </Button>
                       )}
+                      <Link
+                        to={`/dashboard/support?sourceSurface=ATTENDEE_BOOKINGS&category=BOOKING_PAYMENT&bookingId=${encodeURIComponent(booking.id)}&eventId=${encodeURIComponent(booking.eventId || "")}&subject=${encodeURIComponent(`Support for ${booking.eventTitle}`)}`}
+                      >
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 lg:flex-none h-8 border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.06] text-xs px-3"
+                        >
+                          <LifeBuoy className="h-3 w-3 mr-1.5" />
+                          Support
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </div>

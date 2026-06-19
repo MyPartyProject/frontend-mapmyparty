@@ -17,6 +17,7 @@ import Dashboard from "./components/dashboard/Dashboard";
 import BrowseEvents from "./components/dashboard/BrowseEvents";
 import MyBookings from "./pages/MyBookings";
 import AttendeeProfile from "./pages/AttendeeProfile";
+import DashboardSupport from "./pages/DashboardSupport";
 import PromoterDashboard from "./pages/PromoterDashboard";
 import PromoterEventDetail from "./pages/PromoterEventDetail";
 import PromoterOverview from "./components/promoter/PromoterOverview";
@@ -41,6 +42,7 @@ import Profile from "./pages/Profile";
 import PromoterProfile from "./pages/PromoterProfile";
 import PromoterLogin from "./pages/PromoterLogin";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
+import OrganizerSupport from "./pages/OrganizerSupport";
 import EventAnalyticsPage from "./pages/EventAnalyticsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EventOverviewPage from "./pages/EventOverviewPage";
@@ -56,6 +58,7 @@ import RefundPolicy from "./pages/RefundPolicy";
 import Footer from "./components/Footer";
 import { AuthProvider } from "./contexts/AuthContext";
 import OrganizerOnboarding from "./pages/OrganizerOnboarding";
+import PromoterSupport from "./pages/PromoterSupport";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -138,6 +141,7 @@ const App = () => {
                 <Route path="browse-events" element={<BrowseEvents />} />
                 <Route path="bookings" element={<MyBookings />} />
                 <Route path="profile" element={<AttendeeProfile />} />
+                <Route path="support" element={<DashboardSupport />} />
                 <Route path="*" element={<Dashboard />} />
               </Route>
               
@@ -192,6 +196,11 @@ const App = () => {
               <Route path="/organizer/payouts/:id" element={
                 <ProtectedRoute requiredRole="organizer">
                   <OrganizerDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/organizer/support" element={
+                <ProtectedRoute requiredRole="organizer">
+                  <OrganizerSupport />
                 </ProtectedRoute>
               } />
               <Route path="/organizer/events/:eventId/attendees" element={
@@ -268,6 +277,7 @@ const App = () => {
                 <Route path="reports" element={<PromoterReports />} />
                 <Route path="billing" element={<PromoterBilling />} />
                 <Route path="billing/:slug" element={<PromoterBillingDetail />} />
+                <Route path="support" element={<PromoterSupport />} />
                 <Route path="platform-config" element={<PromoterPlatformConfig />} />
                 <Route path="profile" element={<PromoterProfile />} />
               </Route>

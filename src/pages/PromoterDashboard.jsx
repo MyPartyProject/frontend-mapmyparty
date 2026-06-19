@@ -27,6 +27,7 @@ import {
   FileText,
   CreditCard,
   Settings2,
+  LifeBuoy,
   X,
 } from "lucide-react";
 
@@ -41,6 +42,7 @@ const navItems = [
   { label: "Analytics", to: "/promoter/analytics", icon: BarChart3 },
   { label: "Reports", to: "/promoter/reports", icon: FileText },
   { label: "Billing", to: "/promoter/billing", icon: CreditCard },
+  { label: "Support", to: "/promoter/support", icon: LifeBuoy },
   { label: "Platform Config", to: "/promoter/platform-config", icon: Settings2 },
 ];
 

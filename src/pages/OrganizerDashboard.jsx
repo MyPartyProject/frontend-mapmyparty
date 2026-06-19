@@ -38,6 +38,7 @@ import {
   Upload,
   CupSoda,
   Receipt,
+  LifeBuoy,
 } from "lucide-react";
 import FinancialReporting from "./FinancialReporting";
 import OrganizerDashboardHome from "./OrganizerDashboardHome";
@@ -1516,6 +1517,7 @@ const OrganizerDashboard = () => {
     { id: "reception", name: "Reception", icon: <Shield className="w-6 h-6 mr-3" /> },
     { id: "food-beverages", name: "Food & Beverages", icon: <CupSoda className="w-6 h-6 mr-3" /> },
     { id: "payouts", name: "Payouts", icon: <CreditCard className="w-6 h-6 mr-3" /> },
+    { id: "support", name: "Support", icon: <LifeBuoy className="w-6 h-6 mr-3" /> },
     // { id: "financial", name: "Financial Reporting", icon: <Download className="w-6 h-6 mr-3" /> },
   ];
 
@@ -1529,6 +1531,7 @@ const OrganizerDashboard = () => {
     else if (path.startsWith("/organizer/reception")) setActiveTab("reception");
     else if (path.startsWith("/organizer/food-beverages")) setActiveTab("food-beverages");
     else if (path.startsWith("/organizer/payouts")) setActiveTab("payouts");
+    else if (path.startsWith("/organizer/support")) setActiveTab("support");
     else if (path.startsWith("/organizer/events") && path.includes("/attendees")) setActiveTab("attendees");
     else if (path.startsWith("/organizer/events") && path.includes("/refunds")) setActiveTab("refunds");
     else if (path.startsWith("/organizer/financial")) setActiveTab("financial");
@@ -1543,6 +1546,8 @@ const OrganizerDashboard = () => {
         ? "/organizer/dashboard"
         : id === "profile"
         ? "/organizer/profile"
+        : id === "support"
+        ? "/organizer/support"
         : `/organizer/${id}`;
     navigate(base);
   };
