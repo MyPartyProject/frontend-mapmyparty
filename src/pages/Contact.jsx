@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,7 @@ import { Mail, Phone, MapPin, MessageSquare, Send, Clock } from "lucide-react";
 const contactChannels = [
   {
     title: "Email",
-    value: "mapmypartybro@gmail.com",
+    value: "support@mapmyparty.com",
     icon: Mail,
     desc: "We respond within 1 business day.",
   },
@@ -19,14 +20,124 @@ const contactChannels = [
     desc: "Support hours: 9 AM - 9 PM IST",
   },
   {
-    title: "HQ",
+    title: "Come say hii at our studio.",
     value: "Delhi, India",
     icon: MapPin,
-    desc: "Come say hi at our studio.",
+    desc: "MapMyParty operates under MomentumXMedia.",
   },
 ];
 
+const initialFormData = {
+  fullName: "",
+  email: "",
+  phone: "",
+  topic: "",
+  message: "",
+};
+
+const countWords = (value) => value.trim().split(/\s+/).filter(Boolean).length;
+
+const validateField = (fieldName, value) => {
+  const trimmedValue = value.trim();
+
+  switch (fieldName) {
+    case "fullName":
+      if (!trimmedValue) return "Full name is required.";
+      if (trimmedValue.length < 2) return "Full name must be at least 2 characters.";
+      if (!/^[a-zA-Z\s.'-]+$/.test(trimmedValue)) return "Enter a valid full name.";
+      return "";
+    case "email":
+      if (!trimmedValue) return "Email is required.";
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedValue)) return "Enter a valid email address.";
+      return "";
+    case "phone":
+      if (!trimmedValue) return "Phone number is required.";
+      if (!/^\d{10}$/.test(trimmedValue)) return "Phone number must be exactly 10 digits.";
+      return "";
+    case "topic":
+      if (!trimmedValue) return "Topic is required.";
+      if (countWords(trimmedValue) > 20) return "Topic cannot exceed 20 words.";
+      return "";
+    case "message":
+      if (!trimmedValue) return "Message is required.";
+      if (trimmedValue.length < 10) return "Message must be at least 10 characters.";
+      return "";
+    default:
+      return "";
+  }
+};
+
 const Contact = () => {
+  const [formData, setFormData] = useState(initialFormData);
+  const [errors, setErrors] = useState({});
+  const [touchedFields, setTouchedFields] = useState({});
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    let nextValue = value;
+
+    if (name === "phone") {
+      nextValue = value.replace(/\D/g, "").slice(0, 10);
+    }
+
+    if (name === "topic") {
+      const words = value.trim().split(/\s+/).filter(Boolean);
+      nextValue = words.length > 20 ? words.slice(0, 20).join(" ") : value;
+    }
+
+    setFormData((currentData) => ({
+      ...currentData,
+      [name]: nextValue,
+    }));
+
+    if (touchedFields[name]) {
+      setErrors((currentErrors) => ({
+        ...currentErrors,
+        [name]: validateField(name, nextValue),
+      }));
+    }
+  };
+
+  const handleBlur = (event) => {
+    const { name, value } = event.target;
+
+    setTouchedFields((currentTouched) => ({
+      ...currentTouched,
+      [name]: true,
+    }));
+
+    setErrors((currentErrors) => ({
+      ...currentErrors,
+      [name]: validateField(name, value),
+    }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    const nextTouchedFields = Object.keys(formData).reduce((accumulator, fieldName) => {
+      accumulator[fieldName] = true;
+      return accumulator;
+    }, {});
+
+    const nextErrors = Object.entries(formData).reduce((accumulator, [fieldName, value]) => {
+      accumulator[fieldName] = validateField(fieldName, value);
+      return accumulator;
+    }, {});
+
+    setTouchedFields(nextTouchedFields);
+    setErrors(nextErrors);
+
+    if (Object.values(nextErrors).some(Boolean)) {
+      return;
+    }
+  };
+
+  const getFieldClassName = (fieldName) =>
+    errors[fieldName] && touchedFields[fieldName]
+      ? "border-red-400/80 bg-slate-950/40 text-white focus-visible:ring-red-300"
+      : "border-white/15 bg-slate-950/40 text-white";
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50">
       <Header forceMainHeader />
@@ -116,36 +227,130 @@ const Contact = () => {
             </div>
 
             <div className="md:col-span-3">
-              <form className="space-y-4">
+              <form className="space-y-4" noValidate onSubmit={handleSubmit}>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <label className="text-sm text-slate-200/75">Full Name</label>
-                    <Input placeholder="Your name" className="border-white/15 bg-slate-950/40 text-white" />
+                    <label htmlFor="contact-full-name" className="text-sm text-slate-200/75">Full Name</label>
+                    <Input
+                      id="contact-full-name"
+                      name="fullName"
+                      value={formData.fullName}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      placeholder="Your name"
+                      autoComplete="name"
+                      required
+                      minLength={2}
+                      maxLength={80}
+                      pattern="[A-Za-z\s.'-]+"
+                      aria-invalid={Boolean(errors.fullName && touchedFields.fullName)}
+                      aria-describedby={errors.fullName && touchedFields.fullName ? "contact-full-name-error" : undefined}
+                      className={getFieldClassName("fullName")}
+                    />
+                    {errors.fullName && touchedFields.fullName ? (
+                      <p id="contact-full-name-error" className="mt-2 text-xs text-red-200">
+                        {errors.fullName}
+                      </p>
+                    ) : null}
                   </div>
                   <div>
-                    <label className="text-sm text-slate-200/75">Email</label>
-                    <Input type="email" placeholder="you@example.com" className="border-white/15 bg-slate-950/40 text-white" />
+                    <label htmlFor="contact-email" className="text-sm text-slate-200/75">Email</label>
+                    <Input
+                      id="contact-email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      placeholder="you@example.com"
+                      autoComplete="email"
+                      inputMode="email"
+                      required
+                      maxLength={120}
+                      aria-invalid={Boolean(errors.email && touchedFields.email)}
+                      aria-describedby={errors.email && touchedFields.email ? "contact-email-error" : undefined}
+                      className={getFieldClassName("email")}
+                    />
+                    {errors.email && touchedFields.email ? (
+                      <p id="contact-email-error" className="mt-2 text-xs text-red-200">
+                        {errors.email}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <label className="text-sm text-slate-200/75">Phone</label>
-                    <Input placeholder="+91" className="border-white/15 bg-slate-950/40 text-white" />
+                    <label htmlFor="contact-phone" className="text-sm text-slate-200/75">Phone</label>
+                    <Input
+                      id="contact-phone"
+                      name="phone"
+                      type="text"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      placeholder="9876543210"
+                      autoComplete="tel-national"
+                      inputMode="numeric"
+                      required
+                      minLength={10}
+                      maxLength={10}
+                      pattern="\d{10}"
+                      aria-invalid={Boolean(errors.phone && touchedFields.phone)}
+                      aria-describedby={errors.phone && touchedFields.phone ? "contact-phone-error" : undefined}
+                      className={getFieldClassName("phone")}
+                    />
+                    {errors.phone && touchedFields.phone ? (
+                      <p id="contact-phone-error" className="mt-2 text-xs text-red-200">
+                        {errors.phone}
+                      </p>
+                    ) : null}
                   </div>
                   <div>
-                    <label className="text-sm text-slate-200/75">Topic</label>
-                    <Input placeholder="Ticketing, hosting, partnership..." className="border-white/15 bg-slate-950/40 text-white" />
+                    <label htmlFor="contact-topic" className="text-sm text-slate-200/75">Topic</label>
+                    <Input
+                      id="contact-topic"
+                      name="topic"
+                      value={formData.topic}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      placeholder="Ticketing, hosting, partnership..."
+                      required
+                      maxLength={200}
+                      aria-invalid={Boolean(errors.topic && touchedFields.topic)}
+                      aria-describedby={errors.topic && touchedFields.topic ? "contact-topic-error" : undefined}
+                      className={getFieldClassName("topic")}
+                    />
+                    {errors.topic && touchedFields.topic ? (
+                      <p id="contact-topic-error" className="mt-2 text-xs text-red-200">
+                        {errors.topic}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm text-slate-200/75">Message</label>
+                  <label htmlFor="contact-message" className="text-sm text-slate-200/75">Message</label>
                   <Textarea
+                    id="contact-message"
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
                     rows={4}
                     placeholder="Tell us a bit more so we can help fast."
-                    className="border-white/15 bg-slate-950/40 text-white"
+                    required
+                    minLength={10}
+                    maxLength={1000}
+                    aria-invalid={Boolean(errors.message && touchedFields.message)}
+                    aria-describedby={errors.message && touchedFields.message ? "contact-message-error" : undefined}
+                    className={getFieldClassName("message")}
                   />
+                  {errors.message && touchedFields.message ? (
+                    <p id="contact-message-error" className="mt-2 text-xs text-red-200">
+                      {errors.message}
+                    </p>
+                  ) : null}
                 </div>
-                <Button className="w-full gap-2 md:w-auto">
+                <Button type="submit" className="w-full gap-2 md:w-auto">
                   <Send className="h-4 w-4" />
                   Send Message
                 </Button>
