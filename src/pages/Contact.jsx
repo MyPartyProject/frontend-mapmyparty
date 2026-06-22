@@ -22,10 +22,10 @@ const contactChannels = [
     desc: "Support hours: 9 AM - 9 PM IST",
   },
   {
-    title: "Come say hii at our studio.",
-    value: "Delhi, India",
+    title: "Our Office",
+    value: "Saket, New Delhi - India",
     icon: MapPin,
-    desc: "MapMyParty operates under MomentumXMedia.",
+    desc: "MomentumX Media Pvt. Ltd.",
   },
 ];
 
@@ -200,19 +200,19 @@ const Contact = () => {
           {contactChannels.map(({ title, value, icon: Icon, desc }) => (
             <Card
               key={title}
-              className="h-full border-white/10 bg-white/5 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-amber-300/40 hover:shadow-[0_25px_80px_-24px_rgba(0,0,0,0.65)]"
+              className="h-full min-h-[196px] border-white/10 bg-white/5 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_24px_70px_-28px_rgba(0,0,0,0.65)]"
             >
-              <CardContent className="space-y-2 p-5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/15 text-pink-200">
+              <CardContent className="flex h-full flex-col items-start justify-between p-6">
+                <div className="space-y-4">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/15 text-pink-200 ring-1 ring-white/10">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <div>
-                    <div className="font-semibold text-white">{title}</div>
-                    <div className="text-sm text-slate-300/75">{desc}</div>
+                  <div className="space-y-2">
+                    <h2 className="text-lg font-semibold leading-tight text-white">{title}</h2>
+                    <p className="text-sm leading-6 text-slate-300/75">{desc}</p>
                   </div>
                 </div>
-                <div className="text-lg font-semibold text-white">{value}</div>
+                <p className="pt-5 text-base font-semibold leading-6 text-white md:text-[17px]">{value}</p>
               </CardContent>
             </Card>
           ))}
