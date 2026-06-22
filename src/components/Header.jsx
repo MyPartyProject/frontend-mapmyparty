@@ -22,6 +22,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/config/api";
+import logo from "@/assets/MMP logo.svg";
 
 const HEADER_SEARCH_MIN_LENGTH = 2;
 const HEADER_SEARCH_DEBOUNCE_MS = 300;
@@ -550,7 +551,7 @@ const Header = ({
             className="group flex min-w-0 items-center gap-2.5 whitespace-nowrap text-base font-semibold text-foreground"
           >
             <img
-              src="/logo.png"
+              src={logo}
               alt="MapMyParty"
               className="h-8 w-8 object-contain"
             />
