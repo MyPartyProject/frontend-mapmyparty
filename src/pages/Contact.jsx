@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import Header from "@/components/Header";
 import { Mail, Phone, MapPin, MessageSquare, Send, Clock } from "lucide-react";
+import { toast } from "sonner";
+import { apiFetch } from "@/config/api";
 
 const contactChannels = [
   {
@@ -71,6 +73,7 @@ const Contact = () => {
   const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState({});
   const [touchedFields, setTouchedFields] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -112,7 +115,7 @@ const Contact = () => {
     }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const nextTouchedFields = Object.keys(formData).reduce((accumulator, fieldName) => {
@@ -130,6 +133,24 @@ const Contact = () => {
 
     if (Object.values(nextErrors).some(Boolean)) {
       return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      await apiFetch("contact", {
+        method: "POST",
+        body: JSON.stringify(formData),
+      });
+
+      setFormData(initialFormData);
+      setErrors({});
+      setTouchedFields({});
+      toast.success("Your message has been sent successfully. Our team will contact you shortly.");
+    } catch (error) {
+      toast.error(error?.message || "Unable to send your message right now. Please try again later.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -350,9 +371,9 @@ const Contact = () => {
                     </p>
                   ) : null}
                 </div>
-                <Button type="submit" className="w-full gap-2 md:w-auto">
+                <Button type="submit" className="w-full gap-2 md:w-auto" disabled={isSubmitting}>
                   <Send className="h-4 w-4" />
-                  Send Message
+                  {isSubmitting ? "Sending..." : "Send Message"}
                 </Button>
                 <p className="text-xs text-slate-200/70">By submitting, you agree to our Terms and Privacy Policy.</p>
               </form>
