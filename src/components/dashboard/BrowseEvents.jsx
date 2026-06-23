@@ -539,6 +539,19 @@ export default function BrowseEvents({ showPublicHeader = false }) {
   ].filter(Boolean).length;
   const activeTrendingSlideIndex =
     trendingEvents.length > 0 ? activeTrendingIndex % trendingEvents.length : 0;
+  const getTrendingVisualRole = (index) => {
+    if (trendingEvents.length <= 1) {
+      return index === activeTrendingSlideIndex ? "active" : "hidden";
+    }
+
+    const previousIndex = (activeTrendingSlideIndex - 1 + trendingEvents.length) % trendingEvents.length;
+    const nextIndex = (activeTrendingSlideIndex + 1) % trendingEvents.length;
+
+    if (index === activeTrendingSlideIndex) return "active";
+    if (index === previousIndex) return "previous";
+    if (index === nextIndex) return "next";
+    return "hidden";
+  };
 
   const resultsStart =
     pagination.totalEvents > 0 ? (pagination.page - 1) * pagination.limit + 1 : 0;
@@ -723,120 +736,113 @@ export default function BrowseEvents({ showPublicHeader = false }) {
       {showPublicHeader && <Header forceMainHeader />}
       <div className={browseContentClass}>
         {trendingEvents.length > 0 && (
-          <div className="mb-6">
-            <section className="relative mx-auto w-[calc(100vw-32px)] max-w-[420px] overflow-hidden rounded-[16px] border border-accent/15 bg-card/45 shadow-[0_0_15px_rgba(168,85,247,0.05)] sm:w-auto sm:max-w-none sm:mx-0 sm:mb-5 sm:rounded-[1.5rem] sm:border-border/50 sm:bg-card sm:shadow-[var(--shadow-elegant)]">
-              {/* Mobile Swipe Buttons (Over image) */}
-              {trendingEvents.length > 1 && (
-                <div className="absolute left-2 right-2 top-[75px] xs:top-[85px] -translate-y-1/2 z-20 flex justify-between pointer-events-none sm:hidden">
-                  <button
-                    type="button"
-                    aria-label="Previous event"
-                    disabled={activeTrendingSlideIndex === 0}
-                    onClick={goToPreviousTrending}
-                    className="pointer-events-auto inline-flex h-[32px] w-[32px] items-center justify-center rounded-full border border-white/10 bg-black/60 text-white backdrop-blur-sm transition-all duration-200 active:scale-95 disabled:opacity-30 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-accent"
-                  >
-                    <ChevronLeft className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Next event"
-                    disabled={activeTrendingSlideIndex === trendingEvents.length - 1}
-                    onClick={goToNextTrending}
-                    className="pointer-events-auto inline-flex h-[32px] w-[32px] items-center justify-center rounded-full border border-white/10 bg-black/60 text-white backdrop-blur-sm transition-all duration-200 active:scale-95 disabled:opacity-30 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-accent"
-                  >
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              )}
+          <div className="mb-6 sm:mb-8">
+            <section
+              className="relative mx-auto w-[calc(100vw-32px)] max-w-[420px] sm:w-auto sm:max-w-none"
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
+              <div
+                className="relative h-[18.75rem] sm:h-[22rem] lg:h-[24rem] xl:h-[25rem]"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
+                {trendingEvents.map((event, index) => {
+                  const visualRole = getTrendingVisualRole(index);
+                  const isActive = visualRole === "active";
+                  const isSideCard = visualRole === "previous" || visualRole === "next";
+                  const eventHref = getEventHref(event);
+                  const cardPositionClass = {
+                    active:
+                      "absolute left-1/2 top-1/2 z-20 h-[18rem] w-[74%] -translate-x-1/2 -translate-y-1/2 scale-100 opacity-100 sm:left-[43%] sm:h-[21rem] sm:w-[76%] md:left-[42%] md:w-[72%] lg:left-1/2 lg:h-[23rem] lg:w-[66%] xl:h-[24rem]",
+                    previous:
+                      "pointer-events-none absolute left-0 top-1/2 z-10 h-[15.75rem] w-[27%] -translate-y-1/2 scale-[0.88] opacity-55 blur-[1px] saturate-[0.72] lg:h-[20rem] lg:w-[18%]",
+                    next:
+                      "pointer-events-none absolute right-0 top-1/2 z-10 h-[15.75rem] w-[27%] -translate-y-1/2 scale-[0.88] opacity-55 blur-[1px] saturate-[0.72] sm:h-[19rem] sm:w-[24%] md:w-[22%] lg:h-[20rem] lg:w-[18%]",
+                    hidden:
+                      "pointer-events-none absolute left-1/2 top-1/2 z-0 h-[15rem] w-[24%] -translate-x-1/2 -translate-y-1/2 scale-[0.78] opacity-0 sm:h-[19rem] sm:w-[18%]",
+                  }[visualRole];
 
-              <div className="relative overflow-hidden">
-                <div
-                  className="flex transition-transform duration-300 ease-out sm:min-h-[22rem] lg:min-h-[24rem] motion-reduce:transition-none"
-                  style={{ transform: `translateX(-${activeTrendingSlideIndex * 100}%)` }}
-                  onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                  onMouseEnter={handleMouseEnter}
-                  onMouseLeave={handleMouseLeave}
-                >
-                  {trendingEvents.map((event, index) => {
-                    const isActive = index === activeTrendingSlideIndex;
-                    const eventHref = getEventHref(event);
+                  return (
+                    <article
+                      key={event.id || index}
+                      aria-hidden={!isActive && !isSideCard}
+                      className={`${cardPositionClass} group overflow-hidden rounded-[16px] border border-border/45 bg-card shadow-[var(--shadow-card)] transition-all duration-700 ease-out sm:rounded-[1.35rem] sm:shadow-[var(--shadow-elegant)]`}
+                    >
+                      <div className="relative h-full w-full overflow-hidden">
+                        <img
+                          src={getEventImage(event)}
+                          alt={event.title || event.eventTitle || "Event"}
+                          className={`h-full w-full object-cover object-center transition-all duration-700 ${
+                            isActive ? "scale-100 opacity-100" : "scale-[1.04] opacity-95"
+                          }`}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/92 via-background/42 to-background/5" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-background/58 via-background/12 to-transparent" />
+                        <div className="theme-gradient-primary absolute inset-0 opacity-10 transition-opacity duration-700 group-hover:opacity-15" />
 
-                    return (
-                      <div
-                        key={event.id || index}
-                        aria-hidden={!isActive}
-                        className={`relative min-w-full overflow-hidden flex flex-col sm:block ${
-                          isActive ? "" : "pointer-events-none"
-                        }`}
-                      >
-                        {/* Image Wrapper */}
-                        <div className="relative w-full aspect-[16/9] min-h-[150px] max-h-[190px] overflow-hidden rounded-t-[16px] sm:absolute sm:inset-0 sm:h-full sm:w-full sm:aspect-none sm:rounded-none">
-                          <img
-                            src={getEventImage(event)}
-                            alt={event.title || event.eventTitle || "Event"}
-                            className="h-full w-full object-cover object-center"
-                          />
-                          {/* Compact price badge on top-left of the flyer image */}
-                          <div className="absolute top-3 left-3 z-10 sm:hidden">
-                            <span className="inline-flex items-center justify-center rounded-full border border-accent/30 bg-black/60 px-2.5 py-1 text-[10px] font-bold leading-none text-accent backdrop-blur-md">
-                              {getEventPriceDisplay(event)}
+                        <div className="absolute right-3 top-3 z-10 sm:right-4 sm:top-4">
+                          <span className="inline-flex items-center justify-center rounded-full border border-accent/30 bg-card/70 px-2.5 py-1 text-[10px] font-bold leading-none text-accent shadow-[var(--shadow-card)] backdrop-blur-md sm:px-3 sm:py-1.5 sm:text-[11px]">
+                            {getEventPriceDisplay(event)}
+                          </span>
+                        </div>
+
+                        <div
+                          className={`absolute inset-x-0 bottom-0 z-10 flex flex-col p-4 transition-all duration-500 sm:p-5 lg:p-6 ${
+                            isActive ? "translate-y-0 opacity-100" : "translate-y-1 opacity-90"
+                          }`}
+                        >
+                          <h1
+                            className={`line-clamp-2 font-black leading-tight text-foreground drop-shadow-xl ${
+                              isActive
+                                ? "text-xl sm:text-[2rem] lg:text-[2.35rem]"
+                                : "text-[0.7rem] sm:text-[1.05rem] lg:text-lg"
+                            }`}
+                          >
+                            {event.title || event.eventTitle}
+                          </h1>
+
+                          <div
+                            className={`mt-2 flex flex-wrap items-center gap-2 ${
+                              isSideCard ? "grid gap-1.5" : ""
+                            }`}
+                          >
+                            <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-border/35 bg-card/65 px-2 py-1 text-[10px] text-foreground/90 shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs">
+                              <Calendar className="h-3.5 w-3.5 shrink-0 text-accent" />
+                              <span className="truncate">{formatDate(event.startDate || event.date)}</span>
+                            </span>
+                            <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-border/35 bg-card/65 px-2 py-1 text-[10px] text-foreground/90 shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs">
+                              <MapPin className="h-3.5 w-3.5 shrink-0 text-accent" />
+                              <span className="truncate">{getEventLocation(event)}</span>
                             </span>
                           </div>
 
-                          {/* Desktop Overlays (hidden on mobile) */}
-                          <div className="hidden sm:block absolute inset-0 bg-gradient-to-r from-background/92 via-background/58 to-background/16" />
-                          <div className="hidden sm:block absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
-                          <div className="hidden sm:block theme-gradient-primary absolute inset-0 opacity-15" />
-                        </div>
-
-                        {/* Event Information Section */}
-                        <div className="relative flex flex-col justify-between bg-card/95 border-t border-border/10 p-4 sm:absolute sm:inset-0 sm:bg-transparent sm:border-t-0 sm:flex-col sm:justify-end sm:px-6 sm:py-6 lg:px-7">
-                          <div className="flex flex-col gap-2.5 sm:max-w-2xl">
-                            <h1 className="line-clamp-2 text-[17px] font-semibold leading-snug text-foreground sm:text-4xl sm:font-black sm:leading-tight sm:drop-shadow-xl">
-                              {event.title || event.eventTitle}
-                            </h1>
-                            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-muted-foreground sm:mt-3 sm:gap-2 sm:text-sm">
-                              {/* On mobile: simple text with icon. On desktop: rounded-full border bg-card/70 px-2.5 py-1.5 */}
-                              <span className="flex items-center gap-1.5 sm:inline-flex sm:items-center sm:gap-1.5 sm:rounded-full sm:border sm:border-border/40 sm:bg-card/70 sm:px-2.5 sm:py-1.5 sm:backdrop-blur-md">
-                                <Calendar className="h-3.5 w-3.5 text-accent shrink-0" />
-                                <span className="text-[12px] sm:text-xs sm:font-normal">{formatDate(event.startDate || event.date)}</span>
-                              </span>
-                              <span className="flex items-center gap-1.5 sm:inline-flex sm:items-center sm:gap-1.5 sm:rounded-full sm:border sm:border-border/40 sm:bg-card/70 sm:px-2.5 sm:py-1.5 sm:backdrop-blur-md">
-                                <MapPin className="h-3.5 w-3.5 text-accent shrink-0" />
-                                <span className="text-[12px] sm:text-xs sm:font-normal truncate max-w-[180px] sm:max-w-none">{getEventLocation(event)}</span>
-                              </span>
-                            </div>
-                            <div className="mt-2.5 flex sm:mt-4 sm:flex-row">
-                              <Button
-                                asChild
-                                variant="accent"
-                                className="h-10 rounded-[10px] px-[18px] text-[13px] font-semibold w-fit transition-all duration-200 active:scale-[0.97] hover:opacity-90 sm:h-10 sm:rounded-full sm:px-5 sm:text-sm"
-                              >
-                                <Link to={eventHref} target="_blank" rel="noopener noreferrer">
-                                  View Details
-                                  <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
-                                </Link>
-                              </Button>
-                            </div>
+                          <div className={`mt-3 ${isSideCard ? "hidden" : ""}`}>
+                            <Button
+                              asChild
+                              variant="accent"
+                              className="h-9 w-fit rounded-[10px] px-4 text-[13px] font-semibold shadow-[var(--shadow-accent)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-elegant)] active:scale-[0.97] sm:h-10 sm:rounded-full sm:px-5 sm:text-sm"
+                            >
+                              <Link to={eventHref} target="_blank" rel="noopener noreferrer">
+                                View Details
+                                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                              </Link>
+                            </Button>
                           </div>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
+                    </article>
+                  );
+                })}
 
-              {/* Desktop controls */}
-              {trendingEvents.length > 1 && (
-                <>
-                  <div className="hidden sm:flex absolute bottom-4 right-5 z-10 items-center gap-2">
+                {trendingEvents.length > 1 && (
+                  <>
                     <button
                       type="button"
                       aria-label="Previous event"
                       onClick={goToPreviousTrending}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/40 bg-card/65 text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition hover:-translate-y-0.5 hover:border-border hover:bg-primaryCTA hover:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+                      className="absolute left-1 top-1/2 z-30 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-border/40 bg-card/70 text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition-all duration-200 hover:scale-105 hover:border-border hover:bg-primaryCTA hover:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-accent sm:left-3 sm:h-9 sm:w-9 lg:left-[11%]"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </button>
@@ -844,30 +850,32 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                       type="button"
                       aria-label="Next event"
                       onClick={goToNextTrending}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/40 bg-card/65 text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition hover:-translate-y-0.5 hover:border-border hover:bg-primaryCTA hover:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+                      className="absolute right-1 top-1/2 z-30 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-border/40 bg-card/70 text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition-all duration-200 hover:scale-105 hover:border-border hover:bg-primaryCTA hover:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-accent sm:right-3 sm:h-9 sm:w-9 lg:right-[11%]"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </button>
-                  </div>
-                  {/* Desktop indicators */}
-                  <div className="hidden sm:flex absolute bottom-5 left-6 gap-2 lg:left-7 z-10">
-                    {trendingEvents.map((event, index) => (
-                      <button
-                        key={event.id || index}
-                        type="button"
-                        aria-label={`Go to slide ${index + 1}`}
-                        onClick={() => setActiveTrendingIndex(index)}
-                        className={`h-1.5 rounded-full transition-all duration-200 ${
-                          index === activeTrendingSlideIndex ? "w-7 bg-accent" : "w-3 bg-muted-foreground/35"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </>
+                  </>
+                )}
+              </div>
+
+              {trendingEvents.length > 1 && (
+                <div className="mt-3 flex items-center justify-center gap-1.5 sm:mt-4 sm:gap-2">
+                  {trendingEvents.map((event, index) => (
+                    <button
+                      key={event.id || index}
+                      type="button"
+                      aria-label={`Go to slide ${index + 1}`}
+                      onClick={() => setActiveTrendingIndex(index)}
+                      className={`h-1 rounded-full transition-all duration-500 ${
+                        index === activeTrendingSlideIndex
+                          ? "w-10 bg-accent shadow-[var(--shadow-accent)] sm:w-12"
+                          : "w-6 bg-muted-foreground/25 hover:bg-muted-foreground/45 sm:w-8"
+                      }`}
+                    />
+                  ))}
+                </div>
               )}
             </section>
-
-
           </div>
         )}
 
