@@ -52,8 +52,8 @@ export const connectTicketAnalytics = (authToken) => {
   // Build connection options - use cookies (withCredentials) as primary auth
   // Fall back to token if provided
   const connectionOptions = {
-    // Start with polling (sends cookies reliably), then upgrade to websocket
-    transports: ["polling", "websocket"],
+    // WebSocket-only avoids sticky-session requirements across API replicas.
+    transports: ["websocket"],
     reconnection: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
