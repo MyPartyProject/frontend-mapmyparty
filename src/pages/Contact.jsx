@@ -17,7 +17,7 @@ const contactChannels = [
   },
   {
     title: "Phone / WhatsApp",
-    value: "+91 12345 67890",
+    value: "+91 879-619-2111",
     icon: Phone,
     desc: "Support hours: 9 AM - 9 PM IST",
   },
