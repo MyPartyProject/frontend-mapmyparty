@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { apiFetch } from "@/config/api";
 import { toast } from "sonner";
-import { loadRazorpayScript } from "@/utils/loadRazorpayScript";
+import { loadCashfreeScript } from "@/utils/loadCashfreeScript";
 
 const paymentMethods = [
   { label: "UPI", icon: Smartphone, accent: "from-emerald-500/80 to-teal-500/60" },
@@ -38,6 +38,9 @@ const PaymentCheckout = () => {
   const [storedCheckout, setStoredCheckout] = useState(null);
   const [checkoutReady, setCheckoutReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [pendingCheckoutAttempt, setPendingCheckoutAttempt] = useState(null);
+  const [paymentStatusMessage, setPaymentStatusMessage] = useState("");
+  const [isRetryingVerification, setIsRetryingVerification] = useState(false);
 
   useEffect(() => {
     const routeState = location.state;
@@ -65,6 +68,23 @@ const PaymentCheckout = () => {
       setCheckoutReady(true);
     }
   }, [location.state]);
+
+  useEffect(() => {
+    const pendingPaymentRaw = sessionStorage.getItem("pendingPaymentAttempt");
+    if (!pendingPaymentRaw) {
+      return;
+    }
+
+    try {
+      const pendingPayment = JSON.parse(pendingPaymentRaw);
+      if (pendingPayment?.bookingId && pendingPayment?.paymentId && pendingPayment?.orderId) {
+        setPendingCheckoutAttempt(pendingPayment);
+        setPaymentStatusMessage("We are waiting for Cashfree to confirm this payment.");
+      }
+    } catch (error) {
+      console.warn("Failed to restore pending payment attempt", error);
+    }
+  }, []);
 
   const summary = storedCheckout?.eventSummary;
   const tickets = storedCheckout?.tickets || [];
@@ -138,22 +158,85 @@ const PaymentCheckout = () => {
     };
   }, [totalsSafe.gst, totalsSafe.gstType, totalsSafe.igst]);
 
-  const cancelCheckoutAttempt = async ({ checkout, reason, errorPayload }) => {
-    const cancelResponse = await apiFetch("/api/payments/checkout/cancel", {
+  const getCashfreeMode = (checkout) => {
+    const mode = String(checkout?.mode || "").toLowerCase();
+    return mode === "production" || mode === "live" ? "production" : "sandbox";
+  };
+
+  const getCashfreePaymentId = (result) => {
+    return result?.paymentDetails?.cf_payment_id
+      || result?.paymentDetails?.payment_id
+      || result?.cf_payment_id
+      || result?.payment_id
+      || result?.transaction?.cf_payment_id
+      || null;
+  };
+
+  const verifyCheckoutAttempt = async ({ checkout, checkoutResult }) => {
+    const verifyResponse = await apiFetch("/api/payments/checkout/verify", {
       method: "POST",
       body: JSON.stringify({
         bookingId: checkout.bookingId,
         paymentId: checkout.paymentId,
-        reason,
-        razorpay_order_id: checkout.orderId,
-        razorpay_payment_id: errorPayload?.metadata?.payment_id,
-        error: errorPayload || undefined,
+        provider_order_id: checkout.orderId,
+        provider_payment_id: getCashfreePaymentId(checkoutResult),
       }),
     });
 
-    if (!cancelResponse?.success) {
-      throw new Error(cancelResponse?.errorMessage || "Unable to cancel the booking attempt");
+    if (!verifyResponse?.success) {
+      throw new Error(verifyResponse?.errorMessage || "Payment verification failed");
     }
+
+    return verifyResponse;
+  };
+
+  const clearPendingPaymentAttempt = () => {
+    sessionStorage.removeItem("pendingPaymentAttempt");
+    setPendingCheckoutAttempt(null);
+    setPaymentStatusMessage("");
+  };
+
+  const markPaymentPending = (checkout, message) => {
+    sessionStorage.setItem("pendingPaymentAttempt", JSON.stringify(checkout));
+    setPendingCheckoutAttempt(checkout);
+    setPaymentStatusMessage(message || "We are waiting for Cashfree to confirm this payment.");
+  };
+
+  const handleVerificationResponse = ({ verifyResponse, checkout }) => {
+    const verification = verifyResponse?.data || {};
+    const status = String(verification.status || verification.paymentStatus || "").toUpperCase();
+
+    if (status === "SUCCESS" || verification.paymentStatus === "SUCCESS") {
+      toast.success("Payment successful!");
+      clearPendingPaymentAttempt();
+      sessionStorage.removeItem("pendingCheckout");
+      navigate(`/booking-success?bookingId=${checkout.bookingId}`);
+      return "success";
+    }
+
+    if (status === "PENDING" || verifyResponse?.code === 202) {
+      const message = verification.message || "Payment is still being confirmed by Cashfree. We will update this automatically.";
+      markPaymentPending(checkout, message);
+      toast.info("Payment confirmation is pending. Please do not make another payment yet.");
+      return "pending";
+    }
+
+    if (status === "FAILED") {
+      clearPendingPaymentAttempt();
+      sessionStorage.removeItem("pendingCheckout");
+      toast.error(verification.message || "Payment failed or was cancelled. Please try again.");
+      navigate(`/events/${organizerSlug}/${eventSlug}`);
+      return "failed";
+    }
+
+    if (status === "RECOVERY_REQUIRED") {
+      clearPendingPaymentAttempt();
+      sessionStorage.removeItem("pendingCheckout");
+      toast.error(verification.message || "Payment needs manual review. Please contact support if money was debited.");
+      return "recovery";
+    }
+
+    throw new Error(verifyResponse?.message || "Payment verification returned an unknown status");
   };
 
   const handlePayment = async () => {
@@ -190,111 +273,70 @@ const PaymentCheckout = () => {
         return;
       }
 
-      if (!initResponse?.success || !checkout?.key || !checkout?.orderId || !checkout?.paymentId) {
+      if (!initResponse?.success || !checkout?.paymentSessionId || !checkout?.orderId || !checkout?.paymentId) {
         throw new Error(initResponse?.errorMessage || "Unable to initialize payment");
       }
 
-      await loadRazorpayScript();
+      await loadCashfreeScript();
 
-      if (!window.Razorpay) {
-        throw new Error("Razorpay Checkout is unavailable");
+      if (!window.Cashfree) {
+        throw new Error("Cashfree Checkout is unavailable");
       }
 
-      let checkoutFinished = false;
+      const cashfree = window.Cashfree({ mode: getCashfreeMode(checkout) });
+      if (!cashfree?.checkout) {
+        throw new Error("Cashfree Checkout is unavailable");
+      }
 
-      const releaseCheckout = async ({ reason, message, errorPayload }) => {
-        if (checkoutFinished) {
-          return;
-        }
-
-        checkoutFinished = true;
-        try {
-          await cancelCheckoutAttempt({ checkout, reason, errorPayload });
-          sessionStorage.removeItem("pendingCheckout");
-          if (reason === "checkout_failed") {
-            toast.error(message);
-          } else {
-            toast.info(message);
-          }
-          navigate(`/events/${organizerSlug}/${eventSlug}`);
-        } catch (error) {
-          console.error("Checkout cancellation error:", error);
-          toast.error(error?.message || "Payment was not completed. Please contact support if the hold does not clear.");
-        } finally {
-          setIsProcessing(false);
-        }
-      };
-
-      const razorpayOptions = {
-        key: checkout.key,
-        amount: checkout.amount,
-        currency: checkout.currency,
-        name: checkout.name,
-        description: checkout.description,
-        order_id: checkout.orderId,
-        prefill: checkout.prefill,
-        notes: checkout.notes,
-        theme: checkout.theme,
-        ...(checkout.customer_id
-          ? {
-            customer_id: checkout.customer_id,
-            remember_customer: checkout.remember_customer !== false,
-          }
-          : {}),
-        handler: async (razorpayResponse) => {
-          checkoutFinished = true;
-          try {
-            const verifyResponse = await apiFetch("/api/payments/checkout/verify", {
-              method: "POST",
-              body: JSON.stringify({
-                bookingId: checkout.bookingId,
-                paymentId: checkout.paymentId,
-                razorpay_order_id: razorpayResponse.razorpay_order_id,
-                razorpay_payment_id: razorpayResponse.razorpay_payment_id,
-                razorpay_signature: razorpayResponse.razorpay_signature,
-              }),
-            });
-
-            if (!verifyResponse?.success) {
-              throw new Error(verifyResponse?.errorMessage || "Payment verification failed");
-            }
-
-            toast.success("Payment successful!");
-            sessionStorage.removeItem("pendingCheckout");
-            navigate(`/booking-success?bookingId=${checkout.bookingId}`);
-          } catch (error) {
-            console.error("Payment verification error:", error);
-            toast.error(error?.message || "Payment verification failed. Please contact support if money was debited.");
-          } finally {
-            setIsProcessing(false);
-          }
-        },
-        modal: {
-          ondismiss: () => {
-            releaseCheckout({
-              reason: "checkout_cancelled",
-              message: "Payment cancelled. Your tickets have been released.",
-            });
-          },
-        },
-      };
-
-      const razorpay = new window.Razorpay(razorpayOptions);
-
-      razorpay.on("payment.failed", (response) => {
-        const message = response?.error?.description || response?.error?.reason || "Payment failed. Please try again.";
-        releaseCheckout({
-          reason: "checkout_failed",
-          message,
-          errorPayload: response?.error || null,
+      let checkoutResult = null;
+      try {
+        checkoutResult = await cashfree.checkout({
+          paymentSessionId: checkout.paymentSessionId,
+          redirectTarget: "_modal",
         });
-      });
+      } catch (checkoutError) {
+        console.error("Cashfree checkout error:", checkoutError);
+        checkoutResult = { error: checkoutError };
+      }
 
-      razorpay.open();
+      try {
+        const verifyResponse = await verifyCheckoutAttempt({ checkout, checkoutResult });
+        handleVerificationResponse({ verifyResponse, checkout });
+      } catch (verificationError) {
+        console.error("Payment verification error:", verificationError);
+        markPaymentPending(
+          checkout,
+          verificationError?.message || "We could not confirm the payment immediately. Please retry verification in a moment.",
+        );
+        toast.info("Payment confirmation is pending. Please do not make another payment yet.");
+      } finally {
+        setIsProcessing(false);
+      }
     } catch (error) {
       console.error("Payment error:", error);
       toast.error(error?.message || "Payment failed. Please try again.");
       setIsProcessing(false);
+    }
+  };
+
+  const retryPendingVerification = async () => {
+    if (!pendingCheckoutAttempt || isRetryingVerification) {
+      return;
+    }
+
+    setIsRetryingVerification(true);
+    try {
+      const verifyResponse = await verifyCheckoutAttempt({
+        checkout: pendingCheckoutAttempt,
+        checkoutResult: null,
+      });
+      handleVerificationResponse({ verifyResponse, checkout: pendingCheckoutAttempt });
+    } catch (error) {
+      console.error("Pending payment verification retry failed:", error);
+      setPaymentStatusMessage(error?.message || "Payment is still pending. Please retry after a short wait.");
+      toast.info("Payment is still pending. Please retry after a short wait.");
+    } finally {
+      setIsRetryingVerification(false);
     }
   };
 
@@ -356,7 +398,7 @@ const PaymentCheckout = () => {
                   </div>
                   <div>
                     <p className="font-semibold text-white">{label}</p>
-                    <p className="text-xs text-white/60">Available inside Razorpay Checkout</p>
+                    <p className="text-xs text-white/60">Available inside Cashfree Checkout</p>
                   </div>
                 </div>
               ))}
@@ -416,7 +458,7 @@ const PaymentCheckout = () => {
 
               <Button
                 onClick={handlePayment}
-                disabled={isProcessing}
+                disabled={isProcessing || Boolean(pendingCheckoutAttempt)}
                 className="w-full bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active font-semibold py-5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (
@@ -425,21 +467,60 @@ const PaymentCheckout = () => {
                     {isFreeCheckout ? "Confirming Booking..." : "Processing Payment..."}
                   </>
                 ) : (
-                  isFreeCheckout ? "Confirm free booking" : "Pay securely with Razorpay"
+                  pendingCheckoutAttempt
+                    ? "Payment confirmation pending"
+                    : isFreeCheckout ? "Confirm free booking" : "Pay securely with Cashfree"
                 )}
               </Button>
+              {pendingCheckoutAttempt && (
+                <div className="rounded-xl border border-amber-400/30 bg-amber-400/10 p-4 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <Loader2 className="h-5 w-5 text-amber-200 animate-spin mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-amber-100">Payment confirmation pending</p>
+                      <p className="text-xs text-amber-100/80">
+                        {paymentStatusMessage || "Cashfree is still confirming this payment. Please do not pay again."}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={retryPendingVerification}
+                      disabled={isRetryingVerification}
+                      className="bg-white/90 text-slate-950 hover:bg-white"
+                    >
+                      {isRetryingVerification ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Checking...
+                        </>
+                      ) : "Retry verification"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => navigate(`/events/${organizerSlug}/${eventSlug}`)}
+                      className="text-white/80 hover:text-white hover:bg-white/10"
+                    >
+                      Back to event
+                    </Button>
+                  </div>
+                </div>
+              )}
               <p className="text-xs text-center text-white/60">
                 {isProcessing
                   ? isFreeCheckout
                     ? "Please wait while your booking is confirmed..."
-                    : "Please wait while Razorpay Checkout opens or verifies your payment..."
+                    : "Please wait while Cashfree Checkout opens or verifies your payment..."
                   : isFreeCheckout
                     ? "Your booking will be confirmed without payment."
                     : "Your booking is confirmed only after secure server-side payment verification."}
               </p>
               {!isFreeCheckout && (
                 <p className="text-xs text-center text-amber-300/80 bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 mt-2">
-                  Razorpay Test Mode: use Razorpay test credentials and test payment methods until production keys are enabled.
+                  Cashfree Sandbox Mode: use Cashfree sandbox credentials and test payment methods until production keys are enabled.
                 </p>
               )}
             </CardContent>
