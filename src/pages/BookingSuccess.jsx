@@ -33,6 +33,22 @@ const BookingSuccess = () => {
       try {
         const response = await apiFetch(`/api/booking/${bookingId}`);
         if (response?.success && response?.data) {
+          if (response.data?.booking?.status !== "CONFIRMED") {
+            let checkoutStatus = null;
+            try {
+              checkoutStatus = await apiFetch(`/api/payments/checkout/status/${bookingId}`);
+            } catch (statusError) {
+              console.warn("Unable to retrieve checkout status", statusError);
+            }
+            const status = String(checkoutStatus?.data?.status || "PENDING").toUpperCase();
+            throw new Error(
+              status === "RECOVERY_REQUIRED"
+                ? "Your payment needs recovery. Please do not pay again; support can track this booking."
+                : status === "FAILED" || status === "EXPIRED"
+                  ? "This booking was not confirmed. Return to the event to create a new booking."
+                  : "Your payment is still being confirmed. Return to checkout and wait for the automatic update.",
+            );
+          }
           setBookingPayload(response.data);
           setError(null);
           return;

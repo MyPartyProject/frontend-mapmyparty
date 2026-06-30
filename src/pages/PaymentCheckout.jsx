@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,10 @@ const PaymentCheckout = () => {
   const [pendingCheckoutAttempt, setPendingCheckoutAttempt] = useState(null);
   const [paymentStatusMessage, setPaymentStatusMessage] = useState("");
   const [isRetryingVerification, setIsRetryingVerification] = useState(false);
+  const pollingStartedAtRef = useRef(null);
+  const lastInitializationRetryAtRef = useRef(0);
+
+  const paymentAttemptStorageKey = (bookingId) => `pendingPaymentAttempt:${bookingId}`;
 
   useEffect(() => {
     const routeState = location.state;
@@ -70,21 +74,27 @@ const PaymentCheckout = () => {
   }, [location.state]);
 
   useEffect(() => {
-    const pendingPaymentRaw = sessionStorage.getItem("pendingPaymentAttempt");
+    const bookingId = storedCheckout?.bookingData?.bookingId;
+    if (!bookingId) return;
+    const scopedKey = paymentAttemptStorageKey(bookingId);
+    const pendingPaymentRaw = sessionStorage.getItem(scopedKey)
+      || sessionStorage.getItem("pendingPaymentAttempt");
     if (!pendingPaymentRaw) {
       return;
     }
 
     try {
       const pendingPayment = JSON.parse(pendingPaymentRaw);
-      if (pendingPayment?.bookingId && pendingPayment?.paymentId && pendingPayment?.orderId) {
+      if (pendingPayment?.bookingId === bookingId && pendingPayment?.paymentId) {
+        sessionStorage.setItem(scopedKey, JSON.stringify(pendingPayment));
+        sessionStorage.removeItem("pendingPaymentAttempt");
         setPendingCheckoutAttempt(pendingPayment);
         setPaymentStatusMessage("We are waiting for Cashfree to confirm this payment.");
       }
     } catch (error) {
       console.warn("Failed to restore pending payment attempt", error);
     }
-  }, []);
+  }, [storedCheckout?.bookingData?.bookingId]);
 
   const summary = storedCheckout?.eventSummary;
   const tickets = storedCheckout?.tickets || [];
@@ -190,14 +200,15 @@ const PaymentCheckout = () => {
     return verifyResponse;
   };
 
-  const clearPendingPaymentAttempt = () => {
+  const clearPendingPaymentAttempt = (bookingId = pendingCheckoutAttempt?.bookingId || bookingData?.bookingId) => {
+    if (bookingId) sessionStorage.removeItem(paymentAttemptStorageKey(bookingId));
     sessionStorage.removeItem("pendingPaymentAttempt");
     setPendingCheckoutAttempt(null);
     setPaymentStatusMessage("");
   };
 
   const markPaymentPending = (checkout, message) => {
-    sessionStorage.setItem("pendingPaymentAttempt", JSON.stringify(checkout));
+    sessionStorage.setItem(paymentAttemptStorageKey(checkout.bookingId), JSON.stringify(checkout));
     setPendingCheckoutAttempt(checkout);
     setPaymentStatusMessage(message || "We are waiting for Cashfree to confirm this payment.");
   };
@@ -222,22 +233,101 @@ const PaymentCheckout = () => {
     }
 
     if (status === "FAILED") {
-      clearPendingPaymentAttempt();
+      clearPendingPaymentAttempt(checkout.bookingId);
+      if (verification.retryAllowed) {
+        toast.error(verification.message || "This payment attempt failed. You can safely try again.");
+        return "retry";
+      }
       sessionStorage.removeItem("pendingCheckout");
-      toast.error(verification.message || "Payment failed or was cancelled. Please try again.");
+      toast.error(verification.message || "Payment failed or the booking expired.");
       navigate(`/events/${organizerSlug}/${eventSlug}`);
       return "failed";
     }
 
     if (status === "RECOVERY_REQUIRED") {
-      clearPendingPaymentAttempt();
-      sessionStorage.removeItem("pendingCheckout");
-      toast.error(verification.message || "Payment needs manual review. Please contact support if money was debited.");
+      markPaymentPending(checkout, verification.message);
+      toast.error(verification.message || "Payment needs recovery. Please do not make another payment.");
       return "recovery";
     }
 
     throw new Error(verifyResponse?.message || "Payment verification returned an unknown status");
   };
+
+  useEffect(() => {
+    if (!pendingCheckoutAttempt?.bookingId) return undefined;
+
+    let cancelled = false;
+    let timer = null;
+    pollingStartedAtRef.current ||= Date.now();
+
+    const schedule = () => {
+      const elapsed = Date.now() - pollingStartedAtRef.current;
+      timer = window.setTimeout(poll, elapsed < 30_000 ? 3_000 : 10_000);
+    };
+
+    const poll = async () => {
+      if (cancelled) return;
+      if (document.visibilityState === "hidden") {
+        schedule();
+        return;
+      }
+
+      try {
+        const response = await apiFetch(
+          `/api/payments/checkout/status/${pendingCheckoutAttempt.bookingId}`,
+        );
+        if (cancelled || !response?.success) return;
+        const status = String(response.data?.status || "").toUpperCase();
+
+        if (status === "SUCCESS") {
+          clearPendingPaymentAttempt(pendingCheckoutAttempt.bookingId);
+          sessionStorage.removeItem("pendingCheckout");
+          navigate(`/booking-success?bookingId=${pendingCheckoutAttempt.bookingId}`, { replace: true });
+          return;
+        }
+        if (status === "FAILED" && response.data?.retryAllowed) {
+          clearPendingPaymentAttempt(pendingCheckoutAttempt.bookingId);
+          toast.error(response.data?.message || "The payment attempt failed. You can safely try again.");
+          return;
+        }
+        if (status === "FAILED" || status === "EXPIRED") {
+          clearPendingPaymentAttempt(pendingCheckoutAttempt.bookingId);
+          sessionStorage.removeItem("pendingCheckout");
+          toast.error(response.data?.message || "The booking expired before payment was confirmed.");
+          navigate(`/events/${organizerSlug}/${eventSlug}`, { replace: true });
+          return;
+        }
+
+        if (
+          status === "INITIALIZING"
+          && Date.now() - lastInitializationRetryAtRef.current >= 15_000
+        ) {
+          lastInitializationRetryAtRef.current = Date.now();
+          const initResponse = await apiFetch("/api/payments/checkout/init", {
+            method: "POST",
+            body: JSON.stringify({ bookingId: pendingCheckoutAttempt.bookingId }),
+          });
+          if (initResponse?.data?.paymentSessionId && initResponse?.data?.orderId) {
+            clearPendingPaymentAttempt(pendingCheckoutAttempt.bookingId);
+            toast.info("Secure checkout is ready. Select Pay to continue.");
+            return;
+          }
+        }
+
+        setPaymentStatusMessage(response.data?.message || paymentStatusMessage);
+      } catch (error) {
+        console.warn("Automatic payment status check failed", error);
+      }
+
+      if (!cancelled) schedule();
+    };
+
+    schedule();
+    return () => {
+      cancelled = true;
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [pendingCheckoutAttempt?.bookingId, navigate, organizerSlug, eventSlug]);
 
   const handlePayment = async () => {
     if (!bookingData?.bookingId) {
@@ -270,6 +360,19 @@ const PaymentCheckout = () => {
         sessionStorage.removeItem("pendingCheckout");
         toast.success("Booking confirmed successfully!");
         navigate(`/booking-success?bookingId=${checkout.bookingId || bookingData.bookingId}`);
+        return;
+      }
+
+      if (
+        initResponse?.success
+        && checkout?.paymentId
+        && (initResponse?.code === 202 || checkout?.status === "INITIALIZING")
+      ) {
+        markPaymentPending(
+          checkout,
+          "Secure checkout is being prepared. This page will continue automatically.",
+        );
+        setIsProcessing(false);
         return;
       }
 
@@ -326,6 +429,19 @@ const PaymentCheckout = () => {
 
     setIsRetryingVerification(true);
     try {
+      if (!pendingCheckoutAttempt.orderId) {
+        const initResponse = await apiFetch("/api/payments/checkout/init", {
+          method: "POST",
+          body: JSON.stringify({ bookingId: pendingCheckoutAttempt.bookingId }),
+        });
+        if (initResponse?.data?.paymentSessionId && initResponse?.data?.orderId) {
+          clearPendingPaymentAttempt(pendingCheckoutAttempt.bookingId);
+          toast.info("Secure checkout is ready. Select Pay to continue.");
+        } else {
+          setPaymentStatusMessage("Secure checkout is still being prepared. This page will continue automatically.");
+        }
+        return;
+      }
       const verifyResponse = await verifyCheckoutAttempt({
         checkout: pendingCheckoutAttempt,
         checkoutResult: null,
@@ -518,9 +634,9 @@ const PaymentCheckout = () => {
                     ? "Your booking will be confirmed without payment."
                     : "Your booking is confirmed only after secure server-side payment verification."}
               </p>
-              {!isFreeCheckout && (
+              {!isFreeCheckout && pendingCheckoutAttempt && getCashfreeMode(pendingCheckoutAttempt) === "sandbox" && (
                 <p className="text-xs text-center text-amber-300/80 bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 mt-2">
-                  Cashfree Sandbox Mode: use Cashfree sandbox credentials and test payment methods until production keys are enabled.
+                  Cashfree sandbox mode is active. Use test payment methods only.
                 </p>
               )}
             </CardContent>

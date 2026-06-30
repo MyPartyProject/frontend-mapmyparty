@@ -212,6 +212,7 @@ const EventDetailNew = () => {
   const [billingModalOpen, setBillingModalOpen] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const bookingIdempotencyKeyRef = useRef(null);
   const [authMode, setAuthMode] = useState("login");
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [signupForm, setSignupForm] = useState({
@@ -855,8 +856,13 @@ const EventDetailNew = () => {
 
     try {
       setBookingLoading(true);
+      if (!bookingIdempotencyKeyRef.current) {
+        bookingIdempotencyKeyRef.current = globalThis.crypto?.randomUUID?.()
+          || `booking-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      }
       const res = await apiFetch("/api/booking/", {
         method: "POST",
+        headers: { "Idempotency-Key": bookingIdempotencyKeyRef.current },
         body: JSON.stringify(payload),
       });
       if (!res?.success) {
@@ -867,6 +873,7 @@ const EventDetailNew = () => {
       if (!bookingData?.bookingId) {
         throw new Error("Booking response did not include a booking ID");
       }
+      bookingIdempotencyKeyRef.current = null;
 
       const paymentRequired = bookingData?.paymentRequired !== false
         && bookingData?.checkoutProvider !== "FREE"
