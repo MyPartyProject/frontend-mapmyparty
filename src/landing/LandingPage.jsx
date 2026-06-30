@@ -930,14 +930,12 @@ const LandingPage = () => {
             })}
           </div>
 
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-background/92 via-background/58 to-background/20 lg:from-background/88 lg:via-background/46 lg:to-background/12" />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/68 via-background/8 to-background" />
-          <div className="theme-gradient-primary pointer-events-none absolute inset-0 opacity-20" />
-          <div className="theme-gradient-primary pointer-events-none absolute inset-x-0 top-0 h-96 opacity-10 blur-3xl" />
-          <div className="landing-hero-haze pointer-events-none absolute -right-20 top-0 h-80 w-80 rounded-full bg-secondary/20 blur-3xl" />
-          <div className="landing-hero-haze pointer-events-none absolute bottom-0 right-1/4 h-72 w-72 rounded-full bg-primaryCTA/20 blur-3xl [animation-delay:1.2s]" />
-          <div className="landing-glow pointer-events-none absolute -left-16 top-16 h-56 w-56 rounded-full bg-card/70 blur-3xl" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-background" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-background/48 via-background/16 to-transparent lg:from-background/42 lg:via-background/10" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-background/35 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent via-background/18 to-background/82" />
+          <div className="theme-gradient-primary pointer-events-none absolute -right-24 top-4 h-56 w-56 rounded-full opacity-[0.08] blur-2xl" />
+          <div className="landing-hero-haze pointer-events-none absolute bottom-8 right-1/4 h-44 w-44 rounded-full bg-primaryCTA/10 blur-2xl [animation-delay:1.2s]" />
+          <div className="landing-glow pointer-events-none absolute -left-12 top-20 h-40 w-40 rounded-full bg-card/30 blur-2xl" />
           {Array.from({ length: 9 }).map((_, index) => (
             <span
               key={index}

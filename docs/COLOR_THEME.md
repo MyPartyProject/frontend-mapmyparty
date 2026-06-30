@@ -2,6 +2,8 @@
 
 Use this file before starting any new UI implementation. The current product theme is a dark premium party theme built around Midnight Plum, Royal Mulberry, and Antique Gold.
 
+For the new `#f3deff` light UI currently tested on the landing page, use `docs/LIGHT_UI_ROLLOUT_GUIDE.md` before applying that theme to attendee, organizer, or other existing pages.
+
 ## Source Of Truth
 
 - Theme tokens: `src/index.css`

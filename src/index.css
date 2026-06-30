@@ -114,6 +114,51 @@
     --gradient-primary: linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary));
     --gradient-surface: linear-gradient(180deg, hsl(var(--background)), hsl(var(--card)), hsl(var(--background)));
   }
+
+  .landing-homepage {
+    --background: 278 100% 94%; /* #f3deff */
+    --foreground: 276 40% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 276 40% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 276 40% 12%;
+
+    --primary: 276 40% 26%;
+    --primary-foreground: 274 26% 95%;
+    --color-primary-cta: hsl(var(--primary));
+    --primary-cta-hover: 276 40% 32%;
+    --primary-cta-active: 276 40% 21%;
+    --color-primary-cta-hover: hsl(var(--primary-cta-hover));
+    --color-primary-cta-active: hsl(var(--primary-cta-active));
+
+    --secondary: 323 56% 30%;
+    --secondary-foreground: 274 26% 95%;
+
+    --muted: 278 55% 88%;
+    --muted-foreground: 277 22% 36%;
+
+    --accent: 25 44% 42%;
+    --accent-foreground: 0 0% 100%;
+
+    --border: 278 34% 78%;
+    --input: 278 34% 78%;
+    --ring: 276 40% 26%;
+
+    --shadow-elegant: 0 24px 70px -36px rgba(72,40,93,0.34);
+    --shadow-card: 0 18px 42px -28px rgba(72,40,93,0.28);
+    --shadow-accent: 0 18px 42px -24px rgba(119,34,86,0.35);
+
+    --color-bg-primary: hsl(var(--background));
+    --color-card-bg: hsl(var(--card));
+    --color-accent-primary: #772256;
+    --color-accent-secondary: #c99774;
+    --color-text-primary: hsl(var(--foreground));
+    --color-text-muted: hsl(var(--muted-foreground));
+    --gradient-primary: linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary));
+    --gradient-surface: linear-gradient(180deg, hsl(var(--background)), hsl(var(--card) / 0.72), hsl(var(--background)));
+  }
 }
 
 @layer components {

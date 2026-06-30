@@ -434,6 +434,8 @@ const Header = ({
     "h-11 w-full justify-start gap-3 rounded-xl border border-border/45 bg-card/65 px-3 text-left text-sm font-medium text-destructive hover:border-destructive/45 hover:bg-destructive/10 hover:text-destructive active:scale-[0.99]";
   const navLinkClass =
     "text-[15px] font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground";
+  const landingNavLinkClass =
+    "text-[15px] font-semibold text-foreground transition-colors duration-200 hover:text-accent";
   const actionButtonClass =
     "group relative h-9 w-9 rounded-full border border-border/50 bg-card/55 p-0 text-foreground shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted/70 hover:text-foreground focus-visible:ring-ring disabled:hover:translate-y-0";
   const expandingActionButtonClass =
@@ -454,6 +456,10 @@ const Header = ({
   const isLandingPage =
     forceMainHeader &&
     (location.pathname === "/" || location.pathname === "/landing/homepage");
+  const landingHeaderSurfaceClass =
+    "border-b border-border/45 bg-background/92 shadow-[0_14px_36px_-28px_rgba(72,40,93,0.42)] backdrop-blur-md";
+  const landingHeaderControlClass =
+    "border-border/45 bg-card/90 shadow-[var(--shadow-card)]";
 
   const renderSearchDropdown = (isMobile = false) => {
     if (!searchOpen || normalizedSearchQuery.length < HEADER_SEARCH_MIN_LENGTH) {
@@ -539,7 +545,7 @@ const Header = ({
     <header
       className={`sticky top-0 z-50 w-full ${
         isLandingPage
-          ? "-mb-14 bg-gradient-to-b from-background/55 via-background/20 to-transparent backdrop-blur-sm shadow-none"
+          ? `-mb-14 ${landingHeaderSurfaceClass}`
           : "bg-card/70 shadow-[var(--shadow-card)] backdrop-blur-xl"
       } ${forceMainHeader ? "" : "border-b border-border/45"} relative`}
     >
@@ -565,25 +571,25 @@ const Header = ({
           <nav className="hidden items-center gap-5 md:flex lg:gap-6">
             <Link
               to="/browse-events"
-              className={navLinkClass}
+              className={isLandingPage ? landingNavLinkClass : navLinkClass}
             >
               Browse Events
             </Link>
             <Link
               to="/host-events"
-              className={navLinkClass}
+              className={isLandingPage ? landingNavLinkClass : navLinkClass}
             >
               Host Events
             </Link>
             <Link
               to="/about"
-              className={navLinkClass}
+              className={isLandingPage ? landingNavLinkClass : navLinkClass}
             >
               About
             </Link>
             <Link
               to="/contact"
-              className={navLinkClass}
+              className={isLandingPage ? landingNavLinkClass : navLinkClass}
             >
               Contact
             </Link>
@@ -595,7 +601,9 @@ const Header = ({
           <form
             ref={desktopSearchRef}
             onSubmit={handleSearchSubmit}
-            className={`relative hidden h-9 items-center justify-end rounded-full border border-border/50 bg-card/55 shadow-[var(--shadow-card)] transition-[width,background-color,border-color] duration-300 ease-out md:flex ${
+            className={`relative hidden h-9 items-center justify-end rounded-full border transition-[width,background-color,border-color] duration-300 ease-out md:flex ${
+              isLandingPage ? landingHeaderControlClass : "border-border/50 bg-card/55 shadow-[var(--shadow-card)]"
+            } ${
               desktopSearchExpanded ? "w-[19rem] lg:w-[20rem]" : "w-9"
             }`}
           >
@@ -781,7 +789,9 @@ const Header = ({
               <Button
                 variant="ghost"
                 onClick={handleAuthClick}
-                className="h-9 rounded-full border border-border/50 bg-card/45 px-3 text-[13px] text-foreground hover:bg-muted/70 hover:text-foreground"
+                className={`h-9 rounded-full border px-3 text-[13px] text-foreground hover:bg-muted/70 hover:text-foreground ${
+                  isLandingPage ? landingHeaderControlClass : "border-border/50 bg-card/45"
+                }`}
               >
                 Login
               </Button>
@@ -849,7 +859,9 @@ const Header = ({
       {mobileSearchOpen && (
         <div
           ref={mobileSearchRef}
-          className="border-t border-border/45 bg-card/55 px-4 py-3 md:hidden"
+          className={`border-t px-4 py-3 md:hidden ${
+            isLandingPage ? "border-border/25 bg-background/70" : "border-border/45 bg-card/55"
+          }`}
         >
           <form
             onSubmit={handleSearchSubmit}
