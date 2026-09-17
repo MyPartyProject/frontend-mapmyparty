@@ -127,9 +127,7 @@ export async function cancelAdminBalanceAdjustment(adjustmentId, payload) {
 }
 
 export async function calculateEventPayout(eventId) {
-  const response = await apiFetch(`admin/events/${eventId}/payouts/calculate`, {
-    method: "POST",
-  });
+  const response = await apiFetch(`admin/events/${eventId}/payouts/calculate`);
   return response.data;
 }
 

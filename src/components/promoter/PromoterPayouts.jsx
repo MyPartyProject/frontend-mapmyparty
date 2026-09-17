@@ -1,3 +1,4 @@
+import FinanceSecurityPanel from './FinanceSecurityPanel';
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -949,6 +950,7 @@ const PromoterPayouts = () => {
 
   return (
     <div className="space-y-6">
+      <FinanceSecurityPanel />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold">Payouts</h2>

@@ -202,8 +202,8 @@ const PayoutDetail = ({ payoutId, onBack }) => {
           {bankDetails ? (
             <div className="space-y-1 text-sm">
               <p className="text-white">{bankDetails.accountHolder}</p>
-              <p className="text-white/60">{bankDetails.bankName}</p>
-              <p className="text-white/40 text-xs">Branch: {bankDetails.branchName}</p>
+              {bankDetails.bankName && <p className="text-white/60">{bankDetails.bankName}</p>}
+              {bankDetails.branchName && <p className="text-white/40 text-xs">Branch: {bankDetails.branchName}</p>}
               <p className="text-white/40 text-xs">
                 A/C: {bankDetails.accountNumberMasked || (bankDetails.accountNumberLast4 ? `****${bankDetails.accountNumberLast4}` : "Not available")}
               </p>

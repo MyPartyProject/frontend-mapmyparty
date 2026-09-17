@@ -162,9 +162,9 @@ const BookingSuccess = () => {
                 </div>
                 <div className="space-y-1.5">
                   <p className="text-[10px] uppercase tracking-[0.22em] text-gray-500">Booking status</p>
-                  <h1 className="text-2xl font-bold tracking-[0.02em] text-white sm:text-3xl">Payment completed</h1>
+                  <h1 className="text-2xl font-bold tracking-[0.02em] text-white sm:text-3xl">Booking summary unavailable</h1>
                   <p className="text-sm text-gray-400">
-                    We could not load the booking summary screen, but your payment may still have been processed.
+                    We could not load this booking summary. Your payment may still be pending, failed, or under recovery — check My Bookings before paying again.
                   </p>
                   <p className="text-xs text-gray-500">{error || "Booking summary unavailable"}</p>
                 </div>

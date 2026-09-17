@@ -141,8 +141,18 @@ export async function customFetch(url, options = {}, retrying = false) {
   return response;
 }
 
+let financeAuthorizationHandler = null;
+export const setFinanceAuthorizationHandler = (handler) => { financeAuthorizationHandler = handler; };
 export async function apiFetch(path, { headers = {}, ...options } = {}) {
   const url = /^https?:/i.test(path) ? path : buildUrl(path);
+  const pathname = new URL(url, window.location.origin).pathname;
+  const method = (options.method || 'GET').toUpperCase();
+  const finance = /\/(payouts|payout-config|bank-details|balance-adjustments|finance|refunds|finance-access|finance-approvals)(\/|$)|\/platform\/config|\/gst-verification$/.test(pathname);
+  if (pathname.startsWith('/api/admin/') && finance && !['GET', 'HEAD', 'OPTIONS'].includes(method) && !headers['x-finance-authorization']) {
+    if (!financeAuthorizationHandler) throw new Error('Open the finance dashboard to authorize this action');
+    const requiresApproval = /\/(bank-details|balance-adjustments|payout-config|refunds)(\/|$)|\/platform\/config|\/gst-verification$|\/finance\/(disputes|events)/.test(pathname);
+    headers = { ...headers, ...await financeAuthorizationHandler({ method, path: pathname, payload: options.body ? JSON.parse(options.body) : {}, requiresApproval }) };
+  }
   const response = await customFetch(url, { headers, ...options });
 
   const contentType = response.headers.get("content-type") || "";

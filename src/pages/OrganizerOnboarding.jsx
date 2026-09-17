@@ -41,8 +41,7 @@ const buildBankDefaults = (bank = null) => ({
   accountNumber: "",
   accountNumberMasked: bank?.accountNumberMasked || "",
   ifscCode: bank?.ifscCode || "",
-  bankName: bank?.bankName || "",
-  branchName: bank?.branchName || "",
+  currentPassword: "",
 });
 
 const OrganizerOnboarding = () => {
@@ -56,6 +55,7 @@ const OrganizerOnboarding = () => {
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingBank, setSavingBank] = useState(false);
   const [requestingVerification, setRequestingVerification] = useState(false);
+  const [isEditingBank, setIsEditingBank] = useState(false);
 
   const [profileForm, setProfileForm] = useState(() => buildProfileDefaults(user));
   const [bankForm, setBankForm] = useState(() => buildBankDefaults());
@@ -133,7 +133,7 @@ const OrganizerOnboarding = () => {
         };
       });
 
-      if (Object.keys(nextBankDetails).length > 0) {
+      if (!isEditingBank && Object.keys(nextBankDetails).length > 0) {
         setBankForm(buildBankDefaults(nextBankDetails));
       }
 
@@ -149,19 +149,21 @@ const OrganizerOnboarding = () => {
         clearOrganizerOnboardingCache();
       }
     },
-    [refreshStatus, status?.bankVerificationStatus]
+    [isEditingBank, refreshStatus, status?.bankVerificationStatus]
   );
 
   useEffect(() => {
-    if (currentStep !== "verify" || !status?.hasBankDetails || status?.isBankVerified) {
+    if (currentStep !== "verify" || status?.bankVerificationStatus !== "VERIFICATION_IN_PROGRESS" || isEditingBank) {
       return undefined;
     }
 
     let cancelled = false;
+    let checks = 0;
 
     const pollVerificationStatus = async () => {
       if (verificationPollRef.current || cancelled) return;
       verificationPollRef.current = true;
+      checks += 1;
       try {
         const response = await apiFetch("organizer/me/bank-details/verification/status", {
           method: "GET",
@@ -175,10 +177,11 @@ const OrganizerOnboarding = () => {
         }
       } finally {
         verificationPollRef.current = false;
+        if (checks >= 8) window.clearInterval(intervalId);
       }
     };
 
-    const intervalId = window.setInterval(pollVerificationStatus, 10000);
+    const intervalId = window.setInterval(pollVerificationStatus, 15000);
     pollVerificationStatus();
 
     return () => {
@@ -188,6 +191,7 @@ const OrganizerOnboarding = () => {
   }, [
     applyVerificationStatus,
     currentStep,
+    isEditingBank,
     status?.bankVerificationStatus,
     status?.hasBankDetails,
     status?.isBankVerified,
@@ -329,32 +333,40 @@ const OrganizerOnboarding = () => {
     event.preventDefault();
     if (savingBank) return;
 
-    if (
-      !bankForm.accountHolder.trim() ||
-      !bankForm.accountNumber.trim() ||
-      !bankForm.ifscCode.trim() ||
-      !bankForm.bankName.trim() ||
-      !bankForm.branchName.trim()
-    ) {
-      toast.error("All bank detail fields are required");
+    const existing = status?.hasBankDetails;
+    const accountHolder = bankForm.accountHolder.trim();
+    const accountNumber = bankForm.accountNumber.trim();
+    const ifscCode = bankForm.ifscCode.trim().toUpperCase();
+    if (!accountHolder || !ifscCode || (!existing && !accountNumber)) {
+      toast.error("Enter the account holder, account number, and IFSC");
       return;
     }
 
-    const payload = {
-      accountHolder: bankForm.accountHolder.trim(),
-      accountNumber: bankForm.accountNumber.trim(),
-      ifscCode: bankForm.ifscCode.trim().toUpperCase(),
-      bankName: bankForm.bankName.trim(),
-      branchName: bankForm.branchName.trim(),
-    };
+    const payload = existing ? {
+      ...(accountHolder !== status.bankDetails.accountHolder ? { accountHolder } : {}),
+      ...(accountNumber ? { accountNumber } : {}),
+      ...(ifscCode !== status.bankDetails.ifscCode ? { ifscCode } : {}),
+    } : { accountHolder, accountNumber, ifscCode };
+    if (existing && !Object.keys(payload).length) {
+      toast.info("No bank details changed");
+      return;
+    }
+    if (existing) {
+      if (!bankForm.currentPassword) {
+        toast.error("Enter your current password to change payout details");
+        return;
+      }
+      payload.currentPassword = bankForm.currentPassword;
+    }
 
     setSavingBank(true);
     try {
       await apiFetch("organizer/me/bank-details", {
-        method: "POST",
+        method: existing ? "PATCH" : "POST",
         body: JSON.stringify(payload),
       });
       toast.success("Bank details saved");
+      setIsEditingBank(false);
       clearOrganizerOnboardingCache();
       await refreshStatus(true);
     } catch (error) {
@@ -381,8 +393,20 @@ const OrganizerOnboarding = () => {
       await applyVerificationStatus(response);
     } catch (error) {
       toast.error(error?.message || "Failed to request bank verification");
+      if (error?.status === 409) {
+        clearOrganizerOnboardingCache();
+        await refreshStatus(true);
+      }
     } finally {
       setRequestingVerification(false);
+    }
+  };
+
+  const handleRefreshBankVerificationStatus = async () => {
+    try {
+      await applyVerificationStatus(await apiFetch("organizer/me/bank-details/verification/status", { method: "GET" }));
+    } catch (error) {
+      toast.error(error?.message || "Failed to refresh bank verification status");
     }
   };
 
@@ -587,10 +611,10 @@ const OrganizerOnboarding = () => {
           </Card>
         )}
 
-        {currentStep === "bank" && (
+        {(currentStep === "bank" || isEditingBank) && (
           <Card className="bg-[#0b101d] border-white/10 text-white">
             <CardHeader>
-              <CardTitle>Add Bank Details</CardTitle>
+              <CardTitle>{status?.hasBankDetails ? "Edit Bank Details" : "Add Bank Details"}</CardTitle>
               <CardDescription className="text-white/60">
                 Add payout details to finish organizer onboarding.
               </CardDescription>
@@ -614,8 +638,10 @@ const OrganizerOnboarding = () => {
                       id="bank-account-number"
                       value={bankForm.accountNumber}
                       onChange={(e) => onBankInputChange("accountNumber", e.target.value)}
+                      placeholder={status?.hasBankDetails ? `Leave blank to keep ${bankForm.accountNumberMasked}` : ""}
+                      autoComplete="off"
                       className="bg-[#070b14] border-white/15 text-white"
-                      required
+                      required={!status?.hasBankDetails}
                     />
                   </div>
                   <div className="space-y-2">
@@ -629,26 +655,15 @@ const OrganizerOnboarding = () => {
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="bank-name">Bank Name</Label>
-                  <Input
-                    id="bank-name"
-                    value={bankForm.bankName}
-                    onChange={(e) => onBankInputChange("bankName", e.target.value)}
-                    className="bg-[#070b14] border-white/15 text-white"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="bank-branch-name">Branch Name</Label>
-                  <Input
-                    id="bank-branch-name"
-                    value={bankForm.branchName}
-                    onChange={(e) => onBankInputChange("branchName", e.target.value)}
-                    className="bg-[#070b14] border-white/15 text-white"
-                    required
-                  />
-                </div>
+                {status?.hasBankDetails && (
+                  <div className="space-y-2">
+                    <Label htmlFor="bank-current-password">Current password</Label>
+                    <Input id="bank-current-password" type="password" autoComplete="current-password"
+                      value={bankForm.currentPassword}
+                      onChange={(e) => onBankInputChange("currentPassword", e.target.value)}
+                      className="bg-[#070b14] border-white/15 text-white" required />
+                  </div>
+                )}
                 <Button type="submit" disabled={savingBank} className="w-full">
                   {savingBank ? (
                     <span className="inline-flex items-center gap-2">
@@ -659,12 +674,15 @@ const OrganizerOnboarding = () => {
                     "Save Bank Details"
                   )}
                 </Button>
+                {status?.hasBankDetails && (
+                  <Button type="button" variant="outline" onClick={() => { setBankForm(buildBankDefaults(status.bankDetails)); setIsEditingBank(false); }} className="w-full border-white/15 bg-transparent text-white">Cancel edit</Button>
+                )}
               </form>
             </CardContent>
           </Card>
         )}
 
-        {currentStep === "verify" && (
+        {currentStep === "verify" && !isEditingBank && (
           <Card className="bg-[#0b101d] border-white/10 text-white animate-in fade-in-0 slide-in-from-bottom-3 duration-500">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -677,6 +695,7 @@ const OrganizerOnboarding = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <p className="text-sm text-white/70">{status?.bankDetails?.accountHolder} · {status?.bankDetails?.accountNumberMasked} · {status?.bankDetails?.ifscCode}</p>
                 <p className="text-xs uppercase tracking-[0.2em] text-white/45">Current status</p>
                 <p className="mt-2 text-lg font-semibold">{status?.bankVerificationStatus || "UNVERIFIED"}</p>
                 {status?.bankDetails?.verificationFailureReason && (
@@ -684,6 +703,7 @@ const OrganizerOnboarding = () => {
                 )}
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
+                <Button type="button" variant="outline" onClick={() => { setBankForm(buildBankDefaults(status.bankDetails)); setIsEditingBank(true); }} className="border-white/15 bg-transparent text-white hover:bg-white/10">Edit details</Button>
                 <Button
                   type="button"
                   onClick={handleRequestBankVerification}
@@ -701,6 +721,7 @@ const OrganizerOnboarding = () => {
                     "Verify Bank Account"
                   )}
                 </Button>
+                <Button type="button" variant="outline" onClick={handleRefreshBankVerificationStatus} className="border-white/15 bg-transparent text-white hover:bg-white/10">Refresh status</Button>
                 <Button
                   type="button"
                   variant="outline"
