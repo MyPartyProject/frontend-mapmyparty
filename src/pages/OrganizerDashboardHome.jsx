@@ -134,7 +134,7 @@ const OrganizerDashboardHome = ({ user, handleLogout, setActiveTab, activeTab })
                   {item.label}
                 </p>
                 <div className="shrink-0 p-2 rounded-lg bg-primary/15 border border-primary/20">
-                  <item.icon className="w-5 h-5 text-accent" />
+                  <item.icon className="w-5 h-5 text-accent-foreground" />
                 </div>
               </div>
 
@@ -203,7 +203,7 @@ const OrganizerDashboardHome = ({ user, handleLogout, setActiveTab, activeTab })
                     <tr key={booking.id} className="hover:bg-background transition">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-xs font-semibold text-accent">
+                          <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center text-xs font-semibold text-accent-foreground">
                             {(booking.user?.name || "U").charAt(0).toUpperCase()}
                           </div>
                           <div>

@@ -156,16 +156,16 @@ const Contact = () => {
 
   const getFieldClassName = (fieldName) =>
     errors[fieldName] && touchedFields[fieldName]
-      ? "border-red-400/80 bg-slate-950/40 text-white focus-visible:ring-red-300"
-      : "border-white/15 bg-slate-950/40 text-white";
+      ? "border-red-400/80 bg-surface text-foreground focus-visible:ring-red-300"
+      : "border-border bg-surface text-foreground";
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50">
+    <div className="min-h-screen bg-surface text-slate-50">
       <Header forceMainHeader />
 
-      <section className="relative overflow-hidden bg-[#140a2b]">
+      <section className="relative overflow-hidden bg-background">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(255,105,180,0.28),transparent_45%),radial-gradient(circle_at_65%_25%,rgba(122,78,255,0.35),transparent_40%),radial-gradient(circle_at_80%_70%,rgba(255,183,104,0.25),transparent_40%)]" />
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0a0619] via-[#1b0c2f] to-[#31154a] opacity-90" />
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-background opacity-90" />
         <div className="absolute inset-0 opacity-70">
           <div className="absolute left-16 top-16 h-3 w-3 rounded-full bg-pink-300/70 blur-sm" />
           <div className="absolute left-40 top-28 h-2 w-2 rounded-full bg-purple-200/70 blur-sm" />
@@ -176,18 +176,18 @@ const Contact = () => {
 
         <div className="relative mx-auto max-w-5xl px-6 pt-16 pb-20 md:pt-20 md:pb-24">
           <div className="max-w-3xl space-y-4">
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-200/70">Contact</p>
+            <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Contact</p>
             <h1 className="text-4xl font-bold leading-tight md:text-5xl">
               Talk to a real human. We're here to help your event shine.
             </h1>
-            <p className="max-w-2xl text-lg text-slate-200/80">
+            <p className="max-w-2xl text-lg text-muted-foreground">
               Whether you're hosting, attending, or partnering, our concierge support team responds fast and with care.
             </p>
             <div className="flex flex-wrap gap-3">
               <Button>
                 Chat with us
               </Button>
-              <Button variant="outline" className="border-white/30 text-white hover:bg-white hover:text-slate-900">
+              <Button variant="outline" className="border-border text-foreground hover:bg-white hover:text-slate-900">
                 Book a call
               </Button>
             </div>
@@ -195,24 +195,24 @@ const Contact = () => {
         </div>
       </section>
 
-      <section className="bg-slate-950 py-16">
+      <section className="bg-surface py-16">
         <div className="mx-auto grid max-w-5xl gap-6 px-6 md:grid-cols-3">
           {contactChannels.map(({ title, value, icon: Icon, desc }) => (
             <Card
               key={title}
-              className="h-full min-h-[196px] border-white/10 bg-white/5 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_24px_70px_-28px_rgba(0,0,0,0.65)]"
+              className="h-full min-h-[196px] border-border bg-muted backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-border hover:shadow-[0_24px_70px_-28px_rgba(0,0,0,0.65)]"
             >
               <CardContent className="flex h-full flex-col items-start justify-between p-6">
                 <div className="space-y-4">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/15 text-pink-200 ring-1 ring-white/10">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-muted text-pink-200 ring-1 ring-border">
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="space-y-2">
-                    <h2 className="text-lg font-semibold leading-tight text-white">{title}</h2>
-                    <p className="text-sm leading-6 text-slate-300/75">{desc}</p>
+                    <h2 className="text-lg font-semibold leading-tight text-foreground">{title}</h2>
+                    <p className="text-sm leading-6 text-muted-foreground">{desc}</p>
                   </div>
                 </div>
-                <p className="pt-5 text-base font-semibold leading-6 text-white md:text-[17px]">{value}</p>
+                <p className="pt-5 text-base font-semibold leading-6 text-foreground md:text-[17px]">{value}</p>
               </CardContent>
             </Card>
           ))}
@@ -221,27 +221,27 @@ const Contact = () => {
 
       <section className="bg-gradient-to-br from-amber-400/10 via-rose-400/10 to-blue-400/10 py-16">
         <div className="mx-auto max-w-5xl px-6">
-          <div className="grid gap-8 rounded-3xl border border-white/15 bg-white/10 p-6 backdrop-blur-xl md:grid-cols-5 md:p-10">
+          <div className="grid gap-8 rounded-3xl border border-border bg-muted p-6 backdrop-blur-xl md:grid-cols-5 md:p-10">
             <div className="space-y-4 md:col-span-2">
-              <div className="flex items-center gap-2 text-sm text-slate-200/75">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4" />
                 <span>Avg. response time: under 2 hours</span>
               </div>
-              <h2 className="text-3xl font-bold text-white">Send us a note</h2>
-              <p className="text-slate-200/80">
+              <h2 className="text-3xl font-bold text-foreground">Send us a note</h2>
+              <p className="text-muted-foreground">
                 Share a few details and we'll follow up with exactly what you need - no bots, no fluff.
               </p>
-              <ul className="space-y-2 text-sm text-slate-200/75">
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-amber-200" />
+                  <MessageSquare className="h-4 w-4 text-warning" />
                   Event setup & onboarding
                 </li>
                 <li className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-amber-200" />
+                  <MessageSquare className="h-4 w-4 text-warning" />
                   Ticketing, payouts, and refunds
                 </li>
                 <li className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-amber-200" />
+                  <MessageSquare className="h-4 w-4 text-warning" />
                   Partnerships & media
                 </li>
               </ul>
@@ -251,7 +251,7 @@ const Contact = () => {
               <form className="space-y-4" noValidate onSubmit={handleSubmit}>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <label htmlFor="contact-full-name" className="text-sm text-slate-200/75">Full Name</label>
+                    <label htmlFor="contact-full-name" className="text-sm text-muted-foreground">Full Name</label>
                     <Input
                       id="contact-full-name"
                       name="fullName"
@@ -269,13 +269,13 @@ const Contact = () => {
                       className={getFieldClassName("fullName")}
                     />
                     {errors.fullName && touchedFields.fullName ? (
-                      <p id="contact-full-name-error" className="mt-2 text-xs text-red-200">
+                      <p id="contact-full-name-error" className="mt-2 text-xs text-destructive">
                         {errors.fullName}
                       </p>
                     ) : null}
                   </div>
                   <div>
-                    <label htmlFor="contact-email" className="text-sm text-slate-200/75">Email</label>
+                    <label htmlFor="contact-email" className="text-sm text-muted-foreground">Email</label>
                     <Input
                       id="contact-email"
                       name="email"
@@ -293,7 +293,7 @@ const Contact = () => {
                       className={getFieldClassName("email")}
                     />
                     {errors.email && touchedFields.email ? (
-                      <p id="contact-email-error" className="mt-2 text-xs text-red-200">
+                      <p id="contact-email-error" className="mt-2 text-xs text-destructive">
                         {errors.email}
                       </p>
                     ) : null}
@@ -301,7 +301,7 @@ const Contact = () => {
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <label htmlFor="contact-phone" className="text-sm text-slate-200/75">Phone</label>
+                    <label htmlFor="contact-phone" className="text-sm text-muted-foreground">Phone</label>
                     <Input
                       id="contact-phone"
                       name="phone"
@@ -321,13 +321,13 @@ const Contact = () => {
                       className={getFieldClassName("phone")}
                     />
                     {errors.phone && touchedFields.phone ? (
-                      <p id="contact-phone-error" className="mt-2 text-xs text-red-200">
+                      <p id="contact-phone-error" className="mt-2 text-xs text-destructive">
                         {errors.phone}
                       </p>
                     ) : null}
                   </div>
                   <div>
-                    <label htmlFor="contact-topic" className="text-sm text-slate-200/75">Topic</label>
+                    <label htmlFor="contact-topic" className="text-sm text-muted-foreground">Topic</label>
                     <Input
                       id="contact-topic"
                       name="topic"
@@ -342,14 +342,14 @@ const Contact = () => {
                       className={getFieldClassName("topic")}
                     />
                     {errors.topic && touchedFields.topic ? (
-                      <p id="contact-topic-error" className="mt-2 text-xs text-red-200">
+                      <p id="contact-topic-error" className="mt-2 text-xs text-destructive">
                         {errors.topic}
                       </p>
                     ) : null}
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="contact-message" className="text-sm text-slate-200/75">Message</label>
+                  <label htmlFor="contact-message" className="text-sm text-muted-foreground">Message</label>
                   <Textarea
                     id="contact-message"
                     name="message"
@@ -366,7 +366,7 @@ const Contact = () => {
                     className={getFieldClassName("message")}
                   />
                   {errors.message && touchedFields.message ? (
-                    <p id="contact-message-error" className="mt-2 text-xs text-red-200">
+                    <p id="contact-message-error" className="mt-2 text-xs text-destructive">
                       {errors.message}
                     </p>
                   ) : null}
@@ -375,7 +375,7 @@ const Contact = () => {
                   <Send className="h-4 w-4" />
                   {isSubmitting ? "Sending..." : "Send Message"}
                 </Button>
-                <p className="text-xs text-slate-200/70">By submitting, you agree to our Terms and Privacy Policy.</p>
+                <p className="text-xs text-muted-foreground">By submitting, you agree to our Terms and Privacy Policy.</p>
               </form>
             </div>
           </div>

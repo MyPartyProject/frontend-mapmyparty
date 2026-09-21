@@ -74,15 +74,15 @@ const socialIcons = {
 };
 
 const eventStatusColors = {
-  UPCOMING: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  ONGOING: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  UPCOMING: "bg-blue-500/15 text-info border-blue-500/30",
+  ONGOING: "bg-emerald-500/15 text-success border-emerald-500/30",
   COMPLETED: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
-  CANCELLED: "bg-red-500/15 text-red-400 border-red-500/30",
+  CANCELLED: "bg-red-500/15 text-destructive border-red-500/30",
 };
 
 const publishStatusColors = {
-  PUBLISHED: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-  DRAFT: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+  PUBLISHED: "bg-emerald-500/15 text-success border-emerald-500/30",
+  DRAFT: "bg-amber-500/15 text-warning border-amber-500/30",
   UNPUBLISHED: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
 };
 
@@ -148,7 +148,7 @@ const ProfileHeader = ({
             <div className="flex items-center gap-2.5 flex-wrap">
               <h2 className="text-2xl font-bold">{profile.name}</h2>
               {profile.isVerified && (
-                <Badge className="bg-accent/15 text-accent border-accent/30 gap-1">
+                <Badge className="bg-accent/15 text-accent-foreground border-accent/30 gap-1">
                   <ShieldCheck className="w-3 h-3" /> Verified
                 </Badge>
               )}
@@ -255,7 +255,7 @@ const ProfileHeader = ({
                       target="_blank"
                       rel="noopener noreferrer"
                       title={platform.charAt(0).toUpperCase() + platform.slice(1)}
-                      className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 hover:bg-accent/15 px-3 py-2 text-sm text-muted-foreground hover:text-accent transition-colors"
+                      className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 hover:bg-accent/15 px-3 py-2 text-sm text-muted-foreground hover:text-accent-foreground transition-colors"
                     >
                       <Icon className="w-3.5 h-3.5" />
                       <span className="capitalize">{platform}</span>
@@ -440,21 +440,21 @@ const StatsOverview = ({ stats }) => {
       value: stats.events.total,
       sub: `${stats.events.published} published`,
       icon: CalendarClock,
-      color: "text-blue-400",
+      color: "text-info",
     },
     {
       label: "Total Bookings",
       value: stats.bookings.total,
       sub: `${stats.bookings.confirmed} confirmed`,
       icon: Ticket,
-      color: "text-purple-400",
+      color: "text-accent-foreground",
     },
     {
       label: "Revenue",
       value: formatCurrency(stats.revenue.total),
       sub: `${stats.ticketsSold} tickets sold`,
       icon: Wallet2,
-      color: "text-accent",
+      color: "text-accent-foreground",
     },
     {
       label: "Reviews",
@@ -463,7 +463,7 @@ const StatsOverview = ({ stats }) => {
         ? `${stats.reviews.averageRating} avg rating`
         : "No ratings yet",
       icon: Star,
-      color: "text-amber-400",
+      color: "text-warning",
     },
   ];
 
@@ -616,7 +616,7 @@ const ReviewsList = ({ reviewsData }) => {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <Star className="w-4 h-4 text-amber-400" /> Reviews
+              <Star className="w-4 h-4 text-warning" /> Reviews
             </CardTitle>
             <CardDescription className="text-muted-foreground">
               What attendees are saying.
@@ -657,7 +657,7 @@ const ReviewsList = ({ reviewsData }) => {
                     <Star
                       key={i}
                       className={`w-3.5 h-3.5 ${
-                        i < review.rating ? "text-amber-400 fill-amber-400" : "text-muted-foreground/30"
+                        i < review.rating ? "text-warning fill-amber-400" : "text-muted-foreground/30"
                       }`}
                     />
                   ))}
@@ -785,7 +785,7 @@ const PromoterOrganizerDetail = () => {
       {/* Back link */}
       <Link
         to="/promoter/organizers"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-accent transition"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-accent-foreground transition"
       >
         <ArrowLeft className="w-4 h-4" /> Back to organizers
       </Link>

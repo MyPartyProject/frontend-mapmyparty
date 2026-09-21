@@ -3,9 +3,9 @@ import logo from "../assets/MMP logo.svg";
 
 const PrivacyPolicy = () => {
   return (
-    <div className="min-h-screen bg-[#090d1a] text-white">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#090d1a]/95 backdrop-blur-sm border-b border-white/10">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background backdrop-blur-sm border-b border-border">
         <div className="max-w-5xl mx-auto px-8 py-4">
           <Link to="/" className="flex items-center gap-3">
             <img src={logo} alt="MapMyParty" className="h-10 w-auto" />
@@ -24,7 +24,7 @@ const PrivacyPolicy = () => {
         </div>
 
         {/* Content */}
-        <div className="space-y-8 text-white/80 leading-relaxed text-sm">
+        <div className="space-y-8 text-muted-foreground leading-relaxed text-sm">
           <p>
             MapMyParty ("MapMyParty", "we", "our") respect your privacy and are committed to protecting your Personal Data. This policy describes:
           </p>
@@ -47,38 +47,38 @@ const PrivacyPolicy = () => {
           </p>
 
           {/* Definitions */}
-          <div className="pt-6 border-t border-white/10">
-            <h2 className="text-lg font-semibold text-white mb-4">Definitions</h2>
+          <div className="pt-6 border-t border-border">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Definitions</h2>
             <ul className="list-disc list-inside space-y-2 ml-2">
-              <li><strong className="text-white">"Curator":</strong> Event organisers or creators using MapMyParty's SaaS platform.</li>
-              <li><strong className="text-white">"Customer":</strong> Individuals attending events or interacting with event-related content.</li>
-              <li><strong className="text-white">"User / You":</strong> Curators, Customers, and any individual using our services.</li>
-              <li><strong className="text-white">"Personal Data":</strong> Any data that identifies or relates to an identifiable individual, as defined under the DPDP Act and GDPR.</li>
+              <li><strong className="text-foreground">"Curator":</strong> Event organisers or creators using MapMyParty's SaaS platform.</li>
+              <li><strong className="text-foreground">"Customer":</strong> Individuals attending events or interacting with event-related content.</li>
+              <li><strong className="text-foreground">"User / You":</strong> Curators, Customers, and any individual using our services.</li>
+              <li><strong className="text-foreground">"Personal Data":</strong> Any data that identifies or relates to an identifiable individual, as defined under the DPDP Act and GDPR.</li>
             </ul>
           </div>
 
           {/* Our Role */}
-          <div className="pt-6 border-t border-white/10">
-            <h2 className="text-lg font-semibold text-white mb-4">Our Role: Data Controller & Data Processor</h2>
+          <div className="pt-6 border-t border-border">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Our Role: Data Controller & Data Processor</h2>
             <p className="mb-4">Depending on how you use our services, MapMyParty may act as:</p>
             
-            <p className="mb-2"><strong className="text-white">1. Data Controller</strong></p>
+            <p className="mb-2"><strong className="text-foreground">1. Data Controller</strong></p>
             <p className="mb-4 ml-4">
               MapMyParty acts as a Data Controller when you create an account with us, you explore or interact with our platform, or we analyse platform usage, security, or performance data. In these cases, we determine the purpose and means of processing your Personal Data.
             </p>
             
-            <p className="mb-2"><strong className="text-white">2. Data Processor</strong></p>
+            <p className="mb-2"><strong className="text-foreground">2. Data Processor</strong></p>
             <p className="ml-4">
               MapMyParty acts as a Data Processor when you register for an event organised by a Curator, or a Curator uploads or imports your data to manage invitations or communications. In such cases, the Curator is the Data Controller, and MapMyParty processes data strictly on their instructions.
             </p>
           </div>
 
           {/* Information We Collect */}
-          <div className="pt-6 border-t border-white/10">
-            <h2 className="text-lg font-semibold text-white mb-4">1. Information We Collect</h2>
+          <div className="pt-6 border-t border-border">
+            <h2 className="text-lg font-semibold text-foreground mb-4">1. Information We Collect</h2>
             <p className="mb-4">We collect Personal Data only when it is necessary, lawful, and proportionate.</p>
             
-            <p className="mb-2 font-semibold text-white">Personal Data You Provide</p>
+            <p className="mb-2 font-semibold text-foreground">Personal Data You Provide</p>
             <ul className="list-disc list-inside space-y-1 ml-4 mb-4">
               <li>Name, age, date of birth, gender</li>
               <li>Email address, phone number, postal address</li>
@@ -86,13 +86,13 @@ const PrivacyPolicy = () => {
               <li>Preferences, feedback, survey responses</li>
             </ul>
             
-            <p className="mb-2 font-semibold text-white">Financial Information</p>
+            <p className="mb-2 font-semibold text-foreground">Financial Information</p>
             <ul className="list-disc list-inside space-y-1 ml-4 mb-4">
               <li>Payment details are processed via secure third-party payment gateways</li>
               <li>MapMyParty does not store card or banking details beyond transaction completion</li>
             </ul>
             
-            <p className="mb-2 font-semibold text-white">Automatically Collected Data</p>
+            <p className="mb-2 font-semibold text-foreground">Automatically Collected Data</p>
             <ul className="list-disc list-inside space-y-1 ml-4">
               <li>IP address, device type, browser details</li>
               <li>Log data, cookies, usage analytics</li>
@@ -100,8 +100,8 @@ const PrivacyPolicy = () => {
           </div>
 
           {/* Lawful Basis */}
-          <div className="pt-6 border-t border-white/10">
-            <h2 className="text-lg font-semibold text-white mb-4">2. Lawful Basis for Processing</h2>
+          <div className="pt-6 border-t border-border">
+            <h2 className="text-lg font-semibold text-foreground mb-4">2. Lawful Basis for Processing</h2>
             <p className="mb-4">We process Personal Data only on lawful grounds permitted under the DPDP Act and GDPR, including:</p>
             <ul className="list-disc list-inside space-y-1 ml-4">
               <li>Consent (explicit, informed, and revocable)</li>
@@ -113,8 +113,8 @@ const PrivacyPolicy = () => {
           </div>
 
           {/* How We Use */}
-          <div className="pt-6 border-t border-white/10">
-            <h2 className="text-lg font-semibold text-white mb-4">3. How We Use Your Personal Data</h2>
+          <div className="pt-6 border-t border-border">
+            <h2 className="text-lg font-semibold text-foreground mb-4">3. How We Use Your Personal Data</h2>
             <p className="mb-4">Your data is used strictly for legitimate purposes, including:</p>
             <ul className="list-disc list-inside space-y-1 ml-4 mb-4">
               <li>Account creation and authentication (OTP-based login)</li>
@@ -124,38 +124,38 @@ const PrivacyPolicy = () => {
               <li>Legal, tax, and regulatory compliance</li>
               <li>Improving platform functionality and user experience</li>
             </ul>
-            <p className="text-sm text-white/60 italic">
+            <p className="text-sm text-muted-foreground italic">
               We do not sell or trade Personal Data. We do not broadcast unsolicited promotional messages. Any suspicious message claiming to be from MapMyParty should be reported to support@mapmyparty.com.
             </p>
           </div>
 
           {/* Sharing */}
-          <div className="pt-6 border-t border-white/10">
-            <h2 className="text-lg font-semibold text-white mb-4">4. Sharing of Personal Data</h2>
+          <div className="pt-6 border-t border-border">
+            <h2 className="text-lg font-semibold text-foreground mb-4">4. Sharing of Personal Data</h2>
             <p className="mb-4">We may share Personal Data only with:</p>
             
-            <p className="mb-2 font-semibold text-white">Curators</p>
+            <p className="mb-2 font-semibold text-foreground">Curators</p>
             <ul className="list-disc list-inside space-y-1 ml-4 mb-4">
               <li>Event-related communications</li>
               <li>Attendance and registration details</li>
             </ul>
-            <p className="text-sm text-white/60 ml-4 mb-4">Customers may opt out of Curator communications at any time.</p>
+            <p className="text-sm text-muted-foreground ml-4 mb-4">Customers may opt out of Curator communications at any time.</p>
             
-            <p className="mb-2 font-semibold text-white">Trusted Service Providers</p>
+            <p className="mb-2 font-semibold text-foreground">Trusted Service Providers</p>
             <ul className="list-disc list-inside space-y-1 ml-4 mb-4">
               <li>Payment processors</li>
               <li>Hosting and cloud infrastructure providers</li>
               <li>Analytics and security vendors</li>
             </ul>
-            <p className="text-sm text-white/60 ml-4 mb-4">All third parties are bound by strict confidentiality and data-protection obligations.</p>
+            <p className="text-sm text-muted-foreground ml-4 mb-4">All third parties are bound by strict confidentiality and data-protection obligations.</p>
             
-            <p className="mb-2 font-semibold text-white">Legal Authorities</p>
+            <p className="mb-2 font-semibold text-foreground">Legal Authorities</p>
             <p className="ml-4">Where required to comply with law, court orders, or regulatory requirements.</p>
           </div>
 
           {/* Cross-Border */}
-          <div className="pt-6 border-t border-white/10">
-            <h2 className="text-lg font-semibold text-white mb-4">5. Cross-Border Data Transfers</h2>
+          <div className="pt-6 border-t border-border">
+            <h2 className="text-lg font-semibold text-foreground mb-4">5. Cross-Border Data Transfers</h2>
             <p className="mb-4">Your Personal Data may be stored or processed outside India or the European Economic Area (EEA). MapMyParty ensures:</p>
             <ul className="list-disc list-inside space-y-1 ml-4">
               <li>Adequate technical and organisational safeguards</li>
@@ -165,32 +165,32 @@ const PrivacyPolicy = () => {
           </div>
 
           {/* Security */}
-          <div className="pt-6 border-t border-white/10">
-            <h2 className="text-lg font-semibold text-white mb-4">6. Data Security</h2>
+          <div className="pt-6 border-t border-border">
+            <h2 className="text-lg font-semibold text-foreground mb-4">6. Data Security</h2>
             <p className="mb-4">We implement reasonable security safeguards as required under the DPDP Act and GDPR, including:</p>
             <ul className="list-disc list-inside space-y-1 ml-4 mb-4">
               <li>SSL encryption</li>
               <li>Secure servers and restricted access</li>
               <li>Regular monitoring and security reviews</li>
             </ul>
-            <p className="text-sm text-white/60 italic">While no system is completely secure, we take all reasonable steps to protect your data.</p>
+            <p className="text-sm text-muted-foreground italic">While no system is completely secure, we take all reasonable steps to protect your data.</p>
           </div>
 
           {/* Retention */}
-          <div className="pt-6 border-t border-white/10">
-            <h2 className="text-lg font-semibold text-white mb-4">7. Data Retention</h2>
+          <div className="pt-6 border-t border-border">
+            <h2 className="text-lg font-semibold text-foreground mb-4">7. Data Retention</h2>
             <p className="mb-4">We retain Personal Data only for as long as necessary to:</p>
             <ul className="list-disc list-inside space-y-1 ml-4 mb-4">
               <li>Fulfil the purpose for which it was collected</li>
               <li>Comply with legal obligations</li>
               <li>Resolve disputes or enforce agreements</li>
             </ul>
-            <p className="text-sm text-white/60">Thereafter, data is securely deleted or anonymised.</p>
+            <p className="text-sm text-muted-foreground">Thereafter, data is securely deleted or anonymised.</p>
           </div>
 
           {/* Rights */}
-          <div className="pt-6 border-t border-white/10">
-            <h2 className="text-lg font-semibold text-white mb-4">8. Your Rights Under DPDP Act & GDPR</h2>
+          <div className="pt-6 border-t border-border">
+            <h2 className="text-lg font-semibold text-foreground mb-4">8. Your Rights Under DPDP Act & GDPR</h2>
             <p className="mb-4">You have the right to:</p>
             <ul className="list-disc list-inside space-y-1 ml-4 mb-4">
               <li>Access your Personal Data</li>
@@ -201,30 +201,30 @@ const PrivacyPolicy = () => {
               <li>Data portability (where applicable)</li>
               <li>Grievance redressal</li>
             </ul>
-            <p>Requests can be made by contacting: <a href="mailto:support@mapmyparty.com" className="text-[#D60024] hover:underline">support@mapmyparty.com</a>. We will respond within statutory timelines.</p>
+            <p>Requests can be made by contacting: <a href="mailto:support@mapmyparty.com" className="text-accent-foreground hover:underline">support@mapmyparty.com</a>. We will respond within statutory timelines.</p>
           </div>
 
           {/* Grievance */}
-          <div className="pt-6 border-t border-white/10">
-            <h2 className="text-lg font-semibold text-white mb-4">9. Grievance Redressal & Complaints</h2>
+          <div className="pt-6 border-t border-border">
+            <h2 className="text-lg font-semibold text-foreground mb-4">9. Grievance Redressal & Complaints</h2>
             <p className="mb-4">If you believe your data is being misused or your rights are violated:</p>
             <ol className="list-decimal list-inside space-y-2 ml-4">
-              <li>Contact us at <a href="mailto:support@mapmyparty.com" className="text-[#D60024] hover:underline">support@mapmyparty.com</a></li>
+              <li>Contact us at <a href="mailto:support@mapmyparty.com" className="text-accent-foreground hover:underline">support@mapmyparty.com</a></li>
               <li>If unresolved, you may approach the appropriate Data Protection Authority under the DPDP Act or GDPR.</li>
             </ol>
           </div>
 
           {/* Changes */}
-          <div className="pt-6 border-t border-white/10">
-            <h2 className="text-lg font-semibold text-white mb-4">10. Changes to This Privacy Policy</h2>
+          <div className="pt-6 border-t border-border">
+            <h2 className="text-lg font-semibold text-foreground mb-4">10. Changes to This Privacy Policy</h2>
             <p>We may update this Privacy Policy to reflect changes in law or our services. Updates will be published on this page and, where required, notified to Users. Continued use of MapMyParty signifies acceptance of the updated policy.</p>
           </div>
 
           {/* Contact */}
-          <div className="pt-6 border-t border-white/10">
-            <h2 className="text-lg font-semibold text-white mb-4">11. Contact Information</h2>
+          <div className="pt-6 border-t border-border">
+            <h2 className="text-lg font-semibold text-foreground mb-4">11. Contact Information</h2>
             <p className="mb-2">For privacy-related queries, requests, or complaints:</p>
-            <a href="mailto:support@mapmyparty.com" className="text-[#D60024] hover:underline">support@mapmyparty.com</a>
+            <a href="mailto:support@mapmyparty.com" className="text-accent-foreground hover:underline">support@mapmyparty.com</a>
           </div>
         </div>
 

@@ -457,26 +457,26 @@ const PaymentCheckout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0b1220] via-[#0c1120] to-[#05070f] text-white">
+    <div className="min-h-screen bg-gradient-to-br from-background via-surface to-surface text-foreground">
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" className="text-white/80" onClick={() => navigate(-1)}>
+          <Button variant="ghost" className="text-muted-foreground" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5 mr-1" /> Back
           </Button>
-          <Badge className="bg-white/10 border-white/20 text-xs">Secure Checkout</Badge>
+          <Badge className="bg-muted border-border text-xs">Secure Checkout</Badge>
         </div>
 
         {summary && (
-          <Card className="bg-white/5 border-white/10 shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
+          <Card className="bg-muted border-border shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
             <CardContent className="p-5 grid md:grid-cols-[1.5fr,1fr] gap-4">
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="h-14 w-20 rounded-xl overflow-hidden border border-white/10 bg-black/30">
+                  <div className="h-14 w-20 rounded-xl overflow-hidden border border-border bg-surface">
                     <img src={summary.banner} alt={summary.title} className="w-full h-full object-cover" />
                   </div>
                   <div className="space-y-1">
                     <h2 className="text-xl font-bold leading-snug">{summary.title}</h2>
-                    <div className="flex flex-wrap gap-3 text-xs text-white/70">
+                    <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1">
                         <Calendar className="h-4 w-4" /> {summary.date || "Date TBA"}
                       </span>
@@ -487,19 +487,19 @@ const PaymentCheckout = () => {
                         <MapPin className="h-4 w-4" /> {summary.venue || "Venue TBA"}
                       </span>
                     </div>
-                    <p className="text-xs text-white/60">{summary.address}</p>
+                    <p className="text-xs text-muted-foreground">{summary.address}</p>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-end gap-2 text-sm text-white/80">
-                <ShieldCheck className="h-5 w-5 text-emerald-300" /> Payments are encrypted & secure
+              <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
+                <ShieldCheck className="h-5 w-5 text-success" /> Payments are encrypted & secure
               </div>
             </CardContent>
           </Card>
         )}
 
         <div className="grid lg:grid-cols-[1.4fr,1fr] gap-6">
-          <Card className="bg-white/[0.04] border-white/10">
+          <Card className="bg-muted border-border">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">Accepted payment options</CardTitle>
             </CardHeader>
@@ -507,65 +507,65 @@ const PaymentCheckout = () => {
               {paymentMethods.map(({ label, icon: Icon, accent }) => (
                 <div
                   key={label}
-                  className="flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5"
+                  className="flex items-center gap-3 p-4 rounded-xl border border-border bg-muted"
                 >
-                  <div className={`h-11 w-11 rounded-xl bg-gradient-to-br ${accent} flex items-center justify-center text-white`}>
+                  <div className={`h-11 w-11 rounded-xl bg-gradient-to-br ${accent} flex items-center justify-center text-foreground`}>
                     <Icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white">{label}</p>
-                    <p className="text-xs text-white/60">Available inside Cashfree Checkout</p>
+                    <p className="font-semibold text-foreground">{label}</p>
+                    <p className="text-xs text-muted-foreground">Available inside Cashfree Checkout</p>
                   </div>
                 </div>
               ))}
             </CardContent>
           </Card>
 
-          <Card className="bg-white/5 border-white/10 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+          <Card className="bg-muted border-border shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
             <CardHeader>
               <CardTitle className="text-lg">Order summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-white/70">Tickets</span>
-                <span className="font-semibold text-white">{totalQty}</span>
+                <span className="text-muted-foreground">Tickets</span>
+                <span className="font-semibold text-foreground">{totalQty}</span>
               </div>
-              <Separator className="bg-white/10" />
+              <Separator className="bg-muted" />
 
               <div className="space-y-2 text-sm">
                 {itemsForDisplay.map((item) => (
                   <div key={item.ticketId || item.id} className="flex justify-between items-start gap-3">
-                    <div className="text-white/80">
-                      <div className="font-semibold text-white">{item.displayName}</div>
-                      <div className="text-xs text-white/60">
+                    <div className="text-muted-foreground">
+                      <div className="font-semibold text-foreground">{item.displayName}</div>
+                      <div className="text-xs text-muted-foreground">
                         Qty: {item.quantity} x {formatCurrency(item.ticketPrice || 0)}
                       </div>
                     </div>
-                    <div className="text-white font-semibold">{formatCurrency(item.subtotal || 0)}</div>
+                    <div className="text-foreground font-semibold">{formatCurrency(item.subtotal || 0)}</div>
                   </div>
                 ))}
               </div>
 
-              <Separator className="bg-white/10" />
+              <Separator className="bg-muted" />
 
-              <div className="space-y-2 text-sm text-white/80">
+              <div className="space-y-2 text-sm text-muted-foreground">
                 <div className="flex justify-between">
                   <span>Ticket subtotal</span>
-                  <span className="text-white">{formatCurrency(totalsSafe.subtotal || 0)}</span>
+                  <span className="text-foreground">{formatCurrency(totalsSafe.subtotal || 0)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>
                     Platform charges
                   </span>
-                  <span className="text-white">{formatCurrency(totalsSafe.platformFee || 0)}</span>
+                  <span className="text-foreground">{formatCurrency(totalsSafe.platformFee || 0)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>{taxSummary.label}</span>
-                  <span className="text-white">{formatCurrency(taxSummary.amount)}</span>
+                  <span className="text-foreground">{formatCurrency(taxSummary.amount)}</span>
                 </div>
               </div>
 
-              <Separator className="bg-white/10" />
+              <Separator className="bg-muted" />
 
               <div className="flex justify-between items-center text-base font-semibold">
                 <span>Total Amount</span>
@@ -591,7 +591,7 @@ const PaymentCheckout = () => {
               {pendingCheckoutAttempt && (
                 <div className="rounded-xl border border-amber-400/30 bg-amber-400/10 p-4 space-y-3">
                   <div className="flex items-start gap-3">
-                    <Loader2 className="h-5 w-5 text-amber-200 animate-spin mt-0.5" />
+                    <Loader2 className="h-5 w-5 text-warning animate-spin mt-0.5" />
                     <div className="space-y-1">
                       <p className="text-sm font-semibold text-amber-100">Payment confirmation pending</p>
                       <p className="text-xs text-amber-100/80">
@@ -605,7 +605,7 @@ const PaymentCheckout = () => {
                       variant="secondary"
                       onClick={retryPendingVerification}
                       disabled={isRetryingVerification}
-                      className="bg-white/90 text-slate-950 hover:bg-white"
+                      className="bg-muted text-slate-950 hover:bg-white"
                     >
                       {isRetryingVerification ? (
                         <>
@@ -618,14 +618,14 @@ const PaymentCheckout = () => {
                       type="button"
                       variant="ghost"
                       onClick={() => navigate(`/events/${organizerSlug}/${eventSlug}`)}
-                      className="text-white/80 hover:text-white hover:bg-white/10"
+                      className="text-muted-foreground hover:text-foreground hover:bg-muted"
                     >
                       Back to event
                     </Button>
                   </div>
                 </div>
               )}
-              <p className="text-xs text-center text-white/60">
+              <p className="text-xs text-center text-muted-foreground">
                 {isProcessing
                   ? isFreeCheckout
                     ? "Please wait while your booking is confirmed..."
@@ -635,7 +635,7 @@ const PaymentCheckout = () => {
                     : "Your booking is confirmed only after secure server-side payment verification."}
               </p>
               {!isFreeCheckout && pendingCheckoutAttempt && getCashfreeMode(pendingCheckoutAttempt) === "sandbox" && (
-                <p className="text-xs text-center text-amber-300/80 bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 mt-2">
+                <p className="text-xs text-center text-warning bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 mt-2">
                   Cashfree sandbox mode is active. Use test payment methods only.
                 </p>
               )}

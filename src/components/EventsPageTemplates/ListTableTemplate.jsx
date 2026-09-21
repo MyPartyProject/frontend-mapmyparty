@@ -133,7 +133,7 @@ const ListTableTemplate = ({
               <div className="flex-1">
                 {loading ? (
                   <div className="flex flex-col items-center justify-center py-20">
-                    <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+                    <Loader2 className="w-12 h-12 animate-spin text-accent-foreground mb-4" />
                     <p className="text-muted-foreground">Loading events...</p>
                   </div>
                 ) : (
@@ -184,7 +184,7 @@ const ListTableTemplate = ({
                                   {/* Content */}
                                   <CardContent className="flex-1 p-6 flex flex-col justify-between">
                                     <div>
-                                      <h3 className="font-bold text-xl mb-3 group-hover:text-primary transition-colors line-clamp-2">
+                                      <h3 className="font-bold text-xl mb-3 group-hover:text-accent-foreground transition-colors line-clamp-2">
                                         {getEventTitle(event)}
                                       </h3>
 
@@ -209,7 +209,7 @@ const ListTableTemplate = ({
                                     <div className="flex items-center justify-between pt-4 border-t border-border">
                                       <div>
                                         {getEventPriceDisplay(event) && (
-                                          <span className="text-2xl font-bold text-primary">
+                                          <span className="text-2xl font-bold text-accent-foreground">
                                             {getEventPriceDisplay(event)}
                                           </span>
                                         )}

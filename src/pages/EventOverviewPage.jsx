@@ -138,22 +138,22 @@ const EventOverviewPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0b1426] text-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#ff6a63]" />
+      <div className="min-h-screen flex items-center justify-center bg-card text-foreground">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" />
       </div>
     );
   }
 
   if (error || !event) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0b1426] px-4 text-white">
-        <div className="max-w-md rounded-2xl border border-white/10 bg-white/8 p-6 text-center">
+      <div className="min-h-screen flex items-center justify-center bg-card px-4 text-foreground">
+        <div className="max-w-md rounded-2xl border border-border bg-muted p-6 text-center">
           <p className="text-lg font-semibold">Event overview unavailable</p>
-          <p className="mt-2 text-sm text-white/70">
+          <p className="mt-2 text-sm text-muted-foreground">
             {error || "This event could not be found."}
           </p>
           <Button
-            className="mt-5 rounded-full bg-transparent px-5 font-semibold text-[#ff6a63] ring-1 ring-[#ff6a63] hover:bg-[#ff6a63] hover:text-white"
+            className="mt-5 rounded-full bg-transparent px-5 font-semibold text-accent-foreground ring-1 ring-primary hover:bg-primaryCTA hover:text-inverse"
             onClick={() => navigate("/browse-events")}
           >
             Browse Events
@@ -164,10 +164,10 @@ const EventOverviewPage = () => {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0b1426] text-white">
+    <div className="relative min-h-screen overflow-hidden bg-card text-foreground">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-32 -top-24 h-96 w-96 rounded-full bg-[#ff4f5c] blur-3xl opacity-40" />
-        <div className="absolute left-12 top-40 h-64 w-64 rounded-full bg-[#f38b5d] blur-3xl opacity-30" />
+        <div className="absolute -left-32 -top-24 h-96 w-96 rounded-full bg-primaryCTA blur-3xl opacity-40" />
+        <div className="absolute left-12 top-40 h-64 w-64 rounded-full bg-primaryCTA blur-3xl opacity-30" />
       </div>
 
       <header className="relative z-10">
@@ -176,30 +176,30 @@ const EventOverviewPage = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="text-white/80 hover:bg-white/10"
+              className="text-muted-foreground hover:bg-muted"
               onClick={() => navigate(-1)}
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-2">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#ff5d6c] via-[#ff7c55] to-[#ff4f5c] shadow-lg shadow-[#ff5d6c]/30" />
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary via-primary to-primary shadow-lg shadow-primary/30" />
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-[#ff6a63]">{organizerName}</p>
-                <p className="text-sm text-white/80">Event Overview</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-accent-foreground">{organizerName}</p>
+                <p className="text-sm text-muted-foreground">Event Overview</p>
               </div>
             </div>
           </div>
 
-          <nav className="hidden items-center gap-8 text-sm font-semibold uppercase tracking-wide text-[#ff6a63] md:flex">
-            <a href="#hero" className="hover:text-white">Home</a>
-            <a href="#about" className="hover:text-white">About</a>
-            <a href="#tickets" className="hover:text-white">Tickets</a>
-            <a href="#gallery" className="hover:text-white">Highlights</a>
+          <nav className="hidden items-center gap-8 text-sm font-semibold uppercase tracking-wide text-accent-foreground md:flex">
+            <a href="#hero" className="hover:text-foreground">Home</a>
+            <a href="#about" className="hover:text-foreground">About</a>
+            <a href="#tickets" className="hover:text-foreground">Tickets</a>
+            <a href="#gallery" className="hover:text-foreground">Highlights</a>
           </nav>
 
           <div className="flex items-center gap-3">
             <Button
-              className="hidden rounded-full bg-transparent px-5 font-semibold text-[#ff6a63] ring-1 ring-[#ff6a63] hover:bg-[#ff6a63] hover:text-white md:inline-flex"
+              className="hidden rounded-full bg-transparent px-5 font-semibold text-accent-foreground ring-1 ring-primary hover:bg-primaryCTA hover:text-inverse md:inline-flex"
               onClick={() => navigate(detailPath)}
             >
               Event Page
@@ -211,24 +211,24 @@ const EventOverviewPage = () => {
       <main className="relative z-10">
         <section id="hero" className="container grid items-center gap-10 py-12 lg:grid-cols-2 lg:py-16">
           <div className="relative space-y-8">
-            <div className="absolute -left-10 -top-12 hidden h-28 w-48 bg-white/8 backdrop-blur-lg md:block" />
-            <div className="inline-block rounded-lg bg-white/8 px-5 py-4 backdrop-blur-lg ring-1 ring-white/10">
-              <p className="max-w-xs text-sm leading-relaxed text-white/70">
+            <div className="absolute -left-10 -top-12 hidden h-28 w-48 bg-muted backdrop-blur-lg md:block" />
+            <div className="inline-block rounded-lg bg-muted px-5 py-4 backdrop-blur-lg ring-1 ring-border">
+              <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
                 {categoryLabel} by {organizerName}. {dateLabel}
               </p>
             </div>
 
             <div className="space-y-4">
-              <h1 className="text-4xl font-bold leading-[1.05] text-white md:text-5xl lg:text-6xl">
+              <h1 className="text-4xl font-bold leading-[1.05] text-foreground md:text-5xl lg:text-6xl">
                 {title}
               </h1>
-              <p className="max-w-2xl text-lg text-white/75">{description}</p>
+              <p className="max-w-2xl text-lg text-muted-foreground">{description}</p>
             </div>
 
             <div className="flex flex-wrap items-center gap-5">
               <Button
                 size="lg"
-                className="group rounded-full border-2 border-[#ff6a63] bg-transparent px-7 text-lg font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#ff6a63]"
+                className="group rounded-full border-2 border-primary bg-transparent px-7 text-lg font-semibold text-accent-foreground transition hover:-translate-y-0.5 hover:bg-primaryCTA hover:text-inverse"
                 onClick={() => navigate(`${detailPath}#ticket-section`)}
               >
                 {priceLabel || "View Tickets"}
@@ -256,7 +256,7 @@ const EventOverviewPage = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-4 top-4 h-11 w-11 rounded-full border border-white/55 bg-[#0b1426]/80 text-white shadow-[0_18px_48px_-28px_rgba(0,0,0,0.95)] ring-1 ring-white/20 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-[#0b1426]/90 hover:text-white"
+                className="absolute right-4 top-4 h-11 w-11 rounded-full border border-border bg-card/80 text-foreground shadow-[0_18px_48px_-28px_rgba(0,0,0,0.95)] ring-1 ring-border backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-card/90 hover:text-foreground"
                 onClick={handleShare}
                 aria-label="Share event"
                 title="Share event"
@@ -268,9 +268,9 @@ const EventOverviewPage = () => {
         </section>
 
         <section className="relative w-full py-4">
-          <div className="absolute inset-0 bg-[#101a2e]/80" />
+          <div className="absolute inset-0 bg-card/80" />
           <div className="container relative flex justify-end">
-            <p className="max-w-xs text-right text-xs leading-relaxed text-white/75">
+            <p className="max-w-xs text-right text-xs leading-relaxed text-muted-foreground">
               {venueLabel}. {addressLabel}
             </p>
           </div>
@@ -278,12 +278,12 @@ const EventOverviewPage = () => {
 
         <section className="container pb-8 pt-2" />
 
-        <section id="tickets" className="w-full bg-white text-[#0b1426]">
+        <section id="tickets" className="w-full bg-white text-foreground">
           <div className="container flex flex-col items-start justify-between gap-6 py-6 md:flex-row md:items-center">
-            <p className="text-sm font-medium text-[#2a2a2a]">Event details from the live listing</p>
+            <p className="text-sm font-medium text-foreground">Event details from the live listing</p>
             <div className="flex flex-wrap items-center gap-4 text-sm font-semibold uppercase">
               {eventFacts.map((fact) => (
-                <span key={fact.label} className="rounded-full bg-[#0b1426]/5 px-4 py-2 text-[#0b1426]">
+                <span key={fact.label} className="rounded-full bg-card/5 px-4 py-2 text-foreground">
                   {fact.label}: {fact.value}
                 </span>
               ))}
@@ -293,18 +293,18 @@ const EventOverviewPage = () => {
 
         <section className="container pb-8 pt-2" />
 
-        <section id="about" className="w-full bg-[#0b1426] text-white pb-10 pt-6">
+        <section id="about" className="w-full bg-card text-foreground pb-10 pt-6">
           <div className="container px-0 space-y-4">
             <div className="flex flex-col gap-3 px-10 text-right lg:items-end">
-              <h3 className="text-3xl font-semibold text-[#f6cfc8]">About the Experience</h3>
-              <p className="max-w-3xl text-sm leading-relaxed text-white/80">
+              <h3 className="text-3xl font-semibold text-accent-foreground">About the Experience</h3>
+              <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
                 {description}
               </p>
               <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={() => navigate(detailPath)}
-                  className="inline-flex items-center gap-1 text-xs uppercase tracking-wide text-white/70 hover:text-white"
+                  className="inline-flex items-center gap-1 text-xs uppercase tracking-wide text-muted-foreground hover:text-foreground"
                 >
                   Open full event page
                 </button>
@@ -323,11 +323,11 @@ const EventOverviewPage = () => {
           </div>
         </section>
 
-        <section id="gallery" className="w-full bg-[#0b1426] text-white pb-12 pt-8">
+        <section id="gallery" className="w-full bg-card text-foreground pb-12 pt-8">
           <div className="container px-0 space-y-8">
             <div className="space-y-3 px-4 text-center md:px-10 md:text-left">
-              <h3 className="text-3xl font-semibold uppercase tracking-[0.08em] text-[#f6cfc8]">What to Expect</h3>
-              <p className="max-w-3xl text-sm leading-relaxed text-white/80">
+              <h3 className="text-3xl font-semibold uppercase tracking-[0.08em] text-accent-foreground">What to Expect</h3>
+              <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
                 Highlights are based on this event's current artists, venue, ticket options, and gallery data.
               </p>
             </div>
@@ -338,7 +338,7 @@ const EventOverviewPage = () => {
                 return (
                   <div key={`${item.title}-${idx}`} className="relative flex flex-col">
                     <button
-                      className="absolute right-6 top-6 z-20 rounded-full bg-[#f7b7b0] ring-2 ring-white/50 shadow-lg transition-transform hover:scale-105"
+                      className="absolute right-6 top-6 z-20 rounded-full bg-primaryCTA ring-2 ring-border shadow-lg transition-transform hover:scale-105"
                       style={{ width: "72px", height: "72px" }}
                       type="button"
                       aria-label={`More about ${item.title}`}
@@ -351,7 +351,7 @@ const EventOverviewPage = () => {
                       }
                     />
                     <div
-                      className="overflow-hidden rounded-[36px] bg-gradient-to-b from-[#1f2435] via-[#151c2e] to-[#0f1628] ring-1 ring-white/10 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.6)]"
+                      className="overflow-hidden rounded-[36px] bg-gradient-to-b from-surface via-surface to-surface ring-1 ring-border shadow-[0_30px_80px_-40px_rgba(0,0,0,0.6)]"
                       style={{
                         WebkitMaskImage:
                           "radial-gradient(circle 40px at calc(100% - 48px) 48px, transparent 0 40px, black 40px 100%)",
@@ -360,7 +360,7 @@ const EventOverviewPage = () => {
                       }}
                     >
                       {expanded && (
-                        <div className="px-5 pt-5 text-center text-white">
+                        <div className="px-5 pt-5 text-center text-foreground">
                           <p className="mb-2 text-base font-semibold">{item.desc}</p>
                         </div>
                       )}
@@ -369,8 +369,8 @@ const EventOverviewPage = () => {
                         alt={item.title}
                         className="h-[220px] w-full object-cover md:h-[240px]"
                       />
-                      <div className="bg-[#f7e0dc]/85 px-6 py-5 text-center text-[#1a0f18] backdrop-blur-sm">
-                        <p className="text-base font-semibold text-[#1f1a1d]">{item.title}</p>
+                      <div className="bg-surface/85 px-6 py-5 text-center text-foreground backdrop-blur-sm">
+                        <p className="text-base font-semibold text-foreground">{item.title}</p>
                       </div>
                     </div>
                   </div>

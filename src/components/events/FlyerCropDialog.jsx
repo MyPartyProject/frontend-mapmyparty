@@ -62,7 +62,7 @@ const FlyerCropDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-3xl overflow-y-auto border-border/60 bg-[#101010] text-foreground sm:rounded-2xl">
+      <DialogContent className="max-h-[92vh] max-w-3xl overflow-y-auto border-border bg-background text-foreground sm:rounded-2xl">
         <DialogHeader>
           <DialogTitle>Crop event flyer</DialogTitle>
           <DialogDescription className="text-muted-foreground">

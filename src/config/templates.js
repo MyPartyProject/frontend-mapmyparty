@@ -14,11 +14,11 @@ export const TEMPLATE_CONFIGS = {
     previewImage: null, // Can be added later
     layoutConfig: {
       theme: {
-        primaryColor: "#6366f1",
-        secondaryColor: "#8b5cf6",
-        accentColor: "#ec4899",
-        backgroundColor: "#ffffff",
-        textColor: "#1f2937",
+        primaryColor: "#8438B0",
+        secondaryColor: "#F3E8FF",
+        accentColor: "#A259C9",
+        backgroundColor: "#FFFFFF",
+        textColor: "#111827",
       },
       sections: {
         hero: {
@@ -46,10 +46,10 @@ export const TEMPLATE_CONFIGS = {
     previewImage: null,
     layoutConfig: {
       theme: {
-        primaryColor: "#8b5cf6",
-        secondaryColor: "#ec4899",
-        accentColor: "#f59e0b",
-        backgroundColor: "#f9fafb",
+        primaryColor: "#8438B0",
+        secondaryColor: "#F3E8FF",
+        accentColor: "#A259C9",
+        backgroundColor: "#FFFFFF",
         textColor: "#111827",
       },
       sections: {
@@ -78,11 +78,11 @@ export const TEMPLATE_CONFIGS = {
     previewImage: null,
     layoutConfig: {
       theme: {
-        primaryColor: "#3b82f6",
-        secondaryColor: "#10b981",
-        accentColor: "#6366f1",
-        backgroundColor: "#ffffff",
-        textColor: "#374151",
+        primaryColor: "#8438B0",
+        secondaryColor: "#F3E8FF",
+        accentColor: "#A259C9",
+        backgroundColor: "#FFFFFF",
+        textColor: "#111827",
       },
       sections: {
         hero: {
@@ -113,9 +113,9 @@ export const DETAIL_TEMPLATE_CONFIGS = {
     description: "Full-width hero image at top, event info card below hero, stacked sections for all content.",
     layoutConfig: {
       theme: {
-        primaryColor: "#6366f1",
-        secondaryColor: "#8b5cf6",
-        accentColor: "#ec4899",
+        primaryColor: "#8438B0",
+        secondaryColor: "#F3E8FF",
+        accentColor: "#A259C9",
       },
       sections: {
         hero: {
@@ -137,9 +137,9 @@ export const DETAIL_TEMPLATE_CONFIGS = {
     description: "Hero section with overlay content, split layout with main content and sticky sidebar.",
     layoutConfig: {
       theme: {
-        primaryColor: "#8b5cf6",
-        secondaryColor: "#ec4899",
-        accentColor: "#f59e0b",
+        primaryColor: "#8438B0",
+        secondaryColor: "#F3E8FF",
+        accentColor: "#A259C9",
       },
       sections: {
         hero: {
@@ -161,9 +161,9 @@ export const DETAIL_TEMPLATE_CONFIGS = {
     description: "Minimalist header, full-width event image, single column layout with centered content.",
     layoutConfig: {
       theme: {
-        primaryColor: "#3b82f6",
-        secondaryColor: "#10b981",
-        accentColor: "#6366f1",
+        primaryColor: "#8438B0",
+        secondaryColor: "#F3E8FF",
+        accentColor: "#A259C9",
       },
       sections: {
         hero: {

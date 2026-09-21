@@ -48,21 +48,21 @@ const TicketsAndReservations = () => {
     const baseClass = "px-2 py-1 rounded text-[11px] font-semibold inline-flex items-center gap-1 border bg-gradient-to-r";
     if (status === "checked-in")
       return (
-        <span className={`${baseClass} from-cyan-400 to-blue-500 text-white border-blue-400/30`}>
+        <span className={`${baseClass} from-cyan-400 to-blue-500 text-foreground border-blue-400/30`}>
           <CheckCircle className="w-3 h-3" />
           Checked In
         </span>
       );
     if (status === "pending")
       return (
-        <span className={`${baseClass} from-slate-500 to-slate-600 text-white border-slate-400/40`}>
+        <span className={`${baseClass} from-slate-500 to-slate-600 text-foreground border-slate-400/40`}>
           <Clock className="w-3 h-3" />
           Pending
         </span>
       );
     if (status === "cancelled")
       return (
-        <span className={`${baseClass} from-red-500 to-rose-500 text-white border-red-400/40`}>
+        <span className={`${baseClass} from-red-500 to-rose-500 text-foreground border-red-400/40`}>
           <XCircle className="w-3 h-3" />
           Cancelled
         </span>
@@ -81,26 +81,26 @@ const TicketsAndReservations = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#05060c] via-[#090f1c] to-[#05060c] text-white">
+    <div className="min-h-screen bg-gradient-to-b from-surface via-surface to-surface text-foreground">
       {/* Header */}
-      <div className="px-6 py-5 border-b border-white/10 bg-white/5 backdrop-blur">
+      <div className="px-6 py-5 border-b border-border bg-muted backdrop-blur">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition"
+              className="p-2 rounded-xl bg-muted border border-border hover:bg-muted transition"
             >
-              <ArrowLeft className="w-5 h-5 text-white/80" />
+              <ArrowLeft className="w-5 h-5 text-muted-foreground" />
             </button>
             <div>
-              <p className="text-[11px] uppercase tracking-[0.25em] text-white/50 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-red-400" /> Operations
+              <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-destructive" /> Operations
               </p>
               <h1 className="text-2xl font-extrabold">Tickets & Reservations</h1>
-              <p className="text-sm text-white/60">Keep a pulse on ticket flow and reservation health.</p>
+              <p className="text-sm text-muted-foreground">Keep a pulse on ticket flow and reservation health.</p>
             </div>
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-blue-500 text-white shadow-lg shadow-red-500/20 hover:shadow-red-500/30 transition">
+          <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-blue-500 text-foreground shadow-lg shadow-red-500/20 hover:shadow-red-500/30 transition">
             <Download className="w-4 h-4" />
             Export Data
           </button>
@@ -111,39 +111,39 @@ const TicketsAndReservations = () => {
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur shadow-lg shadow-black/30">
-            <p className="text-xs uppercase tracking-wide text-white/60">Total Tickets</p>
+          <div className="bg-muted border border-border rounded-2xl p-5 backdrop-blur shadow-lg shadow-black/5">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Total Tickets</p>
             <p className="text-3xl font-bold mt-2">{statistics.totalTickets}</p>
-            <p className="text-sm text-white/60 mt-1">{statistics.confirmedTickets} confirmed</p>
+            <p className="text-sm text-muted-foreground mt-1">{statistics.confirmedTickets} confirmed</p>
           </div>
 
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur shadow-lg shadow-black/30">
-            <p className="text-xs uppercase tracking-wide text-white/60">Checked In</p>
-            <p className="text-3xl font-bold mt-2 text-cyan-200">{statistics.checkedIn}</p>
-            <p className="text-sm text-white/60 mt-1">
+          <div className="bg-muted border border-border rounded-2xl p-5 backdrop-blur shadow-lg shadow-black/5">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Checked In</p>
+            <p className="text-3xl font-bold mt-2 text-info">{statistics.checkedIn}</p>
+            <p className="text-sm text-muted-foreground mt-1">
               {Math.round((statistics.checkedIn / statistics.totalTickets) * 100)}% check-in rate
             </p>
           </div>
 
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur shadow-lg shadow-black/30">
-            <p className="text-xs uppercase tracking-wide text-white/60">Pending</p>
-            <p className="text-3xl font-bold mt-2 text-amber-200">{statistics.pendingTickets}</p>
-            <p className="text-sm text-white/60 mt-1">Awaiting confirmation</p>
+          <div className="bg-muted border border-border rounded-2xl p-5 backdrop-blur shadow-lg shadow-black/5">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Pending</p>
+            <p className="text-3xl font-bold mt-2 text-warning">{statistics.pendingTickets}</p>
+            <p className="text-sm text-muted-foreground mt-1">Awaiting confirmation</p>
           </div>
 
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur shadow-lg shadow-black/30">
-            <p className="text-xs uppercase tracking-wide text-white/60">Total Reservations</p>
-            <p className="text-3xl font-bold mt-2 text-emerald-200">{statistics.totalReservations}</p>
-            <p className="text-sm text-white/60 mt-1">{statistics.confirmedReservations} confirmed</p>
+          <div className="bg-muted border border-border rounded-2xl p-5 backdrop-blur shadow-lg shadow-black/5">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Total Reservations</p>
+            <p className="text-3xl font-bold mt-2 text-success">{statistics.totalReservations}</p>
+            <p className="text-sm text-muted-foreground mt-1">{statistics.confirmedReservations} confirmed</p>
           </div>
         </div>
 
         {/* Tickets Section */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl backdrop-blur shadow-lg shadow-black/30 mb-4">
-          <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between flex-wrap gap-3">
+        <div className="bg-muted border border-border rounded-2xl backdrop-blur shadow-lg shadow-black/5 mb-4">
+          <div className="px-5 py-4 border-b border-border flex items-center justify-between flex-wrap gap-3">
             <h2 className="text-xl font-semibold">Tickets</h2>
             <div className="flex gap-2 items-center">
-              <span className="text-xs text-white/50 flex items-center gap-1">
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
                 <Filter className="w-4 h-4" /> Filter by status
               </span>
               <div className="flex gap-2">
@@ -153,8 +153,8 @@ const TicketsAndReservations = () => {
                     onClick={() => setSelectedFilter(filter)}
                     className={`px-3 py-2 rounded-lg text-sm font-semibold capitalize transition ${
                       selectedFilter === filter
-                        ? "bg-gradient-to-r from-red-500 to-blue-500 text-white shadow-md shadow-red-500/20"
-                        : "bg-white/5 border border-white/10 text-white/70 hover:bg-white/10"
+                        ? "bg-gradient-to-r from-red-500 to-blue-500 text-foreground shadow-md shadow-red-500/20"
+                        : "bg-muted border border-border text-muted-foreground hover:bg-muted"
                     }`}
                   >
                     {filter}
@@ -165,15 +165,15 @@ const TicketsAndReservations = () => {
           </div>
 
           {/* Search and Filter */}
-          <div className="px-5 py-4 border-b border-white/10 flex gap-4 flex-wrap">
+          <div className="px-5 py-4 border-b border-border flex gap-4 flex-wrap">
             <div className="flex-1 min-w-64 relative">
-              <Search className="absolute left-3 top-3 w-5 h-5 text-white/50" />
+              <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search by ticket ID, customer name, or event..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-red-500/60"
+                className="w-full pl-10 pr-4 py-2 rounded-lg bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-red-500/60"
               />
             </div>
           </div>
@@ -182,13 +182,13 @@ const TicketsAndReservations = () => {
           <div className="overflow-x-auto">
             {filteredTickets.length === 0 ? (
               <div className="px-5 py-16 text-center">
-                <CheckCircle className="w-12 h-12 mx-auto mb-4 text-white/30" />
-                <p className="text-white/60 text-lg font-medium">No tickets found</p>
-                <p className="text-white/40 text-sm mt-1">Tickets will appear here when customers make purchases</p>
+                <CheckCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-muted-foreground text-lg font-medium">No tickets found</p>
+                <p className="text-muted-foreground text-sm mt-1">Tickets will appear here when customers make purchases</p>
               </div>
             ) : (
               <table className="min-w-full text-sm">
-                <thead className="bg-white/5 border-b border-white/10 text-white/60 uppercase text-[11px]">
+                <thead className="bg-muted border-b border-border text-muted-foreground uppercase text-[11px]">
                   <tr>
                     <th className="px-5 py-3 text-left font-semibold">Ticket ID</th>
                     <th className="px-5 py-3 text-left font-semibold">Event</th>
@@ -200,18 +200,18 @@ const TicketsAndReservations = () => {
                     <th className="px-5 py-3 text-left font-semibold">Check-in</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-border">
                   {filteredTickets.map((ticket) => (
-                    <tr key={ticket.id} className="hover:bg-white/5 transition">
-                      <td className="px-5 py-4 font-semibold text-white">{ticket.id}</td>
-                      <td className="px-5 py-4 text-white/80">{ticket.eventName}</td>
-                      <td className="px-5 py-4 text-white/80">
+                    <tr key={ticket.id} className="hover:bg-muted transition">
+                      <td className="px-5 py-4 font-semibold text-foreground">{ticket.id}</td>
+                      <td className="px-5 py-4 text-muted-foreground">{ticket.eventName}</td>
+                      <td className="px-5 py-4 text-muted-foreground">
                         <div>{ticket.customerName}</div>
-                        <div className="text-xs text-white/50">{ticket.email}</div>
+                        <div className="text-xs text-muted-foreground">{ticket.email}</div>
                       </td>
-                      <td className="px-5 py-4 text-white/80">{ticket.ticketType}</td>
-                      <td className="px-5 py-4 text-white/80">{ticket.quantity}</td>
-                      <td className="px-5 py-4 font-semibold text-white">{ticket.totalAmount}</td>
+                      <td className="px-5 py-4 text-muted-foreground">{ticket.ticketType}</td>
+                      <td className="px-5 py-4 text-muted-foreground">{ticket.quantity}</td>
+                      <td className="px-5 py-4 font-semibold text-foreground">{ticket.totalAmount}</td>
                       <td className="px-5 py-4">{getStatusBadge(ticket.status)}</td>
                       <td className="px-5 py-4">{getCheckInBadge(ticket.checkInStatus)}</td>
                     </tr>
@@ -223,8 +223,8 @@ const TicketsAndReservations = () => {
         </div>
 
         {/* Reservations Section */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl backdrop-blur shadow-lg shadow-black/30">
-          <div className="px-5 py-4 border-b border-white/10">
+        <div className="bg-muted border border-border rounded-2xl backdrop-blur shadow-lg shadow-black/5">
+          <div className="px-5 py-4 border-b border-border">
             <h2 className="text-xl font-semibold">Reservations</h2>
           </div>
 
@@ -232,13 +232,13 @@ const TicketsAndReservations = () => {
           <div className="overflow-x-auto">
             {reservationsData.length === 0 ? (
               <div className="px-5 py-16 text-center">
-                <Clock className="w-12 h-12 mx-auto mb-4 text-white/30" />
-                <p className="text-white/60 text-lg font-medium">No reservations found</p>
-                <p className="text-white/40 text-sm mt-1">Reservations will appear here when customers book seats</p>
+                <Clock className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-muted-foreground text-lg font-medium">No reservations found</p>
+                <p className="text-muted-foreground text-sm mt-1">Reservations will appear here when customers book seats</p>
               </div>
             ) : (
               <table className="min-w-full text-sm">
-                <thead className="bg-white/5 border-b border-white/10 text-white/60 uppercase text-[11px]">
+                <thead className="bg-muted border-b border-border text-muted-foreground uppercase text-[11px]">
                   <tr>
                     <th className="px-5 py-3 text-left font-semibold">Reservation ID</th>
                     <th className="px-5 py-3 text-left font-semibold">Event</th>
@@ -250,20 +250,20 @@ const TicketsAndReservations = () => {
                     <th className="px-5 py-3 text-left font-semibold">Notes</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-border">
                   {reservationsData.map((reservation) => (
-                    <tr key={reservation.id} className="hover:bg-white/5 transition">
-                      <td className="px-5 py-4 font-semibold text-white">{reservation.id}</td>
-                      <td className="px-5 py-4 text-white/80">{reservation.eventName}</td>
-                      <td className="px-5 py-4 text-white/80">
+                    <tr key={reservation.id} className="hover:bg-muted transition">
+                      <td className="px-5 py-4 font-semibold text-foreground">{reservation.id}</td>
+                      <td className="px-5 py-4 text-muted-foreground">{reservation.eventName}</td>
+                      <td className="px-5 py-4 text-muted-foreground">
                         <div>{reservation.customerName}</div>
-                        <div className="text-xs text-white/50">{reservation.email}</div>
+                        <div className="text-xs text-muted-foreground">{reservation.email}</div>
                       </td>
-                      <td className="px-5 py-4 text-white/80">{reservation.reservationType}</td>
-                      <td className="px-5 py-4 text-white/80">{reservation.seats}</td>
-                      <td className="px-5 py-4 text-white/80">{reservation.eventDate}</td>
+                      <td className="px-5 py-4 text-muted-foreground">{reservation.reservationType}</td>
+                      <td className="px-5 py-4 text-muted-foreground">{reservation.seats}</td>
+                      <td className="px-5 py-4 text-muted-foreground">{reservation.eventDate}</td>
                       <td className="px-5 py-4">{getStatusBadge(reservation.status)}</td>
-                      <td className="px-5 py-4 text-white/80 max-w-xs truncate" title={reservation.notes}>
+                      <td className="px-5 py-4 text-muted-foreground max-w-xs truncate" title={reservation.notes}>
                         {reservation.notes}
                       </td>
                     </tr>

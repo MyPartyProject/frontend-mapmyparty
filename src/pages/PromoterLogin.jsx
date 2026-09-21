@@ -58,29 +58,29 @@ const PromoterLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
-        <Card className="border border-gray-800 bg-gray-900 shadow-xl">
+        <Card className="border border-border bg-surface shadow-xl">
           <CardHeader className="text-center pb-5 pt-6">
             <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="w-14 h-14 bg-gray-800 rounded-xl flex items-center justify-center border border-gray-700">
+              <div className="w-14 h-14 bg-surface rounded-xl flex items-center justify-center border border-border">
                 <img src={Logo} alt="MapMyParty" className="w-9 h-9" />
               </div>
             </div>
             <div className="flex items-center justify-center gap-2 mb-1">
               <Shield className="w-5 h-5 text-red-500" />
-              <CardTitle className="text-3xl font-bold text-white">
+              <CardTitle className="text-3xl font-bold text-foreground">
                 Promoter Login
               </CardTitle>
             </div>
-            <CardDescription className="text-gray-400 text-sm mt-1">
+            <CardDescription className="text-muted-foreground text-sm mt-1">
               Sign in to access the promoter dashboard
             </CardDescription>
           </CardHeader>
           <CardContent className="px-6 pb-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-gray-300 text-sm font-medium">
+                <Label htmlFor="email" className="text-muted-foreground text-sm font-medium">
                   Email
                 </Label>
                 <Input
@@ -88,11 +88,11 @@ const PromoterLogin = () => {
                   type="email"
                   placeholder="Enter your email"
                   required
-                  className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 h-10 text-sm"
+                  className="border-border bg-surface text-foreground placeholder:text-muted-foreground focus:border-red-500 h-10 text-sm"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-gray-300 text-sm font-medium">
+                <Label htmlFor="password" className="text-muted-foreground text-sm font-medium">
                   Password
                 </Label>
                 <div className="relative">
@@ -101,13 +101,13 @@ const PromoterLogin = () => {
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     required
-                    className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 pr-10 h-10 text-sm"
+                    className="border-border bg-surface text-foreground placeholder:text-muted-foreground focus:border-red-500 pr-10 h-10 text-sm"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-300"
+                    className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-muted-foreground"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -129,7 +129,7 @@ const PromoterLogin = () => {
               </Button>
             </form>
 
-            <p className="text-center text-gray-500 text-xs mt-6">
+            <p className="text-center text-muted-foreground text-xs mt-6">
               Promoter accounts are created by the platform administrator.
               <br />
               Contact your admin if you need access.

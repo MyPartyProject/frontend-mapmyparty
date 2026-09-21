@@ -104,10 +104,10 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-b from-[#0b1220] to-[#0a0f1a] border-white/10 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-gradient-to-b from-background to-background border-border text-foreground max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">Billing Details</DialogTitle>
-          <DialogDescription className="text-white/70">
+          <DialogDescription className="text-muted-foreground">
             Please provide your billing information for the booking
           </DialogDescription>
         </DialogHeader>
@@ -115,13 +115,13 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           {/* Personal Information */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-white/90 border-b border-white/10 pb-2">
+            <h3 className="text-sm font-semibold text-muted-foreground border-b border-border pb-2">
               Personal Information
             </h3>
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="fullName" className="text-white/80">
+                <Label htmlFor="fullName" className="text-muted-foreground">
                   Full Name *
                 </Label>
                 <Input
@@ -130,13 +130,13 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                   value={formData.fullName}
                   onChange={handleChange}
                   placeholder="John Doe"
-                  className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
+                  className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="email" className="text-white/80">
+                <Label htmlFor="email" className="text-muted-foreground">
                   Email Address *
                 </Label>
                 <Input
@@ -146,14 +146,14 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="john@example.com"
-                  className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
+                  className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="phone" className="text-white/80">
+              <Label htmlFor="phone" className="text-muted-foreground">
                 Phone Number *
               </Label>
               <Input
@@ -163,7 +163,7 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="9876543210"
-                className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
                 required
               />
             </div>
@@ -171,12 +171,12 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
 
           {/* Billing Address */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-white/90 border-b border-white/10 pb-2">
+            <h3 className="text-sm font-semibold text-muted-foreground border-b border-border pb-2">
               Billing Address
             </h3>
 
             <div>
-              <Label htmlFor="addressLine1" className="text-white/80">
+              <Label htmlFor="addressLine1" className="text-muted-foreground">
                 Address Line 1 *
               </Label>
               <Input
@@ -185,13 +185,13 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                 value={formData.addressLine1}
                 onChange={handleChange}
                 placeholder="Street address, P.O. box"
-                className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
                 required
               />
             </div>
 
             <div>
-              <Label htmlFor="addressLine2" className="text-white/80">
+              <Label htmlFor="addressLine2" className="text-muted-foreground">
                 Address Line 2 (Optional)
               </Label>
               <Input
@@ -200,13 +200,13 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                 value={formData.addressLine2}
                 onChange={handleChange}
                 placeholder="Apartment, suite, unit, building, floor, etc."
-                className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
 
             <div className="grid md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="city" className="text-white/80">
+                <Label htmlFor="city" className="text-muted-foreground">
                   City *
                 </Label>
                 <Input
@@ -215,13 +215,13 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                   value={formData.city}
                   onChange={handleChange}
                   placeholder="Mumbai"
-                  className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
+                  className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="state" className="text-white/80">
+                <Label htmlFor="state" className="text-muted-foreground">
                   State *
                 </Label>
                 <Input
@@ -230,13 +230,13 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                   value={formData.state}
                   onChange={handleChange}
                   placeholder="Maharashtra"
-                  className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
+                  className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="pincode" className="text-white/80">
+                <Label htmlFor="pincode" className="text-muted-foreground">
                   Pincode *
                 </Label>
                 <Input
@@ -245,7 +245,7 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                   value={formData.pincode}
                   onChange={handleChange}
                   placeholder="400001"
-                className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
+                className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
                   required
                 />
               </div>
@@ -259,7 +259,7 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
               variant="outline"
               onClick={onClose}
               disabled={isLoading}
-              className="flex-1 border-white/20 text-white hover:bg-white/10"
+              className="flex-1 border-border text-foreground hover:bg-muted"
             >
               Cancel
             </Button>

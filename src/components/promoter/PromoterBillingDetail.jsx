@@ -312,7 +312,7 @@ const PromoterBillingDetail = () => {
               onClick={() => setActiveTab(tab)}
               className={`py-2 px-1 border-b-2 font-medium text-sm capitalize ${
                 activeTab === tab
-                  ? "border-primary text-primary"
+                  ? "border-primary text-accent-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >

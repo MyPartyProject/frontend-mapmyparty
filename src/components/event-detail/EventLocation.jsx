@@ -19,7 +19,7 @@ const EventLocation = ({ venue, address, phone }) => {
           <div className="relative h-[400px] bg-muted">
             <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
               <div className="text-center space-y-3 p-6">
-                <MapPin className="w-16 h-16 mx-auto text-primary animate-pulse" />
+                <MapPin className="w-16 h-16 mx-auto text-accent-foreground animate-pulse" />
                 <div>
                   <p className="text-lg font-semibold mb-1">Interactive Map</p>
                   <p className="text-sm text-muted-foreground max-w-xs">
@@ -38,14 +38,14 @@ const EventLocation = ({ venue, address, phone }) => {
             <div>
               <h3 className="text-2xl font-bold mb-2">{venue}</h3>
               <p className="text-muted-foreground flex items-start gap-2">
-                <MapPin className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                <MapPin className="w-5 h-5 text-accent-foreground mt-0.5 flex-shrink-0" />
                 {address}
               </p>
             </div>
 
             {phone && (
               <p className="text-muted-foreground flex items-center gap-2">
-                <Phone className="w-5 h-5 text-accent" />
+                <Phone className="w-5 h-5 text-accent-foreground" />
                 {phone}
               </p>
             )}

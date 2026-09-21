@@ -43,7 +43,7 @@ const SocialLink = ({ platform, value }) => {
       target="_blank"
       rel="noopener noreferrer"
       title={label}
-      className="flex items-center justify-center w-8 h-8 rounded-lg bg-muted/50 hover:bg-accent/20 text-muted-foreground hover:text-accent transition-colors"
+      className="flex items-center justify-center w-8 h-8 rounded-lg bg-muted/50 hover:bg-accent/20 text-muted-foreground hover:text-accent-foreground transition-colors"
     >
       <Icon className="w-3.5 h-3.5" />
     </a>
@@ -81,7 +81,7 @@ const OrganizerCard = ({ org }) => {
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-lg font-semibold truncate">{org.name}</h3>
               {org.isVerified && (
-                <ShieldCheck className="w-4 h-4 text-accent shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-accent-foreground shrink-0" />
               )}
               {org.isSuspended && (
                 <Badge variant="destructive" className="text-[10px]">
@@ -164,7 +164,7 @@ const OrganizerCard = ({ org }) => {
         <Separator className="bg-border/40" />
         <Link
           to={`/promoter/organizers/${org.id}`}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent/80 transition"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent-foreground hover:text-accent-foreground/80 transition"
         >
           View details <ChevronRight className="w-4 h-4" />
         </Link>

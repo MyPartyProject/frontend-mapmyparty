@@ -113,8 +113,8 @@ const PromoterBookings = () => {
 
   const paymentStatusIcon = useMemo(() => {
     const normalized = String(selectedBooking?.paymentStatus || "").toUpperCase();
-    if (normalized === "SUCCESS") return <CheckCircle2 className="w-4 h-4 text-emerald-400" />;
-    if (normalized === "FAILED" || normalized === "REFUNDED") return <XCircle className="w-4 h-4 text-amber-400" />;
+    if (normalized === "SUCCESS") return <CheckCircle2 className="w-4 h-4 text-success" />;
+    if (normalized === "FAILED" || normalized === "REFUNDED") return <XCircle className="w-4 h-4 text-warning" />;
     return <AlertTriangle className="w-4 h-4 text-sky-400" />;
   }, [selectedBooking?.paymentStatus]);
 
@@ -183,7 +183,7 @@ const PromoterBookings = () => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-400" /> {summary?.refunds?.count || 0} refunds
+              <AlertTriangle className="w-4 h-4 text-warning" /> {summary?.refunds?.count || 0} refunds
             </p>
             <p className="text-sm text-muted-foreground">
               Refund value {currency(summary?.refunds?.value || 0)} | pending {summary?.pendingPayments?.count || 0}
@@ -212,7 +212,7 @@ const PromoterBookings = () => {
               onClick={() => handleStatusFilter(status)}
               className={`px-3 py-2 rounded-lg border border-border/60 transition ${
                 filters.status === status
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-primaryCTA text-primary-foreground"
                   : "bg-card/70 text-muted-foreground hover:bg-card"
               }`}
             >
@@ -224,7 +224,7 @@ const PromoterBookings = () => {
 
       {isFetching && !loading && (
         <div className="h-0.5 w-full bg-muted overflow-hidden rounded-full">
-          <div className="h-full w-1/3 bg-primary rounded-full animate-pulse" />
+          <div className="h-full w-1/3 bg-primaryCTA rounded-full animate-pulse" />
         </div>
       )}
 
@@ -286,7 +286,7 @@ const PromoterBookings = () => {
                         <p className="text-xs text-muted-foreground">{formatDateTime(booking.createdAt)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-accent">{currency(booking.amount)}</p>
+                        <p className="font-semibold text-accent-foreground">{currency(booking.amount)}</p>
                         <div className="mt-1 flex flex-col items-end gap-1">
                           <Badge variant={statusVariant(booking.status)}>{statusLabel(booking.status)}</Badge>
                           <Badge variant={statusVariant(booking.paymentStatus)}>{statusLabel(booking.paymentStatus)}</Badge>
@@ -390,7 +390,7 @@ const PromoterBookings = () => {
                           <span className="text-muted-foreground">
                             {String(selectedBooking.paymentStatus || "").toUpperCase() === "SUCCESS" ? "Total paid" : "Total amount"}
                           </span>
-                          <span className="font-semibold text-accent">
+                          <span className="font-semibold text-accent-foreground">
                             {currency(selectedBooking.paymentAmount || selectedBooking.pricing?.grandTotal || 0)}
                           </span>
                         </div>

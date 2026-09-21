@@ -179,7 +179,7 @@ const PromoterUserDetail = () => {
 
       {isFetching && (
         <div className="h-0.5 w-full bg-muted overflow-hidden rounded-full">
-          <div className="h-full w-1/3 bg-primary rounded-full animate-pulse" />
+          <div className="h-full w-1/3 bg-primaryCTA rounded-full animate-pulse" />
         </div>
       )}
 
@@ -272,7 +272,7 @@ const PromoterUserDetail = () => {
                 <p className="text-xs text-muted-foreground flex items-center gap-2">
                   <Wallet2 className="w-4 h-4" /> Spent
                 </p>
-                <p className="text-2xl font-semibold text-accent">{currency(user?.totalSpent)}</p>
+                <p className="text-2xl font-semibold text-accent-foreground">{currency(user?.totalSpent)}</p>
                 <p className="text-xs text-muted-foreground">Confirmed booking spend</p>
               </CardContent>
             </Card>
@@ -322,7 +322,7 @@ const PromoterUserDetail = () => {
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-muted-foreground">Total spent</p>
-                        <p className="font-semibold text-accent">{currency(event.spent)}</p>
+                        <p className="font-semibold text-accent-foreground">{currency(event.spent)}</p>
                       </div>
                     </div>
                     <div className="mt-3 space-y-2">
@@ -531,7 +531,7 @@ const PromoterUserDetail = () => {
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Total spent</span>
-                <span className="font-semibold text-accent">{currency(user?.totalSpent)}</span>
+                <span className="font-semibold text-accent-foreground">{currency(user?.totalSpent)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Avg per ticket</span>

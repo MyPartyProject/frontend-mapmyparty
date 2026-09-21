@@ -107,7 +107,7 @@ const PromoterLiveEvents = () => {
                   </div>
                   <div className="rounded-lg border border-border/60 bg-card/80 p-3">
                     <p className="text-xs text-muted-foreground">Gross</p>
-                    <p className="font-semibold text-accent">{currency(event.gross)}</p>
+                    <p className="font-semibold text-accent-foreground">{currency(event.gross)}</p>
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-sm">
@@ -117,7 +117,7 @@ const PromoterLiveEvents = () => {
                   </div>
                   <Link
                     to={`/promoter/live/${event.id}`}
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-accent hover:text-accent/80 transition"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-accent-foreground hover:text-accent-foreground/80 transition"
                   >
                     View details <ChevronRight className="w-4 h-4" />
                   </Link>

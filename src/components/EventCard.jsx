@@ -25,7 +25,7 @@ const ClassicCardTemplate = ({ organizerSlug, eventSlug, title, date, location, 
           </div>
         </div>
         <CardContent className="p-5">
-          <h3 className="font-bold text-lg mb-3 line-clamp-2 group-hover:text-primary transition-colors">
+          <h3 className="font-bold text-lg mb-3 line-clamp-2 group-hover:text-accent-foreground transition-colors">
             {title}
           </h3>
 
@@ -50,7 +50,7 @@ const ClassicCardTemplate = ({ organizerSlug, eventSlug, title, date, location, 
 
           <div className="flex items-center justify-between">
             {price && (
-              <span className="text-lg font-bold text-primary">{price}</span>
+              <span className="text-lg font-bold text-accent-foreground">{price}</span>
             )}
             <Button variant="accent" size="sm" className="ml-auto">
               View Details
@@ -83,7 +83,7 @@ const ModernHorizontalTemplate = ({ organizerSlug, eventSlug, title, date, locat
           </div>
           <CardContent className="flex-1 p-4 md:p-6 flex flex-col justify-between">
             <div>
-              <h3 className="font-bold text-lg md:text-xl mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+              <h3 className="font-bold text-lg md:text-xl mb-2 line-clamp-2 group-hover:text-accent-foreground transition-colors">
                 {title}
               </h3>
 
@@ -109,7 +109,7 @@ const ModernHorizontalTemplate = ({ organizerSlug, eventSlug, title, date, locat
 
             <div className="flex items-center justify-between pt-2 border-t border-border">
               {price && (
-                <span className="text-lg font-bold text-primary">{price}</span>
+                <span className="text-lg font-bold text-accent-foreground">{price}</span>
               )}
               <Button variant="accent" size="sm" className="ml-auto">
                 View Details
@@ -142,12 +142,12 @@ const MinimalistBannerTemplate = ({ organizerSlug, eventSlug, title, date, locat
                 <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm mb-2 text-xs">
                   {category}
                 </Badge>
-                <h3 className="font-bold text-xl mb-2 line-clamp-2 group-hover:text-primary transition-colors text-foreground">
+                <h3 className="font-bold text-xl mb-2 line-clamp-2 group-hover:text-accent-foreground transition-colors text-foreground">
                   {title}
                 </h3>
               </div>
               {price && (
-                <span className="text-2xl font-bold text-primary flex-shrink-0">{price}</span>
+                <span className="text-2xl font-bold text-accent-foreground flex-shrink-0">{price}</span>
               )}
             </div>
 

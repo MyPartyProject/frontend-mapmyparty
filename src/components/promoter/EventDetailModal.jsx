@@ -35,8 +35,8 @@ import {
 
 // Different color theme - Teal/Emerald/Indigo palette
 const ANALYTICS_COLORS = {
-  primary: "#14b8a6",      // Teal
-  secondary: "#10b981",    // Emerald
+  primary: "#8438B0", // Brand series
+  secondary: "#0F766E", // Distinct comparison series
   accent: "#6366f1",       // Indigo
   warning: "#f59e0b",      // Amber
   info: "#06b6d4",         // Cyan
@@ -122,7 +122,7 @@ const EventDetailModal = ({ isOpen, onClose, event }) => {
       <text
         x={x}
         y={y}
-        fill="white"
+        fill="hsl(var(--foreground))"
         textAnchor={x > cx ? "start" : "end"}
         dominantBaseline="central"
         className="text-sm font-semibold"
@@ -139,7 +139,7 @@ const EventDetailModal = ({ isOpen, onClose, event }) => {
       change: "+24% from target",
       icon: DollarSign,
       color: ANALYTICS_COLORS.primary,
-      bgColor: "bg-teal-100 dark:bg-teal-900/20",
+      bgColor: "bg-teal-100 ",
     },
     {
       title: "Tickets Sold",
@@ -147,7 +147,7 @@ const EventDetailModal = ({ isOpen, onClose, event }) => {
       change: `${enrolledPercentage}% of capacity`,
       icon: Users,
       color: ANALYTICS_COLORS.secondary,
-      bgColor: "bg-emerald-100 dark:bg-emerald-900/20",
+      bgColor: "bg-emerald-100 ",
     },
   ];
 
@@ -171,7 +171,7 @@ const EventDetailModal = ({ isOpen, onClose, event }) => {
             {stats.map((stat, index) => (
               <Card
                 key={stat.title}
-                className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-2 hover:border-teal-200 dark:hover:border-teal-800 animate-in fade-in-0 slide-in-from-bottom-4"
+                className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-2 hover:border-teal-200  animate-in fade-in-0 slide-in-from-bottom-4"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <CardContent className="p-5">
@@ -572,9 +572,9 @@ const EventDetailModal = ({ isOpen, onClose, event }) => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-200 dark:border-indigo-800">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-indigo-50  border border-indigo-200 ">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-900/20">
+                          <div className="p-2 rounded-lg bg-indigo-100 ">
                             <Eye className="w-4 h-4 text-indigo-600" />
                           </div>
                           <div>
@@ -586,9 +586,9 @@ const EventDetailModal = ({ isOpen, onClose, event }) => {
                           {(event.ticketsSold * 15).toLocaleString()}
                         </p>
                       </div>
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-amber-50  border border-amber-200 ">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/20">
+                          <div className="p-2 rounded-lg bg-amber-100 ">
                             <Clock className="w-4 h-4 text-amber-600" />
                           </div>
                           <div>

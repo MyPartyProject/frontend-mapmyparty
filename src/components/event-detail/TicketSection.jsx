@@ -37,7 +37,7 @@ const TicketSection = ({ tickets = [] }) => {
               {/* Header */}
               <div className="flex items-start justify-between">
                 <div className="p-3 rounded-lg bg-gradient-to-br from-primary/10 to-accent/10 group-hover:scale-110 transition-transform">
-                  <Ticket className="w-6 h-6 text-primary" />
+                  <Ticket className="w-6 h-6 text-accent-foreground" />
                 </div>
                 {ticket.comingSoon ? (
                   <Badge variant="outline" className="border-dashed text-muted-foreground">
@@ -46,7 +46,7 @@ const TicketSection = ({ tickets = [] }) => {
                 ) : ticket.soldOut ? (
                   <Badge variant="secondary">Sold Out</Badge>
                 ) : (
-                  <Badge variant="default" className="bg-primary/10 text-primary">
+                  <Badge variant="default" className="bg-primary/10 text-accent-foreground">
                     {Number.isFinite(ticket.available) && ticket.available !== null
                       ? ticket.available
                       : ticket.raw?.availableQty ??
@@ -66,7 +66,7 @@ const TicketSection = ({ tickets = [] }) => {
                 <p className="text-sm text-muted-foreground mb-3">
                   {ticket.description}
                 </p>
-                <div className="text-3xl font-bold text-primary">{formatCurrency(ticket.price)}</div>
+                <div className="text-3xl font-bold text-accent-foreground">{formatCurrency(ticket.price)}</div>
                 <p className="text-sm text-muted-foreground mt-2">
                   {ticket.maxPerOrder
                     ? `Maximum ${ticket.maxPerOrder} per order`

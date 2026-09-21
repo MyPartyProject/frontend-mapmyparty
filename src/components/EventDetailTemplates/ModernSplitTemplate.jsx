@@ -100,7 +100,7 @@ const ModernSplitTemplate = ({
             <div className="lg:col-span-2 space-y-12">
               {/* Description */}
               <section>
-                <h2 className="text-3xl font-bold mb-6 text-primary">About this Event</h2>
+                <h2 className="text-3xl font-bold mb-6 text-accent-foreground">About this Event</h2>
                 <Card className="border-2">
                   <CardContent className="p-8">
                     <div className="prose prose-lg max-w-none">
@@ -115,7 +115,7 @@ const ModernSplitTemplate = ({
               {/* Gallery */}
               {eventGallery && eventGallery.length > 0 && galleryImages.length > 1 && (
                 <section>
-                  <h2 className="text-3xl font-bold mb-6 text-primary">Gallery</h2>
+                  <h2 className="text-3xl font-bold mb-6 text-accent-foreground">Gallery</h2>
                   <EventGallery images={galleryImages} />
                 </section>
               )}
@@ -130,7 +130,7 @@ const ModernSplitTemplate = ({
               {/* Tickets */}
               {ticketDisplayList.length > 0 && (
                 <section id="tickets-section">
-                  <h2 className="text-3xl font-bold mb-6 text-primary">Get Your Tickets</h2>
+                  <h2 className="text-3xl font-bold mb-6 text-accent-foreground">Get Your Tickets</h2>
                   <TicketSection tickets={ticketDisplayList} />
                 </section>
               )}
@@ -138,7 +138,7 @@ const ModernSplitTemplate = ({
               {/* Artists */}
               {event.artists && event.artists.length > 0 && (
                 <section>
-                  <h2 className="text-3xl font-bold mb-6 text-primary">Artists & Performers</h2>
+                  <h2 className="text-3xl font-bold mb-6 text-accent-foreground">Artists & Performers</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {event.artists.map((artist, index) => (
                       <Card key={index} className="hover:shadow-lg transition-shadow">
@@ -159,7 +159,7 @@ const ModernSplitTemplate = ({
                                     href={artist.instagram.startsWith('http') ? artist.instagram : `https://instagram.com/${artist.instagram.replace(/^@/, "")}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-sm text-primary hover:underline flex items-center gap-1"
+                                    className="text-sm text-accent-foreground hover:underline flex items-center gap-1"
                                   >
                                     <span>📷</span>
                                     <span className="truncate">{artist.instagram}</span>
@@ -170,7 +170,7 @@ const ModernSplitTemplate = ({
                                     href={artist.spotify.startsWith('http') ? artist.spotify : `https://open.spotify.com/${artist.spotify}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-sm text-primary hover:underline flex items-center gap-1"
+                                    className="text-sm text-accent-foreground hover:underline flex items-center gap-1"
                                   >
                                     <span>🎵</span>
                                     <span>Spotify</span>
@@ -189,7 +189,7 @@ const ModernSplitTemplate = ({
               {/* Advisory */}
               {event.advisory && (
                 <section>
-                  <h2 className="text-3xl font-bold mb-6 text-primary">Event Advisory</h2>
+                  <h2 className="text-3xl font-bold mb-6 text-accent-foreground">Event Advisory</h2>
                   <Card>
                     <CardContent className="p-6">
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -219,7 +219,7 @@ const ModernSplitTemplate = ({
               {/* Custom Questions */}
               {event.customQuestions && event.customQuestions.length > 0 && (
                 <section>
-                  <h2 className="text-3xl font-bold mb-6 text-primary">Event Information</h2>
+                  <h2 className="text-3xl font-bold mb-6 text-accent-foreground">Event Information</h2>
                   <div className="space-y-4">
                     {event.customQuestions.map((item, index) => (
                       <Card key={index}>
@@ -236,7 +236,7 @@ const ModernSplitTemplate = ({
               {/* Terms & Conditions */}
               {event.termsAndConditions && (
                 <section>
-                  <h2 className="text-3xl font-bold mb-6 text-primary">Terms & Conditions</h2>
+                  <h2 className="text-3xl font-bold mb-6 text-accent-foreground">Terms & Conditions</h2>
                   <Card>
                     <CardContent className="p-6">
                       <div
@@ -255,17 +255,17 @@ const ModernSplitTemplate = ({
                 {/* Event Details Card */}
                 <Card className="border-2 border-primary/20">
                   <CardContent className="p-6">
-                    <h3 className="font-bold text-xl mb-6 text-primary">Event Details</h3>
+                    <h3 className="font-bold text-xl mb-6 text-accent-foreground">Event Details</h3>
                     <div className="space-y-4">
                       <div className="flex items-start gap-3">
-                        <Calendar className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                        <Calendar className="w-5 h-5 text-accent-foreground mt-0.5 flex-shrink-0" />
                         <div>
                           <p className="font-medium">{eventDate}</p>
                           <p className="text-sm text-muted-foreground">{eventTime}</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
-                        <MapPin className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                        <MapPin className="w-5 h-5 text-accent-foreground mt-0.5 flex-shrink-0" />
                         <div>
                           <p className="font-medium">{eventVenue}</p>
                           <p className="text-sm text-muted-foreground">{eventAddress}</p>
@@ -273,7 +273,7 @@ const ModernSplitTemplate = ({
                       </div>
                       {event.email && event.email !== "N/A" && (
                         <div className="flex items-start gap-3">
-                          <Mail className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                          <Mail className="w-5 h-5 text-accent-foreground mt-0.5 flex-shrink-0" />
                           <div>
                             <p className="font-medium">Contact</p>
                             <p className="text-sm text-muted-foreground">{event.email}</p>
@@ -282,7 +282,7 @@ const ModernSplitTemplate = ({
                       )}
                       {priceRange && (
                         <div className="flex items-start gap-3">
-                          <Ticket className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                          <Ticket className="w-5 h-5 text-accent-foreground mt-0.5 flex-shrink-0" />
                           <div>
                             <p className="font-medium">Price Range</p>
                             <p className="text-sm text-muted-foreground">{priceRange}</p>

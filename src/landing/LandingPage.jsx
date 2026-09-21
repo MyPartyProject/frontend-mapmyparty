@@ -3,8 +3,6 @@ import { Link } from "react-router-dom";
 import {
   ArrowRight,
   CalendarRange,
-  ChevronLeft,
-  ChevronRight,
   Clock3,
   Clapperboard,
   MapPin,
@@ -205,44 +203,7 @@ const steps = [
   },
 ];
 
-const heroSlides = [
-  { id: "party-video", type: "video", src: "/videos/party2.mp4" },
-  { id: "party-image-1", type: "image", src: "/images/ph1.jpg" },
-  { id: "party-image-2", type: "image", src: "/images/ph2.jpg" },
-  { id: "party-image-3", type: "image", src: "/images/ph3.jpg" },
-];
-
-const getHeroSlide = (index) =>
-  heroSlides[(index + heroSlides.length) % heroSlides.length];
-
-const HeroMediaFill = ({
-  slide,
-  className,
-  videoRef,
-  onEnded,
-  autoPlay = false,
-  loop = false,
-}) => {
-  if (slide.type === "video") {
-    return (
-      <video
-        ref={videoRef}
-        className={className}
-        src={slide.src}
-        muted
-        playsInline
-        preload="auto"
-        autoPlay={autoPlay}
-        loop={loop}
-        onEnded={onEnded}
-      />
-    );
-  }
-
-  return <img src={slide.src} alt="" className={className} />;
-};
-
-const heroCarouselStyles = `
+const landingStyles = `
   @keyframes landingReveal {
     0% {
       opacity: 0;
@@ -279,28 +240,6 @@ const heroCarouselStyles = `
     }
   }
 
-  @keyframes landingHeroHaze {
-    0%, 100% {
-      transform: translate3d(0, 0, 0) scale(1);
-      opacity: 0.42;
-    }
-    50% {
-      transform: translate3d(-14px, -10px, 0) scale(1.05);
-      opacity: 0.68;
-    }
-  }
-
-  @keyframes landingHeroParticleFloat {
-    0%, 100% {
-      opacity: 0.16;
-      transform: translate3d(0, 0, 0) scale(0.95);
-    }
-    50% {
-      opacity: 0.48;
-      transform: translate3d(10px, -16px, 0) scale(1.05);
-    }
-  }
-
   .landing-reveal {
     animation: landingReveal 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
     animation-delay: var(--landing-delay, 0ms);
@@ -314,50 +253,8 @@ const heroCarouselStyles = `
     animation: landingLineFlow 4.8s ease-in-out infinite;
   }
 
-  .landing-hero-haze {
-    animation: landingHeroHaze 9s ease-in-out infinite;
-  }
-
-  .landing-hero-particle {
-    animation: landingHeroParticleFloat 7.5s ease-in-out infinite;
-    animation-delay: var(--landing-delay, 0ms);
-  }
-
-  .landing-hero-stage {
-    background-color: #08060d;
-    background-image:
-      radial-gradient(ellipse 58% 70% at 74% 48%, rgba(124, 58, 237, 0.22) 0%, transparent 58%),
-      radial-gradient(ellipse 42% 50% at 18% 18%, rgba(168, 85, 247, 0.08) 0%, transparent 55%),
-      linear-gradient(180deg, #08060d 0%, #0c0814 48%, #08060d 100%);
-  }
-
-  .landing-hero-dots {
-    background-image: radial-gradient(rgba(168, 85, 247, 0.32) 1px, transparent 1.2px);
-    background-size: 16px 16px;
-    mask-image: radial-gradient(ellipse 68% 72% at 42% 50%, black 12%, transparent 72%);
-    opacity: 0.28;
-  }
-
-  .landing-hero-main-glow {
-    box-shadow:
-      0 0 0 1px rgba(168, 85, 247, 0.42),
-      0 0 28px rgba(124, 58, 237, 0.28),
-      0 18px 50px rgba(0, 0, 0, 0.45);
-  }
-
-  .landing-hero-satellite-glow {
-    box-shadow:
-      0 0 0 1px rgba(168, 85, 247, 0.4),
-      0 0 18px rgba(124, 58, 237, 0.28);
-  }
-
-  .landing-hero-deco-ring {
-    border: 1px solid rgba(168, 85, 247, 0.38);
-    box-shadow: 0 0 14px rgba(124, 58, 237, 0.18);
-  }
-
   .landing-hero-cta {
-    background-color: hsl(var(--primary)) !important;
+    background-color: hsl(var(--primary-cta)) !important;
     box-shadow: var(--shadow-accent);
   }
 
@@ -367,10 +264,6 @@ const heroCarouselStyles = `
 
   .landing-hero-cta:active {
     background-color: hsl(var(--primary-cta-active)) !important;
-  }
-
-  .landing-hero-vibe {
-    color: hsl(var(--primary));
   }
 
   .landing-event-card {
@@ -389,9 +282,7 @@ const heroCarouselStyles = `
   @media (prefers-reduced-motion: reduce) {
     .landing-reveal,
     .landing-glow,
-    .landing-flow-line > span,
-    .landing-hero-haze,
-    .landing-hero-particle {
+    .landing-flow-line > span {
       animation: none;
     }
 
@@ -582,44 +473,41 @@ const LandingEventCard = ({
       rel={opensEventDetail ? "noopener noreferrer" : undefined}
       className={`group block h-full ${mobileHorizontalItemClass}`}
     >
-      <article className="landing-event-card relative h-full min-h-[11.25rem] overflow-hidden rounded-lg border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1 hover:border-border hover:shadow-[var(--shadow-elegant)]">
-        <div className="absolute inset-0 overflow-hidden">
+      <article className="landing-event-card relative h-full overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-card)] transition-all duration-300 hover:-translate-y-1 hover:border-primary hover:shadow-[var(--shadow-elegant)]">
+        <div className="relative aspect-video overflow-hidden">
           <img
             src={imageSrc}
             alt={title}
             className="landing-event-card__image h-full w-full object-cover"
             onError={handleImageError}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-background/5" />
-          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-background/55 to-transparent" />
-          <div className="theme-gradient-primary absolute inset-0 opacity-10 transition-opacity duration-500 group-hover:opacity-20" />
         </div>
 
-        <div className="relative flex h-full min-h-[11.25rem] flex-col justify-between p-3 sm:min-h-[inherit]">
+        <div className="relative flex flex-col gap-4 bg-card p-4">
           <div className="flex items-start justify-between gap-2">
             {category && (
-              <div className="max-w-[62%] truncate rounded-full border border-border/40 bg-card/85 px-2.5 py-1 text-[0.68rem] font-medium leading-none text-foreground shadow-[var(--shadow-card)] backdrop-blur-md">
+              <div className="max-w-[62%] truncate rounded-full bg-secondary px-2.5 py-1 text-[0.68rem] font-medium leading-none text-secondary-foreground">
                 {category}
               </div>
             )}
             {price && (
-              <div className="inline-flex min-w-[4.75rem] shrink-0 items-center justify-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-[0.68rem] font-bold leading-none tabular-nums text-accent shadow-[var(--shadow-card)] backdrop-blur-md">
+              <div className="inline-flex min-w-[4.75rem] shrink-0 items-center justify-center rounded-full bg-secondary px-3 py-1.5 text-[0.68rem] font-bold leading-none tabular-nums text-secondary-foreground">
                 {price}
               </div>
             )}
           </div>
 
           <div className="mt-auto">
-            <h3 className="line-clamp-2 text-sm font-black leading-tight text-foreground drop-shadow-xl transition-colors group-hover:text-accent sm:text-base">
+            <h3 className="line-clamp-2 text-sm font-black leading-tight text-foreground transition-colors group-hover:text-accent-foreground sm:text-base">
               {title}
             </h3>
             <div className="mt-2 grid gap-1 text-[0.7rem] text-muted-foreground">
               <div className="flex items-center gap-1.5">
-                <CalendarRange className="h-3 w-3 shrink-0 text-accent" />
+                <CalendarRange className="h-3 w-3 shrink-0 text-accent-foreground" />
                 <span className="line-clamp-1">{date}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <MapPin className="h-3 w-3 shrink-0 text-accent" />
+                <MapPin className="h-3 w-3 shrink-0 text-accent-foreground" />
                 <span className="line-clamp-1">{location}</span>
               </div>
             </div>
@@ -705,8 +593,6 @@ const LandingDiscoverySection = ({
 };
 
 const LandingPage = () => {
-  const [activeHeroSlide, setActiveHeroSlide] = useState(0);
-  const heroVideoRef = useRef(null);
   const [eventSections, setEventSections] = useState({});
   const [sectionsLoading, setSectionsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -722,15 +608,6 @@ const LandingPage = () => {
   const [searchError, setSearchError] = useState("");
   const [hasSearchResults, setHasSearchResults] = useState(false);
   const searchRequestRef = useRef(0);
-
-  useEffect(() => {
-    heroSlides
-      .filter((slide) => slide.type === "image")
-      .forEach((slide) => {
-        const image = new Image();
-        image.src = slide.src;
-      });
-  }, []);
 
   const runSearch = async ({ query }) => {
     const normalizedQuery = query.trim();
@@ -824,31 +701,6 @@ const LandingPage = () => {
   }, [searchQuery]);
 
   useEffect(() => {
-    const activeSlide = heroSlides[activeHeroSlide];
-
-    if (activeSlide.type === "video") {
-      const video = heroVideoRef.current;
-
-      if (!video) return undefined;
-
-      video.currentTime = 0;
-      const playAttempt = video.play();
-      if (playAttempt?.catch) playAttempt.catch(() => {});
-      return undefined;
-    }
-
-    if (heroVideoRef.current) {
-      heroVideoRef.current.pause();
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setActiveHeroSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 4000);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [activeHeroSlide]);
-
-  useEffect(() => {
     let isMounted = true;
 
     const fetchSectionEvents = async () => {
@@ -900,20 +752,6 @@ const LandingPage = () => {
     };
   }, []);
 
-  const handleHeroVideoEnded = () => {
-    setActiveHeroSlide(1);
-  };
-
-  const goToPreviousHeroSlide = () => {
-    setActiveHeroSlide(
-      (prev) => (prev - 1 + heroSlides.length) % heroSlides.length,
-    );
-  };
-
-  const goToNextHeroSlide = () => {
-    setActiveHeroSlide((prev) => (prev + 1) % heroSlides.length);
-  };
-
   const handleSearchSubmit = () => {
     runSearch({ query: searchQuery });
   };
@@ -957,21 +795,17 @@ const LandingPage = () => {
 
   return (
     <div className="landing-homepage min-h-screen flex flex-col overflow-hidden bg-background text-foreground">
-      <style>{heroCarouselStyles}</style>
+      <style>{landingStyles}</style>
       <Header forceMainHeader />
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="landing-hero-stage relative isolate overflow-hidden pb-10 pt-20 sm:pb-12 sm:pt-24 md:min-h-[calc(100svh-0.5rem)] md:pb-8">
-          <div className="landing-hero-haze pointer-events-none absolute right-[12%] top-[22%] h-[22rem] w-[22rem] rounded-full bg-primary/25 blur-3xl" />
-          <div className="landing-hero-haze pointer-events-none absolute bottom-[12%] right-[28%] h-56 w-56 rounded-full bg-secondary/15 blur-3xl [animation-delay:1.2s]" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-background" />
-
-          <div className="container relative z-10 grid items-center gap-10 px-4 sm:px-6 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] md:gap-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.18fr)] lg:px-8 xl:gap-10">
-            <div className="landing-reveal max-w-[34rem] md:self-start md:pt-2 lg:pt-4">
-              <h1 className="hero-heading max-w-[11ch] text-left text-[2.65rem] font-extrabold leading-[0.98] tracking-tight text-foreground text-pretty sm:text-6xl md:text-5xl lg:text-[4.35rem] xl:text-[4.7rem]">
+        <section className="relative isolate overflow-hidden bg-background pb-16 pt-28 sm:pb-20 sm:pt-36" style={{ backgroundImage: "radial-gradient(circle at 80% 20%, rgba(162,89,201,0.08) 0%, transparent 60%)" }}>
+          <div className="container relative z-10 grid items-center gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8">
+            <div className="landing-reveal max-w-[36rem]">
+              <h1 className="hero-heading max-w-[11ch] text-left text-[2.65rem] font-extrabold leading-[0.98] tracking-tight text-foreground text-pretty sm:text-6xl lg:text-[4.7rem]">
                 Find your{" "}
-                <span className="theme-gradient-primary bg-clip-text text-transparent">
+                <span className="text-primary">
                   vibe.
                 </span>
               </h1>
@@ -980,122 +814,19 @@ const LandingPage = () => {
                 in as an attendee and enjoy the city's best experiences.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link to="/auth">
-                  <Button
+                  <Button asChild
                     size="lg"
                     variant="default"
                     className="landing-hero-cta h-auto w-full rounded-xl px-7 py-4 text-base font-semibold text-primary-foreground transition-all duration-300 hover:-translate-y-0.5 sm:w-auto"
                   >
-                    Host an Event
-                    <ArrowRight className="h-4 w-4" />
+                    <Link to="/auth">Host an Event
+                    <ArrowRight className="h-4 w-4" /></Link>
                   </Button>
-                </Link>
               </div>
             </div>
-
-            <div className="relative mx-auto h-[min(88vw,32rem)] w-full max-w-[42rem] overflow-visible md:h-[min(48vw,30rem)] lg:ml-auto lg:mr-0 lg:h-[min(46vw,38rem)]">
-              <div
-                aria-hidden="true"
-                className="landing-hero-dots pointer-events-none absolute left-0 top-[12%] h-[70%] w-[58%]"
-              />
-
-              <span
-                aria-hidden="true"
-                className="landing-hero-deco-ring pointer-events-none absolute right-[6%] top-[3%] size-12 rounded-full bg-transparent sm:size-14"
-              />
-              <span
-                aria-hidden="true"
-                className="landing-hero-deco-ring pointer-events-none absolute right-0 top-[38%] size-16 rounded-full bg-transparent sm:size-[4.5rem]"
-              />
-              <span
-                aria-hidden="true"
-                className="landing-hero-deco-ring pointer-events-none absolute bottom-[8%] right-[16%] size-10 rounded-full bg-transparent"
-              />
-              <span
-                aria-hidden="true"
-                className="landing-hero-deco-ring pointer-events-none absolute left-[22%] top-[30%] size-8 rounded-full bg-transparent"
-              />
-
-              <div
-                key={`satellite-a-${getHeroSlide(activeHeroSlide + 1).id}`}
-                className="landing-hero-satellite-glow pointer-events-none absolute left-[2%] top-[6%] z-10 size-[clamp(6.75rem,16vw,10.5rem)] overflow-hidden rounded-full"
-                aria-hidden="true"
-              >
-                <HeroMediaFill
-                  slide={getHeroSlide(activeHeroSlide + 1)}
-                  className="h-full w-full object-cover"
-                  autoPlay
-                  loop
-                />
-              </div>
-              <div
-                key={`satellite-b-${getHeroSlide(activeHeroSlide + 2).id}`}
-                className="landing-hero-satellite-glow pointer-events-none absolute bottom-[8%] left-0 z-10 size-[clamp(6.5rem,15vw,10rem)] overflow-hidden rounded-full"
-                aria-hidden="true"
-              >
-                <HeroMediaFill
-                  slide={getHeroSlide(activeHeroSlide + 2)}
-                  className="h-full w-full object-cover"
-                  autoPlay
-                  loop
-                />
-              </div>
-
-              <div className="absolute right-0 top-1/2 z-20 aspect-square h-[92%] max-h-[36.25rem] -translate-y-1/2">
-                <div className="relative aspect-square w-full">
-                  <div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute -inset-3 rounded-full border border-[color:var(--color-accent-secondary)]/25 sm:-inset-5"
-                  />
-                  <div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute -inset-7 rounded-full border border-[color:var(--color-accent-primary)]/15 sm:-inset-9"
-                  />
-                  <div
-                    className="landing-hero-main-glow relative h-full w-full overflow-hidden rounded-full"
-                    role="region"
-                    aria-roledescription="carousel"
-                    aria-label="Featured event media"
-                  >
-                    {heroSlides.map((slide, index) => {
-                      const isActive = index === activeHeroSlide;
-
-                      return (
-                        <div
-                          key={slide.id}
-                          className={`absolute inset-0 transition-opacity duration-700 ease-out ${isActive ? "opacity-100" : "pointer-events-none opacity-0"}`}
-                        >
-                          <HeroMediaFill
-                            slide={slide}
-                            videoRef={index === 0 ? heroVideoRef : null}
-                            onEnded={handleHeroVideoEnded}
-                            className={`h-full w-full object-cover transition-transform duration-700 ease-out ${isActive ? "scale-100" : "scale-[1.04]"}`}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="absolute -bottom-1 -right-1 z-30 flex items-center gap-2 sm:bottom-3 sm:right-3">
-                    <button
-                      type="button"
-                      aria-label="Previous hero slide"
-                      onClick={goToPreviousHeroSlide}
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--color-accent-secondary)]/45 bg-background/70 text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition-all duration-300 hover:border-[color:var(--color-accent-secondary)] hover:bg-background/90 hover:shadow-[0_0_18px_rgba(124,58,237,0.35)] sm:h-11 sm:w-11"
-                    >
-                      <ChevronLeft className="h-5 w-5" />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="Next hero slide"
-                      onClick={goToNextHeroSlide}
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--color-accent-secondary)]/45 bg-background/70 text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition-all duration-300 hover:border-[color:var(--color-accent-secondary)] hover:bg-background/90 hover:shadow-[0_0_18px_rgba(124,58,237,0.35)] sm:h-11 sm:w-11"
-                    >
-                      <ChevronRight className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-border bg-surface shadow-[var(--shadow-elegant)]">
+              <img src="/images/ph1.jpg" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
+              <video aria-hidden="true" className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden" src="/videos/party2.mp4" poster="/images/ph1.jpg" autoPlay muted loop playsInline preload="metadata" />
             </div>
           </div>
         </section>
@@ -1107,7 +838,7 @@ const LandingPage = () => {
             <div className="relative">
               <div className="landing-reveal flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.18em] text-accent">
+                  <p className="text-sm uppercase tracking-[0.18em] text-accent-foreground">
                     Discover
                   </p>
                   <h2 className="mt-3 text-3xl font-black text-foreground sm:text-4xl">
@@ -1140,18 +871,18 @@ const LandingPage = () => {
                       className={`group landing-reveal block h-full text-left ${mobileHorizontalItemClass}`}
                       style={{ "--landing-delay": `${index * 70}ms` }}
                     >
-                      <div className="relative flex h-full min-h-[16.75rem] flex-col overflow-hidden rounded-[1.5rem] border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-2 hover:border-border hover:shadow-[var(--shadow-elegant)]">
+                      <div className="relative flex h-full min-h-[16.75rem] flex-col overflow-hidden rounded-[1.5rem] border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-2 hover:border-primary hover:shadow-[var(--shadow-elegant)]">
                         <div className="relative flex-1 overflow-hidden">
                           <img
                             src={section.image}
                             alt=""
                             aria-hidden="true"
-                            className="h-full min-h-[10.25rem] w-full object-cover opacity-75 transition duration-700 group-hover:scale-110 group-hover:opacity-95"
+                            className="h-full min-h-[10.25rem] w-full object-cover transition duration-700 group-hover:scale-105"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-transparent" />
                           <div className="theme-gradient-primary absolute inset-0 opacity-10" />
-                          <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full border border-border/40 bg-card/75 px-3 py-1.5 text-xs font-medium text-foreground shadow-[var(--shadow-card)] backdrop-blur-md">
-                            <Icon className="h-3.5 w-3.5 text-accent" />
+                          <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full border border-border bg-secondary px-3 py-1.5 text-xs font-medium text-foreground shadow-[var(--shadow-card)] backdrop-blur-md">
+                            <Icon className="h-3.5 w-3.5 text-accent-foreground" />
                             {section.eyebrow}
                           </div>
                         </div>
@@ -1198,12 +929,12 @@ const LandingPage = () => {
         ))}
 
         {/* How it works */}
-        <section className="relative bg-background py-10 sm:py-12">
+        <section className="relative bg-surface py-10 sm:py-12">
           <div className="container relative px-4 sm:px-6 lg:px-8">
-            <div className="relative overflow-hidden rounded-[2rem] border border-border/50 bg-card/60 p-5 shadow-[var(--shadow-elegant)] backdrop-blur-xl sm:p-8">
+            <div className="relative overflow-hidden rounded-[2rem] border border-border/50 bg-card p-5 shadow-[var(--shadow-elegant)] backdrop-blur-xl sm:p-8">
               <div className="theme-gradient-primary absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full opacity-10 blur-3xl" />
               <div className="landing-reveal relative mx-auto mb-12 max-w-3xl text-center">
-                <p className="text-sm uppercase tracking-[0.18em] text-accent">
+                <p className="text-sm uppercase tracking-[0.18em] text-accent-foreground">
                   Seamless
                 </p>
                 <h2 className="mt-3 text-3xl font-black text-foreground sm:text-4xl">
@@ -1222,12 +953,12 @@ const LandingPage = () => {
                 {steps.map(({ title, desc, icon: Icon }, index) => (
                   <div
                     key={title}
-                    className="landing-reveal relative overflow-hidden rounded-[1.5rem] border border-border/50 bg-card/70 p-6 shadow-[var(--shadow-card)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:border-border hover:shadow-[var(--shadow-elegant)]"
+                    className="landing-reveal relative overflow-hidden rounded-[1.5rem] border border-border/50 bg-card/70 p-6 shadow-[var(--shadow-card)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:border-primary hover:shadow-[var(--shadow-elegant)]"
                     style={{ "--landing-delay": `${index * 100}ms` }}
                   >
                     <div className="theme-gradient-primary absolute inset-0 opacity-10" />
                     <div className="relative flex items-center justify-between">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/40 bg-accent/10 text-accent shadow-[var(--shadow-card)]">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/40 bg-accent/10 text-accent-foreground shadow-[var(--shadow-card)]">
                         <Icon className="h-6 w-6" />
                       </div>
                       <span className="text-xs font-semibold text-muted-foreground">
@@ -1248,13 +979,13 @@ const LandingPage = () => {
         </section>
 
         {/* Platform trust */}
-        <section className="relative bg-background py-10 sm:py-12">
+        <section className="relative bg-surface py-10 sm:py-12">
           <div className="container relative px-4 sm:px-6 lg:px-8">
-            <div className="relative overflow-hidden rounded-[2rem] border border-border/50 bg-card/60 p-5 shadow-[var(--shadow-elegant)] backdrop-blur-xl sm:p-8">
+            <div className="relative overflow-hidden rounded-[2rem] border border-border/50 bg-card p-5 shadow-[var(--shadow-elegant)] backdrop-blur-xl sm:p-8">
               <div className="theme-gradient-primary absolute right-0 top-8 h-80 w-80 rounded-full opacity-10 blur-3xl" />
               <div className="relative grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
                 <div className="landing-reveal space-y-5">
-                  <p className="text-sm uppercase tracking-[0.18em] text-accent">
+                  <p className="text-sm uppercase tracking-[0.18em] text-accent-foreground">
                     Platform
                   </p>
                   <h2 className="text-3xl font-black text-foreground sm:text-4xl">
@@ -1267,15 +998,15 @@ const LandingPage = () => {
                   </p>
                   <div className="flex flex-wrap gap-3 text-foreground">
                     <div className="flex items-center gap-2 rounded-full border border-border/40 bg-card/70 px-4 py-2 text-sm shadow-[var(--shadow-card)] backdrop-blur">
-                      <Search className="h-4 w-4 text-accent" />
+                      <Search className="h-4 w-4 text-accent-foreground" />
                       Event, artist, and venue search
                     </div>
                     <div className="flex items-center gap-2 rounded-full border border-border/40 bg-card/70 px-4 py-2 text-sm shadow-[var(--shadow-card)] backdrop-blur">
-                      <ShieldCheck className="h-4 w-4 text-accent" />
+                      <ShieldCheck className="h-4 w-4 text-accent-foreground" />
                       Secure booking flow
                     </div>
                     <div className="flex items-center gap-2 rounded-full border border-border/40 bg-card/70 px-4 py-2 text-sm shadow-[var(--shadow-card)] backdrop-blur">
-                      <Clock3 className="h-4 w-4 text-accent" />
+                      <Clock3 className="h-4 w-4 text-accent-foreground" />
                       Event updates and entry tools
                     </div>
                   </div>
@@ -1290,7 +1021,7 @@ const LandingPage = () => {
                     <div className="grid gap-4">
                       <div className="rounded-2xl border border-border/40 bg-background/45 p-5">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/40 bg-accent/10 text-accent">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/40 bg-accent/10 text-accent-foreground">
                             <Sparkles className="h-5 w-5" />
                           </div>
                           <div>
@@ -1307,7 +1038,7 @@ const LandingPage = () => {
 
                       <div className="rounded-2xl border border-border/40 bg-background/45 p-5">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/40 bg-accent/10 text-accent">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/40 bg-accent/10 text-accent-foreground">
                             <ShieldCheck className="h-5 w-5" />
                           </div>
                           <div>
@@ -1324,7 +1055,7 @@ const LandingPage = () => {
 
                       <div className="rounded-2xl border border-border/40 bg-background/45 p-5">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/40 bg-accent/10 text-accent">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/40 bg-accent/10 text-accent-foreground">
                             <Clock3 className="h-5 w-5" />
                           </div>
                           <div>
@@ -1347,7 +1078,7 @@ const LandingPage = () => {
         </section>
 
         {/* Final CTA */}
-        <section className="relative bg-background py-10 sm:py-12">
+        <section className="relative bg-surface py-10 sm:py-12">
           <div className="container relative px-4 text-center sm:px-6 lg:px-8">
             <div className="relative mx-auto max-w-4xl overflow-hidden rounded-[2rem] border border-border/50 bg-card/75 p-7 shadow-[var(--shadow-elegant)] backdrop-blur-xl sm:p-10">
               <div className="landing-glow pointer-events-none absolute left-1/2 top-8 h-52 w-52 -translate-x-1/2 rounded-full bg-secondary/20 blur-3xl" />

@@ -71,10 +71,10 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
       <Button
         variant="ghost"
-        className="absolute top-6 left-6 text-gray-400 hover:text-white hover:bg-gray-900 rounded-lg"
+        className="absolute top-6 left-6 text-muted-foreground hover:text-foreground hover:bg-surface rounded-lg"
         onClick={() => navigate("/auth")}
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
@@ -82,26 +82,26 @@ const ResetPassword = () => {
       </Button>
 
       <div className="w-full max-w-md">
-        <Card className="border border-gray-800 bg-gray-900 shadow-xl">
+        <Card className="border border-border bg-surface shadow-xl">
           <CardHeader className="text-center pb-5 pt-6">
             <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="w-14 h-14 bg-gray-800 rounded-xl flex items-center justify-center border border-gray-700">
+              <div className="w-14 h-14 bg-surface rounded-xl flex items-center justify-center border border-border">
                 <img src={Logo} alt="MapMyParty" className="w-9 h-9" />
               </div>
             </div>
-            <CardTitle className="text-3xl font-bold text-white">Reset Password</CardTitle>
-            <CardDescription className="text-gray-400 text-sm mt-1">
+            <CardTitle className="text-3xl font-bold text-foreground">Reset Password</CardTitle>
+            <CardDescription className="text-muted-foreground text-sm mt-1">
               Choose a new password for your MapMyParty account.
             </CardDescription>
           </CardHeader>
           <CardContent className="px-6 pb-6">
             {!token ? (
               <div className="space-y-4 rounded-xl border border-red-500/20 bg-red-500/10 p-5">
-                <div className="flex items-center gap-3 text-red-200">
+                <div className="flex items-center gap-3 text-destructive">
                   <ShieldCheck className="h-5 w-5" />
                   <p className="text-sm font-medium">This reset link is invalid or incomplete.</p>
                 </div>
-                <p className="text-sm text-gray-300">
+                <p className="text-sm text-muted-foreground">
                   Request a fresh password reset email from the login page and use the newest link.
                 </p>
                 <Button asChild className="w-full">
@@ -110,16 +110,16 @@ const ResetPassword = () => {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="rounded-xl border border-gray-800 bg-gray-950/60 p-4 text-sm text-gray-300">
-                  <div className="flex items-center gap-2 text-white font-medium">
-                    <KeyRound className="h-4 w-4 text-red-400" />
+                <div className="rounded-xl border border-border bg-surface p-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2 text-foreground font-medium">
+                    <KeyRound className="h-4 w-4 text-destructive" />
                     Password requirements
                   </div>
-                  <p className="mt-2 text-gray-400">{PASSWORD_REQUIREMENTS_TEXT}</p>
+                  <p className="mt-2 text-muted-foreground">{PASSWORD_REQUIREMENTS_TEXT}</p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="new-password" className="text-gray-300 text-sm font-medium">
+                  <Label htmlFor="new-password" className="text-muted-foreground text-sm font-medium">
                     New password
                   </Label>
                   <div className="relative">
@@ -131,13 +131,13 @@ const ResetPassword = () => {
                       onChange={(event) =>
                         setForm((current) => ({ ...current, password: event.target.value }))
                       }
-                      className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 pr-10 h-10 text-sm"
+                      className="border-border bg-surface text-foreground placeholder:text-muted-foreground focus:border-red-500 pr-10 h-10 text-sm"
                     />
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-300"
+                      className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-muted-foreground"
                       onClick={() => setShowPassword((current) => !current)}
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -146,7 +146,7 @@ const ResetPassword = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password" className="text-gray-300 text-sm font-medium">
+                  <Label htmlFor="confirm-password" className="text-muted-foreground text-sm font-medium">
                     Confirm password
                   </Label>
                   <div className="relative">
@@ -158,13 +158,13 @@ const ResetPassword = () => {
                       onChange={(event) =>
                         setForm((current) => ({ ...current, confirmPassword: event.target.value }))
                       }
-                      className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-red-500 pr-10 h-10 text-sm"
+                      className="border-border bg-surface text-foreground placeholder:text-muted-foreground focus:border-red-500 pr-10 h-10 text-sm"
                     />
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-300"
+                      className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-muted-foreground"
                       onClick={() => setShowConfirmPassword((current) => !current)}
                     >
                       {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -173,7 +173,7 @@ const ResetPassword = () => {
                 </div>
 
                 {serverError ? (
-                  <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+                  <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-destructive">
                     {serverError}
                   </div>
                 ) : null}
@@ -196,7 +196,7 @@ const ResetPassword = () => {
                 <Button
                   type="button"
                   variant="ghost"
-                  className="w-full text-gray-300 hover:text-white hover:bg-gray-800"
+                  className="w-full text-muted-foreground hover:text-foreground hover:bg-surface"
                   onClick={() => navigate("/auth")}
                 >
                   Back to login

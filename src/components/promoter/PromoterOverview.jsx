@@ -144,7 +144,7 @@ const PromoterOverview = () => {
             <CardContent>
               <Link
                 to={task.to}
-                className="inline-flex items-center gap-2 text-sm font-semibold text-accent transition hover:text-accent/80"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-accent-foreground transition hover:text-accent-foreground/80"
               >
                 Open queue <ArrowRight className="h-4 w-4" />
               </Link>

@@ -13,7 +13,7 @@ const EventOverview = ({ event }) => {
         <Button 
           asChild 
           variant="outline" 
-          className="group flex items-center gap-1 hover:bg-primary hover:text-primary-foreground transition-colors"
+          className="group flex items-center gap-1 hover:bg-primaryCTA hover:text-primary-foreground transition-colors"
         >
           <Link to={`/event/${event.id}/overview`} target="_blank" rel="noopener noreferrer">
             View Full Overview <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />

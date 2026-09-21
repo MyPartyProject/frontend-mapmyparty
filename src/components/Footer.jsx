@@ -18,7 +18,7 @@ const socials = [
 
 const Footer = () => {
   return (
-    <footer className="relative mt-0 overflow-hidden border-t border-border/40 bg-background text-foreground">
+    <footer className="theme-inverse relative mt-0 overflow-hidden border-t border-border/40 bg-background text-foreground">
       <div className="theme-gradient-primary absolute inset-x-0 top-0 h-px opacity-35" />
 
       <div className="relative mx-auto max-w-7xl px-5 py-10 sm:px-6 lg:px-8">
@@ -40,7 +40,7 @@ const Footer = () => {
               <p className="font-semibold text-foreground">Explore</p>
               <div className="space-y-2 text-muted-foreground">
                 {navLinks.map((link) => (
-                  <Link key={link.to} to={link.to} className="block transition-colors hover:text-accent">
+                  <Link key={link.to} to={link.to} className="block transition-colors hover:text-accent-foreground">
                     {link.label}
                   </Link>
                 ))}
@@ -50,19 +50,19 @@ const Footer = () => {
             <div className="space-y-3 lg:min-w-44">
               <p className="font-semibold text-foreground">Support</p>
               <div className="space-y-2 text-muted-foreground">
-                <Link to="/contact" className="block transition-colors hover:text-accent">
+                <Link to="/contact" className="block transition-colors hover:text-accent-foreground">
                   Help & Support
                 </Link>
-                <Link to="/privacy-policy" className="block transition-colors hover:text-accent">
+                <Link to="/privacy-policy" className="block transition-colors hover:text-accent-foreground">
                   Privacy Policy
                 </Link>
-                <Link to="/terms-conditions" className="block transition-colors hover:text-accent">
+                <Link to="/terms-conditions" className="block transition-colors hover:text-accent-foreground">
                   Terms & Conditions
                 </Link>
-                <Link to="/cookie-policy" className="block transition-colors hover:text-accent">
+                <Link to="/cookie-policy" className="block transition-colors hover:text-accent-foreground">
                   Cookie Policy
                 </Link>
-                <Link to="/refund-policy" className="block transition-colors hover:text-accent">
+                <Link to="/refund-policy" className="block transition-colors hover:text-accent-foreground">
                   Refund Policy
                 </Link>
               </div>
@@ -78,7 +78,7 @@ const Footer = () => {
                     aria-label={label}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-border/40 bg-card/70 text-muted-foreground shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:border-border hover:bg-accent hover:text-accent-foreground"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-border/40 bg-card/70 text-muted-foreground shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:border-border hover:bg-primaryCTA hover:text-inverse"
                   >
                     <Icon className="h-4 w-4" />
                   </a>

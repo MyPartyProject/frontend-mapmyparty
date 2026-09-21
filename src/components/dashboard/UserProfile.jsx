@@ -349,8 +349,8 @@ export default function UserProfile() {
     return (
       <div className="w-full h-full flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-[#D60024]"></div>
-          <p className="text-sm text-white/40">Loading profile...</p>
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary"></div>
+          <p className="text-sm text-muted-foreground">Loading profile...</p>
         </div>
       </div>
     );
@@ -360,7 +360,7 @@ export default function UserProfile() {
     return (
       <div className="w-full h-full flex items-center justify-center min-h-[60vh]">
         <div className="text-center max-w-sm space-y-4">
-          <p className="text-sm text-red-400">{error}</p>
+          <p className="text-sm text-destructive">{error}</p>
           <Button onClick={() => window.location.reload()} className="text-sm">
             Try Again
           </Button>
@@ -370,38 +370,38 @@ export default function UserProfile() {
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 text-white space-y-6">
+    <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 text-foreground space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white">My Profile</h1>
-        <p className="text-sm text-white/40 mt-1">Manage your account settings and preferences</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">My Profile</h1>
+        <p className="text-sm text-muted-foreground mt-1">Manage your account settings and preferences</p>
       </div>
 
       {/* Profile Card */}
-      <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-5 sm:p-6">
+      <div className="rounded-xl border border-border bg-muted p-5 sm:p-6">
         <div className="flex flex-col sm:flex-row gap-5">
           {/* Avatar */}
           <div className="flex-shrink-0">
             <Dialog open={avatarDialogOpen} onOpenChange={(open) => { setAvatarDialogOpen(open); if (!open) stopCameraStream(); }}>
               <DialogTrigger asChild>
                 <button type="button" className="relative group" onClick={() => setAvatarDialogOpen(true)}>
-                  <Avatar className="h-20 w-20 sm:h-24 sm:w-24 border-2 border-white/[0.08]">
+                  <Avatar className="h-20 w-20 sm:h-24 sm:w-24 border-2 border-border">
                     {profile.avatarUrl ? (
                       <AvatarImage src={profile.avatarUrl} alt={profile.name} />
                     ) : (
-                      <AvatarFallback className="text-xl font-bold bg-[#D60024] text-white">
+                      <AvatarFallback className="text-xl font-bold bg-primaryCTA text-inverse">
                         {getInitials(profile.name, profile.email)}
                       </AvatarFallback>
                     )}
                   </Avatar>
-                  <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Camera className="h-5 w-5 text-white" />
+                  <div className="theme-inverse absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Camera className="h-5 w-5 text-foreground" />
                   </div>
                 </button>
               </DialogTrigger>
-              <DialogContent className="max-w-md bg-[#0e0e18] border-white/[0.08] text-white rounded-xl">
+              <DialogContent className="max-w-md bg-background border-border text-foreground rounded-xl">
                 <DialogHeader>
-                  <DialogTitle className="text-white text-base">Choose Avatar</DialogTitle>
+                  <DialogTitle className="text-foreground text-base">Choose Avatar</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="grid grid-cols-4 gap-3">
@@ -409,7 +409,7 @@ export default function UserProfile() {
                       <button
                         key={option.id}
                         type="button"
-                        className="flex flex-col items-center gap-1.5 rounded-lg border border-white/[0.06] bg-white/[0.03] p-3 transition-all hover:border-[#D60024] hover:bg-[#D60024]/5"
+                        className="flex flex-col items-center gap-1.5 rounded-lg border border-border bg-muted p-3 transition-all hover:border-primary hover:bg-primaryCTA/5"
                         onClick={() => setPendingAvatar(option.url)}
                         disabled={avatarUploading}
                       >
@@ -417,27 +417,27 @@ export default function UserProfile() {
                           <AvatarImage src={option.url} alt={option.label} />
                           <AvatarFallback>{option.label.slice(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
-                        <span className="text-[10px] text-white/50 text-center leading-tight">{option.label}</span>
+                        <span className="text-[10px] text-muted-foreground text-center leading-tight">{option.label}</span>
                       </button>
                     ))}
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <Button variant="outline" className="border-white/[0.08] text-white/70 hover:bg-white/[0.05] text-xs" type="button" onClick={() => fileInputRef.current?.click()} disabled={avatarUploading}>
+                    <Button variant="outline" className="border-border text-muted-foreground hover:bg-muted text-xs" type="button" onClick={() => fileInputRef.current?.click()} disabled={avatarUploading}>
                       <Upload className="h-3.5 w-3.5 mr-1.5" /> Upload
                     </Button>
-                    <Button variant="outline" className="border-white/[0.08] text-white/70 hover:bg-white/[0.05] text-xs" type="button" onClick={openCamera} disabled={avatarUploading}>
+                    <Button variant="outline" className="border-border text-muted-foreground hover:bg-muted text-xs" type="button" onClick={openCamera} disabled={avatarUploading}>
                       <Camera className="h-3.5 w-3.5 mr-1.5" /> Camera
                     </Button>
                   </div>
                   <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
                   {pendingAvatar && (
-                    <div className="flex items-center gap-3 p-3 rounded-lg border border-white/[0.06] bg-white/[0.02]">
-                      <Avatar className="h-12 w-12 border border-white/[0.08]">
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted">
+                      <Avatar className="h-12 w-12 border border-border">
                         <AvatarImage src={pendingAvatar} alt="Preview" />
                         <AvatarFallback>AV</AvatarFallback>
                       </Avatar>
                       <div className="flex gap-2 flex-1">
-                        <Button variant="outline" type="button" onClick={() => setPendingAvatar(null)} className="flex-1 h-8 border-white/[0.08] text-white/60 text-xs" disabled={avatarUploading}>Cancel</Button>
+                        <Button variant="outline" type="button" onClick={() => setPendingAvatar(null)} className="flex-1 h-8 border-border text-muted-foreground text-xs" disabled={avatarUploading}>Cancel</Button>
                         <Button type="button" onClick={() => handleAvatarSave(pendingAvatar)} className="flex-1 h-8 text-xs" disabled={avatarUploading}>
                           {avatarUploading ? "Saving..." : "Save"}
                         </Button>
@@ -450,25 +450,25 @@ export default function UserProfile() {
 
             {/* Camera Dialog */}
             <Dialog open={cameraDialogOpen} onOpenChange={(open) => { setCameraDialogOpen(open); if (!open) { stopCameraStream(); setCapturedPhoto(null); } }}>
-              <DialogContent className="max-w-md bg-[#0e0e18] border-white/[0.08] text-white rounded-xl">
+              <DialogContent className="max-w-md bg-background border-border text-foreground rounded-xl">
                 <DialogHeader>
-                  <DialogTitle className="text-white text-base">Take a Photo</DialogTitle>
+                  <DialogTitle className="text-foreground text-base">Take a Photo</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-3">
                   {!capturedPhoto ? (
                     <>
-                      <video ref={videoRef} className="w-full rounded-lg border border-white/[0.06]" autoPlay muted />
+                      <video ref={videoRef} className="w-full rounded-lg border border-border" autoPlay muted />
                       <canvas ref={canvasRef} className="hidden" />
                       <div className="flex gap-2 justify-end">
-                        <Button variant="outline" type="button" onClick={() => { stopCameraStream(); setCameraDialogOpen(false); }} className="border-white/[0.08] text-white/60 text-xs">Cancel</Button>
+                        <Button variant="outline" type="button" onClick={() => { stopCameraStream(); setCameraDialogOpen(false); }} className="border-border text-muted-foreground text-xs">Cancel</Button>
                         <Button type="button" onClick={captureFromCamera} className="text-xs" disabled={avatarUploading}>Capture</Button>
                       </div>
                     </>
                   ) : (
                     <>
-                      <img src={capturedPhoto} alt="Captured" className="w-full rounded-lg border border-white/[0.06] object-contain max-h-72" />
+                      <img src={capturedPhoto} alt="Captured" className="w-full rounded-lg border border-border object-contain max-h-72" />
                       <div className="flex gap-2 justify-end">
-                        <Button variant="outline" type="button" onClick={startCamera} className="border-white/[0.08] text-white/60 text-xs" disabled={avatarUploading}>Retake</Button>
+                        <Button variant="outline" type="button" onClick={startCamera} className="border-border text-muted-foreground text-xs" disabled={avatarUploading}>Retake</Button>
                         <Button type="button" onClick={() => handleAvatarSave(capturedPhoto)} className="text-xs" disabled={avatarUploading}>
                           {avatarUploading ? "Saving..." : "Save Photo"}
                         </Button>
@@ -483,28 +483,28 @@ export default function UserProfile() {
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-2">
-              <Badge className="bg-[#D60024]/10 text-[#D60024] border border-[#D60024]/20 text-xs font-medium">
+              <Badge className="bg-primaryCTA/10 text-accent-foreground border border-primary/20 text-xs font-medium">
                 {roleLabelMap[role] || "Attendee"}
               </Badge>
               {profile.isVerified && (
-                <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-medium">
+                <Badge className="bg-emerald-500/10 text-success border border-emerald-500/20 text-xs font-medium">
                   <ShieldCheck className="h-3 w-3 mr-1" /> Verified
                 </Badge>
               )}
             </div>
-            <h2 className="text-xl font-bold text-white mb-1">{profile.name}</h2>
-            <p className="text-xs text-white/40 flex items-center gap-1.5 mb-4">
+            <h2 className="text-xl font-bold text-foreground mb-1">{profile.name}</h2>
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5 mb-4">
               <CalendarIcon className="h-3.5 w-3.5" />
               Member since {memberSince}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white/[0.04] border border-white/[0.06]">
-                <Mail className="h-4 w-4 text-white/30 flex-shrink-0" />
-                <span className="text-sm text-white/70 truncate">{profile.email}</span>
+              <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-muted border border-border">
+                <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <span className="text-sm text-muted-foreground truncate">{profile.email}</span>
               </div>
-              <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white/[0.04] border border-white/[0.06]">
-                <Phone className="h-4 w-4 text-white/30 flex-shrink-0" />
-                <span className="text-sm text-white/70">{profile.phone}</span>
+              <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-muted border border-border">
+                <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <span className="text-sm text-muted-foreground">{profile.phone}</span>
               </div>
             </div>
           </div>
@@ -513,23 +513,23 @@ export default function UserProfile() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Account Security */}
-        <div className="lg:col-span-2 rounded-xl border border-white/[0.06] bg-white/[0.03]">
-          <div className="px-5 py-4 border-b border-white/[0.06] flex items-center gap-2">
-            <Lock className="h-4 w-4 text-white/30" />
-            <h3 className="text-sm font-semibold text-white">Account Security</h3>
+        <div className="lg:col-span-2 rounded-xl border border-border bg-muted">
+          <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+            <Lock className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-foreground">Account Security</h3>
           </div>
           <div className="p-5 space-y-3">
             {detailRows.map((row) => {
               const Icon = row.icon;
               return (
-                <div key={row.label} className="flex items-center justify-between p-3.5 rounded-lg bg-white/[0.03] border border-white/[0.04] hover:border-white/[0.08] transition-colors">
+                <div key={row.label} className="flex items-center justify-between p-3.5 rounded-lg bg-muted border border-border hover:border-border transition-colors">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="h-8 w-8 rounded-lg bg-white/[0.05] flex items-center justify-center flex-shrink-0">
-                      <Icon className="h-4 w-4 text-white/30" />
+                    <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                      <Icon className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider">{row.label}</p>
-                      <p className="text-sm font-medium text-white truncate">{row.value}</p>
+                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{row.label}</p>
+                      <p className="text-sm font-medium text-foreground truncate">{row.value}</p>
                     </div>
                   </div>
                   {row.editable && (
@@ -537,7 +537,7 @@ export default function UserProfile() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleEditClick(row.field)}
-                      className="text-white/40 hover:text-white hover:bg-white/[0.06] h-8 px-3 text-xs"
+                      className="text-muted-foreground hover:text-foreground hover:bg-muted h-8 px-3 text-xs"
                     >
                       <Edit2 className="h-3.5 w-3.5 mr-1.5" />
                       Edit
@@ -552,20 +552,20 @@ export default function UserProfile() {
         {/* Stats */}
         <div className="space-y-3">
           {[
-            { label: "Total Bookings", value: "12", icon: Ticket, color: "#D60024" },
-            { label: "Favorite Events", value: "8", icon: Heart, color: "#60a5fa" },
-            { label: "Average Rating", value: "4.8", icon: Star, color: "#22c55e" },
+            { label: "Total Bookings", value: "12", icon: Ticket, color: "#8438B0" },
+            { label: "Favorite Events", value: "8", icon: Heart, color: "#8438B0" },
+            { label: "Average Rating", value: "4.8", icon: Star, color: "#8438B0" },
           ].map((stat) => {
             const Icon = stat.icon;
             return (
-              <div key={stat.label} className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-4">
+              <div key={stat.label} className="rounded-xl border border-border bg-muted p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${stat.color}12` }}>
                     <Icon className="h-4 w-4" style={{ color: stat.color }} />
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-white">{stat.value}</p>
-                <p className="text-xs text-white/40 mt-0.5">{stat.label}</p>
+                <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
               </div>
             );
           })}
@@ -574,10 +574,10 @@ export default function UserProfile() {
 
       {/* Edit Dialog */}
       <Dialog open={!!editField} onOpenChange={(open) => !open && !isSaving && setEditField(null)}>
-        <DialogContent className="sm:max-w-md bg-[#0e0e18] border-white/[0.08] text-white rounded-xl">
+        <DialogContent className="sm:max-w-md bg-background border-border text-foreground rounded-xl">
           <form onSubmit={handleEditSubmit} className="space-y-4 py-1">
             <DialogHeader>
-              <DialogTitle className="text-white text-base">
+              <DialogTitle className="text-foreground text-base">
                 {editField === "name" ? "Update Name" : isCreatePasswordFlow ? "Create Password" : "Update Password"}
               </DialogTitle>
             </DialogHeader>
@@ -586,34 +586,34 @@ export default function UserProfile() {
               <div className="space-y-3">
                 {!isCreatePasswordFlow && (
                   <div className="space-y-1.5">
-                    <Label htmlFor="profile-current-password" className="text-white/60 text-xs">Current Password</Label>
+                    <Label htmlFor="profile-current-password" className="text-muted-foreground text-xs">Current Password</Label>
                     <Input id="profile-current-password" type="password" placeholder="Enter current password" value={passwordValues.current}
                       onChange={(event) => setPasswordValues((prev) => ({ ...prev, current: event.target.value }))}
                       required={!isCreatePasswordFlow} autoComplete="current-password"
-                      className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/25 h-9 text-sm" />
+                      className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-9 text-sm" />
                   </div>
                 )}
                 <div className="space-y-1.5">
-                  <Label htmlFor="profile-new-password" className="text-white/60 text-xs">{isCreatePasswordFlow ? "Create Password" : "New Password"}</Label>
+                  <Label htmlFor="profile-new-password" className="text-muted-foreground text-xs">{isCreatePasswordFlow ? "Create Password" : "New Password"}</Label>
                   <Input id="profile-new-password" type="password" placeholder={isCreatePasswordFlow ? "Enter password" : "Enter new password"} value={passwordValues.new}
                     onChange={(event) => setPasswordValues((prev) => ({ ...prev, new: event.target.value }))}
                     required autoComplete="new-password"
-                    className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/25 h-9 text-sm" />
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-9 text-sm" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="profile-confirm-password" className="text-white/60 text-xs">Confirm Password</Label>
+                  <Label htmlFor="profile-confirm-password" className="text-muted-foreground text-xs">Confirm Password</Label>
                   <Input id="profile-confirm-password" type="password" placeholder={isCreatePasswordFlow ? "Confirm password" : "Confirm new password"} value={passwordValues.confirm}
                     onChange={(event) => setPasswordValues((prev) => ({ ...prev, confirm: event.target.value }))}
                     required autoComplete="new-password"
-                    className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/25 h-9 text-sm" />
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-9 text-sm" />
                 </div>
               </div>
             ) : (
               <div className="space-y-1.5">
-                <Label htmlFor="profile-edit-input" className="text-white/60 text-xs">Full Name</Label>
+                <Label htmlFor="profile-edit-input" className="text-muted-foreground text-xs">Full Name</Label>
                 <Input id="profile-edit-input" type="text" placeholder="Enter your full name" value={editValue}
                   onChange={(event) => setEditValue(event.target.value)} required
-                  className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/25 h-9 text-sm" />
+                  className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-9 text-sm" />
               </div>
             )}
 

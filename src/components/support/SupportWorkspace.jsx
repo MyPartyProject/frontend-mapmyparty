@@ -407,14 +407,14 @@ const SupportWorkspace = ({
 
   const requesterDetailContent = selectedTicket ? (
     <>
-      <div className="space-y-3 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
+      <div className="space-y-3 rounded-2xl border border-border bg-muted p-4 sm:p-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-white/35">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
               {selectedTicket.publicId || selectedTicket.id}
             </p>
-            <h2 className="mt-2 text-lg font-semibold text-white sm:text-xl">{selectedTicket.subject}</h2>
-            <p className="mt-2 whitespace-pre-wrap text-sm text-white/55">
+            <h2 className="mt-2 text-lg font-semibold text-foreground sm:text-xl">{selectedTicket.subject}</h2>
+            <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
               {selectedTicket.description || "No description provided."}
             </p>
           </div>
@@ -425,30 +425,30 @@ const SupportWorkspace = ({
             <Badge className={supportPriorityTone(selectedTicket.priority)}>
               {formatSupportLabel(selectedTicket.priority)}
             </Badge>
-            <Badge className="border-white/15 bg-white/5 text-white/70">
+            <Badge className="border-border bg-muted text-muted-foreground">
               {formatSupportLabel(selectedTicket.category)}
             </Badge>
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-            <p className="text-xs uppercase tracking-[0.16em] text-white/35">Requester</p>
-            <p className="mt-2 text-sm font-medium text-white">{selectedTicket.requester?.name}</p>
-            <p className="text-xs text-white/45">{selectedTicket.requester?.email || "No email"}</p>
-            <p className="mt-1 text-xs text-white/45">
+          <div className="rounded-xl border border-border bg-muted p-4">
+            <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Requester</p>
+            <p className="mt-2 text-sm font-medium text-foreground">{selectedTicket.requester?.name}</p>
+            <p className="text-xs text-muted-foreground">{selectedTicket.requester?.email || "No email"}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
               {formatSupportLabel(selectedTicket.requesterType)}
             </p>
           </div>
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-            <p className="text-xs uppercase tracking-[0.16em] text-white/35">Timeline</p>
-            <p className="mt-2 text-xs text-white/55">Created: {formatSupportDateTime(selectedTicket.createdAt)}</p>
-            <p className="text-xs text-white/55">Updated: {formatSupportDateTime(selectedTicket.updatedAt)}</p>
+          <div className="rounded-xl border border-border bg-muted p-4">
+            <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Timeline</p>
+            <p className="mt-2 text-xs text-muted-foreground">Created: {formatSupportDateTime(selectedTicket.createdAt)}</p>
+            <p className="text-xs text-muted-foreground">Updated: {formatSupportDateTime(selectedTicket.updatedAt)}</p>
             {selectedTicket.resolvedAt && (
-              <p className="text-xs text-white/55">Resolved: {formatSupportDateTime(selectedTicket.resolvedAt)}</p>
+              <p className="text-xs text-muted-foreground">Resolved: {formatSupportDateTime(selectedTicket.resolvedAt)}</p>
             )}
             {selectedTicket.closedAt && (
-              <p className="text-xs text-white/55">Closed: {formatSupportDateTime(selectedTicket.closedAt)}</p>
+              <p className="text-xs text-muted-foreground">Closed: {formatSupportDateTime(selectedTicket.closedAt)}</p>
             )}
           </div>
         </div>
@@ -456,7 +456,7 @@ const SupportWorkspace = ({
         {selectedMeta.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {selectedMeta.map((item) => (
-              <Badge key={`${item.label}-${item.value}`} className="border-white/15 bg-white/5 text-white/70">
+              <Badge key={`${item.label}-${item.value}`} className="border-border bg-muted text-muted-foreground">
                 {item.label}: {item.value}
               </Badge>
             ))}
@@ -466,12 +466,12 @@ const SupportWorkspace = ({
 
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <MessageSquare className="h-4 w-4 text-white/60" />
-          <h3 className="text-base font-semibold text-white">Conversation</h3>
+          <MessageSquare className="h-4 w-4 text-muted-foreground" />
+          <h3 className="text-base font-semibold text-foreground">Conversation</h3>
         </div>
         <div className="space-y-3">
           {selectedTicket.messages.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/[0.08] bg-white/[0.02] p-5 text-sm text-white/50">
+            <div className="rounded-xl border border-dashed border-border bg-muted p-5 text-sm text-muted-foreground">
               No replies yet.
             </div>
           ) : (
@@ -481,23 +481,23 @@ const SupportWorkspace = ({
                 className={`rounded-xl border p-4 ${
                   message.isInternal
                     ? "border-amber-500/20 bg-amber-500/10"
-                    : "border-white/[0.08] bg-white/[0.02]"
+                    : "border-border bg-muted"
                 }`}
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-medium text-white">{message.author?.name || "Support"}</p>
+                  <p className="text-sm font-medium text-foreground">{message.author?.name || "Support"}</p>
                   <Badge
                     className={
                       message.isInternal
-                        ? "border-amber-500/25 bg-amber-500/10 text-amber-300"
-                        : "border-white/15 bg-white/5 text-white/70"
+                        ? "border-amber-500/25 bg-amber-500/10 text-warning"
+                        : "border-border bg-muted text-muted-foreground"
                     }
                   >
                     {formatSupportLabel(message.messageType)}
                   </Badge>
-                  <span className="text-xs text-white/40">{formatSupportDateTime(message.createdAt)}</span>
+                  <span className="text-xs text-muted-foreground">{formatSupportDateTime(message.createdAt)}</span>
                 </div>
-                <p className="mt-2 whitespace-pre-wrap text-sm text-white/75">
+                <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
                   {message.body || "No content"}
                 </p>
               </div>
@@ -506,10 +506,10 @@ const SupportWorkspace = ({
         </div>
       </div>
 
-      <Card className="border-white/[0.08] bg-white/[0.02]">
+      <Card className="border-border bg-muted">
         <CardHeader>
-          <CardTitle className="text-base text-white">Reply</CardTitle>
-          <CardDescription className="text-white/45">
+          <CardTitle className="text-base text-foreground">Reply</CardTitle>
+          <CardDescription className="text-muted-foreground">
             {selectedTicket.status === "CLOSED"
               ? "Closed tickets cannot receive new requester replies."
               : "Reply in-thread and staff will see the update in the queue."}
@@ -519,7 +519,7 @@ const SupportWorkspace = ({
           <Textarea
             value={replyBody}
             onChange={(event) => setReplyBody(event.target.value)}
-            className="min-h-[120px] border-white/[0.08] bg-white/[0.03] text-white"
+            className="min-h-[120px] border-border bg-muted text-foreground"
             placeholder="Add more context or answer the support team."
             disabled={selectedTicket.status === "CLOSED"}
           />
@@ -533,15 +533,15 @@ const SupportWorkspace = ({
   ) : null;
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 text-white">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 text-foreground">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">{title}</h1>
-          <p className="mt-1 text-sm text-white/45">{description}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         </div>
         <Button
           variant="outline"
-          className="border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.08]"
+          className="border-border bg-muted text-foreground hover:bg-muted"
           onClick={() => {
             loadTickets();
             if (selectedTicketId) loadTicketDetail(selectedTicketId);
@@ -560,14 +560,14 @@ const SupportWorkspace = ({
             { label: "Unassigned", value: summary?.unassigned ?? summary?.counts?.unassigned ?? 0, icon: UserRound },
             { label: "Waiting for user", value: summary?.waitingForUser ?? summary?.counts?.waitingForUser ?? 0, icon: Clock3 },
           ].map((item) => (
-            <Card key={item.label} className="border-white/[0.08] bg-white/[0.03]">
+            <Card key={item.label} className="border-border bg-muted">
               <CardContent className="flex items-center justify-between p-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-white/40">{item.label}</p>
-                  <p className="mt-2 text-2xl font-semibold text-white">{item.value}</p>
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{item.label}</p>
+                  <p className="mt-2 text-2xl font-semibold text-foreground">{item.value}</p>
                 </div>
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/[0.05]">
-                  <item.icon className="h-5 w-5 text-white/70" />
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted">
+                  <item.icon className="h-5 w-5 text-muted-foreground" />
                 </div>
               </CardContent>
             </Card>
@@ -576,21 +576,21 @@ const SupportWorkspace = ({
       )}
 
       {!isStaff && (
-        <Card className="border-white/[0.08] bg-white/[0.03]">
+        <Card className="border-border bg-muted">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-white">
+            <CardTitle className="flex items-center gap-2 text-foreground">
               <Plus className="h-4 w-4" />
               Create a Ticket
             </CardTitle>
-            <CardDescription className="text-white/45">
+            <CardDescription className="text-muted-foreground">
               Raise an issue from your dashboard and keep all replies in one thread.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col gap-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-4 rounded-2xl border border-border bg-muted p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-medium text-white">Start a new support conversation</p>
-                <p className="mt-1 text-xs text-white/45">
+                <p className="text-sm font-medium text-foreground">Start a new support conversation</p>
+                <p className="mt-1 text-xs text-muted-foreground">
                   Open the ticket form in a focused modal and submit from any device.
                 </p>
               </div>
@@ -604,21 +604,21 @@ const SupportWorkspace = ({
       )}
 
       {isStaff && (
-        <Card className="border-white/[0.08] bg-white/[0.03]">
+        <Card className="border-border bg-muted">
           <CardHeader>
-            <CardTitle className="text-white">Queue Filters</CardTitle>
-            <CardDescription className="text-white/45">
+            <CardTitle className="text-foreground">Queue Filters</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Narrow the shared support queue before opening a ticket.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div className="space-y-2">
-              <Label className="text-white/70">Status</Label>
+              <Label className="text-muted-foreground">Status</Label>
               <Select
                 value={queueFilters.status}
                 onValueChange={(value) => setQueueFilters((prev) => ({ ...prev, status: value }))}
               >
-                <SelectTrigger className="border-white/[0.08] bg-white/[0.03] text-white">
+                <SelectTrigger className="border-border bg-muted text-foreground">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -632,12 +632,12 @@ const SupportWorkspace = ({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-white/70">Priority</Label>
+              <Label className="text-muted-foreground">Priority</Label>
               <Select
                 value={queueFilters.priority}
                 onValueChange={(value) => setQueueFilters((prev) => ({ ...prev, priority: value }))}
               >
-                <SelectTrigger className="border-white/[0.08] bg-white/[0.03] text-white">
+                <SelectTrigger className="border-border bg-muted text-foreground">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -651,12 +651,12 @@ const SupportWorkspace = ({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-white/70">Category</Label>
+              <Label className="text-muted-foreground">Category</Label>
               <Select
                 value={queueFilters.category}
                 onValueChange={(value) => setQueueFilters((prev) => ({ ...prev, category: value }))}
               >
-                <SelectTrigger className="border-white/[0.08] bg-white/[0.03] text-white">
+                <SelectTrigger className="border-border bg-muted text-foreground">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -670,12 +670,12 @@ const SupportWorkspace = ({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-white/70">Requester</Label>
+              <Label className="text-muted-foreground">Requester</Label>
               <Select
                 value={queueFilters.requesterType}
                 onValueChange={(value) => setQueueFilters((prev) => ({ ...prev, requesterType: value }))}
               >
-                <SelectTrigger className="border-white/[0.08] bg-white/[0.03] text-white">
+                <SelectTrigger className="border-border bg-muted text-foreground">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -686,38 +686,38 @@ const SupportWorkspace = ({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-white/70">Search</Label>
+              <Label className="text-muted-foreground">Search</Label>
               <Input
                 value={queueFilters.search}
                 onChange={(event) => setQueueFilters((prev) => ({ ...prev, search: event.target.value }))}
-                className="border-white/[0.08] bg-white/[0.03] text-white"
+                className="border-border bg-muted text-foreground"
                 placeholder="Subject, public id, email"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-white/70">Assignee</Label>
+              <Label className="text-muted-foreground">Assignee</Label>
               <Input
                 value={queueFilters.assignee}
                 onChange={(event) => setQueueFilters((prev) => ({ ...prev, assignee: event.target.value }))}
-                className="border-white/[0.08] bg-white/[0.03] text-white"
+                className="border-border bg-muted text-foreground"
                 placeholder="User id or email"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-white/70">Organizer ID</Label>
+              <Label className="text-muted-foreground">Organizer ID</Label>
               <Input
                 value={queueFilters.organizerId}
                 onChange={(event) => setQueueFilters((prev) => ({ ...prev, organizerId: event.target.value }))}
-                className="border-white/[0.08] bg-white/[0.03] text-white"
+                className="border-border bg-muted text-foreground"
                 placeholder="Optional"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-white/70">Event ID</Label>
+              <Label className="text-muted-foreground">Event ID</Label>
               <Input
                 value={queueFilters.eventId}
                 onChange={(event) => setQueueFilters((prev) => ({ ...prev, eventId: event.target.value }))}
-                className="border-white/[0.08] bg-white/[0.03] text-white"
+                className="border-border bg-muted text-foreground"
                 placeholder="Optional"
               />
             </div>
@@ -726,23 +726,23 @@ const SupportWorkspace = ({
       )}
 
       <div className={`grid grid-cols-1 gap-6 ${isStaff ? "xl:grid-cols-[360px_minmax(0,1fr)]" : ""}`}>
-        <Card className="border-white/[0.08] bg-white/[0.03]">
+        <Card className="border-border bg-muted">
           <CardHeader>
-            <CardTitle className="text-white">{isStaff ? "Ticket Queue" : "Your Tickets"}</CardTitle>
-            <CardDescription className="text-white/45">
+            <CardTitle className="text-foreground">{isStaff ? "Ticket Queue" : "Your Tickets"}</CardTitle>
+            <CardDescription className="text-muted-foreground">
               {loadingTickets ? "Loading..." : `${tickets.length} ticket${tickets.length === 1 ? "" : "s"}`}
             </CardDescription>
           </CardHeader>
           <CardContent className={isStaff ? "space-y-3" : ""}>
             {loadingTickets ? (
-              <div className="flex items-center justify-center py-12 text-white/50">
+              <div className="flex items-center justify-center py-12 text-muted-foreground">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Loading tickets...
               </div>
             ) : tickets.length === 0 ? (
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-6 text-center">
-                <LifeBuoy className="mx-auto mb-3 h-8 w-8 text-white/25" />
-                <p className="text-sm text-white/55">No support tickets found.</p>
+              <div className="rounded-xl border border-border bg-muted p-6 text-center">
+                <LifeBuoy className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">No support tickets found.</p>
               </div>
             ) : (
               <div className={isStaff ? "space-y-3" : "grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"}>
@@ -755,14 +755,14 @@ const SupportWorkspace = ({
                     onClick={() => handleTicketCardClick(ticket.id)}
                     className={`w-full rounded-2xl border p-4 text-left transition ${
                       active
-                        ? "border-[#D60024]/45 bg-[#D60024]/10"
-                        : "border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05]"
+                        ? "border-primary/45 bg-primaryCTA/10"
+                        : "border-border bg-muted hover:bg-muted"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-white">{ticket.subject}</p>
-                        <p className="mt-1 text-xs text-white/40">
+                        <p className="truncate text-sm font-semibold text-foreground">{ticket.subject}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
                           {ticket.publicId || ticket.id} • {formatSupportDateTime(ticket.updatedAt)}
                         </p>
                       </div>
@@ -774,21 +774,21 @@ const SupportWorkspace = ({
                       <Badge className={supportPriorityTone(ticket.priority)}>
                         {formatSupportLabel(ticket.priority)}
                       </Badge>
-                      <Badge className="border-white/15 bg-white/5 text-white/70">
+                      <Badge className="border-border bg-muted text-muted-foreground">
                         {formatSupportLabel(ticket.category)}
                       </Badge>
                       {isStaff && (
-                        <Badge className="border-white/15 bg-white/5 text-white/70">
+                        <Badge className="border-border bg-muted text-muted-foreground">
                           {formatSupportLabel(ticket.requesterType)}
                         </Badge>
                       )}
                     </div>
                     {!isStaff && (
-                      <div className="mt-4 flex items-center justify-between border-t border-white/[0.06] pt-3">
-                        <span className="text-xs text-white/40">
+                      <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+                        <span className="text-xs text-muted-foreground">
                           {ticket.messages?.length || 0} message{ticket.messages?.length === 1 ? "" : "s"}
                         </span>
-                        <span className="text-xs font-medium text-[#D60024]">View details</span>
+                        <span className="text-xs font-medium text-accent-foreground">View details</span>
                       </div>
                     )}
                   </button>
@@ -800,34 +800,34 @@ const SupportWorkspace = ({
         </Card>
 
         {isStaff && (
-        <Card className="border-white/[0.08] bg-white/[0.03]">
+        <Card className="border-border bg-muted">
           <CardHeader>
-            <CardTitle className="text-white">Ticket Detail</CardTitle>
-            <CardDescription className="text-white/45">
+            <CardTitle className="text-foreground">Ticket Detail</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Full thread, context, and workflow controls.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             {loadingDetail ? (
-              <div className="flex items-center justify-center py-20 text-white/50">
+              <div className="flex items-center justify-center py-20 text-muted-foreground">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Loading detail...
               </div>
             ) : !selectedTicket ? (
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-8 text-center">
-                <MessageSquare className="mx-auto mb-3 h-8 w-8 text-white/25" />
-                <p className="text-sm text-white/55">Select a ticket to view the conversation.</p>
+              <div className="rounded-xl border border-border bg-muted p-8 text-center">
+                <MessageSquare className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">Select a ticket to view the conversation.</p>
               </div>
             ) : (
               <>
-                <div className="space-y-3 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
+                <div className="space-y-3 rounded-2xl border border-border bg-muted p-5">
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0">
-                      <p className="text-xs uppercase tracking-[0.18em] text-white/35">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
                         {selectedTicket.publicId || selectedTicket.id}
                       </p>
-                      <h2 className="mt-2 text-xl font-semibold text-white">{selectedTicket.subject}</h2>
-                      <p className="mt-2 text-sm text-white/55 whitespace-pre-wrap">
+                      <h2 className="mt-2 text-xl font-semibold text-foreground">{selectedTicket.subject}</h2>
+                      <p className="mt-2 text-sm text-muted-foreground whitespace-pre-wrap">
                         {selectedTicket.description || "No description provided."}
                       </p>
                     </div>
@@ -838,30 +838,30 @@ const SupportWorkspace = ({
                       <Badge className={supportPriorityTone(selectedTicket.priority)}>
                         {formatSupportLabel(selectedTicket.priority)}
                       </Badge>
-                      <Badge className="border-white/15 bg-white/5 text-white/70">
+                      <Badge className="border-border bg-muted text-muted-foreground">
                         {formatSupportLabel(selectedTicket.category)}
                       </Badge>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-                      <p className="text-xs uppercase tracking-[0.16em] text-white/35">Requester</p>
-                      <p className="mt-2 text-sm font-medium text-white">{selectedTicket.requester?.name}</p>
-                      <p className="text-xs text-white/45">{selectedTicket.requester?.email || "No email"}</p>
-                      <p className="mt-1 text-xs text-white/45">
+                    <div className="rounded-xl border border-border bg-muted p-4">
+                      <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Requester</p>
+                      <p className="mt-2 text-sm font-medium text-foreground">{selectedTicket.requester?.name}</p>
+                      <p className="text-xs text-muted-foreground">{selectedTicket.requester?.email || "No email"}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
                         {formatSupportLabel(selectedTicket.requesterType)}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-                      <p className="text-xs uppercase tracking-[0.16em] text-white/35">Timeline</p>
-                      <p className="mt-2 text-xs text-white/55">Created: {formatSupportDateTime(selectedTicket.createdAt)}</p>
-                      <p className="text-xs text-white/55">Updated: {formatSupportDateTime(selectedTicket.updatedAt)}</p>
+                    <div className="rounded-xl border border-border bg-muted p-4">
+                      <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Timeline</p>
+                      <p className="mt-2 text-xs text-muted-foreground">Created: {formatSupportDateTime(selectedTicket.createdAt)}</p>
+                      <p className="text-xs text-muted-foreground">Updated: {formatSupportDateTime(selectedTicket.updatedAt)}</p>
                       {selectedTicket.resolvedAt && (
-                        <p className="text-xs text-white/55">Resolved: {formatSupportDateTime(selectedTicket.resolvedAt)}</p>
+                        <p className="text-xs text-muted-foreground">Resolved: {formatSupportDateTime(selectedTicket.resolvedAt)}</p>
                       )}
                       {selectedTicket.closedAt && (
-                        <p className="text-xs text-white/55">Closed: {formatSupportDateTime(selectedTicket.closedAt)}</p>
+                        <p className="text-xs text-muted-foreground">Closed: {formatSupportDateTime(selectedTicket.closedAt)}</p>
                       )}
                     </div>
                   </div>
@@ -869,7 +869,7 @@ const SupportWorkspace = ({
                   {selectedMeta.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {selectedMeta.map((item) => (
-                        <Badge key={`${item.label}-${item.value}`} className="border-white/15 bg-white/5 text-white/70">
+                        <Badge key={`${item.label}-${item.value}`} className="border-border bg-muted text-muted-foreground">
                           {item.label}: {item.value}
                         </Badge>
                       ))}
@@ -879,13 +879,13 @@ const SupportWorkspace = ({
 
                 {isStaff && (
                   <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                    <Card className="border-white/[0.08] bg-white/[0.02]">
+                    <Card className="border-border bg-muted">
                       <CardHeader>
-                        <CardTitle className="text-base text-white">Assignment</CardTitle>
+                        <CardTitle className="text-base text-foreground">Assignment</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <div className="space-y-2">
-                          <Label className="text-white/70">Assigned user</Label>
+                          <Label className="text-muted-foreground">Assigned user</Label>
                           <Input
                             value={assignmentForm.assignedToUserId}
                             onChange={(event) =>
@@ -894,12 +894,12 @@ const SupportWorkspace = ({
                                 assignedToUserId: event.target.value,
                               }))
                             }
-                            className="border-white/[0.08] bg-white/[0.03] text-white"
+                            className="border-border bg-muted text-foreground"
                             placeholder="User id"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-white/70">Team role</Label>
+                          <Label className="text-muted-foreground">Team role</Label>
                           <Input
                             value={assignmentForm.assignedTeamRole}
                             onChange={(event) =>
@@ -908,7 +908,7 @@ const SupportWorkspace = ({
                                 assignedTeamRole: event.target.value,
                               }))
                             }
-                            className="border-white/[0.08] bg-white/[0.03] text-white"
+                            className="border-border bg-muted text-foreground"
                             placeholder="ADMIN"
                           />
                         </div>
@@ -919,18 +919,18 @@ const SupportWorkspace = ({
                       </CardContent>
                     </Card>
 
-                    <Card className="border-white/[0.08] bg-white/[0.02]">
+                    <Card className="border-border bg-muted">
                       <CardHeader>
-                        <CardTitle className="text-base text-white">Status</CardTitle>
+                        <CardTitle className="text-base text-foreground">Status</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <div className="space-y-2">
-                          <Label className="text-white/70">Status</Label>
+                          <Label className="text-muted-foreground">Status</Label>
                           <Select
                             value={statusForm.status}
                             onValueChange={(value) => setStatusForm((prev) => ({ ...prev, status: value }))}
                           >
-                            <SelectTrigger className="border-white/[0.08] bg-white/[0.03] text-white">
+                            <SelectTrigger className="border-border bg-muted text-foreground">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -943,7 +943,7 @@ const SupportWorkspace = ({
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-white/70">Resolution code</Label>
+                          <Label className="text-muted-foreground">Resolution code</Label>
                           <Input
                             value={statusForm.resolutionCode}
                             onChange={(event) =>
@@ -952,7 +952,7 @@ const SupportWorkspace = ({
                                 resolutionCode: event.target.value,
                               }))
                             }
-                            className="border-white/[0.08] bg-white/[0.03] text-white"
+                            className="border-border bg-muted text-foreground"
                             placeholder="Required before close"
                           />
                         </div>
@@ -967,12 +967,12 @@ const SupportWorkspace = ({
 
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4 text-white/60" />
-                    <h3 className="text-base font-semibold text-white">Conversation</h3>
+                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                    <h3 className="text-base font-semibold text-foreground">Conversation</h3>
                   </div>
                   <div className="space-y-3">
                     {selectedTicket.messages.length === 0 ? (
-                      <div className="rounded-xl border border-dashed border-white/[0.08] bg-white/[0.02] p-5 text-sm text-white/50">
+                      <div className="rounded-xl border border-dashed border-border bg-muted p-5 text-sm text-muted-foreground">
                         No replies yet.
                       </div>
                     ) : (
@@ -982,23 +982,23 @@ const SupportWorkspace = ({
                           className={`rounded-xl border p-4 ${
                             message.isInternal
                               ? "border-amber-500/20 bg-amber-500/10"
-                              : "border-white/[0.08] bg-white/[0.02]"
+                              : "border-border bg-muted"
                           }`}
                         >
                           <div className="flex flex-wrap items-center gap-2">
-                            <p className="text-sm font-medium text-white">{message.author?.name || "Support"}</p>
+                            <p className="text-sm font-medium text-foreground">{message.author?.name || "Support"}</p>
                             <Badge
                               className={
                                 message.isInternal
-                                  ? "border-amber-500/25 bg-amber-500/10 text-amber-300"
-                                  : "border-white/15 bg-white/5 text-white/70"
+                                  ? "border-amber-500/25 bg-amber-500/10 text-warning"
+                                  : "border-border bg-muted text-muted-foreground"
                               }
                             >
                               {formatSupportLabel(message.messageType)}
                             </Badge>
-                            <span className="text-xs text-white/40">{formatSupportDateTime(message.createdAt)}</span>
+                            <span className="text-xs text-muted-foreground">{formatSupportDateTime(message.createdAt)}</span>
                           </div>
-                          <p className="mt-2 whitespace-pre-wrap text-sm text-white/75">
+                          <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
                             {message.body || "No content"}
                           </p>
                         </div>
@@ -1008,10 +1008,10 @@ const SupportWorkspace = ({
                 </div>
 
                 {!isStaff && (
-                  <Card className="border-white/[0.08] bg-white/[0.02]">
+                  <Card className="border-border bg-muted">
                     <CardHeader>
-                      <CardTitle className="text-base text-white">Reply</CardTitle>
-                      <CardDescription className="text-white/45">
+                      <CardTitle className="text-base text-foreground">Reply</CardTitle>
+                      <CardDescription className="text-muted-foreground">
                         {selectedTicket.status === "CLOSED"
                           ? "Closed tickets cannot receive new requester replies."
                           : "Reply in-thread and staff will see the update in the queue."}
@@ -1021,7 +1021,7 @@ const SupportWorkspace = ({
                       <Textarea
                         value={replyBody}
                         onChange={(event) => setReplyBody(event.target.value)}
-                        className="min-h-[120px] border-white/[0.08] bg-white/[0.03] text-white"
+                        className="min-h-[120px] border-border bg-muted text-foreground"
                         placeholder="Add more context or answer the support team."
                         disabled={selectedTicket.status === "CLOSED"}
                       />
@@ -1034,10 +1034,10 @@ const SupportWorkspace = ({
                 )}
 
                 {isStaff && (
-                  <Card className="border-white/[0.08] bg-white/[0.02]">
+                  <Card className="border-border bg-muted">
                     <CardHeader>
-                      <CardTitle className="text-base text-white">Internal Note</CardTitle>
-                      <CardDescription className="text-white/45">
+                      <CardTitle className="text-base text-foreground">Internal Note</CardTitle>
+                      <CardDescription className="text-muted-foreground">
                         Internal notes stay hidden from the requester.
                       </CardDescription>
                     </CardHeader>
@@ -1045,7 +1045,7 @@ const SupportWorkspace = ({
                       <Textarea
                         value={internalNoteBody}
                         onChange={(event) => setInternalNoteBody(event.target.value)}
-                        className="min-h-[120px] border-white/[0.08] bg-white/[0.03] text-white"
+                        className="min-h-[120px] border-border bg-muted text-foreground"
                         placeholder="Add triage notes, handoff context, or internal observations."
                       />
                       <Button onClick={handleInternalNote} disabled={submitting}>
@@ -1065,28 +1065,28 @@ const SupportWorkspace = ({
       {!isStaff && (
         <>
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-            <DialogContent className="w-[calc(100vw-1.5rem)] max-w-3xl rounded-2xl border-white/[0.08] bg-[#0e0e18] p-0 text-white sm:w-full">
-              <DialogHeader className="border-b border-white/[0.06] px-4 py-4 sm:px-6">
-                <DialogTitle className="text-white">Create Ticket</DialogTitle>
-                <DialogDescription className="text-white/45">
+            <DialogContent className="w-[calc(100vw-1.5rem)] max-w-3xl rounded-2xl border-border bg-background p-0 text-foreground sm:w-full">
+              <DialogHeader className="border-b border-border px-4 py-4 sm:px-6">
+                <DialogTitle className="text-foreground">Create Ticket</DialogTitle>
+                <DialogDescription className="text-muted-foreground">
                   Share the issue once and track replies from the same thread.
                 </DialogDescription>
               </DialogHeader>
               <div className="max-h-[calc(100dvh-10rem)] overflow-y-auto px-4 py-4 sm:px-6">
                 <form onSubmit={handleCreateTicket} className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                   <div className="space-y-2 lg:col-span-2">
-                    <Label className="text-white/70">Subject</Label>
+                    <Label className="text-muted-foreground">Subject</Label>
                     <Input
                       value={requestForm.subject}
                       onChange={(event) => handleRequestFormChange("subject", event.target.value)}
-                      className="border-white/[0.08] bg-white/[0.03] text-white"
+                      className="border-border bg-muted text-foreground"
                       placeholder="Describe the issue briefly"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-white/70">Category</Label>
+                    <Label className="text-muted-foreground">Category</Label>
                     <Select value={requestForm.category} onValueChange={(value) => handleRequestFormChange("category", value)}>
-                      <SelectTrigger className="border-white/[0.08] bg-white/[0.03] text-white">
+                      <SelectTrigger className="border-border bg-muted text-foreground">
                         <SelectValue placeholder="Choose category" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1099,9 +1099,9 @@ const SupportWorkspace = ({
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-white/70">Priority</Label>
+                    <Label className="text-muted-foreground">Priority</Label>
                     <Select value={requestForm.priority} onValueChange={(value) => handleRequestFormChange("priority", value)}>
-                      <SelectTrigger className="border-white/[0.08] bg-white/[0.03] text-white">
+                      <SelectTrigger className="border-border bg-muted text-foreground">
                         <SelectValue placeholder="Choose priority" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1114,29 +1114,29 @@ const SupportWorkspace = ({
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-white/70">Booking ID</Label>
+                    <Label className="text-muted-foreground">Booking ID</Label>
                     <Input
                       value={requestForm.bookingId}
                       onChange={(event) => handleRequestFormChange("bookingId", event.target.value)}
-                      className="border-white/[0.08] bg-white/[0.03] text-white"
+                      className="border-border bg-muted text-foreground"
                       placeholder="Optional"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-white/70">Event ID</Label>
+                    <Label className="text-muted-foreground">Event ID</Label>
                     <Input
                       value={requestForm.eventId}
                       onChange={(event) => handleRequestFormChange("eventId", event.target.value)}
-                      className="border-white/[0.08] bg-white/[0.03] text-white"
+                      className="border-border bg-muted text-foreground"
                       placeholder="Optional"
                     />
                   </div>
                   <div className="space-y-2 lg:col-span-2">
-                    <Label className="text-white/70">Description</Label>
+                    <Label className="text-muted-foreground">Description</Label>
                     <Textarea
                       value={requestForm.description}
                       onChange={(event) => handleRequestFormChange("description", event.target.value)}
-                      className="min-h-[160px] border-white/[0.08] bg-white/[0.03] text-white"
+                      className="min-h-[160px] border-border bg-muted text-foreground"
                       placeholder="Explain what happened, what you expected, and any IDs or timeline that can help."
                     />
                   </div>
@@ -1144,7 +1144,7 @@ const SupportWorkspace = ({
                     <Button
                       type="button"
                       variant="outline"
-                      className="border-white/[0.08] bg-white/[0.03] text-white hover:bg-white/[0.08]"
+                      className="border-border bg-muted text-foreground hover:bg-muted"
                       onClick={() => setCreateDialogOpen(false)}
                     >
                       Cancel
@@ -1160,23 +1160,23 @@ const SupportWorkspace = ({
           </Dialog>
 
           <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-            <DialogContent className="w-[calc(100vw-1rem)] max-w-5xl rounded-2xl border-white/[0.08] bg-[#0e0e18] p-0 text-white sm:w-full">
-              <DialogHeader className="border-b border-white/[0.06] px-4 py-4 sm:px-6">
-                <DialogTitle className="text-white">Ticket Details</DialogTitle>
-                <DialogDescription className="text-white/45">
+            <DialogContent className="w-[calc(100vw-1rem)] max-w-5xl rounded-2xl border-border bg-background p-0 text-foreground sm:w-full">
+              <DialogHeader className="border-b border-border px-4 py-4 sm:px-6">
+                <DialogTitle className="text-foreground">Ticket Details</DialogTitle>
+                <DialogDescription className="text-muted-foreground">
                   Review the full thread and continue the conversation from here.
                 </DialogDescription>
               </DialogHeader>
               <div className="max-h-[calc(100dvh-9rem)] overflow-y-auto px-4 py-4 sm:px-6">
                 {loadingDetail ? (
-                  <div className="flex items-center justify-center py-20 text-white/50">
+                  <div className="flex items-center justify-center py-20 text-muted-foreground">
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Loading detail...
                   </div>
                 ) : !selectedTicket ? (
-                  <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-8 text-center">
-                    <MessageSquare className="mx-auto mb-3 h-8 w-8 text-white/25" />
-                    <p className="text-sm text-white/55">Select a ticket to view the conversation.</p>
+                  <div className="rounded-xl border border-border bg-muted p-8 text-center">
+                    <MessageSquare className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">Select a ticket to view the conversation.</p>
                   </div>
                 ) : (
                   <div className="space-y-5">

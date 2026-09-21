@@ -70,8 +70,8 @@ const PromoterTopPerformers = () => {
   return (
     <div className="grid md:grid-cols-2 gap-6">
       {/* Top Performing Events */}
-      <Card className="hover:shadow-xl transition-all duration-300 animate-in fade-in-0 slide-in-from-right-4 border-2 border-red-200/50 dark:border-red-800/50">
-        <CardHeader className="bg-red-50 dark:bg-red-900/20 border-b">
+      <Card className="hover:shadow-xl transition-all duration-300 animate-in fade-in-0 slide-in-from-right-4 border-2 border-red-200/50 ">
+        <CardHeader className="bg-red-50  border-b">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-red-600">
               <TrendingUp className="w-5 h-5 text-red-600 animate-pulse" />
@@ -83,7 +83,7 @@ const PromoterTopPerformers = () => {
           {topEvents.map((event, index) => (
             <div
               key={event.id}
-              className="flex items-start gap-4 p-4 rounded-xl bg-gray-50 dark:bg-neutral-900/30 hover:bg-gray-100/70 dark:hover:bg-neutral-800/50 border border-gray-200/50 dark:border-neutral-800/30 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg animate-in fade-in-0 slide-in-from-left-4"
+              className="flex items-start gap-4 p-4 rounded-xl bg-gray-50  hover:bg-gray-100/70  border border-gray-200/50  transition-all duration-300 hover:scale-[1.02] hover:shadow-lg animate-in fade-in-0 slide-in-from-left-4"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className={`text-3xl font-bold ${getRankColor(event.rank)} transition-transform duration-300 hover:scale-110`}>
@@ -95,11 +95,11 @@ const PromoterTopPerformers = () => {
                   by {event.organizer}
                 </p>
                 <div className="flex flex-wrap gap-3 text-sm">
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-red-100  text-red-700 ">
                     <Users className="w-3 h-3" />
                     <span>{event.ticketsSold} tickets</span>
                   </div>
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 dark:bg-neutral-900/30 text-black dark:text-white font-semibold">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100  text-black  font-semibold">
                     <DollarSign className="w-3 h-3" />
                     <span>₹{event.revenue.toLocaleString()}</span>
                   </div>
@@ -111,11 +111,11 @@ const PromoterTopPerformers = () => {
       </Card>
 
       {/* Top Performing Organizers */}
-      <Card className="hover:shadow-xl transition-all duration-300 animate-in fade-in-0 slide-in-from-left-4 border-2 border-black/20 dark:border-neutral-700/50">
-        <CardHeader className="bg-black text-white border-b">
+      <Card className="hover:shadow-xl transition-all duration-300 animate-in fade-in-0 slide-in-from-left-4 border-2 border-black/20 ">
+        <CardHeader className="bg-secondary text-secondary-foreground border-b">
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-white">
-              <TrendingUp className="w-5 h-5 text-white animate-pulse" />
+            <CardTitle className="flex items-center gap-2 text-foreground">
+              <TrendingUp className="w-5 h-5 text-foreground animate-pulse" />
               Top Performing Organizers
             </CardTitle>
           </div>
@@ -124,7 +124,7 @@ const PromoterTopPerformers = () => {
           {topOrganizers.map((organizer, index) => (
             <div
               key={organizer.id}
-              className="flex items-start gap-4 p-4 rounded-xl bg-gray-50 dark:bg-neutral-900/30 hover:bg-gray-100/70 dark:hover:bg-neutral-800/50 border border-gray-200/30 dark:border-neutral-800/30 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg animate-in fade-in-0 slide-in-from-right-4"
+              className="flex items-start gap-4 p-4 rounded-xl bg-gray-50  hover:bg-gray-100/70  border border-gray-200/30  transition-all duration-300 hover:scale-[1.02] hover:shadow-lg animate-in fade-in-0 slide-in-from-right-4"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className={`text-3xl font-bold ${getRankColor(organizer.rank)} transition-transform duration-300 hover:scale-110`}>
@@ -133,11 +133,11 @@ const PromoterTopPerformers = () => {
               <div className="flex-1">
                 <h4 className="font-semibold mb-2 text-foreground">{organizer.name}</h4>
                 <div className="flex flex-wrap gap-3 text-sm">
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-black text-white dark:bg-neutral-800">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-secondary text-secondary-foreground ">
                     <Calendar className="w-3 h-3" />
                     <span>{organizer.totalEvents} events</span>
                   </div>
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 font-semibold">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-red-100  text-red-700  font-semibold">
                     <DollarSign className="w-3 h-3" />
                     <span>₹{organizer.totalRevenue.toLocaleString()}</span>
                   </div>

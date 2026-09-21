@@ -432,7 +432,7 @@ const UserDashboard = () => {
           {loading ? (
             <Card>
               <CardContent className="p-12 text-center space-y-4">
-                <Loader2 className="w-10 h-10 mx-auto animate-spin text-primary" />
+                <Loader2 className="w-10 h-10 mx-auto animate-spin text-accent-foreground" />
                 <p className="text-muted-foreground">Loading your bookings...</p>
               </CardContent>
             </Card>
@@ -459,22 +459,22 @@ const UserDashboard = () => {
                     {/* Top header row: Booking Date/ID/Payment/Amount */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 text-sm text-gray-600">
                       <div>
-                        <div className="text-xs font-medium text-gray-500">BOOKING DATE & TIME</div>
+                        <div className="text-xs font-medium text-muted-foreground">BOOKING DATE & TIME</div>
                         <div className="mt-1 font-semibold text-gray-800">{ticket.bookingDate} {ticket.eventTime ? `• ${ticket.eventTime}` : ""}</div>
                       </div>
 
                       <div>
-                        <div className="text-xs font-medium text-gray-500">BOOKING ID</div>
+                        <div className="text-xs font-medium text-muted-foreground">BOOKING ID</div>
                         <div className="mt-1 font-semibold text-gray-800">{ticket.id}</div>
                       </div>
 
                       <div>
-                        <div className="text-xs font-medium text-gray-500">PAYMENT METHOD</div>
+                        <div className="text-xs font-medium text-muted-foreground">PAYMENT METHOD</div>
                         <div className="mt-1 font-semibold text-gray-800">{ticket.raw?.payment?.paymentMethod || "N/A"}</div>
                       </div>
 
                       <div className="text-right">
-                        <div className="text-xs font-medium text-gray-500">BOOKING AMOUNT</div>
+                        <div className="text-xs font-medium text-muted-foreground">BOOKING AMOUNT</div>
                         <div className="mt-1 font-semibold text-gray-800">₹{ticket.totalPrice.toFixed(2)}</div>
                       </div>
                     </div>

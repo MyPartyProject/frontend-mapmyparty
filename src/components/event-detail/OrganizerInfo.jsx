@@ -17,7 +17,7 @@ const OrganizerInfo = ({ name, logo, bio, organizerId }) => {
                 className="w-12 h-12 rounded-full object-cover"
               />
             ) : (
-              <User className="w-12 h-12 text-primary" />
+              <User className="w-12 h-12 text-accent-foreground" />
             )}
           </div>
 

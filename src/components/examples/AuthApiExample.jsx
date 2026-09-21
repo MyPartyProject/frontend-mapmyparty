@@ -78,7 +78,7 @@ export default function AuthApiExample() {
           <button
             type="submit"
             disabled={busy}
-            className="rounded bg-black text-white px-4 py-2 disabled:opacity-60"
+            className="rounded bg-black text-inverse px-4 py-2 disabled:opacity-60"
           >
             {busy ? "Signing in..." : "Sign in"}
           </button>
@@ -107,7 +107,7 @@ export default function AuthApiExample() {
             type="button"
             onClick={logout}
             disabled={busy}
-            className="rounded bg-red-600 text-white px-3 py-2 disabled:opacity-60"
+            className="rounded bg-red-600 text-inverse px-3 py-2 disabled:opacity-60"
           >
             Logout
           </button>

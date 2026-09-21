@@ -59,7 +59,7 @@ const ClassicDetailTemplate = ({
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Button onClick={scrollToTickets} className="bg-primary hover:bg-primary/90">
+                    <Button onClick={scrollToTickets} className="bg-primaryCTA hover:bg-primaryCTA-hover">
                       Get Tickets
                     </Button>
                     <Button variant="outline" onClick={scrollToLocation}>
@@ -172,7 +172,7 @@ const ClassicDetailTemplate = ({
                                 href={artist.instagram.startsWith('http') ? artist.instagram : `https://instagram.com/${artist.instagram.replace(/^@/, "")}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-sm text-primary hover:underline flex items-center gap-1"
+                                className="text-sm text-accent-foreground hover:underline flex items-center gap-1"
                               >
                                 <span>📷</span>
                                 <span>{artist.instagram}</span>
@@ -183,7 +183,7 @@ const ClassicDetailTemplate = ({
                                 href={artist.spotify.startsWith('http') ? artist.spotify : `https://open.spotify.com/${artist.spotify}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-sm text-primary hover:underline flex items-center gap-1"
+                                className="text-sm text-accent-foreground hover:underline flex items-center gap-1"
                               >
                                 <span>🎵</span>
                                 <span>Spotify</span>

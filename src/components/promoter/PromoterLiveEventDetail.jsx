@@ -114,7 +114,7 @@ const PromoterLiveEventDetail = () => {
                 <div key={ticket.name} className="rounded-lg border border-border/60 bg-card/80 p-3">
                   <div className="flex items-center justify-between">
                     <p className="font-semibold">{ticket.name}</p>
-                    <p className="font-semibold text-accent">{currency(ticket.price)}</p>
+                    <p className="font-semibold text-accent-foreground">{currency(ticket.price)}</p>
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground mt-2">
                     <span>{ticket.soldQty} sold</span>
@@ -162,7 +162,7 @@ const PromoterLiveEventDetail = () => {
             <CardContent className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Gross revenue</span>
-                <span className="font-semibold text-accent">{currency(gross)}</span>
+                <span className="font-semibold text-accent-foreground">{currency(gross)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Platform fee</span>

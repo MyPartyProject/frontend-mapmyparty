@@ -920,7 +920,7 @@
 //       <div className="min-h-screen flex flex-col">
 //         <main className="flex-1 flex items-center justify-center">
 //           <div className="text-center">
-//             <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
+//             <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-accent-foreground" />
 //             <p className="text-muted-foreground">Loading event details...</p>
 //           </div>
 //         </main>
@@ -1267,7 +1267,7 @@
 //                 <div className="mt-6 space-y-4">
 //                   {bookingTicketsLoading && ticketDisplayList.length === 0 ? (
 //                     <div className="flex justify-center py-10">
-//                       <Loader2 className="w-6 h-6 animate-spin text-primary" />
+//                       <Loader2 className="w-6 h-6 animate-spin text-accent-foreground" />
 //                     </div>
 //                   ) : availableTickets.length === 0 ? (
 //                     <p className="text-muted-foreground">
@@ -1296,7 +1296,7 @@
 //                               )}
 //                             </div>
 //                             <div className="flex flex-col items-end gap-3">
-//                               <span className="text-2xl font-bold text-primary">
+//                               <span className="text-2xl font-bold text-accent-foreground">
 //                                 {formatCurrencyValue(ticket.price)}
 //                               </span>
 //                               <div className="flex items-center gap-2">
@@ -1352,7 +1352,7 @@
 //                     </p>
 //                     <p>
 //                       Total Amount:{" "}
-//                       <span className="font-semibold text-primary">
+//                       <span className="font-semibold text-accent-foreground">
 //                         {formatCurrencyValue(totalSelectedAmount)}
 //                       </span>
 //                     </p>
@@ -1645,7 +1645,7 @@
 //                       </div>
 //                       <div className="flex justify-between border-t pt-3 font-semibold">
 //                         <span>Total Amount</span>
-//                         <span className="text-primary text-xl">
+//                         <span className="text-accent-foreground text-xl">
 //                           {formatCurrencyValue(totalSelectedAmount)}
 //                         </span>
 //                       </div>
@@ -1763,12 +1763,12 @@
 
 //                   <div className="rounded-2xl border border-primary/40 bg-primary/10 p-5 flex items-center justify-between">
 //                     <div>
-//                       <p className="text-sm text-primary uppercase tracking-wide">Amount Payable</p>
+//                       <p className="text-sm text-accent-foreground uppercase tracking-wide">Amount Payable</p>
 //                       <p className="text-muted-foreground text-xs">
 //                         Complete payment to confirm your reservation.
 //                       </p>
 //                     </div>
-//                     <span className="text-3xl font-bold text-primary">
+//                     <span className="text-3xl font-bold text-accent-foreground">
 //                       {formatCurrencyValue(bookingGrandTotal)}
 //                     </span>
 //                   </div>

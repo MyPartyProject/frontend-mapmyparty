@@ -237,18 +237,18 @@ const FoodBeverages = () => {
   return (
     <div className="space-y-6">
       <style>{popupStyles}</style>
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-lg shadow-black/30">
+      <div className="rounded-2xl border border-border bg-muted p-5 shadow-lg shadow-black/5">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-white/60">Food & Beverages</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Food & Beverages</p>
             <h2 className="text-2xl font-bold">On-site inventory tracker</h2>
-            <p className="text-sm text-white/60">
+            <p className="text-sm text-muted-foreground">
               Track items you sell on-site and manually update sold counts (no payments handled here).
             </p>
           </div>
           <button
             onClick={fetchEvents}
-            className="px-3 py-2 rounded-lg bg-white/10 border border-white/15 hover:bg-white/15 transition text-sm flex items-center gap-2"
+            className="px-3 py-2 rounded-lg bg-muted border border-border hover:bg-muted transition text-sm flex items-center gap-2"
           >
             <RefreshCw className="w-4 h-4" /> Refresh events
           </button>
@@ -256,9 +256,9 @@ const FoodBeverages = () => {
 
         <div className="mt-4">
           {loadingEvents ? (
-            <p className="text-sm text-white/60">Loading events...</p>
+            <p className="text-sm text-muted-foreground">Loading events...</p>
           ) : publishedEvents.length === 0 ? (
-            <div className="rounded-xl border border-white/10 bg-black/30 p-4 text-sm text-white/60">
+            <div className="rounded-xl border border-border bg-surface p-4 text-sm text-muted-foreground">
               No published events yet. Publish an event to manage add-ons.
             </div>
           ) : (
@@ -270,18 +270,18 @@ const FoodBeverages = () => {
                     setSelectedEventId(event.id);
                     setIsModalOpen(true);
                   }}
-                  className="text-left rounded-2xl border border-white/10 bg-black/30 p-5 transition shadow-lg shadow-black/30 hover:border-emerald-300/40 hover:bg-emerald-500/10"
+                  className="text-left rounded-2xl border border-border bg-surface p-5 transition shadow-lg shadow-black/5 hover:border-emerald-300/40 hover:bg-emerald-500/10"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center">
-                      <ShoppingBag className="w-5 h-5 text-emerald-200" />
+                      <ShoppingBag className="w-5 h-5 text-success" />
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-[0.18em] text-white/50">{event.category}</p>
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{event.category}</p>
                       <h3 className="text-lg font-semibold mt-1">{event.title}</h3>
                     </div>
                   </div>
-                  <p className="text-xs text-white/60 mt-3">{event.publishStatus} • {event.eventStatus}</p>
+                  <p className="text-xs text-muted-foreground mt-3">{event.publishStatus} • {event.eventStatus}</p>
                 </button>
               ))}
             </div>
@@ -291,16 +291,16 @@ const FoodBeverages = () => {
 
       {isModalOpen && selectedEvent && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div className="w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-3xl border border-white/10 bg-[#0e1215] shadow-2xl shadow-black/50">
-            <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
+          <div className="w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-3xl border border-border bg-card shadow-2xl shadow-black/5">
+            <div className="flex items-center justify-between border-b border-border px-6 py-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-white/50">Inventory</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Inventory</p>
                 <h3 className="text-2xl font-semibold">{selectedEvent.title}</h3>
-                <p className="text-xs text-white/60">Manage on-site items and sold counts.</p>
+                <p className="text-xs text-muted-foreground">Manage on-site items and sold counts.</p>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center hover:bg-white/10"
+                className="w-10 h-10 rounded-full border border-border bg-muted flex items-center justify-center hover:bg-muted"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -308,17 +308,17 @@ const FoodBeverages = () => {
 
             <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-4 p-6 overflow-y-auto max-h-[80vh]">
               <div className="space-y-4">
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                <div className="rounded-2xl border border-border bg-muted p-5">
                   <div ref={itemsTopRef} />
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="text-lg font-semibold">Items on sale</h4>
-                    <span className="text-xs text-white/60">Published event</span>
+                    <span className="text-xs text-muted-foreground">Published event</span>
                   </div>
 
                   {loadingAddOns ? (
-                    <p className="text-sm text-white/60">Loading items...</p>
+                    <p className="text-sm text-muted-foreground">Loading items...</p>
                   ) : addOns.length === 0 ? (
-                    <div className="rounded-xl border border-white/10 bg-black/30 p-4 text-sm text-white/60">
+                    <div className="rounded-xl border border-border bg-surface p-4 text-sm text-muted-foreground">
                       No add-ons yet. Add your first item.
                     </div>
                   ) : (
@@ -330,11 +330,11 @@ const FoodBeverages = () => {
                         const soldQty = item.receivedQty || 0;
                         const soldProgress = totalQty > 0 ? Math.min((soldQty / totalQty) * 100, 100) : 0;
                         return (
-                          <div key={item.id} className="relative rounded-2xl border border-white/10 bg-black/30 p-4">
+                          <div key={item.id} className="relative rounded-2xl border border-border bg-surface p-4">
                             {/* Error popup */}
                             {itemError.id === item.id && (
                               <div
-                                className="absolute top-2 left-2 right-2 z-10 rounded-xl border border-red-400/40 bg-red-500/95 backdrop-blur-sm p-3 text-sm text-white shadow-lg"
+                                className="absolute top-2 left-2 right-2 z-10 rounded-xl border border-red-400/40 bg-red-500/95 backdrop-blur-sm p-3 text-sm text-inverse shadow-lg"
                                 style={{ animation: "popIn 0.2s ease-out" }}
                               >
                                 <div className="flex items-start justify-between gap-2">
@@ -344,7 +344,7 @@ const FoodBeverages = () => {
                                   </div>
                                   <button
                                     onClick={() => setItemError({ id: null, message: "" })}
-                                    className="text-white/80 hover:text-white transition flex-shrink-0"
+                                    className="text-muted-foreground hover:text-foreground transition flex-shrink-0"
                                   >
                                     <X className="w-4 h-4" />
                                   </button>
@@ -353,31 +353,31 @@ const FoodBeverages = () => {
                             )}
                             <div className="flex items-center justify-between gap-3 flex-wrap">
                               <div>
-                                <p className="text-xs uppercase tracking-[0.2em] text-white/50">Item</p>
+                                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Item</p>
                                 <h4 className="text-lg font-semibold">{item.name}</h4>
                               </div>
-                              <div className="flex items-center gap-2 text-xs text-white/60 flex-wrap">
-                                <span className="px-2 py-1 rounded-full bg-white/10 border border-white/10">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                                <span className="px-2 py-1 rounded-full bg-muted border border-border">
                                   Stock: {formatNumber(item.totalQty)}
                                 </span>
-                                <span className="px-2 py-1 rounded-full bg-white/10 border border-white/10">
+                                <span className="px-2 py-1 rounded-full bg-muted border border-border">
                                   Sold: {formatNumber(item.receivedQty)}
                                 </span>
-                                <span className="px-2 py-1 rounded-full bg-white/10 border border-white/10">
+                                <span className="px-2 py-1 rounded-full bg-muted border border-border">
                                   Remaining: {formatNumber(remaining)}
                                 </span>
                               </div>
                             </div>
 
                             <div className="mt-3">
-                              <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-white/40">
+                              <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                                 <span>Sold progress</span>
                                 <span>{Math.round(soldProgress)}%</span>
                               </div>
-                              <div className="mt-2 h-2 w-full rounded-full bg-white/10 overflow-hidden relative">
+                              <div className="mt-2 h-2 w-full rounded-full bg-muted overflow-hidden relative">
                                 {totalQty === 0 ? (
                                   <div className="absolute inset-0 flex items-center justify-center">
-                                    <span className="text-[10px] text-white/40">No stock set</span>
+                                    <span className="text-[10px] text-muted-foreground">No stock set</span>
                                   </div>
                                 ) : (
                                   <div
@@ -390,48 +390,48 @@ const FoodBeverages = () => {
 
                             <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-3">
                               <div className="space-y-2">
-                                <label className="text-xs text-white/60">Item name</label>
+                                <label className="text-xs text-muted-foreground">Item name</label>
                                 <input
                                   value={draft.name || ""}
                                   onChange={(e) => handleDraftChange(item.id, "name", e.target.value)}
-                                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
+                                  className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm text-foreground"
                                 />
                               </div>
                               <div className="space-y-2">
-                                <label className="text-xs text-white/60">Unit (optional)</label>
+                                <label className="text-xs text-muted-foreground">Unit (optional)</label>
                                 <input
                                   value={draft.unit || ""}
                                   onChange={(e) => handleDraftChange(item.id, "unit", e.target.value)}
                                   placeholder="bottles / plates"
-                                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
+                                  className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm text-foreground"
                                 />
                               </div>
                               <div className="space-y-2">
-                                <label className="text-xs text-white/60">Total stock</label>
+                                <label className="text-xs text-muted-foreground">Total stock</label>
                                 <input
                                   type="number"
                                   min="0"
                                   value={draft.totalQty ?? 0}
                                   onChange={(e) => handleDraftChange(item.id, "totalQty", e.target.value)}
-                                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
+                                  className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm text-foreground"
                                 />
                               </div>
                             </div>
 
                             <div className="mt-3 grid grid-cols-1 lg:grid-cols-3 gap-3 items-end">
                               <div className="lg:col-span-2 space-y-2">
-                                <label className="text-xs text-white/60">Notes</label>
+                                <label className="text-xs text-muted-foreground">Notes</label>
                                 <input
                                   value={draft.notes || ""}
                                   onChange={(e) => handleDraftChange(item.id, "notes", e.target.value)}
                                   placeholder="Optional note"
-                                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
+                                  className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm text-foreground"
                                 />
                               </div>
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => handleUpdate(item.id)}
-                                  className="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-white/15 hover:bg-white/15 transition text-sm flex items-center justify-center gap-2"
+                                  className="flex-1 px-3 py-2 rounded-lg bg-muted border border-border hover:bg-muted transition text-sm flex items-center justify-center gap-2"
                                 >
                                   <PackagePlus className="w-4 h-4" /> Update
                                 </button>
@@ -453,7 +453,7 @@ const FoodBeverages = () => {
                                   setReceiveDrafts((prev) => ({ ...prev, [item.id]: e.target.value }))
                                 }
                                 placeholder="Mark sold qty"
-                                className="w-40 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
+                                className="w-40 rounded-lg bg-muted border border-border px-3 py-2 text-sm text-foreground"
                               />
                               <button
                                 onClick={() => handleReceive(item.id)}
@@ -471,21 +471,21 @@ const FoodBeverages = () => {
               </div>
 
               <div className="space-y-4">
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                <div className="rounded-2xl border border-border bg-muted p-5">
                   <h4 className="text-lg font-semibold mb-3">Add new item</h4>
                   <form onSubmit={handleCreate} className="space-y-3">
                     <input
                       value={form.name}
                       onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
                       placeholder="Item name (e.g., Coke bottles)"
-                      className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
+                      className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm text-foreground"
                       required
                     />
                     <input
                       value={form.unit}
                       onChange={(e) => setForm((prev) => ({ ...prev, unit: e.target.value }))}
                       placeholder="Unit (optional)"
-                      className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
+                      className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm text-foreground"
                     />
                     <input
                       type="number"
@@ -493,14 +493,14 @@ const FoodBeverages = () => {
                       value={form.totalQty}
                       onChange={(e) => setForm((prev) => ({ ...prev, totalQty: e.target.value }))}
                       placeholder="Total stock"
-                      className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
+                      className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm text-foreground"
                     />
                     <textarea
                       rows={3}
                       value={form.notes}
                       onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
                       placeholder="Notes (optional)"
-                      className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white"
+                      className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm text-foreground"
                     />
                     <button
                       type="submit"

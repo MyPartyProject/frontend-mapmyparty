@@ -270,7 +270,7 @@ const PromoterEventDetail = () => {
                   <p className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Wallet2 className="h-4 w-4" /> Lowest price
                   </p>
-                  <p className="text-2xl font-semibold text-accent">
+                  <p className="text-2xl font-semibold text-accent-foreground">
                     {lowestTicketPrice !== null ? currency(lowestTicketPrice) : "N/A"}
                   </p>
                   <p className="text-xs text-muted-foreground">{event.type || "Event type not set"}</p>
@@ -295,7 +295,7 @@ const PromoterEventDetail = () => {
                           <p className="text-xs text-muted-foreground">{ticket.publicId || ticket.id}</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold text-accent">{currency(ticket.price)}</p>
+                          <p className="font-semibold text-accent-foreground">{currency(ticket.price)}</p>
                           <p className="text-xs text-muted-foreground">
                             {ticket.soldQty}/{ticket.totalQty} sold
                           </p>

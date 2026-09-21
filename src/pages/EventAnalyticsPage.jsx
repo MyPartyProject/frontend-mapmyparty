@@ -60,63 +60,63 @@ const fmt = (n) =>
   }).format(n || 0);
 
 const PIE_COLORS = [
-  "#8b5cf6", "#06b6d4", "#f59e0b", "#10b981", "#ef4444",
+  "#8438B0", "#06b6d4", "#f59e0b", "#10b981", "#ef4444",
   "#ec4899", "#6366f1", "#14b8a6",
 ];
 
 const STATUS_COLORS = {
-  CONFIRMED: "text-emerald-400 bg-emerald-500/15",
-  PENDING: "text-amber-400 bg-amber-500/15",
-  CANCELLED: "text-red-400 bg-red-500/15",
+  CONFIRMED: "text-success bg-emerald-500/15",
+  PENDING: "text-warning bg-amber-500/15",
+  CANCELLED: "text-destructive bg-red-500/15",
   REFUNDED: "text-sky-400 bg-sky-500/15",
 };
 
 // ─── Skeleton Loaders ───────────────────────────────────────────────────────
 
 const CardSkeleton = () => (
-  <div className="rounded-xl bg-white/[0.04] ring-1 ring-white/[0.07] p-4 flex items-start gap-3 animate-pulse">
-    <div className="mt-0.5 p-2 rounded-lg bg-white/[0.06] w-8 h-8" />
+  <div className="rounded-xl bg-muted ring-1 ring-border p-4 flex items-start gap-3 animate-pulse">
+    <div className="mt-0.5 p-2 rounded-lg bg-muted w-8 h-8" />
     <div className="flex-1">
-      <div className="h-3 w-16 bg-white/[0.08] rounded mb-2" />
-      <div className="h-6 w-24 bg-white/[0.08] rounded" />
+      <div className="h-3 w-16 bg-muted rounded mb-2" />
+      <div className="h-6 w-24 bg-muted rounded" />
     </div>
   </div>
 );
 
 const SectionSkeleton = ({ rows = 3 }) => (
-  <div className="rounded-xl bg-white/[0.03] ring-1 ring-white/[0.07] p-4 animate-pulse space-y-3">
-    <div className="h-4 w-40 bg-white/[0.08] rounded" />
+  <div className="rounded-xl bg-muted ring-1 ring-border p-4 animate-pulse space-y-3">
+    <div className="h-4 w-40 bg-muted rounded" />
     {Array.from({ length: rows }).map((_, i) => (
-      <div key={i} className="h-3 w-full bg-white/[0.05] rounded" />
+      <div key={i} className="h-3 w-full bg-muted rounded" />
     ))}
   </div>
 );
 
 const ChartSkeleton = () => (
-  <div className="rounded-xl bg-white/[0.03] ring-1 ring-white/[0.07] p-4 animate-pulse">
-    <div className="h-4 w-40 bg-white/[0.08] rounded mb-4" />
-    <div className="h-48 bg-white/[0.04] rounded" />
+  <div className="rounded-xl bg-muted ring-1 ring-border p-4 animate-pulse">
+    <div className="h-4 w-40 bg-muted rounded mb-4" />
+    <div className="h-48 bg-muted rounded" />
   </div>
 );
 
 const SectionError = ({ message }) => (
   <div className="rounded-xl bg-red-500/10 ring-1 ring-red-500/20 p-4 flex items-start gap-2">
-    <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
-    <p className="text-xs text-red-400/80">{message}</p>
+    <AlertCircle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
+    <p className="text-xs text-destructive">{message}</p>
   </div>
 );
 
 // ─── Metric Card ────────────────────────────────────────────────────────────
 
 const MetricCard = ({ icon: Icon, label, value, subValue, accent }) => (
-  <div className="rounded-xl bg-white/[0.04] ring-1 ring-white/[0.07] p-4 flex items-start gap-3">
+  <div className="rounded-xl bg-muted ring-1 ring-border p-4 flex items-start gap-3">
     <div className={`mt-0.5 p-2 rounded-lg ${accent} flex items-center justify-center`}>
       <Icon className="w-4 h-4" />
     </div>
     <div>
-      <p className="text-[11px] uppercase tracking-widest text-white/40 mb-0.5">{label}</p>
-      <p className="text-xl font-semibold text-white">{value}</p>
-      {subValue && <p className="text-[11px] text-white/30 mt-0.5">{subValue}</p>}
+      <p className="text-[11px] uppercase tracking-widest text-muted-foreground mb-0.5">{label}</p>
+      <p className="text-xl font-semibold text-foreground">{value}</p>
+      {subValue && <p className="text-[11px] text-muted-foreground mt-0.5">{subValue}</p>}
     </div>
   </div>
 );
@@ -126,10 +126,10 @@ const MetricCard = ({ icon: Icon, label, value, subValue, accent }) => (
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#0c1120] ring-1 ring-white/[0.1] rounded-lg px-3 py-2 text-xs shadow-xl">
-      <p className="text-white/50 mb-1">{label}</p>
+    <div className="bg-card ring-1 ring-border rounded-lg px-3 py-2 text-xs shadow-xl">
+      <p className="text-muted-foreground mb-1">{label}</p>
       {payload.map((p, i) => (
-        <p key={i} className="text-white" style={{ color: p.color }}>
+        <p key={i} className="text-foreground">
           {p.name}: {p.name === "revenue" ? fmt(p.value) : p.value}
         </p>
       ))}
@@ -141,17 +141,17 @@ const ChartTooltip = ({ active, payload, label }) => {
 
 const PROGRESS_FILL_STYLES = {
   cyan: { backgroundColor: "#06b6d4" },
-  violet: { backgroundColor: "#8b5cf6" },
+  violet: { backgroundColor: "#8438B0" },
   emerald: { backgroundColor: "#10b981" },
   amber: { backgroundColor: "#f59e0b" },
-  muted: { backgroundColor: "rgba(255, 255, 255, 0.24)" },
+  muted: { backgroundColor: "rgba(107, 114, 128, 0.4)" },
 };
 
 const ProgressBar = ({ value, tone = "violet" }) => (
   <AnalyticsProgressBar
     value={value}
     heightClassName="h-1.5"
-    trackStyle={{ backgroundColor: "rgba(255, 255, 255, 0.08)" }}
+    trackStyle={{ backgroundColor: "rgba(107, 114, 128, 0.12)" }}
     fillStyle={PROGRESS_FILL_STYLES[tone] || PROGRESS_FILL_STYLES.violet}
   />
 );
@@ -291,11 +291,11 @@ const EventAnalyticsPage = () => {
 
   if (!organizerId || !eventId) {
     return (
-      <div className="min-h-screen bg-[#040712] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
-          <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-3" />
-          <p className="text-sm text-white/60">Missing event or organizer information.</p>
-          <p className="text-xs text-white/30 mt-1">Please navigate from My Events.</p>
+          <AlertCircle className="w-8 h-8 text-destructive mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">Missing event or organizer information.</p>
+          <p className="text-xs text-muted-foreground mt-1">Please navigate from My Events.</p>
         </div>
       </div>
     );
@@ -324,23 +324,23 @@ const EventAnalyticsPage = () => {
   const checkins = checkinStats.data || {};
 
   return (
-    <div className="min-h-screen bg-[#040712] text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         {/* ── Header ───────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.06] transition-colors"
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
             <div>
-              <p className="text-[11px] uppercase tracking-widest text-white/40 mb-0.5">
+              <p className="text-[11px] uppercase tracking-widest text-muted-foreground mb-0.5">
                 Event Analytics
               </p>
               <h1 className="text-xl font-semibold tracking-tight flex items-center gap-2">
-                <BarChart2 className="w-5 h-5 text-violet-400" />
+                <BarChart2 className="w-5 h-5 text-accent-foreground" />
                 {summary.data?.eventTitle || eventTitleFromState || eventSlug || "Event"}
               </h1>
             </div>
@@ -349,7 +349,7 @@ const EventAnalyticsPage = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={refetch}
-              className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.06] transition-colors"
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               title="Refresh all"
             >
               <RefreshCw className="w-4 h-4" />
@@ -383,13 +383,13 @@ const EventAnalyticsPage = () => {
               label="Tickets Sold"
               value={s.totalTicketsSold ?? 0}
               subValue={`${s.sellThroughRate ?? 0}% of ${s.totalCapacity ?? 0} capacity`}
-              accent="bg-violet-500/15 text-violet-400"
+              accent="bg-violet-500/15 text-accent-foreground"
             />
             <MetricCard
               icon={DollarSign}
               label="Total Revenue"
               value={fmt(s.totalRevenue)}
-              accent="bg-emerald-500/15 text-emerald-400"
+              accent="bg-emerald-500/15 text-success"
             />
             <MetricCard
               icon={Wallet}
@@ -414,7 +414,7 @@ const EventAnalyticsPage = () => {
               icon={BadgePercent}
               label="GST Collected"
               value={fmt(s.totalGST)}
-              accent="bg-amber-500/15 text-amber-400"
+              accent="bg-amber-500/15 text-warning"
             />
             <MetricCard
               icon={PercentIcon}
@@ -437,29 +437,29 @@ const EventAnalyticsPage = () => {
         ) : salesTimeline.error ? (
           <SectionError message={salesTimeline.error} />
         ) : timeline.length > 0 ? (
-          <div className="rounded-xl bg-white/[0.03] ring-1 ring-white/[0.07] p-4">
+          <div className="rounded-xl bg-muted ring-1 ring-border p-4">
             <h2 className="text-sm font-semibold mb-4 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-violet-400" />
+              <TrendingUp className="w-4 h-4 text-accent-foreground" />
               Sales Timeline
             </h2>
             <ResponsiveContainer width="100%" height={260}>
               <AreaChart data={timeline}>
                 <defs>
                   <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#8438B0" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#8438B0" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="ticketsGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#06b6d4" stopOpacity={0.3} />
                     <stop offset="100%" stopColor="#06b6d4" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                <XAxis dataKey="label" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="revenue" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="tickets" orientation="right" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="label" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis yAxisId="revenue" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis yAxisId="tickets" orientation="right" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <Tooltip content={<ChartTooltip />} />
-                <Area yAxisId="revenue" type="monotone" dataKey="revenue" stroke="#8b5cf6" fill="url(#revenueGrad)" strokeWidth={2} />
+                <Area yAxisId="revenue" type="monotone" dataKey="revenue" stroke="#8438B0" fill="url(#revenueGrad)" strokeWidth={2} />
                 <Area yAxisId="tickets" type="monotone" dataKey="tickets" stroke="#06b6d4" fill="url(#ticketsGrad)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
@@ -474,9 +474,9 @@ const EventAnalyticsPage = () => {
           ) : revenueBreakdown.error ? (
             <SectionError message={revenueBreakdown.error} />
           ) : revenue.byTicketType?.length > 0 ? (
-            <div className="rounded-xl bg-white/[0.03] ring-1 ring-white/[0.07] p-4">
+            <div className="rounded-xl bg-muted ring-1 ring-border p-4">
               <h2 className="text-sm font-semibold mb-4 flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-emerald-400" />
+                <DollarSign className="w-4 h-4 text-success" />
                 Revenue by Ticket Type
               </h2>
               <div className="flex items-center gap-4">
@@ -504,27 +504,27 @@ const EventAnalyticsPage = () => {
                     <div key={i} className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
                         <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-                        <span className="text-white/70 truncate max-w-[120px]">{t.ticketName}</span>
+                        <span className="text-muted-foreground truncate max-w-[120px]">{t.ticketName}</span>
                       </div>
-                      <span className="text-white/50">{t.percentage}%</span>
+                      <span className="text-muted-foreground">{t.percentage}%</span>
                     </div>
                   ))}
                 </div>
               </div>
               {/* Fee breakdown */}
               {revenue.feeBreakdown && (
-                <div className="mt-4 pt-3 border-t border-white/[0.06] grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="mt-4 pt-3 border-t border-border grid grid-cols-3 gap-2 text-center text-xs">
                   <div>
-                    <p className="text-white/30">Gross</p>
-                    <p className="text-white font-medium">{fmt(revenue.feeBreakdown.grossRevenue)}</p>
+                    <p className="text-muted-foreground">Gross</p>
+                    <p className="text-foreground font-medium">{fmt(revenue.feeBreakdown.grossRevenue)}</p>
                   </div>
                   <div>
-                    <p className="text-white/30">Fees + GST</p>
-                    <p className="text-red-400 font-medium">-{fmt(revenue.feeBreakdown.platformFees + revenue.feeBreakdown.gst)}</p>
+                    <p className="text-muted-foreground">Fees + GST</p>
+                    <p className="text-destructive font-medium">-{fmt(revenue.feeBreakdown.platformFees + revenue.feeBreakdown.gst)}</p>
                   </div>
                   <div>
-                    <p className="text-white/30">Net Payout</p>
-                    <p className="text-emerald-400 font-medium">{fmt(revenue.feeBreakdown.netPayout)}</p>
+                    <p className="text-muted-foreground">Net Payout</p>
+                    <p className="text-success font-medium">{fmt(revenue.feeBreakdown.netPayout)}</p>
                   </div>
                 </div>
               )}
@@ -537,18 +537,18 @@ const EventAnalyticsPage = () => {
           ) : checkinStats.error ? (
             <SectionError message={checkinStats.error} />
           ) : checkins.totalItems > 0 ? (
-            <div className="rounded-xl bg-white/[0.03] ring-1 ring-white/[0.07] p-4">
+            <div className="rounded-xl bg-muted ring-1 ring-border p-4">
               <h2 className="text-sm font-semibold mb-4 flex items-center gap-2">
-                <ScanLine className="w-4 h-4 text-cyan-400" />
+                <ScanLine className="w-4 h-4 text-info" />
                 Check-in Progress
               </h2>
               {/* Overall progress */}
               <div className="mb-4">
                 <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="text-white/50">
+                  <span className="text-muted-foreground">
                     {checkins.checkedIn} / {checkins.totalItems} checked in
                   </span>
-                  <span className="text-cyan-400 font-medium">{checkins.checkInRate}%</span>
+                  <span className="text-info font-medium">{checkins.checkInRate}%</span>
                 </div>
                 <ProgressBar value={checkins.checkInRate} tone="cyan" />
               </div>
@@ -557,8 +557,8 @@ const EventAnalyticsPage = () => {
                 {checkins.perTicket?.map((t, i) => (
                   <div key={i}>
                     <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-white/70 truncate max-w-[180px]">{t.ticketName}</span>
-                      <span className="text-white/40">{t.checkedIn}/{t.total} ({t.checkInRate}%)</span>
+                      <span className="text-muted-foreground truncate max-w-[180px]">{t.ticketName}</span>
+                      <span className="text-muted-foreground">{t.checkedIn}/{t.total} ({t.checkInRate}%)</span>
                     </div>
                     <ProgressBar value={t.checkInRate} tone="violet" />
                   </div>
@@ -566,8 +566,8 @@ const EventAnalyticsPage = () => {
               </div>
             </div>
           ) : checkins && !checkinStats.loading ? (
-            <div className="rounded-xl bg-white/[0.03] ring-1 ring-white/[0.07] p-4 flex items-center justify-center">
-              <p className="text-xs text-white/30">No check-in data yet</p>
+            <div className="rounded-xl bg-muted ring-1 ring-border p-4 flex items-center justify-center">
+              <p className="text-xs text-muted-foreground">No check-in data yet</p>
             </div>
           ) : null}
         </div>
@@ -578,39 +578,39 @@ const EventAnalyticsPage = () => {
         ) : ticketBreakdown.error ? (
           <SectionError message={ticketBreakdown.error} />
         ) : (
-          <div className="rounded-xl bg-white/[0.03] ring-1 ring-white/[0.07] overflow-hidden">
-            <div className="px-4 py-3 border-b border-white/[0.06]">
+          <div className="rounded-xl bg-muted ring-1 ring-border overflow-hidden">
+            <div className="px-4 py-3 border-b border-border">
               <h2 className="text-sm font-semibold flex items-center gap-2">
-                <Ticket className="w-4 h-4 text-violet-400" />
+                <Ticket className="w-4 h-4 text-accent-foreground" />
                 Ticket Performance
               </h2>
             </div>
 
             {tickets.length === 0 ? (
-              <div className="px-4 py-10 text-center text-sm text-white/40">
+              <div className="px-4 py-10 text-center text-sm text-muted-foreground">
                 No tickets configured for this event.
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-white/[0.06]">
+                    <tr className="border-b border-border">
                       {["Ticket", "Type", "Price", "Sold / Total", "Sell-through", "Revenue", "GST", "Platform Fee", "Net Payout"].map((h) => (
-                        <th key={h} className="px-4 py-2.5 text-left font-medium text-white/40 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                        <th key={h} className="px-4 py-2.5 text-left font-medium text-muted-foreground uppercase tracking-widest whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {tickets.map((row, i) => (
-                      <tr key={i} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
-                        <td className="px-4 py-3 font-medium text-white/90">{row.ticketName}</td>
+                      <tr key={i} className="border-b border-border hover:bg-muted transition-colors">
+                        <td className="px-4 py-3 font-medium text-muted-foreground">{row.ticketName}</td>
                         <td className="px-4 py-3">
-                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-white/[0.06] text-white/50">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-muted text-muted-foreground">
                             {row.ticketType?.replace(/_/g, " ")}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-white/70">{fmt(row.price)}</td>
-                        <td className="px-4 py-3 text-white/70">
+                        <td className="px-4 py-3 text-muted-foreground">{fmt(row.price)}</td>
+                        <td className="px-4 py-3 text-muted-foreground">
                           {row.soldQty} / {row.totalQty}
                         </td>
                         <td className="px-4 py-3">
@@ -618,28 +618,28 @@ const EventAnalyticsPage = () => {
                             <div className="w-16">
                               <ProgressBar value={row.sellThroughRate} tone={row.sellThroughRate > 80 ? "emerald" : row.sellThroughRate > 50 ? "amber" : "muted"} />
                             </div>
-                            <span className="text-white/50">{row.sellThroughRate}%</span>
+                            <span className="text-muted-foreground">{row.sellThroughRate}%</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-emerald-400">{fmt(row.revenue)}</td>
-                        <td className="px-4 py-3 text-amber-400">{fmt(row.gst)}</td>
+                        <td className="px-4 py-3 text-success">{fmt(row.revenue)}</td>
+                        <td className="px-4 py-3 text-warning">{fmt(row.gst)}</td>
                         <td className="px-4 py-3 text-sky-400">{fmt(row.platformFee)}</td>
-                        <td className="px-4 py-3 font-medium text-white">{fmt(row.netPayout)}</td>
+                        <td className="px-4 py-3 font-medium text-foreground">{fmt(row.netPayout)}</td>
                       </tr>
                     ))}
                   </tbody>
                   {tickets.length > 1 && summary.data && (
                     <tfoot>
-                      <tr className="border-t border-white/[0.1] bg-white/[0.02]">
-                        <td className="px-4 py-3 font-semibold text-white/60 uppercase tracking-widest text-[10px]" colSpan={3}>Total</td>
-                        <td className="px-4 py-3 font-semibold text-white">
+                      <tr className="border-t border-border bg-muted">
+                        <td className="px-4 py-3 font-semibold text-muted-foreground uppercase tracking-widest text-[10px]" colSpan={3}>Total</td>
+                        <td className="px-4 py-3 font-semibold text-foreground">
                           {s.totalTicketsSold} / {s.totalCapacity}
                         </td>
-                        <td className="px-4 py-3 font-semibold text-white">{s.sellThroughRate}%</td>
-                        <td className="px-4 py-3 font-semibold text-emerald-400">{fmt(s.totalRevenue)}</td>
-                        <td className="px-4 py-3 font-semibold text-amber-400">{fmt(s.totalGST)}</td>
+                        <td className="px-4 py-3 font-semibold text-foreground">{s.sellThroughRate}%</td>
+                        <td className="px-4 py-3 font-semibold text-success">{fmt(s.totalRevenue)}</td>
+                        <td className="px-4 py-3 font-semibold text-warning">{fmt(s.totalGST)}</td>
                         <td className="px-4 py-3 font-semibold text-sky-400">{fmt(s.totalPlatformFees)}</td>
-                        <td className="px-4 py-3 font-semibold text-white">{fmt(s.netPayout)}</td>
+                        <td className="px-4 py-3 font-semibold text-foreground">{fmt(s.netPayout)}</td>
                       </tr>
                     </tfoot>
                   )}
@@ -657,38 +657,38 @@ const EventAnalyticsPage = () => {
         ) : bookings.totalBookings > 0 ? (
           <div className="space-y-4">
             {/* Booking Status Distribution */}
-            <div className="rounded-xl bg-white/[0.03] ring-1 ring-white/[0.07] p-4">
+            <div className="rounded-xl bg-muted ring-1 ring-border p-4">
               <h2 className="text-sm font-semibold mb-4 flex items-center gap-2">
                 <ShoppingCart className="w-4 h-4 text-indigo-400" />
                 Booking Status
               </h2>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {Object.entries(bookings.statusBreakdown || {}).map(([status, data]) => {
-                  const colorClass = STATUS_COLORS[status] || "text-white/50 bg-white/[0.06]";
+                  const colorClass = STATUS_COLORS[status] || "text-muted-foreground bg-muted";
                   const icon = status === "CONFIRMED" ? CheckCircle2 : status === "PENDING" ? Clock : status === "CANCELLED" ? XCircle : RefreshCw;
                   const Icon = icon;
                   return (
-                    <div key={status} className="rounded-lg bg-white/[0.03] ring-1 ring-white/[0.05] p-3 text-center">
+                    <div key={status} className="rounded-lg bg-muted ring-1 ring-border p-3 text-center">
                       <Icon className={`w-4 h-4 mx-auto mb-1 ${colorClass.split(" ")[0]}`} />
-                      <p className="text-lg font-semibold text-white">{data.count}</p>
-                      <p className="text-[10px] uppercase tracking-widest text-white/40">{status}</p>
-                      <p className="text-[10px] text-white/30 mt-0.5">{fmt(data.revenue)}</p>
+                      <p className="text-lg font-semibold text-foreground">{data.count}</p>
+                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{status}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{fmt(data.revenue)}</p>
                     </div>
                   );
                 })}
               </div>
               {bookings.refunds?.count > 0 && (
-                <div className="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs">
-                  <span className="text-white/40">Refunds processed</span>
-                  <span className="text-red-400">{bookings.refunds.count} ({fmt(bookings.refunds.totalAmount)})</span>
+                <div className="mt-3 pt-3 border-t border-border flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Refunds processed</span>
+                  <span className="text-destructive">{bookings.refunds.count} ({fmt(bookings.refunds.totalAmount)})</span>
                 </div>
               )}
             </div>
 
             {/* Recent Bookings */}
             {bookings.recentBookings?.length > 0 && (
-              <div className="rounded-xl bg-white/[0.03] ring-1 ring-white/[0.07] overflow-hidden">
-                <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between">
+              <div className="rounded-xl bg-muted ring-1 ring-border overflow-hidden">
+                <div className="px-4 py-3 border-b border-border flex items-center justify-between">
                   <h2 className="text-sm font-semibold flex items-center gap-2">
                     <Users className="w-4 h-4 text-indigo-400" />
                     Recent Bookings
@@ -696,7 +696,7 @@ const EventAnalyticsPage = () => {
                   {bookings.recentBookings.length > 5 && (
                     <button
                       onClick={() => setShowAllBookings(!showAllBookings)}
-                      className="flex items-center gap-1 text-xs text-violet-400 hover:text-violet-300"
+                      className="flex items-center gap-1 text-xs text-accent-foreground hover:text-accent-foreground"
                     >
                       {showAllBookings ? "Show less" : "Show all"}
                       {showAllBookings ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -706,31 +706,31 @@ const EventAnalyticsPage = () => {
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-white/[0.06]">
+                      <tr className="border-b border-border">
                         {["Customer", "Tickets", "Amount", "Status", "Date"].map((h) => (
-                          <th key={h} className="px-4 py-2.5 text-left font-medium text-white/40 uppercase tracking-widest">{h}</th>
+                          <th key={h} className="px-4 py-2.5 text-left font-medium text-muted-foreground uppercase tracking-widest">{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {(showAllBookings ? bookings.recentBookings : bookings.recentBookings.slice(0, 5)).map((b) => (
-                        <tr key={b.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
+                        <tr key={b.id} className="border-b border-border hover:bg-muted transition-colors">
                           <td className="px-4 py-3">
-                            <p className="text-white/90 font-medium">{b.customerName}</p>
-                            <p className="text-white/30 text-[10px]">{b.customerEmail}</p>
+                            <p className="text-muted-foreground font-medium">{b.customerName}</p>
+                            <p className="text-muted-foreground text-[10px]">{b.customerEmail}</p>
                           </td>
-                          <td className="px-4 py-3 text-white/70">
+                          <td className="px-4 py-3 text-muted-foreground">
                             {b.tickets.map((t, i) => (
                               <span key={i}>{t.quantity}x {t.name}{i < b.tickets.length - 1 ? ", " : ""}</span>
                             ))}
                           </td>
-                          <td className="px-4 py-3 text-emerald-400">{fmt(b.amount)}</td>
+                          <td className="px-4 py-3 text-success">{fmt(b.amount)}</td>
                           <td className="px-4 py-3">
-                            <span className={`px-1.5 py-0.5 rounded text-[10px] ${STATUS_COLORS[b.status] || "bg-white/[0.06] text-white/50"}`}>
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] ${STATUS_COLORS[b.status] || "bg-muted text-muted-foreground"}`}>
                               {b.status}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-white/50">
+                          <td className="px-4 py-3 text-muted-foreground">
                             {new Date(b.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                           </td>
                         </tr>
@@ -744,10 +744,10 @@ const EventAnalyticsPage = () => {
         ) : null}
 
         {/* ── Off-Platform Tickets ──────────────────────────────────────── */}
-        <div className="border-t border-white/[0.06] pt-6 space-y-4">
+        <div className="border-t border-border pt-6 space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <h2 className="text-sm font-semibold flex items-center gap-2">
-              <Ticket className="w-4 h-4 text-amber-400" />
+              <Ticket className="w-4 h-4 text-warning" />
               Off-Platform Tickets
             </h2>
             <button
@@ -762,55 +762,55 @@ const EventAnalyticsPage = () => {
           {/* Summary strip */}
           {records.length > 0 && (
             <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-lg bg-white/[0.04] ring-1 ring-white/[0.07] p-3 text-center">
-                <p className="text-[10px] uppercase tracking-widest text-white/40 mb-0.5">Records</p>
-                <p className="text-lg font-semibold text-white">{offPlatformTotals.count}</p>
+              <div className="rounded-lg bg-muted ring-1 ring-border p-3 text-center">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-0.5">Records</p>
+                <p className="text-lg font-semibold text-foreground">{offPlatformTotals.count}</p>
               </div>
-              <div className="rounded-lg bg-white/[0.04] ring-1 ring-white/[0.07] p-3 text-center">
-                <p className="text-[10px] uppercase tracking-widest text-white/40 mb-0.5">Total Members</p>
-                <p className="text-lg font-semibold text-white">{offPlatformTotals.members}</p>
+              <div className="rounded-lg bg-muted ring-1 ring-border p-3 text-center">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-0.5">Total Members</p>
+                <p className="text-lg font-semibold text-foreground">{offPlatformTotals.members}</p>
               </div>
-              <div className="rounded-lg bg-white/[0.04] ring-1 ring-white/[0.07] p-3 text-center">
-                <p className="text-[10px] uppercase tracking-widest text-white/40 mb-0.5">Total Revenue</p>
-                <p className="text-lg font-semibold text-amber-400">{fmt(offPlatformTotals.revenue)}</p>
+              <div className="rounded-lg bg-muted ring-1 ring-border p-3 text-center">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-0.5">Total Revenue</p>
+                <p className="text-lg font-semibold text-warning">{fmt(offPlatformTotals.revenue)}</p>
               </div>
             </div>
           )}
 
           {/* Table */}
-          <div className="rounded-xl bg-white/[0.03] ring-1 ring-white/[0.07] overflow-hidden">
+          <div className="rounded-xl bg-muted ring-1 ring-border overflow-hidden">
             {loadingRecords ? (
               <div className="p-6 text-center">
-                <Loader className="w-4 h-4 animate-spin text-white/30 mx-auto" />
+                <Loader className="w-4 h-4 animate-spin text-muted-foreground mx-auto" />
               </div>
             ) : records.length === 0 ? (
-              <div className="px-4 py-10 text-center text-sm text-white/40">
+              <div className="px-4 py-10 text-center text-sm text-muted-foreground">
                 No off-platform tickets recorded yet. Click "Add Record" to get started.
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-white/[0.06]">
+                    <tr className="border-b border-border">
                       {["Recipient", "Ticket Label", "Members", "Price", "Check-in Time", "Notes", "Actions"].map((h) => (
-                        <th key={h} className="px-4 py-2.5 text-left font-medium text-white/40 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                        <th key={h} className="px-4 py-2.5 text-left font-medium text-muted-foreground uppercase tracking-widest whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {records.map((r) => (
-                      <tr key={r.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
-                        <td className="px-4 py-3 font-medium text-white/90">{r.recipientName}</td>
+                      <tr key={r.id} className="border-b border-border hover:bg-muted transition-colors">
+                        <td className="px-4 py-3 font-medium text-muted-foreground">{r.recipientName}</td>
                         <td className="px-4 py-3">
-                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/10 text-amber-400">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/10 text-warning">
                             {r.ticketLabel}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-white/70">{r.members}</td>
-                        <td className="px-4 py-3 text-emerald-400">{fmt(r.price)}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{r.members}</td>
+                        <td className="px-4 py-3 text-success">{fmt(r.price)}</td>
                         <td className="px-4 py-3">
                           {r.checkinTime ? (
-                            <span className="text-cyan-400">
+                            <span className="text-info">
                               {new Date(r.checkinTime).toLocaleDateString("en-IN", {
                                 day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
                               })}
@@ -818,25 +818,25 @@ const EventAnalyticsPage = () => {
                           ) : (
                             <button
                               onClick={() => handleMarkCheckedIn(r)}
-                              className="px-2 py-0.5 rounded text-[10px] bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-colors whitespace-nowrap"
+                              className="px-2 py-0.5 rounded text-[10px] bg-cyan-500/10 text-info hover:bg-cyan-500/20 transition-colors whitespace-nowrap"
                             >
                               Mark Checked In
                             </button>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-white/40 max-w-[140px] truncate">{r.notes || "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground max-w-[140px] truncate">{r.notes || "—"}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => openEditModal(r)}
-                              className="p-1 rounded text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors"
+                              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                               title="Edit"
                             >
                               <Pencil className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleDelete(r)}
-                              className="p-1 rounded text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                              className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-red-500/10 transition-colors"
                               title="Delete"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -856,14 +856,14 @@ const EventAnalyticsPage = () => {
       {/* ── Off-Platform Ticket Modal ─────────────────────────────────────── */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-xl bg-[#0c1120] ring-1 ring-white/[0.1] shadow-2xl">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.07]">
-              <h3 className="text-sm font-semibold text-white">
+          <div className="w-full max-w-md rounded-xl bg-card ring-1 ring-border shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">
                 {editingRecord ? "Edit Record" : "Add Off-Platform Ticket"}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-1 rounded text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors"
+                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -871,73 +871,73 @@ const EventAnalyticsPage = () => {
 
             <div className="px-5 py-4 space-y-3">
               <div>
-                <label className="block text-[10px] uppercase tracking-widest text-white/40 mb-1">Recipient Name *</label>
+                <label className="block text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Recipient Name *</label>
                 <input
                   type="text"
                   value={modalForm.recipientName}
                   onChange={(e) => setModalForm((f) => ({ ...f, recipientName: e.target.value }))}
-                  className="w-full bg-white/[0.05] ring-1 ring-white/[0.1] rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:ring-violet-500"
+                  className="w-full bg-muted ring-1 ring-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-subtle focus:outline-none focus:ring-violet-500"
                   placeholder="e.g. John Doe"
                 />
               </div>
               <div>
-                <label className="block text-[10px] uppercase tracking-widest text-white/40 mb-1">Ticket Label *</label>
+                <label className="block text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Ticket Label *</label>
                 <input
                   type="text"
                   value={modalForm.ticketLabel}
                   onChange={(e) => setModalForm((f) => ({ ...f, ticketLabel: e.target.value }))}
-                  className="w-full bg-white/[0.05] ring-1 ring-white/[0.1] rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:ring-violet-500"
+                  className="w-full bg-muted ring-1 ring-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-subtle focus:outline-none focus:ring-violet-500"
                   placeholder="e.g. VIP, General, Backstage"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] uppercase tracking-widest text-white/40 mb-1">Members *</label>
+                  <label className="block text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Members *</label>
                   <input
                     type="number"
                     min={1}
                     value={modalForm.members}
                     onChange={(e) => setModalForm((f) => ({ ...f, members: e.target.value }))}
-                    className="w-full bg-white/[0.05] ring-1 ring-white/[0.1] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-violet-500"
+                    className="w-full bg-muted ring-1 ring-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-violet-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase tracking-widest text-white/40 mb-1">Price (₹) *</label>
+                  <label className="block text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Price (₹) *</label>
                   <input
                     type="number"
                     min={0}
                     step="0.01"
                     value={modalForm.price}
                     onChange={(e) => setModalForm((f) => ({ ...f, price: e.target.value }))}
-                    className="w-full bg-white/[0.05] ring-1 ring-white/[0.1] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-violet-500"
+                    className="w-full bg-muted ring-1 ring-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-violet-500"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] uppercase tracking-widest text-white/40 mb-1">Check-in Time (optional)</label>
+                <label className="block text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Check-in Time (optional)</label>
                 <input
                   type="datetime-local"
                   value={modalForm.checkinTime}
                   onChange={(e) => setModalForm((f) => ({ ...f, checkinTime: e.target.value }))}
-                  className="w-full bg-white/[0.05] ring-1 ring-white/[0.1] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-violet-500"
+                  className="w-full bg-muted ring-1 ring-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-violet-500"
                 />
               </div>
               <div>
-                <label className="block text-[10px] uppercase tracking-widest text-white/40 mb-1">Notes (optional)</label>
+                <label className="block text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Notes (optional)</label>
                 <textarea
                   value={modalForm.notes}
                   onChange={(e) => setModalForm((f) => ({ ...f, notes: e.target.value }))}
                   rows={2}
-                  className="w-full bg-white/[0.05] ring-1 ring-white/[0.1] rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:ring-violet-500 resize-none"
+                  className="w-full bg-muted ring-1 ring-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-subtle focus:outline-none focus:ring-violet-500 resize-none"
                   placeholder="Any notes about this ticket..."
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-white/[0.07]">
+            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-border">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-sm text-white/50 hover:text-white rounded-lg hover:bg-white/[0.05] transition-colors"
+                className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
               >
                 Cancel
               </button>

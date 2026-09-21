@@ -21,7 +21,7 @@ const EventSchedule = ({ schedule, highlights }) => {
                 key={index}
                 className="flex items-start gap-3 p-4 rounded-lg bg-gradient-to-br from-primary/5 to-accent/5 hover:from-primary/10 hover:to-accent/10 transition-all group hover-scale"
               >
-                <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 group-hover:scale-110 transition-transform" />
+                <CheckCircle2 className="w-5 h-5 text-accent-foreground mt-0.5 group-hover:scale-110 transition-transform" />
                 <span className="text-muted-foreground">{highlight}</span>
               </div>
             ))}
@@ -44,11 +44,11 @@ const EventSchedule = ({ schedule, highlights }) => {
               >
                 <AccordionTrigger className="px-6 py-4 hover:no-underline group">
                   <div className="flex items-center gap-4 text-left w-full">
-                    <div className="p-3 rounded-lg bg-primary/10 text-primary group-hover:scale-110 transition-transform">
+                    <div className="p-3 rounded-lg bg-primary/10 text-accent-foreground group-hover:scale-110 transition-transform">
                       <Clock className="w-5 h-5" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-primary text-lg">{item.time}</p>
+                      <p className="font-bold text-accent-foreground text-lg">{item.time}</p>
                       <p className="font-semibold mt-1">{item.activity}</p>
                     </div>
                   </div>

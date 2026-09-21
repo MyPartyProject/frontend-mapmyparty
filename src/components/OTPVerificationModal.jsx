@@ -169,7 +169,7 @@ const OTPVerificationModal = ({
       <DialogContent className="w-[calc(100vw-2rem)] max-w-[360px] max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-xl p-4 sm:max-w-sm sm:p-5">
         <DialogHeader className="text-center space-y-2">
           <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <Mail className="w-6 h-6 text-primary" />
+            <Mail className="w-6 h-6 text-accent-foreground" />
           </div>
           <DialogTitle className="text-xl font-bold leading-tight">{title}</DialogTitle>
           <DialogDescription className="text-sm leading-relaxed">
@@ -255,7 +255,7 @@ const OTPVerificationModal = ({
                 size="sm"
                 onClick={handleResend}
                 disabled={isResending || (resendCooldown > 0 && !isExpired)}
-                className="h-auto px-1 py-0 text-primary font-semibold"
+                className="h-auto px-1 py-0 text-accent-foreground font-semibold"
               >
                 {isResending ? (
                   <>

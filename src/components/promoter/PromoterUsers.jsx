@@ -95,7 +95,7 @@ const PromoterUsers = () => {
 
       {isFetching && !loading && (
         <div className="h-0.5 w-full bg-muted overflow-hidden rounded-full">
-          <div className="h-full w-1/3 bg-primary rounded-full animate-pulse" />
+          <div className="h-full w-1/3 bg-primaryCTA rounded-full animate-pulse" />
         </div>
       )}
 
@@ -189,7 +189,7 @@ const PromoterUsers = () => {
                         </div>
                         <div className="text-center">
                           <p className="text-xs text-muted-foreground">Spent</p>
-                          <p className="font-semibold text-accent">{currency(user.totalSpent)}</p>
+                          <p className="font-semibold text-accent-foreground">{currency(user.totalSpent)}</p>
                         </div>
                         <div className="text-center">
                           <p className="text-xs text-muted-foreground">Last booking</p>
@@ -199,7 +199,7 @@ const PromoterUsers = () => {
 
                       <Link
                         to={`/promoter/users/${user.id}`}
-                        className="inline-flex items-center gap-2 text-sm font-semibold text-accent hover:text-accent/80 transition"
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-accent-foreground hover:text-accent-foreground/80 transition"
                       >
                         View details <ChevronRight className="w-4 h-4" />
                       </Link>

@@ -13,16 +13,16 @@ import {
 import PayoutDetail from "@/components/organizer/PayoutDetail";
 
 const statusColors = {
-  AUTO_APPROVED: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  REVIEW_REQUIRED: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  APPROVED: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  PENDING: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  PROCESSING: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  COMPLETED: "bg-green-500/20 text-green-400 border-green-500/30",
-  FAILED: "bg-red-500/20 text-red-400 border-red-500/30",
-  RETRY_PENDING: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  RECONCILED: "bg-green-500/20 text-green-400 border-green-500/30",
-  CANCELLED: "bg-red-500/20 text-red-400 border-red-500/30",
+  AUTO_APPROVED: "bg-blue-500/20 text-info border-blue-500/30",
+  REVIEW_REQUIRED: "bg-yellow-500/20 text-warning border-yellow-500/30",
+  APPROVED: "bg-blue-500/20 text-info border-blue-500/30",
+  PENDING: "bg-yellow-500/20 text-warning border-yellow-500/30",
+  PROCESSING: "bg-blue-500/20 text-info border-blue-500/30",
+  COMPLETED: "bg-green-500/20 text-success border-green-500/30",
+  FAILED: "bg-red-500/20 text-destructive border-red-500/30",
+  RETRY_PENDING: "bg-yellow-500/20 text-warning border-yellow-500/30",
+  RECONCILED: "bg-green-500/20 text-success border-green-500/30",
+  CANCELLED: "bg-red-500/20 text-destructive border-red-500/30",
 };
 
 const formatStatus = (value) =>
@@ -110,20 +110,20 @@ const OrganizerPayouts = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Payouts</h1>
-          <p className="text-sm text-white/60 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">Payouts</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Track your earnings and payout history
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Filter className="w-4 h-4 text-white/60" />
+          <Filter className="w-4 h-4 text-muted-foreground" />
           <select
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
           >
             <option value="">All Statuses</option>
             <option value="REVIEW_REQUIRED">Review Required</option>
@@ -139,23 +139,23 @@ const OrganizerPayouts = () => {
         </div>
       </div>
 
-      <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+      <div className="bg-muted border border-border rounded-xl p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <Wallet2 className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold text-white">Balance adjustments</h2>
+              <Wallet2 className="h-5 w-5 text-accent-foreground" />
+              <h2 className="text-lg font-semibold text-foreground">Balance adjustments</h2>
             </div>
-            <p className="mt-1 text-sm text-white/50">
+            <p className="mt-1 text-sm text-muted-foreground">
               Chargebacks or post-payout corrections are recovered from future payouts.
             </p>
           </div>
           <div className="text-left lg:text-right">
-            <p className="text-xs text-white/40">Open balance</p>
-            <p className={`text-2xl font-bold ${balanceAdjustments.summary?.openRemainingAmountCents > 0 ? "text-yellow-300" : "text-green-300"}`}>
+            <p className="text-xs text-muted-foreground">Open balance</p>
+            <p className={`text-2xl font-bold ${balanceAdjustments.summary?.openRemainingAmountCents > 0 ? "text-warning" : "text-success"}`}>
               Rs. {((balanceAdjustments.summary?.openRemainingAmountCents || 0) / 100).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
             </p>
-            <p className="text-xs text-white/40">
+            <p className="text-xs text-muted-foreground">
               {balanceAdjustments.summary?.openAdjustmentCount || 0} open adjustment(s)
             </p>
           </div>
@@ -163,17 +163,17 @@ const OrganizerPayouts = () => {
         {!balanceLoading && balanceAdjustments.items.length > 0 && (
           <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {balanceAdjustments.items.slice(0, 3).map((adjustment) => (
-              <div key={adjustment.id} className="rounded-lg border border-white/10 bg-black/10 p-3">
+              <div key={adjustment.id} className="rounded-lg border border-border bg-surface p-3">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-medium text-white">{formatStatus(adjustment.adjustmentType)}</p>
-                  <Badge className={`${statusColors[adjustment.status] || "bg-white/10 text-white/60 border-white/10"} border text-xs`}>
+                  <p className="text-sm font-medium text-foreground">{formatStatus(adjustment.adjustmentType)}</p>
+                  <Badge className={`${statusColors[adjustment.status] || "bg-muted text-muted-foreground border-border"} border text-xs`}>
                     {formatStatus(adjustment.status)}
                   </Badge>
                 </div>
-                <p className="mt-2 text-sm text-white/60">
+                <p className="mt-2 text-sm text-muted-foreground">
                   Remaining Rs. {(Number(adjustment.remainingAmountCents || 0) / 100).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </p>
-                <p className="mt-1 truncate text-xs text-white/40">{adjustment.reason || adjustment.chargebackReference || "Adjustment"}</p>
+                <p className="mt-1 truncate text-xs text-muted-foreground">{adjustment.reason || adjustment.chargebackReference || "Adjustment"}</p>
               </div>
             ))}
           </div>
@@ -181,13 +181,13 @@ const OrganizerPayouts = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+      <div className="bg-muted border border-border rounded-xl overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader className="w-6 h-6 animate-spin text-white/60" />
+            <Loader className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : payouts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-white/40">
+          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <DollarSign className="w-12 h-12 mb-3 opacity-50" />
             <p className="text-lg font-medium">No payouts found</p>
             <p className="text-sm mt-1">Your payouts will appear here once processed.</p>
@@ -196,7 +196,7 @@ const OrganizerPayouts = () => {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/10 text-left text-xs text-white/50 uppercase tracking-wider">
+                <tr className="border-b border-border text-left text-xs text-muted-foreground uppercase tracking-wider">
                   <th className="px-6 py-4">Date</th>
                   <th className="px-6 py-4">Event</th>
                   <th className="px-6 py-4">Amount</th>
@@ -205,16 +205,16 @@ const OrganizerPayouts = () => {
                   <th className="px-6 py-4">Notes</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-border">
                 {payouts.map((payout) => (
                   <tr
                     key={payout.id}
                     onClick={() => setSelectedPayoutId(payout.id)}
-                    className="hover:bg-white/5 cursor-pointer transition"
+                    className="hover:bg-muted cursor-pointer transition"
                   >
-                    <td className="px-6 py-4 text-sm text-white/80">
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-white/40" />
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
                         {payout.payoutDate
                           ? new Date(payout.payoutDate).toLocaleDateString("en-IN", {
                               day: "numeric",
@@ -228,17 +228,17 @@ const OrganizerPayouts = () => {
                             })}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-white/70">
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
                       <div>
                         <div className="max-w-[220px] truncate font-medium">
                           {payout.event?.title || "Organizer payout"}
                         </div>
-                        <div className="text-xs text-white/40">
+                        <div className="text-xs text-muted-foreground">
                           {payout.invoiceNumber || payout.publicId || payout.id.slice(0, 8)}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm font-semibold text-white">
+                    <td className="px-6 py-4 text-sm font-semibold text-foreground">
                       Rs. {getPayoutAmount(payout).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                     </td>
                     <td className="px-6 py-4">
@@ -248,11 +248,11 @@ const OrganizerPayouts = () => {
                         {formatStatus(payout.status)}
                       </Badge>
                     </td>
-                    <td className="px-6 py-4 text-sm text-white/60">
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
                       {payout.bank_details ? (
                         <div>
                           <div>{payout.bank_details.bankName}</div>
-                          <div className="text-xs text-white/40">
+                          <div className="text-xs text-muted-foreground">
                             {payout.bank_details.accountNumberMasked || (payout.bank_details.accountNumberLast4 ? `****${payout.bank_details.accountNumberLast4}` : "Not available")}
                           </div>
                         </div>
@@ -260,7 +260,7 @@ const OrganizerPayouts = () => {
                         "-"
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-white/50 max-w-[200px] truncate">
+                    <td className="px-6 py-4 text-sm text-muted-foreground max-w-[200px] truncate">
                       {payout.failureReason || payout.blockedReason || payout.remarks || "-"}
                     </td>
                   </tr>
@@ -272,25 +272,25 @@ const OrganizerPayouts = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-white/10">
-            <span className="text-sm text-white/50">
+          <div className="flex items-center justify-between px-6 py-4 border-t border-border">
+            <span className="text-sm text-muted-foreground">
               Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
             </span>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="p-2 rounded-lg hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-white/70"
+                className="p-2 rounded-lg hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed text-muted-foreground"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="text-sm text-white/70">
+              <span className="text-sm text-muted-foreground">
                 {page} / {totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="p-2 rounded-lg hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-white/70"
+                className="p-2 rounded-lg hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed text-muted-foreground"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>

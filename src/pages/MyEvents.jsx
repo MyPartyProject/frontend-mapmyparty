@@ -97,17 +97,17 @@ const MyEvents = () => {
 
   const getPublishBadge = (publishStatus) => {
     const n = (publishStatus || "").toUpperCase();
-    if (n === "PUBLISHED" || n === "ACTIVE") return { text: "Published", cls: "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20" };
-    if (n === "DRAFT") return { text: "Draft", cls: "bg-amber-500/10 text-amber-300 border border-amber-500/20" };
-    if (n === "PENDING" || n === "REVIEW") return { text: "Review", cls: "bg-secondary/15 text-accent border border-secondary/30" };
+    if (n === "PUBLISHED" || n === "ACTIVE") return { text: "Published", cls: "bg-emerald-500/10 text-success border border-emerald-500/20" };
+    if (n === "DRAFT") return { text: "Draft", cls: "bg-amber-500/10 text-warning border border-amber-500/20" };
+    if (n === "PENDING" || n === "REVIEW") return { text: "Review", cls: "bg-secondary/15 text-accent-foreground border border-secondary/30" };
     if (n === "ARCHIVED" || n === "CANCELLED") return { text: n.charAt(0) + n.slice(1).toLowerCase(), cls: "bg-destructive/10 text-destructive border border-destructive/30" };
     return { text: publishStatus || "Unknown", cls: "bg-background/60 text-muted-foreground border border-border/60" };
   };
 
   const getStateBadge = (eventStatus) => {
     const n = (eventStatus || "").toUpperCase();
-    if (n === "UPCOMING") return { text: "Upcoming", cls: "bg-primary/15 text-accent border border-primary/30" };
-    if (n === "ONGOING" || n === "LIVE") return { text: "Live", cls: "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20", dot: true };
+    if (n === "UPCOMING") return { text: "Upcoming", cls: "bg-primary/15 text-accent-foreground border border-primary/30" };
+    if (n === "ONGOING" || n === "LIVE") return { text: "Live", cls: "bg-emerald-500/10 text-success border border-emerald-500/20", dot: true };
     if (n === "COMPLETED" || n === "ENDED" || n === "PAST") return { text: "Completed", cls: "bg-background/60 text-muted-foreground border border-border/60" };
     if (n === "CANCELLED") return { text: "Cancelled", cls: "bg-destructive/10 text-destructive border border-destructive/30" };
     return { text: eventStatus || "TBD", cls: "bg-background/60 text-muted-foreground border border-border/60" };
@@ -291,7 +291,7 @@ const MyEvents = () => {
               placeholder="Search by title, location, category..."
               value={searchTerm}
               onChange={handleSearch}
-              className="h-9 w-full rounded-xl border border-border/50 bg-background/55 pl-8 pr-9 text-[13px] text-foreground placeholder:text-muted-foreground/80 shadow-inner shadow-black/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring/45 focus:border-border"
+              className="h-9 w-full rounded-xl border border-border/50 bg-background/55 pl-8 pr-9 text-[13px] text-foreground placeholder:text-muted-foreground/80 shadow-inner shadow-black/5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring/45 focus:border-border"
             />
             {searchTerm && (
               <button
@@ -411,7 +411,7 @@ const MyEvents = () => {
                       </button>
                       <button
                         onClick={() => navigate(`/organizer/events/${event.id}/attendees`)}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-primary/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-primaryCTA-hover hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                         title="View attendees"
                       >
                         <Users className="w-3.5 h-3.5" />
@@ -429,14 +429,14 @@ const MyEvents = () => {
                             }
                           )
                         }
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary/15 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary/15 hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                         title="View analytics"
                       >
                         <BarChart2 className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => navigate(`/organizer/events/${event.id}/refunds`)}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-primary/10 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-primaryCTA-hover hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                         title="View refunds"
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
@@ -445,7 +445,7 @@ const MyEvents = () => {
                       {isCancellable(event) && (
                         <button
                           onClick={() => setConfirmCancel(event)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-secondary/15 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-secondary/15 hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                           title="Cancel event"
                         >
                           <Ban className="w-3.5 h-3.5" />
@@ -516,7 +516,7 @@ const MyEvents = () => {
                     onClick={() => setCurrentPage(page)}
                     className={`w-7 h-7 rounded-md text-xs font-medium transition-colors ${
                       page === currentPage
-                        ? "bg-primary text-primary-foreground"
+                        ? "bg-primaryCTA text-primary-foreground"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     }`}
                   >
@@ -586,7 +586,7 @@ const MyEvents = () => {
           <div className="relative w-full max-w-sm bg-card border border-border/60 rounded-xl p-5 shadow-[var(--shadow-elegant)] animate-card-in space-y-3">
             <div className="flex items-start gap-3">
               <div className="mt-0.5 p-1.5 rounded-lg bg-secondary/15 border border-secondary/25">
-                <Ban className="w-4 h-4 text-accent" />
+                <Ban className="w-4 h-4 text-accent-foreground" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold">Cancel event?</h3>

@@ -68,12 +68,12 @@ const transformEvent = (event) => {
 };
 
 const Stat = ({ label, value, hint, icon: Icon }) => (
-  <div className="rounded-2xl bg-white/5 border border-white/10 p-4 shadow-lg shadow-black/25">
+  <div className="rounded-2xl bg-muted border border-border p-4 shadow-lg shadow-black/5">
     <div className="flex items-center justify-between">
-      <p className="text-xs uppercase tracking-[0.2em] text-white/60 flex items-center gap-2">
-        {Icon && <Icon className="w-4 h-4 text-emerald-300" />} {label}
+      <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+        {Icon && <Icon className="w-4 h-4 text-success" />} {label}
       </p>
-      <span className="text-[10px] text-white/40">{hint}</span>
+      <span className="text-[10px] text-muted-foreground">{hint}</span>
     </div>
     <p className="text-3xl font-bold mt-2">{value}</p>
   </div>
@@ -83,7 +83,7 @@ const Modal = ({ open, onClose, children }) => {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur">
-      <div className="bg-[#0d1526] border border-white/10 rounded-2xl p-5 w-full max-w-lg shadow-2xl shadow-black/40">
+      <div className="bg-background border border-border rounded-2xl p-5 w-full max-w-lg shadow-2xl shadow-black/5">
         {children}
       </div>
     </div>
@@ -100,23 +100,23 @@ const TicketPanel = ({
   error,
   onReset,
 }) => (
-  <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-xl shadow-black/30 space-y-4">
+  <div className="rounded-2xl border border-border bg-muted p-5 shadow-xl shadow-black/5 space-y-4">
     <div className="flex items-center justify-between gap-3">
       <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-white/60 flex items-center gap-2">
-          <Ticket className="w-4 h-4 text-amber-300" /> Ticket
+        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+          <Ticket className="w-4 h-4 text-warning" /> Ticket
         </p>
         <h3 className="text-2xl font-bold">{ticket.holder}</h3>
       </div>
       <div className="text-right">
-        <p className="text-sm font-medium text-white/80">{ticket.ticketType}</p>
+        <p className="text-sm font-medium text-muted-foreground">{ticket.ticketType}</p>
         <p className="text-lg font-bold">Qty {ticket.quantity}</p>
-        <p className="text-sm text-white/60">₹{ticket.price?.toLocaleString()}</p>
+        <p className="text-sm text-muted-foreground">₹{ticket.price?.toLocaleString()}</p>
       </div>
     </div>
 
-    <div className="rounded-xl bg-black/20 border border-white/10 p-3 text-sm text-white/70 flex items-center gap-2">
-      <Info className="w-4 h-4 text-cyan-300" />
+    <div className="rounded-xl bg-surface border border-border p-3 text-sm text-muted-foreground flex items-center gap-2">
+      <Info className="w-4 h-4 text-info" />
       {decision === "allowed"
         ? "Allowed • Check-in completed"
         : decision === "rejected"
@@ -124,8 +124,8 @@ const TicketPanel = ({
         : ticket.status}
     </div>
 
-    {message && <p className="text-sm text-emerald-300">{message}</p>}
-    {error && <p className="text-sm text-red-300">{error}</p>}
+    {message && <p className="text-sm text-success">{message}</p>}
+    {error && <p className="text-sm text-destructive">{error}</p>}
 
     <div className="flex items-center gap-2">
       <button
@@ -144,7 +144,7 @@ const TicketPanel = ({
       </button>
       <button
         onClick={onReset}
-        className="ml-auto px-4 py-2 rounded-lg bg-white/10 border border-white/15 hover:bg-white/15 transition text-sm"
+        className="ml-auto px-4 py-2 rounded-lg bg-muted border border-border hover:bg-muted transition text-sm"
       >
         Verify another
       </button>
@@ -269,10 +269,10 @@ const ReceptionDetail = () => {
 
   if (loading && !event) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#05060c] via-[#0a0f1c] to-[#05060c] text-white">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-surface via-background to-surface text-foreground">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-10 h-10 animate-spin text-emerald-300" />
-          <p className="text-sm text-white/70">Loading reception...</p>
+          <Loader2 className="w-10 h-10 animate-spin text-success" />
+          <p className="text-sm text-muted-foreground">Loading reception...</p>
         </div>
       </div>
     );
@@ -280,16 +280,16 @@ const ReceptionDetail = () => {
 
   if (error && !event) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#05060c] via-[#0a0f1c] to-[#05060c] text-white">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-surface via-background to-surface text-foreground">
         <div className="text-center space-y-3">
           <p className="text-lg">Failed to load reception</p>
-          <p className="text-sm text-white/60">{error}</p>
+          <p className="text-sm text-muted-foreground">{error}</p>
           <button
             onClick={() => {
               hasFetchedRef.current = false;
               fetchEventData();
             }}
-            className="px-4 py-2 rounded-lg bg-white/10 border border-white/15 hover:bg-white/15 transition"
+            className="px-4 py-2 rounded-lg bg-muted border border-border hover:bg-muted transition"
           >
             Retry
           </button>
@@ -300,12 +300,12 @@ const ReceptionDetail = () => {
 
   if (!event) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#05060c] via-[#0a0f1c] to-[#05060c] text-white">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-surface via-background to-surface text-foreground">
         <div className="text-center space-y-3">
           <p className="text-lg">Event not found</p>
           <button
             onClick={() => navigate("/organizer/reception")}
-            className="px-4 py-2 rounded-lg bg-white/10 border border-white/15 hover:bg-white/15 transition"
+            className="px-4 py-2 rounded-lg bg-muted border border-border hover:bg-muted transition"
           >
             Back to reception
           </button>
@@ -535,31 +535,31 @@ const ReceptionDetail = () => {
   }));
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#05060c] via-[#0a0f1c] to-[#05060c] text-white">
-      <div className="px-4 lg:px-6 py-5 border-b border-white/10 bg-white/5 backdrop-blur">
+    <div className="min-h-screen bg-gradient-to-b from-surface via-background to-surface text-foreground">
+      <div className="px-4 lg:px-6 py-5 border-b border-border bg-muted backdrop-blur">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate("/organizer/reception")}
-              className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition"
+              className="p-2 rounded-lg bg-muted border border-border hover:bg-muted transition"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <p className="text-[11px] uppercase tracking-[0.25em] text-white/50 flex items-center gap-2">
-                <Shield className="w-4 h-4 text-emerald-300" /> Reception Desk
+              <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground flex items-center gap-2">
+                <Shield className="w-4 h-4 text-success" /> Reception Desk
               </p>
               <h1 className="text-2xl font-extrabold">{event.title}</h1>
-              <p className="text-sm text-white/60 flex items-center gap-2">
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
                 <Clock className="w-4 h-4" />
                 {formatDateTime(event.startDate)} — {formatDateTime(event.endDate)}
-                <span className="h-1 w-1 rounded-full bg-white/30" />
+                <span className="h-1 w-1 rounded-full bg-muted" />
                 <MapPin className="w-4 h-4" />
                 {event.venue}, {event.city}, {event.state}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm text-white/60">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             Live window • Today
           </div>
@@ -574,50 +574,50 @@ const ReceptionDetail = () => {
           <Stat label="Types" value={ticketTotals.types} hint="Seat / ticket types" icon={Layers} />
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-lg shadow-black/30">
+        <div className="rounded-2xl border border-border bg-muted p-5 shadow-lg shadow-black/5">
           <div className="flex items-center justify-between gap-3 mb-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-white/60 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-emerald-300" /> Check-in desk
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-success" /> Check-in desk
               </p>
               <h3 className="text-xl font-semibold">{event.title}</h3>
-              <p className="text-xs text-white/60">Select method: verify QR or enter manual code.</p>
+              <p className="text-xs text-muted-foreground">Select method: verify QR or enter manual code.</p>
             </div>
-            {message && <span className="text-xs text-emerald-300">{message}</span>}
+            {message && <span className="text-xs text-success">{message}</span>}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="rounded-xl border border-white/10 bg-black/30 p-4">
+            <div className="rounded-xl border border-border bg-surface p-4">
               <p className="text-sm font-semibold flex items-center gap-2">
-                <QrCode className="w-4 h-4 text-cyan-300" /> QR Scan
+                <QrCode className="w-4 h-4 text-info" /> QR Scan
               </p>
-              <p className="text-xs text-white/60 mt-1">Scan a ticket QR code with your camera for instant check-in.</p>
+              <p className="text-xs text-muted-foreground mt-1">Scan a ticket QR code with your camera for instant check-in.</p>
               <button
                 onClick={() => setShowScanner(true)}
-                className="mt-3 w-full px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500/30 to-emerald-500/30 border border-white/10 hover:border-emerald-300/40 transition flex items-center justify-center gap-2"
+                className="mt-3 w-full px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500/30 to-emerald-500/30 border border-border hover:border-emerald-300/40 transition flex items-center justify-center gap-2"
               >
                 <QrCode className="w-4 h-4" />
                 Open QR Scanner
               </button>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-black/30 p-4">
+            <div className="rounded-xl border border-border bg-surface p-4">
               <p className="text-sm font-semibold flex items-center gap-2">
-                <Ticket className="w-4 h-4 text-amber-300" /> Manual Check-in Code
+                <Ticket className="w-4 h-4 text-warning" /> Manual Check-in Code
               </p>
-              <p className="text-xs text-white/60 mt-1">Enter the code printed on the ticket.</p>
+              <p className="text-xs text-muted-foreground mt-1">Enter the code printed on the ticket.</p>
               <form onSubmit={handleSubmitId} className="mt-3 space-y-2">
                 <input
                   value={ticketInput}
                   onChange={(e) => setTicketInput(e.target.value)}
                   placeholder="Enter manual check-in code (e.g., 9sv9begy)"
                   inputMode="text"
-                  className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+                  className="w-full rounded-lg bg-muted border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
                 />
                 <button
                   type="submit"
                   disabled={processing}
-                  className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/15 hover:bg-white/15 transition text-sm disabled:opacity-60"
+                  className="w-full px-4 py-2 rounded-lg bg-muted border border-border hover:bg-muted transition text-sm disabled:opacity-60"
                 >
                   Verify Ticket
                 </button>
@@ -625,7 +625,7 @@ const ReceptionDetail = () => {
             </div>
           </div>
 
-          {error && <p className="mt-3 text-sm text-red-300">{error}</p>}
+          {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
         </div>
 
         {ticket && (
@@ -641,17 +641,17 @@ const ReceptionDetail = () => {
           />
         )}
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-lg shadow-black/30">
+        <div className="rounded-2xl border border-border bg-muted p-5 shadow-lg shadow-black/5">
           <div className="flex items-center gap-2 mb-3">
-            <Radio className="w-5 h-5 text-emerald-300" />
+            <Radio className="w-5 h-5 text-success" />
             <h4 className="text-lg font-semibold">Event tracker</h4>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {seatsByType?.map((s) => (
-              <div key={s.name} className="rounded-xl border border-white/10 bg-black/30 p-3">
+              <div key={s.name} className="rounded-xl border border-border bg-surface p-3">
                 <p className="text-sm font-semibold">{s.name}</p>
-                <p className="text-xs text-white/60">Sold: {s.sold} / {s.total}</p>
-                <p className="text-xs text-white/60">Checked-in: {s.checkedIn}</p>
+                <p className="text-xs text-muted-foreground">Sold: {s.sold} / {s.total}</p>
+                <p className="text-xs text-muted-foreground">Checked-in: {s.checkedIn}</p>
               </div>
             ))}
           </div>
@@ -676,19 +676,19 @@ const ReceptionDetail = () => {
       )}
 
       <Modal open={showReason} onClose={() => setShowReason(false)}>
-        <h3 className="text-lg font-semibold text-white mb-2">Reject ticket</h3>
-        <p className="text-sm text-white/70 mb-3">Provide a reason to deny entry.</p>
+        <h3 className="text-lg font-semibold text-foreground mb-2">Reject ticket</h3>
+        <p className="text-sm text-muted-foreground mb-3">Provide a reason to deny entry.</p>
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={4}
-          className="w-full rounded-xl bg-black/40 border border-white/10 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-red-400/40"
+          className="w-full rounded-xl bg-surface border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-red-400/40"
           placeholder="e.g., QR mismatch, ticket already used, ID not verified"
         />
         <div className="mt-3 flex justify-end gap-2">
           <button
             onClick={() => setShowReason(false)}
-            className="px-4 py-2 rounded-lg bg-white/10 border border-white/15 hover:bg-white/15 transition text-sm"
+            className="px-4 py-2 rounded-lg bg-muted border border-border hover:bg-muted transition text-sm"
           >
             Cancel
           </button>

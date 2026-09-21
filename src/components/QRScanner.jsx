@@ -179,28 +179,28 @@ const QRScanner = ({ onScan, onClose, isProcessing, isPaused = false }) => {
   // On desktop/tablet: centered modal card. On mobile: fullscreen.
   return (
     <div className="fixed inset-0 z-50 bg-black/90 md:bg-black/70 md:backdrop-blur flex items-center justify-center">
-      <div className="w-full h-full md:w-[560px] md:h-auto md:max-h-[90vh] lg:w-[600px] bg-black md:bg-[#0a0f1c] md:rounded-2xl md:border md:border-white/10 md:shadow-2xl md:shadow-black/50 flex flex-col overflow-hidden">
+      <div className="w-full h-full md:w-[560px] md:h-auto md:max-h-[90vh] lg:w-[600px] bg-background text-foreground md:rounded-2xl md:border md:border-border md:shadow-2xl md:shadow-black/50 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-black/80 md:bg-transparent backdrop-blur md:backdrop-blur-none border-b border-white/10">
+        <div className="flex items-center justify-between px-4 py-3 bg-background backdrop-blur md:backdrop-blur-none border-b border-border">
           <div className="flex items-center gap-2">
-            <Camera className="w-5 h-5 text-emerald-300" />
-            <span className="text-sm font-semibold text-white">QR Scanner</span>
+            <Camera className="w-5 h-5 text-accent-foreground" />
+            <span className="text-sm font-semibold text-foreground">QR Scanner</span>
           </div>
           <div className="flex items-center gap-2">
             {cameras.length > 1 && (
               <button
                 onClick={switchCamera}
-                className="p-2 rounded-lg bg-white/10 border border-white/15 hover:bg-white/15 transition"
+                className="p-2 rounded-lg bg-muted border border-border hover:bg-secondary transition"
                 title="Switch camera"
               >
-                <SwitchCamera className="w-5 h-5 text-white" />
+                <SwitchCamera className="w-5 h-5 text-foreground" />
               </button>
             )}
             <button
               onClick={onClose}
-              className="p-2 rounded-lg bg-white/10 border border-white/15 hover:bg-white/15 transition"
+              className="p-2 rounded-lg bg-muted border border-border hover:bg-secondary transition"
             >
-              <X className="w-5 h-5 text-white" />
+              <X className="w-5 h-5 text-foreground" />
             </button>
           </div>
         </div>
@@ -209,18 +209,18 @@ const QRScanner = ({ onScan, onClose, isProcessing, isPaused = false }) => {
         <div className="flex-1 md:flex-none relative flex items-center justify-center min-h-[300px] md:min-h-[380px] md:aspect-square md:max-h-[60vh]">
           {isStarting && !cameraError && (
             <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
-              <Loader2 className="w-10 h-10 animate-spin text-emerald-300" />
-              <p className="mt-3 text-sm text-white/70">Starting camera...</p>
+              <Loader2 className="w-10 h-10 animate-spin text-accent-foreground" />
+              <p className="mt-3 text-sm text-muted-foreground">Starting camera...</p>
             </div>
           )}
 
           {cameraError && (
             <div className="absolute inset-0 flex flex-col items-center justify-center z-10 px-6 text-center">
-              <CameraOff className="w-12 h-12 text-red-400 mb-3" />
-              <p className="text-sm text-red-300 mb-4">{cameraError}</p>
+              <CameraOff className="w-12 h-12 text-destructive mb-3" />
+              <p className="text-sm text-destructive mb-4">{cameraError}</p>
               <button
                 onClick={onClose}
-                className="px-4 py-2 rounded-lg bg-white/10 border border-white/15 hover:bg-white/15 transition text-sm text-white"
+                className="px-4 py-2 rounded-lg bg-muted border border-border hover:bg-secondary transition text-sm text-foreground"
               >
                 Use Manual Entry
               </button>
@@ -235,20 +235,20 @@ const QRScanner = ({ onScan, onClose, isProcessing, isPaused = false }) => {
 
           {/* Processing overlay */}
           {isProcessing && (
-            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-20">
-              <Loader2 className="w-10 h-10 animate-spin text-emerald-300" />
-              <p className="mt-3 text-sm text-white/70">Processing check-in...</p>
+            <div className="absolute inset-0 bg-background/95 flex flex-col items-center justify-center z-20">
+              <Loader2 className="w-10 h-10 animate-spin text-accent-foreground" />
+              <p className="mt-3 text-sm text-muted-foreground">Processing check-in...</p>
             </div>
           )}
         </div>
 
         {/* Footer hint */}
-        <div className="px-4 py-3 bg-black/80 md:bg-transparent backdrop-blur md:backdrop-blur-none border-t border-white/10 text-center">
-          <p className="text-xs text-white/50">
+        <div className="px-4 py-3 bg-background backdrop-blur md:backdrop-blur-none border-t border-border text-center">
+          <p className="text-xs text-muted-foreground">
             Point the camera at the QR code on the ticket
           </p>
           {cameras.length > 1 && (
-            <p className="text-[10px] text-white/30 mt-1">
+            <p className="text-[10px] text-muted-foreground mt-1">
               Camera: {cameras[activeCameraIdx]?.label || `Camera ${activeCameraIdx + 1}`}
             </p>
           )}

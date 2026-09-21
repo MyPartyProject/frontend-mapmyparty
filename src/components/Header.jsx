@@ -467,7 +467,7 @@ const Header = ({
         <div className="max-h-[26rem] overflow-y-auto py-1">
           {searchLoading ? (
             <div className="flex items-center gap-2 px-4 py-5 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin text-accent" />
+              <Loader2 className="h-4 w-4 animate-spin text-accent-foreground" />
               Searching...
             </div>
           ) : searchError ? (
@@ -527,11 +527,7 @@ const Header = ({
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full ${
-        isLandingPage
-          ? "-mb-14 bg-gradient-to-b from-background/55 via-background/20 to-transparent backdrop-blur-sm shadow-none"
-          : "bg-card/70 shadow-[var(--shadow-card)] backdrop-blur-xl"
-      } ${forceMainHeader ? "" : "border-b border-border/45"} relative`}
+      className="sticky top-0 z-50 w-full border-b border-border bg-background"
     >
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:px-5 lg:px-8">
         {/* Brand + Search */}

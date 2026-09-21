@@ -25,8 +25,8 @@ import { useAuth } from "@/contexts/AuthContext";
 
 // Beautiful color palette
 const COLORS = {
-  primary: "#3b82f6",      // Blue
-  secondary: "#8b5cf6",    // Purple
+  primary: "#8438B0", // Brand series
+  secondary: "#0F766E", // Distinct comparison series
   success: "#10b981",      // Green
   warning: "#f59e0b",       // Amber
   danger: "#ef4444",        // Red
@@ -97,7 +97,7 @@ const PromoterAnalytics = () => {
       <text
         x={x}
         y={y}
-        fill="white"
+        fill="hsl(var(--foreground))"
         textAnchor={x > cx ? "start" : "end"}
         dominantBaseline="central"
         className="text-sm font-semibold"
@@ -189,7 +189,7 @@ const PromoterAnalytics = () => {
                   <p className="text-2xl font-bold">{formatCurrency(summary?.totalRevenue)}</p>
                   {renderChangeIndicator(summary?.revenueChange)}
                 </div>
-                <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/20">
+                <div className="p-3 rounded-full bg-blue-100 ">
                   <BarChart3 className="w-5 h-5 text-blue-600" />
                 </div>
               </div>
@@ -210,7 +210,7 @@ const PromoterAnalytics = () => {
                   <p className="text-2xl font-bold">{formatNumber(summary?.totalTicketsSold)}</p>
                   {renderChangeIndicator(summary?.ticketsChange)}
                 </div>
-                <div className="p-3 rounded-full bg-purple-100 dark:bg-purple-900/20">
+                <div className="p-3 rounded-full bg-purple-100 ">
                   <Activity className="w-5 h-5 text-purple-600" />
                 </div>
               </div>
@@ -231,7 +231,7 @@ const PromoterAnalytics = () => {
                   <p className="text-2xl font-bold">{formatNumber(summary?.activeEvents)}</p>
                   <p className="text-xs text-muted-foreground mt-1">Across all categories</p>
                 </div>
-                <div className="p-3 rounded-full bg-green-100 dark:bg-green-900/20">
+                <div className="p-3 rounded-full bg-green-100 ">
                   <PieChartIcon className="w-5 h-5 text-green-600" />
                 </div>
               </div>
@@ -254,7 +254,7 @@ const PromoterAnalytics = () => {
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">Sold vs total capacity</p>
                 </div>
-                <div className="p-3 rounded-full bg-amber-100 dark:bg-amber-900/20">
+                <div className="p-3 rounded-full bg-amber-100 ">
                   <TrendingUp className="w-5 h-5 text-amber-600" />
                 </div>
               </div>

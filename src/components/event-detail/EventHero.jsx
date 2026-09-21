@@ -66,7 +66,7 @@ const EventHero = ({ title, date, location, image, onLocationClick }) => {
       </div>
 
       {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-background" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-black/90" />
 
       {/* Content */}
       <div className="relative h-full container flex flex-col justify-end pb-16 pt-32">

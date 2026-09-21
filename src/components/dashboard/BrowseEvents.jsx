@@ -66,20 +66,20 @@ const CATEGORY_ORDER = [
   "food",
   "wellness",
 ];
-const FALLBACK_CATEGORY_COLORS = ["#60a5fa", "#f472b6", "#2dd4bf", "#f59e0b", "#818cf8"];
+const FALLBACK_CATEGORY_COLORS = ["#8438B0"];
 
 const KNOWN_CATEGORY_META = {
-  business: { label: "Business", icon: Briefcase, color: "#38bdf8" },
-  activities: { label: "Activities", icon: PartyPopper, color: "#22c55e" },
-  entertainment: { label: "Entertainment", icon: Sparkles, color: "#ef4444" },
-  concerts: { label: "Concerts", icon: Music, color: "#a855f7" },
-  food: { label: "Food", icon: Sparkles, color: "#f59e0b" },
-  movies: { label: "Movies", icon: Clapperboard, color: "#0ea5e9" },
-  music: { label: "Music", icon: Music, color: "#a855f7" },
-  plays: { label: "Plays", icon: Ticket, color: "#f97316" },
-  sports: { label: "Sports", icon: Trophy, color: "#14b8a6" },
-  wellness: { label: "Wellness", icon: Sparkles, color: "#10b981" },
-  workshop: { label: "Workshop", icon: Briefcase, color: "#f97316" },
+  business: { label: "Business", icon: Briefcase, color: "#8438B0" },
+  activities: { label: "Activities", icon: PartyPopper, color: "#8438B0" },
+  entertainment: { label: "Entertainment", icon: Sparkles, color: "#8438B0" },
+  concerts: { label: "Concerts", icon: Music, color: "#8438B0" },
+  food: { label: "Food", icon: Sparkles, color: "#8438B0" },
+  movies: { label: "Movies", icon: Clapperboard, color: "#8438B0" },
+  music: { label: "Music", icon: Music, color: "#8438B0" },
+  plays: { label: "Plays", icon: Ticket, color: "#8438B0" },
+  sports: { label: "Sports", icon: Trophy, color: "#8438B0" },
+  wellness: { label: "Wellness", icon: Sparkles, color: "#8438B0" },
+  workshop: { label: "Workshop", icon: Briefcase, color: "#8438B0" },
 };
 
 const KNOWN_SUBCATEGORY_OPTIONS = EVENT_SUBCATEGORY_OPTIONS_BY_KEY;
@@ -693,40 +693,37 @@ export default function BrowseEvents({ showPublicHeader = false }) {
       className={`group block h-full ${MOBILE_EVENT_ITEM_CLASS}`}
     >
       <article className="relative h-full min-h-[11.25rem] overflow-hidden rounded-lg border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1 hover:border-border hover:shadow-[var(--shadow-elegant)]">
-        <div className="absolute inset-0 overflow-hidden">
+        <div className="relative aspect-video overflow-hidden">
           <img
             src={getEventImage(event)}
             alt={event.title || event.eventTitle || "Event"}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-background/5" />
-          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-background/55 to-transparent" />
-          <div className="theme-gradient-primary absolute inset-0 opacity-10 transition-opacity duration-500 group-hover:opacity-20" />
         </div>
 
-        <div className="relative flex h-full min-h-[11.25rem] flex-col justify-between p-3">
+        <div className="relative flex min-h-[11.25rem] flex-col gap-4 bg-card p-4">
           <div className="flex items-start justify-between gap-2">
             {(event.subCategory || event.subcategory || event.category) && (
               <div className="max-w-[62%] truncate rounded-full border border-border/40 bg-card/85 px-2.5 py-1 text-[0.68rem] font-medium leading-none text-foreground shadow-[var(--shadow-card)] backdrop-blur-md">
                 {event.subCategory || event.subcategory || event.category}
               </div>
             )}
-            <div className="inline-flex min-w-[4.75rem] shrink-0 items-center justify-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-[0.68rem] font-bold leading-none tabular-nums text-accent shadow-[var(--shadow-card)] backdrop-blur-md">
+            <div className="inline-flex min-w-[4.75rem] shrink-0 items-center justify-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-[0.68rem] font-bold leading-none tabular-nums text-accent-foreground shadow-[var(--shadow-card)] backdrop-blur-md">
               {getEventPriceDisplay(event)}
             </div>
           </div>
 
           <div className="mt-auto">
-            <h3 className="line-clamp-2 text-sm font-black leading-tight text-foreground drop-shadow-xl transition-colors group-hover:text-accent sm:text-base">
+            <h3 className="line-clamp-2 text-sm font-black leading-tight text-foreground drop-shadow-xl transition-colors group-hover:text-accent-foreground sm:text-base">
               {event.title || event.eventTitle}
             </h3>
             <div className="mt-2 grid gap-1 text-[0.7rem] text-muted-foreground">
               <div className="flex items-center gap-1.5">
-                <Calendar className="h-3 w-3 shrink-0 text-accent" />
+                <Calendar className="h-3 w-3 shrink-0 text-accent-foreground" />
                 <span className="line-clamp-1">{formatDate(event.startDate || event.date)}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <MapPin className="h-3 w-3 shrink-0 text-accent" />
+                <MapPin className="h-3 w-3 shrink-0 text-accent-foreground" />
                 <span className="line-clamp-1">{getEventLocation(event)}</span>
               </div>
               {Number.isFinite(Number(event.distanceKm)) && formatDistanceKm(event.distanceKm) && (
@@ -800,13 +797,13 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                         <div className="theme-gradient-primary absolute inset-0 opacity-10 transition-opacity duration-700 group-hover:opacity-15" />
 
                         <div className="absolute right-3 top-3 z-10 sm:right-4 sm:top-4">
-                          <span className="inline-flex items-center justify-center rounded-full border border-accent/30 bg-card/70 px-2.5 py-1 text-[10px] font-bold leading-none text-accent shadow-[var(--shadow-card)] backdrop-blur-md sm:px-3 sm:py-1.5 sm:text-[11px]">
+                          <span className="inline-flex items-center justify-center rounded-full border border-accent/30 bg-card/70 px-2.5 py-1 text-[10px] font-bold leading-none text-accent-foreground shadow-[var(--shadow-card)] backdrop-blur-md sm:px-3 sm:py-1.5 sm:text-[11px]">
                             {getEventPriceDisplay(event)}
                           </span>
                         </div>
 
                         <div
-                          className={`absolute inset-x-0 bottom-0 z-10 flex flex-col p-4 transition-all duration-500 sm:p-5 lg:p-6 ${
+                          className={`absolute inset-x-0 bottom-0 z-10 flex flex-col bg-card/95 p-4 transition-all duration-500 sm:p-5 lg:p-6 ${
                             isActive ? "translate-y-0 opacity-100" : "translate-y-1 opacity-90"
                           }`}
                         >
@@ -826,15 +823,15 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                             }`}
                           >
                             <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-border/35 bg-card/65 px-2 py-1 text-[10px] text-foreground/90 shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs">
-                              <Calendar className="h-3.5 w-3.5 shrink-0 text-accent" />
+                              <Calendar className="h-3.5 w-3.5 shrink-0 text-accent-foreground" />
                               <span className="truncate">{formatDate(event.startDate || event.date)}</span>
                             </span>
                             <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-border/35 bg-card/65 px-2 py-1 text-[10px] text-foreground/90 shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs">
-                              <MapPin className="h-3.5 w-3.5 shrink-0 text-accent" />
+                              <MapPin className="h-3.5 w-3.5 shrink-0 text-accent-foreground" />
                               <span className="truncate">{getEventLocation(event)}</span>
                             </span>
                             {formatDistanceKm(event.distanceKm) && (
-                              <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2 py-1 text-[10px] font-medium text-accent shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs">
+                              <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2 py-1 text-[10px] font-medium text-accent-foreground shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs">
                                 {formatDistanceKm(event.distanceKm)}
                               </span>
                             )}
@@ -930,7 +927,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
               >
                 <div className="grid gap-4 lg:grid-cols-[1fr_0.45fr]">
                   <div>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent-foreground">
                       Category
                     </p>
                     <div className={MOBILE_CHIP_ROW_CLASS}>
@@ -1029,7 +1026,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                   </div>
 
                   <div>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent-foreground">
                       Location
                     </p>
                     <div className={MOBILE_CHIP_ROW_CLASS}>
@@ -1081,7 +1078,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                         </Badge>
                       )}
                       {urlState.nearby && (
-                        <Badge className={`${MOBILE_CHIP_ITEM_CLASS} border-0 bg-accent/10 px-2 py-0.5 text-[11px] text-accent`}>
+                        <Badge className={`${MOBILE_CHIP_ITEM_CLASS} border-0 bg-accent/10 px-2 py-0.5 text-[11px] text-accent-foreground`}>
                           Nearby
                         </Badge>
                       )}
@@ -1117,7 +1114,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
               <section className="space-y-3 border-t border-border/20 pt-4 sm:pt-5">
                 <div className="flex items-end justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/40 bg-card/70 text-accent shadow-[var(--shadow-card)] sm:h-10 sm:w-10">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/40 bg-card/70 text-accent-foreground shadow-[var(--shadow-card)] sm:h-10 sm:w-10">
                       <MapPin className="h-4.5 w-4.5" />
                     </div>
                     <div className="min-w-0">
@@ -1146,7 +1143,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                 <section key={category.key} className="space-y-3 border-t border-border/20 pt-4 sm:pt-5">
                   <div className="flex items-end justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/40 bg-card/70 text-accent shadow-[var(--shadow-card)] sm:h-10 sm:w-10">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/40 bg-card/70 text-accent-foreground shadow-[var(--shadow-card)] sm:h-10 sm:w-10">
                         <Icon className="h-4.5 w-4.5" />
                       </div>
                       <div className="min-w-0">

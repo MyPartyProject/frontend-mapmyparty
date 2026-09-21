@@ -158,7 +158,7 @@ const HostEvents = () => {
               <ul className="space-y-4">
                 {organizerBenefits.map((benefit) => (
                   <li key={benefit} className="flex items-start gap-3 text-sm leading-7 text-muted-foreground">
-                    <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#A855F7]" />
+                    <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primaryCTA" />
                     <span>{benefit}</span>
                   </li>
                 ))}
@@ -186,7 +186,7 @@ const HostEvents = () => {
               style={{ "--host-events-delay": "120ms" }}
             >
               <div className="relative z-10 mb-8 space-y-3">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#C084FC]">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent-foreground">
                   Organizer command center
                 </div>
                 <h2 className="host-events__panel-title max-w-md font-semibold text-foreground">
@@ -204,7 +204,7 @@ const HostEvents = () => {
                     key={title}
                     className="rounded-2xl border border-border/40 bg-background/40 px-4 py-5 transition-transform duration-300 hover:-translate-y-1"
                   >
-                    <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl border border-[#A855F7]/25 bg-[#A855F7]/10 text-[#C084FC]">
+                    <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/25 bg-primaryCTA/10 text-accent-foreground">
                       <Icon className="h-5 w-5" />
                     </div>
                     <div className="text-xs text-muted-foreground">{title}</div>
@@ -238,7 +238,7 @@ const HostEvents = () => {
                 style={{ "--host-events-delay": `${index * 90}ms` }}
               >
                 <div className="flex items-center justify-between gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#A855F7]/25 bg-[#A855F7]/10 text-[#C084FC]">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/25 bg-primaryCTA/10 text-accent-foreground">
                     <Icon className="h-5 w-5" />
                   </div>
                   <span className="text-sm font-semibold tracking-[0.18em] text-muted-foreground/80">
@@ -273,7 +273,7 @@ const HostEvents = () => {
                 className="host-events-reveal host-events__card group rounded-[1.75rem] border border-border/40 bg-card/50 p-7 shadow-[var(--shadow-card)]"
                 style={{ "--host-events-delay": `${index * 70}ms` }}
               >
-                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#A855F7]/25 bg-[#A855F7]/10 text-[#C084FC] transition-transform duration-300 group-hover:scale-105">
+                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/25 bg-primaryCTA/10 text-accent-foreground transition-transform duration-300 group-hover:scale-105">
                   <Icon className="h-5 w-5" />
                 </div>
                 <h3 className="host-events__card-title font-semibold text-foreground">{title}</h3>
@@ -304,7 +304,7 @@ const HostEvents = () => {
                 className="host-events-reveal host-events__card flex h-full flex-col rounded-[1.75rem] border border-border/40 bg-card/45 p-7 sm:p-8"
                 style={{ "--host-events-delay": `${index * 90}ms` }}
               >
-                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#A855F7]/25 bg-[#A855F7]/10 text-[#C084FC]">
+                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/25 bg-primaryCTA/10 text-accent-foreground">
                   <Icon className="h-5 w-5" />
                 </div>
                 <h3 className="host-events__card-title font-semibold text-foreground">{title}</h3>
@@ -327,7 +327,7 @@ const HostEvents = () => {
 
       <section className="host-events__section relative overflow-hidden pb-24 pt-8 sm:pb-28 lg:pb-32">
         <div className="relative mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
-          <div className="host-events-reveal mx-auto max-w-3xl rounded-[2rem] border border-[#A855F7]/25 bg-card/40 px-6 py-14 text-center shadow-[var(--shadow-elegant)] sm:px-10 sm:py-16">
+          <div className="host-events-reveal mx-auto max-w-3xl rounded-[2rem] border border-primary/25 bg-card/40 px-6 py-14 text-center shadow-[var(--shadow-elegant)] sm:px-10 sm:py-16">
             <Badge className="w-fit rounded-full border border-border/50 bg-background/50 px-3 py-1.5 text-xs text-foreground">
               Start hosting
             </Badge>

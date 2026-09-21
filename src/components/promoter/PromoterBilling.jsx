@@ -111,7 +111,7 @@ const PromoterBilling = () => {
               onClick={() => updateFilters({ status })}
               className={`rounded-lg border px-3 py-2 text-sm transition ${
                 filters.status === status
-                  ? "border-primary bg-primary text-primary-foreground"
+                  ? "border-primary bg-primaryCTA text-primary-foreground"
                   : "border-border/60 bg-card/70 text-muted-foreground hover:bg-card"
               }`}
             >

@@ -180,8 +180,8 @@ const PromoterProfile = () => {
       <div className="flex min-h-[60vh] items-center justify-center">
         <Card className="w-full max-w-md border-border/60 bg-card/80">
           <CardContent className="space-y-4 pt-6 text-center">
-            <p className="text-sm text-red-400">{error}</p>
-            <Button onClick={() => window.location.reload()} className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <p className="text-sm text-destructive">{error}</p>
+            <Button onClick={() => window.location.reload()} className="bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover">
               Retry
             </Button>
           </CardContent>
@@ -235,14 +235,14 @@ const PromoterProfile = () => {
               {dashboardLoading
                 ? Array.from({ length: 4 }).map((_, index) => (
                     <div key={index} className="rounded-2xl border border-border/60 bg-background/50 p-4 animate-pulse">
-                      <div className="mb-3 h-4 w-24 rounded bg-white/10" />
-                      <div className="h-7 w-28 rounded bg-white/10" />
-                      <div className="mt-2 h-3 w-20 rounded bg-white/10" />
+                      <div className="mb-3 h-4 w-24 rounded bg-muted" />
+                      <div className="h-7 w-28 rounded bg-muted" />
+                      <div className="mt-2 h-3 w-20 rounded bg-muted" />
                     </div>
                   ))
                 : stats.map((item) => (
                     <div key={item.title} className="rounded-2xl border border-border/60 bg-background/55 p-4 backdrop-blur-sm">
-                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-accent-foreground">
                         <item.icon className="h-5 w-5" />
                       </div>
                       <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{item.title}</p>
@@ -328,7 +328,7 @@ const PromoterProfile = () => {
                 <Button
                   type="submit"
                   disabled={saving || !hasChanges}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  className="bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover"
                 >
                   {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                   {saving ? "Saving..." : "Save Changes"}
@@ -348,21 +348,21 @@ const PromoterProfile = () => {
               <div className="rounded-2xl border border-border/60 bg-background/55 p-4">
                 <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Role</p>
                 <p className="mt-2 flex items-center gap-2 font-semibold">
-                  <Shield className="h-4 w-4 text-primary" />
+                  <Shield className="h-4 w-4 text-accent-foreground" />
                   Platform Administrator
                 </p>
               </div>
               <div className="rounded-2xl border border-border/60 bg-background/55 p-4">
                 <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Member Since</p>
                 <p className="mt-2 flex items-center gap-2 font-semibold">
-                  <Calendar className="h-4 w-4 text-primary" />
+                  <Calendar className="h-4 w-4 text-accent-foreground" />
                   {formatDate(profile?.createdAt)}
                 </p>
               </div>
               <div className="rounded-2xl border border-border/60 bg-background/55 p-4">
                 <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Last Updated</p>
                 <p className="mt-2 flex items-center gap-2 font-semibold">
-                  <User className="h-4 w-4 text-primary" />
+                  <User className="h-4 w-4 text-accent-foreground" />
                   {formatDate(profile?.updatedAt)}
                 </p>
               </div>
@@ -378,14 +378,14 @@ const PromoterProfile = () => {
               <div className="rounded-2xl border border-border/60 bg-background/55 p-4">
                 <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Platform Earnings</p>
                 <p className="mt-2 flex items-center gap-2 text-lg font-semibold">
-                  <Wallet2 className="h-4 w-4 text-primary" />
+                  <Wallet2 className="h-4 w-4 text-accent-foreground" />
                   {stats[3]?.value || "0"}
                 </p>
               </div>
               <div className="rounded-2xl border border-border/60 bg-background/55 p-4">
                 <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Gross Revenue</p>
                 <p className="mt-2 flex items-center gap-2 text-lg font-semibold">
-                  <CreditCard className="h-4 w-4 text-primary" />
+                  <CreditCard className="h-4 w-4 text-accent-foreground" />
                   {stats[2]?.value || "0"}
                 </p>
               </div>

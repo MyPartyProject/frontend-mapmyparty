@@ -137,10 +137,10 @@ const BookingSuccess = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-[#050510] flex items-center justify-center text-white">
+      <div className="min-h-screen bg-gradient-to-br from-black via-surface to-background flex items-center justify-center text-foreground">
         <div className="text-center">
           <Loader2 className="mx-auto mb-4 h-10 w-10 animate-spin text-red-600" />
-          <p className="text-sm text-gray-400">Loading booking details...</p>
+          <p className="text-sm text-muted-foreground">Loading booking details...</p>
         </div>
       </div>
     );
@@ -148,25 +148,25 @@ const BookingSuccess = () => {
 
   if (error || !booking || !event) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-[#050510] text-white">
+      <div className="min-h-screen bg-gradient-to-br from-black via-surface to-background text-foreground">
         <div className="relative overflow-hidden">
           <div className="pointer-events-none absolute inset-0">
             <div className="absolute -left-24 top-0 h-72 w-72 rounded-full bg-red-600/5 blur-3xl" />
             <div className="absolute right-0 top-28 h-64 w-64 rounded-full bg-red-600/5 blur-3xl" />
           </div>
           <div className="relative mx-auto flex min-h-screen max-w-xl items-center px-4 py-12">
-            <Card className="w-full border border-gray-800 bg-gray-900/50 text-white shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-sm">
+            <Card className="w-full border border-border bg-surface text-foreground shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-sm">
               <CardContent className="space-y-4 p-5 text-center sm:p-6">
-                <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full border border-gray-700/50 bg-gray-800/80">
+                <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface">
                   <Ticket className="h-6 w-6 text-red-600" />
                 </div>
                 <div className="space-y-1.5">
-                  <p className="text-[10px] uppercase tracking-[0.22em] text-gray-500">Booking status</p>
-                  <h1 className="text-2xl font-bold tracking-[0.02em] text-white sm:text-3xl">Booking summary unavailable</h1>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Booking status</p>
+                  <h1 className="text-2xl font-bold tracking-[0.02em] text-foreground sm:text-3xl">Booking summary unavailable</h1>
+                  <p className="text-sm text-muted-foreground">
                     We could not load this booking summary. Your payment may still be pending, failed, or under recovery — check My Bookings before paying again.
                   </p>
-                  <p className="text-xs text-gray-500">{error || "Booking summary unavailable"}</p>
+                  <p className="text-xs text-muted-foreground">{error || "Booking summary unavailable"}</p>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Button
@@ -178,7 +178,7 @@ const BookingSuccess = () => {
                   <Button
                     onClick={() => navigate("/dashboard")}
                     variant="outline"
-                    className="border-gray-700 text-white bg-gray-800 hover:bg-gray-700 hover:text-white text-sm"
+                    className="border-border text-foreground bg-surface hover:bg-gray-700 hover:text-foreground text-sm"
                   >
                     Go To Dashboard
                   </Button>
@@ -192,7 +192,7 @@ const BookingSuccess = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-[#050510] text-white">
+    <div className="min-h-screen bg-gradient-to-br from-black via-surface to-background text-foreground">
       <div className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -left-28 top-0 h-80 w-80 rounded-full bg-red-600/5 blur-3xl" />
@@ -200,37 +200,37 @@ const BookingSuccess = () => {
         </div>
 
         <div className="relative mx-auto max-w-xl px-4 py-10 sm:py-12">
-          <Card className="border border-gray-800 bg-gray-900/50 text-white shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-sm">
+          <Card className="border border-border bg-surface text-foreground shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-sm">
             <CardContent className="space-y-5 p-5 sm:p-6">
               <div className="flex items-start gap-4">
-                <div className="inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-gray-700/50 bg-gray-800/80">
+                <div className="inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-border bg-surface">
                   <CheckCircle2 className="h-6 w-6 text-red-600" />
                 </div>
                 <div className="min-w-0 space-y-1">
-                  <p className="text-[10px] uppercase tracking-[0.22em] text-gray-500">Booking confirmed</p>
-                  <h1 className="text-2xl font-bold tracking-[0.02em] text-white sm:text-3xl">Your tickets are ready</h1>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Booking confirmed</p>
+                  <h1 className="text-2xl font-bold tracking-[0.02em] text-foreground sm:text-3xl">Your tickets are ready</h1>
+                  <p className="text-sm text-muted-foreground">
                     The payment went through successfully and your booking has been confirmed.
                   </p>
                 </div>
               </div>
 
-              <Badge className="border border-red-600/20 bg-red-600/10 px-2.5 py-1 text-[10px] text-red-300">
+              <Badge className="border border-red-600/20 bg-red-600/10 px-2.5 py-1 text-[10px] text-destructive">
                 Booking ID: {bookingIdLabel}
               </Badge>
 
-              <div className="rounded-xl border border-gray-700/50 bg-transparent p-4">
+              <div className="rounded-xl border border-border bg-transparent p-4">
                 <div className="flex items-center justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500">Event</p>
-                    <p className="truncate text-lg font-semibold text-white">{event.name || "Event"}</p>
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Event</p>
+                    <p className="truncate text-lg font-semibold text-foreground">{event.name || "Event"}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500">Tickets</p>
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Tickets</p>
                     <p className="font-semibold text-red-600">{totalTickets}</p>
                   </div>
                 </div>
-                <div className="mt-4 space-y-2 text-sm text-gray-400">
+                <div className="mt-4 space-y-2 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-red-600" />
                     <span>{formatDate(eventDate)}</span>
@@ -252,19 +252,19 @@ const BookingSuccess = () => {
               </div>
 
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between text-gray-400">
+                <div className="flex justify-between text-muted-foreground">
                   <span>Subtotal</span>
-                  <span className="text-white">{formatCurrency(subtotal)}</span>
+                  <span className="text-foreground">{formatCurrency(subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-gray-400">
+                <div className="flex justify-between text-muted-foreground">
                   <span>Platform charges</span>
-                  <span className="text-white">{formatCurrency(booking.platformFeeTotal || 0)}</span>
+                  <span className="text-foreground">{formatCurrency(booking.platformFeeTotal || 0)}</span>
                 </div>
-                <div className="flex justify-between text-gray-400">
+                <div className="flex justify-between text-muted-foreground">
                   <span>{taxSummary.label}</span>
-                  <span className="text-white">{formatCurrency(taxSummary.amount)}</span>
+                  <span className="text-foreground">{formatCurrency(taxSummary.amount)}</span>
                 </div>
-                <div className="h-px bg-gray-800" />
+                <div className="h-px bg-surface" />
                 <div className="flex justify-between text-base font-semibold">
                   <span>Total Paid</span>
                   <span className="text-red-600">{formatCurrency(booking.totalAmount || 0)}</span>
@@ -272,7 +272,7 @@ const BookingSuccess = () => {
               </div>
 
               <div className="space-y-3">
-                <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.14em] text-white/80">
+                <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                   <Ticket className="h-4 w-4 text-red-600" />
                   Ticket Summary
                 </h3>
@@ -280,11 +280,11 @@ const BookingSuccess = () => {
                   {tickets.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-start justify-between gap-4 rounded-xl border border-gray-700/50 bg-transparent px-4 py-3"
+                      className="flex items-start justify-between gap-4 rounded-xl border border-border bg-transparent px-4 py-3"
                     >
                       <div>
-                        <p className="text-sm font-medium text-white">{item.name || "Ticket"}</p>
-                        <p className="text-xs text-gray-500">Quantity: {item.quantity}</p>
+                        <p className="text-sm font-medium text-foreground">{item.name || "Ticket"}</p>
+                        <p className="text-xs text-muted-foreground">Quantity: {item.quantity}</p>
                       </div>
                       <p className="text-sm font-semibold text-red-600">{formatCurrency(item.subtotal)}</p>
                     </div>
@@ -303,13 +303,13 @@ const BookingSuccess = () => {
                 <Button
                   onClick={() => navigate("/dashboard/bookings")}
                   variant="outline"
-                  className="w-full border-gray-700 text-white bg-gray-800 hover:bg-gray-700 hover:text-white text-sm"
+                  className="w-full border-border text-foreground bg-surface hover:bg-gray-700 hover:text-foreground text-sm"
                 >
                   View My Bookings
                 </Button>
               </div>
 
-              <div className="rounded-xl border border-gray-700/50 bg-transparent px-4 py-3 text-center text-xs leading-5 text-gray-500 sm:text-sm">
+              <div className="rounded-xl border border-border bg-transparent px-4 py-3 text-center text-xs leading-5 text-muted-foreground sm:text-sm">
                 Your tickets contain QR codes that will be scanned at the event entrance. Please carry a valid ID along
                 with your tickets.
               </div>

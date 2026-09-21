@@ -577,7 +577,7 @@ const Profile = () => {
                                   </AvatarFallback>
                                 )}
                               </Avatar>
-                              <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-semibold text-primary-foreground shadow">Change</span>
+                              <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-primaryCTA px-3 py-0.5 text-xs font-semibold text-primary-foreground shadow">Change</span>
                             </button>
                           </DialogTrigger>
                           <DialogContent className="max-w-lg">
@@ -589,7 +589,7 @@ const Profile = () => {
                                 <button
                                   key={option.id}
                                   type="button"
-                                  className="group flex flex-col items-center gap-2 rounded-xl border border-border/60 bg-background/80 p-3 transition hover:border-primary hover:bg-primary/10"
+                                  className="group flex flex-col items-center gap-2 rounded-xl border border-border/60 bg-background/80 p-3 transition hover:border-primary hover:bg-primaryCTA-hover"
                                 >
                                   <AvatarSelector className="h-16 w-16 border-2 border-border/60 shadow">
                                     <AvatarSelectorImage src={option.url} alt={option.label} />
@@ -612,7 +612,7 @@ const Profile = () => {
 
                       <div className="mt-4 flex-1 space-y-3 sm:mt-0">
                         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                          <MapPin className="h-4 w-4 text-primary" />
+                          <MapPin className="h-4 w-4 text-accent-foreground" />
                           <span>{profile.location}</span>
                           <Badge variant="secondary" className="uppercase tracking-wide">
                             {roleLabelMap[role] || "Attendee"}
@@ -656,7 +656,7 @@ const Profile = () => {
                                 <button
                                   key={action.label}
                                   type="button"
-                                  className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-muted text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
+                                  className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-muted text-muted-foreground transition hover:bg-primaryCTA-hover hover:text-accent-foreground"
                                   aria-label={action.label}
                                   onClick={action.onClick}
                                 >
@@ -668,7 +668,7 @@ const Profile = () => {
                             row.subIsLink ? (
                               <a
                                 href={row.subValue}
-                                className="text-sm text-primary underline decoration-primary/50 underline-offset-4"
+                                className="text-sm text-accent-foreground underline decoration-primary/50 underline-offset-4"
                                 target="_blank"
                                 rel="noreferrer"
                               >
@@ -686,7 +686,7 @@ const Profile = () => {
                                   key={action.label}
                                   variant={action.variant || "link"}
                                   size="sm"
-                                  className="px-0 h-auto text-xs font-semibold text-primary"
+                                  className="px-0 h-auto text-xs font-semibold text-accent-foreground"
                                   type="button"
                                   onClick={action.onClick}
                                 >

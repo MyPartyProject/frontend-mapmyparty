@@ -88,14 +88,14 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave, initialTicket = nu
       case "vip-guest":
         return (
           <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-primary" />
+            <Users className="w-5 h-5 text-accent-foreground" />
             <span>{actionLabel} VIP Guest List</span>
           </div>
         );
       case "standard":
         return (
           <div className="flex items-center gap-2">
-            <Ticket className="w-5 h-5 text-primary" />
+            <Ticket className="w-5 h-5 text-accent-foreground" />
             <span>{actionLabel} Standard Ticket</span>
           </div>
         );
@@ -103,7 +103,7 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave, initialTicket = nu
         return (
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-xs font-bold text-primary">T</span>
+              <span className="text-xs font-bold text-accent-foreground">T</span>
             </div>
             <span>{actionLabel} Table Ticket</span>
           </div>
@@ -111,14 +111,14 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave, initialTicket = nu
       case "group-pass":
         return (
           <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-primary" />
+            <Users className="w-5 h-5 text-accent-foreground" />
             <span>{actionLabel} Group Pass</span>
           </div>
         );
       default:
         return (
           <div className="flex items-center gap-2">
-            <Ticket className="w-5 h-5 text-primary" />
+            <Ticket className="w-5 h-5 text-accent-foreground" />
             <span>{actionLabel} Ticket</span>
           </div>
         );
@@ -380,7 +380,7 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave, initialTicket = nu
                       id="comingSoon"
                       checked={comingSoon}
                       onCheckedChange={(checked) => setComingSoon(!!checked)}
-                      className="h-5 w-5 rounded-md border-2 border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:text-white"
+                      className="h-5 w-5 rounded-md border-2 border-primary/30 data-[state=checked]:bg-primaryCTA data-[state=checked]:text-inverse"
                     />
                     <Label htmlFor="comingSoon" className="cursor-pointer text-sm font-medium">
                       Mark as Coming Soon
@@ -391,7 +391,7 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave, initialTicket = nu
                       id="onsiteOnly"
                       checked={onsiteOnly}
                       onCheckedChange={(checked) => setOnsiteOnly(!!checked)}
-                      className="h-5 w-5 rounded-md border-2 border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:text-white"
+                      className="h-5 w-5 rounded-md border-2 border-primary/30 data-[state=checked]:bg-primaryCTA data-[state=checked]:text-inverse"
                     />
                     <Label htmlFor="onsiteOnly" className="cursor-pointer text-sm font-medium">
                       Available at Door Only
@@ -412,7 +412,7 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave, initialTicket = nu
           </Button>
           <Button 
             onClick={handleSave}
-            className="px-6 h-10 rounded-lg font-medium bg-primary hover:bg-primary/90 transition-colors text-white"
+            className="px-6 h-10 rounded-lg font-medium bg-primaryCTA hover:bg-primaryCTA-hover transition-colors text-inverse"
           >
             {isEditing ? "Update Ticket" : "Save Ticket"}
           </Button>

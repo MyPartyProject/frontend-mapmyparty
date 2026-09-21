@@ -31,12 +31,12 @@ const pillars = [
 
 const About = () => {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50">
+    <div className="min-h-screen bg-surface text-slate-50">
       <Header forceMainHeader />
 
-      <section className="relative overflow-hidden bg-[#140a2b]">
+      <section className="relative overflow-hidden bg-background">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(255,105,180,0.28),transparent_45%),radial-gradient(circle_at_65%_25%,rgba(122,78,255,0.35),transparent_40%),radial-gradient(circle_at_80%_70%,rgba(255,183,104,0.25),transparent_40%)]" />
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0a0619] via-[#1b0c2f] to-[#31154a] opacity-90" />
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-background opacity-90" />
         <div className="absolute inset-0 opacity-70">
           <div className="absolute left-16 top-16 h-3 w-3 rounded-full bg-pink-300/70 blur-sm" />
           <div className="absolute left-40 top-28 h-2 w-2 rounded-full bg-purple-200/70 blur-sm" />
@@ -46,13 +46,13 @@ const About = () => {
         </div>
 
         <div className="relative mx-auto max-w-6xl px-6 pt-16 pb-20 md:pt-20 md:pb-24">
-          <Badge className="mb-4 border border-white/20 bg-white/10 text-white">About Map MyParty</Badge>
+          <Badge className="mb-4 border border-border bg-muted text-foreground">About Map MyParty</Badge>
           <div className="grid gap-10 md:grid-cols-2 md:items-center">
             <div className="space-y-6">
               <h1 className="text-4xl font-bold leading-tight md:text-5xl">
                 We're reimagining how the world meets, celebrates, and discovers.
               </h1>
-              <p className="max-w-2xl text-lg text-slate-200/80">
+              <p className="max-w-2xl text-lg text-muted-foreground">
                 Map MyParty makes it effortless to create, find, and experience unforgettable events. From intimate
                 gigs to city-wide festivals, we connect organizers and guests with tools that feel delightful and fast.
               </p>
@@ -60,21 +60,21 @@ const About = () => {
                 <Button>
                   Browse Events
                 </Button>
-                <Button variant="outline" className="border-white/30 text-white hover:bg-white hover:text-slate-900">
+                <Button variant="outline" className="border-border text-foreground hover:bg-white hover:text-slate-900">
                   Host an Event
                 </Button>
               </div>
             </div>
 
-            <Card className="border-white/15 bg-white/10 backdrop-blur-xl shadow-[0_25px_80px_-35px_rgba(0,0,0,0.75)]">
+            <Card className="border-border bg-muted backdrop-blur-xl shadow-[0_25px_80px_-35px_rgba(0,0,0,0.75)]">
               <CardContent className="grid grid-cols-2 gap-4 p-6">
                 {highlights.map(({ title, value, icon: Icon }) => (
-                  <div key={title} className="space-y-2 rounded-xl border border-white/10 bg-white/10 p-4">
-                    <div className="flex items-center gap-2 text-sm text-slate-200/75">
+                  <div key={title} className="space-y-2 rounded-xl border border-border bg-muted p-4">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Icon className="h-4 w-4 text-pink-200" />
                       <span>{title}</span>
                     </div>
-                    <div className="text-2xl font-bold text-white">{value}</div>
+                    <div className="text-2xl font-bold text-foreground">{value}</div>
                   </div>
                 ))}
               </CardContent>
@@ -83,20 +83,20 @@ const About = () => {
         </div>
       </section>
 
-      <section className="bg-slate-950 py-16">
+      <section className="bg-surface py-16">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-6 md:grid-cols-3">
             {pillars.map(({ title, desc, icon: Icon }) => (
               <Card
                 key={title}
-                className="border-white/10 bg-white/5 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-amber-300/40 hover:shadow-[0_25px_80px_-24px_rgba(0,0,0,0.65)]"
+                className="border-border bg-muted backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-amber-300/40 hover:shadow-[0_25px_80px_-24px_rgba(0,0,0,0.65)]"
               >
                 <CardContent className="space-y-3 p-6">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 text-pink-200">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-pink-200">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <h3 className="text-xl font-semibold text-white">{title}</h3>
-                  <p className="text-sm leading-relaxed text-slate-300/80">{desc}</p>
+                  <h3 className="text-xl font-semibold text-foreground">{title}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{desc}</p>
                 </CardContent>
               </Card>
             ))}
@@ -106,11 +106,11 @@ const About = () => {
 
       <section className="bg-gradient-to-br from-amber-400/10 via-rose-400/10 to-blue-400/10 py-16">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="grid items-center gap-8 rounded-3xl border border-white/15 bg-white/10 p-8 backdrop-blur-xl md:grid-cols-2 md:p-10">
+          <div className="grid items-center gap-8 rounded-3xl border border-border bg-muted p-8 backdrop-blur-xl md:grid-cols-2 md:p-10">
             <div className="space-y-4">
               <Badge className="border border-amber-300/30 bg-amber-400/15 text-amber-100">Our promise</Badge>
-              <h2 className="text-3xl font-bold text-white">Every event feels premium</h2>
-              <p className="text-slate-200/80">
+              <h2 className="text-3xl font-bold text-foreground">Every event feels premium</h2>
+              <p className="text-muted-foreground">
                 Lightning-fast checkout, transparent fees, curated recommendations, and a team that has your back from
                 the first click to the final encore.
               </p>
@@ -118,21 +118,21 @@ const About = () => {
                 <Button>
                   Get Started
                 </Button>
-                <Button variant="outline" className="border-white/30 text-white hover:bg-white hover:text-slate-900">
+                <Button variant="outline" className="border-border text-foreground hover:bg-white hover:text-slate-900">
                   Talk to us
                 </Button>
               </div>
             </div>
 
-            <div className="space-y-3 text-sm text-slate-200/80">
-              <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
+            <div className="space-y-3 text-sm text-muted-foreground">
+              <div className="rounded-2xl border border-border bg-surface p-4">
                 "We moved our entire festival series to Map MyParty and saw 19% faster sell-outs. The guest experience
                 is unmatched."
-                <div className="mt-3 font-semibold text-white">- Aanya Desai, Festival Director</div>
+                <div className="mt-3 font-semibold text-foreground">- Aanya Desai, Festival Director</div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">
+              <div className="rounded-2xl border border-border bg-surface p-4">
                 "Check-ins are smoother, and refunds are transparent. It just works."
-                <div className="mt-3 font-semibold text-white">- Rohan Mehta, Venue Partner</div>
+                <div className="mt-3 font-semibold text-foreground">- Rohan Mehta, Venue Partner</div>
               </div>
             </div>
           </div>

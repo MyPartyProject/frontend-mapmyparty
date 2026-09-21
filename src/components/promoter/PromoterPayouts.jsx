@@ -95,15 +95,15 @@ const statusClass = (status) => {
   switch (status) {
     case "COMPLETED":
     case "RECONCILED":
-      return "border-emerald-500/40 bg-emerald-500/15 text-emerald-300";
+      return "border-emerald-500/40 bg-emerald-500/15 text-success";
     case "APPROVED":
     case "AUTO_APPROVED":
     case "PROCESSING":
-      return "border-blue-500/40 bg-blue-500/15 text-blue-300";
+      return "border-blue-500/40 bg-blue-500/15 text-info";
     case "REVIEW_REQUIRED":
     case "PENDING":
     case "RETRY_PENDING":
-      return "border-amber-500/40 bg-amber-500/15 text-amber-300";
+      return "border-amber-500/40 bg-amber-500/15 text-warning";
     case "FAILED":
     case "CANCELLED":
       return "border-destructive/40 bg-destructive/15 text-destructive";
@@ -193,7 +193,7 @@ const PayoutDetailModal = ({
       <DialogContent className="max-h-[88vh] max-w-5xl overflow-y-auto border-border/70 bg-background/95">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" />
+            <FileText className="h-5 w-5 text-accent-foreground" />
             Payout settlement detail
           </DialogTitle>
           <DialogDescription>
@@ -209,12 +209,12 @@ const PayoutDetailModal = ({
           payout && (
             <div className="space-y-5">
               <div className="grid gap-3 md:grid-cols-4">
-                <SummaryTile label="Net payout" value={formatMoney(getPayoutAmount(payout), 2)} tone="text-accent" />
+                <SummaryTile label="Net payout" value={formatMoney(getPayoutAmount(payout), 2)} tone="text-accent-foreground" />
                 <SummaryTile label="Gross sales" value={formatMoney(payout.grossTicketSales, 2)} />
                 <SummaryTile label="Platform fee" value={formatMoney(payout.platformFeeAmount, 2)} />
                 <SummaryTile label="GST deducted" value={formatMoney(payout.gstTotal, 2)} />
                 {adjustmentAmount > 0 && (
-                  <SummaryTile label="Balance recovered" value={formatMoney(adjustmentAmount, 2)} tone="text-amber-300" />
+                  <SummaryTile label="Balance recovered" value={formatMoney(adjustmentAmount, 2)} tone="text-warning" />
                 )}
               </div>
 
@@ -308,7 +308,7 @@ const PayoutDetailModal = ({
                             <td className="px-4 py-3 text-right">{formatMoney(item.netSales, 2)}</td>
                             <td className="px-4 py-3 text-right">{formatMoney(item.platformFeeAmount, 2)}</td>
                             <td className="px-4 py-3 text-right">{formatMoney(item.gstTotal, 2)}</td>
-                            <td className="px-4 py-3 text-right font-semibold text-accent">{formatMoney(item.netPayoutAmount, 2)}</td>
+                            <td className="px-4 py-3 text-right font-semibold text-accent-foreground">{formatMoney(item.netPayoutAmount, 2)}</td>
                           </tr>
                         ))
                       )}
@@ -383,7 +383,7 @@ const PayoutDetailModal = ({
                         {(revision.adjustments || []).map((adjustment) => (
                           <div key={adjustment.id} className="mt-2 flex justify-between gap-3 text-xs">
                             <span>{formatStatus(adjustment.category)} - {adjustment.description}</span>
-                            <span className={adjustment.direction === "CREDIT" ? "text-emerald-300" : "text-amber-300"}>
+                            <span className={adjustment.direction === "CREDIT" ? "text-success" : "text-warning"}>
                               {adjustment.direction === "CREDIT" ? "+" : "-"}{formatMoney(adjustment.amountCents / 100, 2)}
                             </span>
                           </div>
@@ -483,7 +483,7 @@ const BalanceAdjustmentsModal = ({
       <DialogContent className="max-h-[88vh] max-w-5xl overflow-y-auto border-border/70 bg-background/95">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Wallet2 className="h-5 w-5 text-primary" />
+            <Wallet2 className="h-5 w-5 text-accent-foreground" />
             Organizer balance adjustments
           </DialogTitle>
           <DialogDescription>
@@ -498,7 +498,7 @@ const BalanceAdjustmentsModal = ({
               <SummaryTile
                 label="Open balance"
                 value={formatMoney((summary.openRemainingAmountCents || 0) / 100, 2)}
-                tone={summary.openRemainingAmountCents > 0 ? "text-amber-300" : "text-emerald-300"}
+                tone={summary.openRemainingAmountCents > 0 ? "text-warning" : "text-success"}
               />
               <SummaryTile label="Open adjustments" value={summary.openAdjustmentCount || 0} />
             </div>
@@ -973,14 +973,14 @@ const PromoterPayouts = () => {
         <Card className="border-border/60 bg-card/70">
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground">In review</p>
-            <p className="mt-1 text-2xl font-semibold text-amber-400">{formatMoney(totals.reviewAmount)}</p>
+            <p className="mt-1 text-2xl font-semibold text-warning">{formatMoney(totals.reviewAmount)}</p>
             <p className="text-sm text-muted-foreground">Calculated or approved</p>
           </CardContent>
         </Card>
         <Card className="border-border/60 bg-card/70">
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground">Processing</p>
-            <p className="mt-1 text-2xl font-semibold text-blue-300">{formatMoney(totals.processingAmount)}</p>
+            <p className="mt-1 text-2xl font-semibold text-info">{formatMoney(totals.processingAmount)}</p>
             <p className="text-sm text-muted-foreground">Provider stage</p>
           </CardContent>
         </Card>
@@ -996,7 +996,7 @@ const PromoterPayouts = () => {
       <Card className="border-border/60 bg-card/70">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
+            <Sparkles className="h-4 w-4 text-accent-foreground" />
             Create event payout
           </CardTitle>
           <CardDescription className="text-muted-foreground">
@@ -1070,7 +1070,7 @@ const PromoterPayouts = () => {
                     Backend calculated {preview.lineItems?.length || 0} ticket settlement lines.
                   </p>
                 </div>
-                <Badge className={`${preview.eligible ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300" : "border-destructive/40 bg-destructive/15 text-destructive"} border`}>
+                <Badge className={`${preview.eligible ? "border-emerald-500/40 bg-emerald-500/15 text-success" : "border-destructive/40 bg-destructive/15 text-destructive"} border`}>
                   {preview.eligible ? "Ready for draft" : "Review required"}
                 </Badge>
               </div>
@@ -1081,7 +1081,7 @@ const PromoterPayouts = () => {
                   <SummaryTile label="Refunds/reserve" value={formatMoney((previewTotals.refundAmount || 0) + (previewTotals.refundReserveAmount || 0), 2)} />
                   <SummaryTile label={`Platform fee (${previewTotals.platformFeePercent || 0}%)`} value={formatMoney(previewTotals.platformFeeAmount, 2)} />
                   <SummaryTile label={`${previewTotals.gstType || "GST"} deducted`} value={formatMoney(previewTotals.gstTotal, 2)} />
-                  <SummaryTile label="Net payout" value={formatMoney(previewTotals.netPayoutAmount, 2)} tone="text-accent" />
+                  <SummaryTile label="Net payout" value={formatMoney(previewTotals.netPayoutAmount, 2)} tone="text-accent-foreground" />
                 </div>
               )}
 
@@ -1099,8 +1099,8 @@ const PromoterPayouts = () => {
                   )}
                   {warnings.length > 0 && (
                     <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
-                      <p className="text-sm font-semibold text-amber-300">Warnings</p>
-                      <ul className="mt-2 space-y-1 text-sm text-amber-200/80">
+                      <p className="text-sm font-semibold text-warning">Warnings</p>
+                      <ul className="mt-2 space-y-1 text-sm text-warning">
                         {warnings.map((warning) => (
                           <li key={warning.code}>{warning.message || warning.code}</li>
                         ))}
@@ -1132,7 +1132,7 @@ const PromoterPayouts = () => {
               onClick={() => updateFilters({ status })}
               className={`rounded-lg border px-3 py-2 text-sm transition ${
                 filters.status === status
-                  ? "border-primary bg-primary text-primary-foreground"
+                  ? "border-primary bg-primaryCTA text-primary-foreground"
                   : "border-border/60 bg-card/70 text-muted-foreground hover:bg-card"
               }`}
             >
@@ -1175,7 +1175,7 @@ const PromoterPayouts = () => {
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-accent-foreground">
                             {isEventPayout ? <CalendarDays className="h-5 w-5" /> : <Wallet2 className="h-5 w-5" />}
                           </div>
                           <div className="min-w-0">
@@ -1195,7 +1195,7 @@ const PromoterPayouts = () => {
                           <SummaryTile label="Gross sales" value={formatMoney(payout.grossTicketSales, 2)} />
                           <SummaryTile label="Refunds/reserve" value={formatMoney((payout.refundAmount || 0) + (payout.refundReserveAmount || 0), 2)} />
                           <SummaryTile label="Fee + GST" value={formatMoney((payout.platformFeeAmount || 0) + (payout.gstTotal || 0), 2)} />
-                          <SummaryTile label="Net payout" value={formatMoney(getPayoutAmount(payout), 2)} tone="text-accent" />
+                          <SummaryTile label="Net payout" value={formatMoney(getPayoutAmount(payout), 2)} tone="text-accent-foreground" />
                         </div>
                       </div>
 
@@ -1234,7 +1234,7 @@ const PromoterPayouts = () => {
                       </div>
                       <div className="rounded-lg border border-border/60 bg-background/40 p-3 md:col-span-2">
                         <p className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {payout.failureReason || payout.blockedReason ? <XCircle className="h-4 w-4 text-destructive" /> : <CheckCircle2 className="h-4 w-4 text-emerald-400" />}
+                          {payout.failureReason || payout.blockedReason ? <XCircle className="h-4 w-4 text-destructive" /> : <CheckCircle2 className="h-4 w-4 text-success" />}
                           Review notes
                         </p>
                         <p className="truncate font-semibold">{payout.failureReason || payout.blockedReason || payout.remarks || "No remarks"}</p>

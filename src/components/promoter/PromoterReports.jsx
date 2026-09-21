@@ -39,18 +39,18 @@ const refundStatuses = ["ALL", "REQUESTED", "APPROVED", "DECLINED", "PROCESSED",
 const auditTypes = ["ALL", "users", "event_organizer", "events", "payouts", "refunds", "bank_details"];
 
 const auditToneClasses = {
-  success: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+  success: "border-emerald-500/30 bg-emerald-500/10 text-success",
   danger: "border-destructive/30 bg-destructive/10 text-destructive",
-  warning: "border-amber-500/30 bg-amber-500/10 text-amber-300",
-  info: "border-primary/30 bg-primary/10 text-primary",
+  warning: "border-amber-500/30 bg-amber-500/10 text-warning",
+  info: "border-primary/30 bg-primary/10 text-accent-foreground",
   neutral: "border-border/60 bg-background/70 text-foreground",
 };
 
 const auditIconToneClasses = {
-  success: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+  success: "border-emerald-500/30 bg-emerald-500/10 text-success",
   danger: "border-destructive/30 bg-destructive/10 text-destructive",
-  warning: "border-amber-500/30 bg-amber-500/10 text-amber-300",
-  info: "border-primary/30 bg-primary/10 text-primary",
+  warning: "border-amber-500/30 bg-amber-500/10 text-warning",
+  info: "border-primary/30 bg-primary/10 text-accent-foreground",
   neutral: "border-border/60 bg-background/70 text-muted-foreground",
 };
 
@@ -404,7 +404,7 @@ const PromoterReports = () => {
                   onClick={() => updateRefundFilters({ status })}
                   className={`rounded-lg border px-3 py-2 text-sm transition ${
                     refundFilters.status === status
-                      ? "border-primary bg-primary text-primary-foreground"
+                      ? "border-primary bg-primaryCTA text-primary-foreground"
                       : "border-border/60 bg-card/70 text-muted-foreground hover:bg-card"
                   }`}
                 >
@@ -447,7 +447,7 @@ const PromoterReports = () => {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-semibold text-accent">
+                    <p className="text-2xl font-semibold text-accent-foreground">
                       {(Number(refund.amountCents || 0) / 100).toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}
                     </p>
                     <p className="text-xs text-muted-foreground">
@@ -530,7 +530,7 @@ const PromoterReports = () => {
                   onClick={() => updateAuditFilters({ type })}
                   className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
                     auditFilters.type === type
-                      ? "border-primary bg-primary text-primary-foreground"
+                      ? "border-primary bg-primaryCTA text-primary-foreground"
                       : "border-border/60 bg-card/70 text-muted-foreground hover:bg-card"
                   }`}
                 >

@@ -92,7 +92,7 @@ const PromoterEvents = () => {
                 onClick={() => handleStatusFilter(status)}
                 className={`px-3 py-2 rounded-lg border border-border/60 transition ${
                   filters.eventStatus === status
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-primaryCTA text-primary-foreground"
                     : "bg-card/70 text-muted-foreground hover:bg-card"
                 }`}
               >
@@ -112,7 +112,7 @@ const PromoterEvents = () => {
                 onClick={() => handlePublishStatusFilter(status)}
                 className={`px-3 py-2 rounded-lg border border-border/60 transition ${
                   filters.publishStatus === status
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-primaryCTA text-primary-foreground"
                     : "bg-card/70 text-muted-foreground hover:bg-card"
                 }`}
               >
@@ -126,7 +126,7 @@ const PromoterEvents = () => {
       {/* Thin progress bar when fetching — visible but non-intrusive */}
       {isFetching && !loading && (
         <div className="h-0.5 w-full bg-muted overflow-hidden rounded-full">
-          <div className="h-full w-1/3 bg-primary rounded-full animate-pulse" />
+          <div className="h-full w-1/3 bg-primaryCTA rounded-full animate-pulse" />
         </div>
       )}
 
@@ -211,7 +211,7 @@ const PromoterEvents = () => {
                       </div>
                       <div className="rounded-xl border border-border/60 bg-card/80 p-3">
                         <p className="text-xs text-muted-foreground">Min Price</p>
-                        <p className="text-lg font-semibold text-accent">
+                        <p className="text-lg font-semibold text-accent-foreground">
                           {event.tickets.length > 0 ? currency(event.tickets[0].price) : 'N/A'}
                         </p>
                       </div>
@@ -224,7 +224,7 @@ const PromoterEvents = () => {
                       </div>
                       <Link
                         to={`/promoter/events/${event.id}`}
-                        className="inline-flex items-center gap-2 text-sm font-semibold text-accent hover:text-accent/80 transition"
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-accent-foreground hover:text-accent-foreground/80 transition"
                       >
                         View details <ChevronRight className="w-4 h-4" />
                       </Link>

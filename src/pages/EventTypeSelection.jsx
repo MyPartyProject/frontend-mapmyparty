@@ -14,7 +14,7 @@ const EventTypeSelection = () => {
       description:
         "Invite-only event with a curated guest list. Perfect for private gatherings and exclusive occasions.",
       icon: Users,
-      color: "text-primary",
+      color: "text-accent-foreground",
       bgColor: "bg-primary/10",
     },
     */
@@ -23,7 +23,7 @@ const EventTypeSelection = () => {
       title: "Exclusive Event",
       description: "Keep it premium and private with promotion only on MapMyParty.",
       icon: Lock,
-      color: "text-accent",
+      color: "text-accent-foreground",
       bgColor: "bg-accent/10",
       fee: "5% platform fee",
       highlights: [
@@ -53,7 +53,7 @@ const EventTypeSelection = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
+    <div className="min-h-screen bg-[var(--color-bg-primaryCTA)] text-[var(--color-text-accent-foreground)]">
       <main className="py-12 px-4">
         <div className="max-w-5xl mx-auto space-y-10">
           <div className="relative">
@@ -93,7 +93,7 @@ const EventTypeSelection = () => {
                       </span>
                     </div>
                     <div className="text-center space-y-3">
-                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/30 via-secondary/25 to-accent/15 border border-border/50 flex items-center justify-center mx-auto shadow-inner shadow-black/20">
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/30 via-secondary/25 to-accent/15 border border-border/50 flex items-center justify-center mx-auto shadow-inner shadow-black/5">
                         <Icon className="w-8 h-8 text-foreground" />
                       </div>
                       <CardTitle className="text-xl font-semibold text-foreground">{type.title}</CardTitle>

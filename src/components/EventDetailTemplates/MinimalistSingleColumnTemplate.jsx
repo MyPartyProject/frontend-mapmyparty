@@ -114,7 +114,7 @@ const MinimalistSingleColumnTemplate = ({
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
                     <div className="p-3 rounded-lg bg-primary/10">
-                      <Calendar className="w-6 h-6 text-primary" />
+                      <Calendar className="w-6 h-6 text-accent-foreground" />
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Date & Time</p>
@@ -128,7 +128,7 @@ const MinimalistSingleColumnTemplate = ({
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
                     <div className="p-3 rounded-lg bg-primary/10">
-                      <MapPin className="w-6 h-6 text-primary" />
+                      <MapPin className="w-6 h-6 text-accent-foreground" />
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Location</p>
@@ -143,7 +143,7 @@ const MinimalistSingleColumnTemplate = ({
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4">
                       <div className="p-3 rounded-lg bg-primary/10">
-                        <Mail className="w-6 h-6 text-primary" />
+                        <Mail className="w-6 h-6 text-accent-foreground" />
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">Contact</p>
@@ -158,7 +158,7 @@ const MinimalistSingleColumnTemplate = ({
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4">
                       <div className="p-3 rounded-lg bg-primary/10">
-                        <Ticket className="w-6 h-6 text-primary" />
+                        <Ticket className="w-6 h-6 text-accent-foreground" />
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">Price Range</p>
@@ -228,7 +228,7 @@ const MinimalistSingleColumnTemplate = ({
                                 href={artist.instagram.startsWith('http') ? artist.instagram : `https://instagram.com/${artist.instagram.replace(/^@/, "")}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-sm text-primary hover:underline flex items-center gap-1"
+                                className="text-sm text-accent-foreground hover:underline flex items-center gap-1"
                               >
                                 <span>📷</span>
                                 <span>{artist.instagram}</span>
@@ -240,7 +240,7 @@ const MinimalistSingleColumnTemplate = ({
                                 href={artist.spotify.startsWith('http') ? artist.spotify : `https://open.spotify.com/${artist.spotify}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-sm text-primary hover:underline flex items-center gap-1"
+                                className="text-sm text-accent-foreground hover:underline flex items-center gap-1"
                               >
                                 <span>🎵</span>
                                 <span>Spotify</span>

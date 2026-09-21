@@ -33,7 +33,7 @@ const formatNumber = (value, fallback = "0") => {
 const toTitleCase = (str = "") => str.replace(/_/g, " ").replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
 const sumValues = (arr = [], key = "value") => arr.reduce((acc, cur) => acc + (Number(cur?.[key]) || 0), 0);
 
-const glassCard = "bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md shadow-lg shadow-black/20";
+const glassCard = "bg-muted border border-border rounded-2xl backdrop-blur-md shadow-lg shadow-black/5";
 
 const buildQuery = (path, params = {}) => {
   const qs = Object.entries(params)
@@ -159,7 +159,7 @@ const StackedBars = ({ data }) => {
                 title={`Refunds: ${formatINR(item.refunds)}`}
               />
             </div>
-            <span className="text-xs text-white/60">{item.label}</span>
+            <span className="text-xs text-muted-foreground">{item.label}</span>
           </div>
         );
       })}
@@ -169,10 +169,10 @@ const StackedBars = ({ data }) => {
 
 const StatChip = ({ icon, label, value, accent }) => (
   <div className={`${glassCard} p-4 flex items-center gap-3`}>
-    <div className={`p-2 rounded-xl ${accent} bg-opacity-20 text-white`}>{icon}</div>
+    <div className={`p-2 rounded-xl ${accent} bg-opacity-20 text-foreground`}>{icon}</div>
     <div>
-      <p className="text-xs uppercase tracking-wide text-white/60">{label}</p>
-      <p className="text-lg font-semibold text-white">{value}</p>
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-lg font-semibold text-foreground">{value}</p>
     </div>
   </div>
 );
@@ -407,31 +407,31 @@ const FinancialReporting = () => {
   const maxBooking = useMemo(() => Math.max(...chartTrend.map((t) => t.bookings || 0), 1), [chartTrend]);
 
   return (
-    <div className="min-h-screen text-white">
+    <div className="min-h-screen text-foreground">
       <div className="flex flex-col gap-5">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition"
+              className="p-2 rounded-xl bg-muted border border-border hover:bg-muted transition"
             >
-              <ArrowLeft className="w-5 h-5 text-white" />
+              <ArrowLeft className="w-5 h-5 text-foreground" />
             </button>
             <div>
-              <p className="text-sm text-white/60">{periodLabel}</p>
+              <p className="text-sm text-muted-foreground">{periodLabel}</p>
               <h1 className="text-2xl font-bold">Financial Reporting</h1>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={loadFinancials}
-              className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white/80 hover:bg-white/15 transition text-sm"
+              className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-muted border border-border text-muted-foreground hover:bg-muted transition text-sm"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               Refresh
             </button>
-            <button className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30 hover:from-red-600 hover:to-red-700 transition">
+            <button className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-foreground shadow-lg shadow-red-500/30 hover:from-red-600 hover:to-red-700 transition">
               <Download className="w-4 h-4" />
               Download report
             </button>
@@ -452,32 +452,32 @@ const FinancialReporting = () => {
               onClick={() => setPeriod(opt.value)}
               className={`px-4 py-2 rounded-xl text-sm font-semibold capitalize transition border ${
                 period === opt.value
-                  ? "bg-white text-gray-900 border-white/80 shadow-lg"
-                  : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10"
+                  ? "bg-white text-gray-900 border-border shadow-lg"
+                  : "bg-muted border-border text-muted-foreground hover:bg-muted"
               }`}
             >
               {opt.label}
             </button>
           ))}
-          <div className="flex items-center gap-2 text-xs text-white/70">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-lg px-2 py-1"
+              className="bg-muted border border-border rounded-lg px-2 py-1"
             />
             <span>→</span>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-lg px-2 py-1"
+              className="bg-muted border border-border rounded-lg px-2 py-1"
             />
           </div>
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 text-amber-200 text-sm bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2">
+          <div className="flex items-center gap-2 text-warning text-sm bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2">
             <AlertTriangle className="w-4 h-4" />
             {error}
           </div>
@@ -488,12 +488,12 @@ const FinancialReporting = () => {
           <div className={`${glassCard} p-5`}>
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-white/60">Gross sales (bookings.totalAmount)</p>
+                <p className="text-sm text-muted-foreground">Gross sales (bookings.totalAmount)</p>
                 <p className="text-3xl font-extrabold mt-2">{formatINR(summary.grossSales)}</p>
               </div>
-              <DollarSign className="w-10 h-10 text-emerald-200/70" />
+              <DollarSign className="w-10 h-10 text-success" />
             </div>
-            <div className="mt-3 flex items-center gap-2 text-emerald-300 text-sm">
+            <div className="mt-3 flex items-center gap-2 text-success text-sm">
               <TrendingUp className="w-4 h-4" />
               <span>vs previous period</span>
             </div>
@@ -502,7 +502,7 @@ const FinancialReporting = () => {
           <div className={`${glassCard} p-5`}>
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-white/60">Net revenue after fees & refunds</p>
+                <p className="text-sm text-muted-foreground">Net revenue after fees & refunds</p>
                 <p className="text-3xl font-extrabold mt-2">{formatINR(netRevenue)}</p>
               </div>
               <Wallet className="w-10 h-10 text-indigo-200/80" />
@@ -516,7 +516,7 @@ const FinancialReporting = () => {
           <div className={`${glassCard} p-5`}>
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-white/60">GST collected (bookings.gstTotal)</p>
+                <p className="text-sm text-muted-foreground">GST collected (bookings.gstTotal)</p>
                 <p className="text-3xl font-extrabold mt-2">{formatINR(summary.gstCollected)}</p>
               </div>
               <Receipt className="w-10 h-10 text-sky-200/80" />
@@ -530,12 +530,12 @@ const FinancialReporting = () => {
           <div className={`${glassCard} p-5`}>
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-white/60">Platform fees (booking_items.platformFee)</p>
+                <p className="text-sm text-muted-foreground">Platform fees (booking_items.platformFee)</p>
                 <p className="text-3xl font-extrabold mt-2">{formatINR(summary.platformFees)}</p>
               </div>
-              <Banknote className="w-10 h-10 text-amber-200/80" />
+              <Banknote className="w-10 h-10 text-warning" />
             </div>
-            <div className="mt-3 flex items-center gap-2 text-amber-200 text-sm">
+            <div className="mt-3 flex items-center gap-2 text-warning text-sm">
               <TrendingDown className="w-4 h-4" />
               <span>Fees applied</span>
             </div>
@@ -569,13 +569,13 @@ const FinancialReporting = () => {
           <div className={`${glassCard} p-6`}>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-sm text-white/60">Cashflow across bookings / payouts / refunds</p>
+                <p className="text-sm text-muted-foreground">Cashflow across bookings / payouts / refunds</p>
                 <h3 className="text-lg font-semibold">Revenue vs Payouts</h3>
               </div>
-              {loading && <Loader2 className="w-6 h-6 text-white/60 animate-spin" />}
+              {loading && <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />}
             </div>
             <StackedBars data={chartTrend} />
-            <div className="flex gap-4 mt-6 text-sm text-white/70">
+            <div className="flex gap-4 mt-6 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded bg-red-400" />
                 Gross (bookings.totalAmount)
@@ -594,10 +594,10 @@ const FinancialReporting = () => {
           <div className={`${glassCard} p-6`}>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-sm text-white/60">Revenue contribution by event types</p>
+                <p className="text-sm text-muted-foreground">Revenue contribution by event types</p>
                 <h3 className="text-lg font-semibold">Event type mix</h3>
               </div>
-              <PieChartIcon className="w-6 h-6 text-white/70" />
+              <PieChartIcon className="w-6 h-6 text-muted-foreground" />
             </div>
             <div className="flex flex-col md:flex-row md:items-center gap-6">
               <div className="mx-auto">
@@ -610,7 +610,7 @@ const FinancialReporting = () => {
                       <span className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
                       <p className="text-sm">{item.name}</p>
                     </div>
-                    <p className="text-sm text-white/70">
+                    <p className="text-sm text-muted-foreground">
                       {summary.grossSales ? ((item.value / summary.grossSales) * 100).toFixed(1) : "0.0"}%
                     </p>
                   </div>
@@ -627,19 +627,19 @@ const FinancialReporting = () => {
             <div className="space-y-3">
               {(gstSplit || []).map((row, idx) => (
                 <div key={row.label || idx}>
-                  <div className="flex items-center justify-between text-sm text-white/70 mb-1">
+                  <div className="flex items-center justify-between text-sm text-muted-foreground mb-1">
                     <span>{row.label || row.name}</span>
                     <span>{formatINR(row.value)}</span>
                   </div>
                   <AnalyticsProgressBar
                     value={((row.value || 0) / (summary.gstCollected || 1)) * 100}
-                    trackStyle={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+                    trackStyle={{ backgroundColor: "hsl(var(--border))" }}
                     fillStyle={{ backgroundColor: row.color || palette[idx % palette.length] }}
                   />
                 </div>
               ))}
             </div>
-            <div className="mt-4 text-sm text-white/60">
+            <div className="mt-4 text-sm text-muted-foreground">
               Based on bookings.gstType and gstTotal captured per ticket purchase.
             </div>
           </div>
@@ -650,20 +650,20 @@ const FinancialReporting = () => {
               {(payouts || []).map((payout, idx) => (
                 <div
                   key={payout.id || idx}
-                  className="flex items-center justify-between rounded-xl bg-white/5 border border-white/10 px-3 py-2"
+                  className="flex items-center justify-between rounded-xl bg-muted border border-border px-3 py-2"
                 >
                   <div>
                     <p className="text-sm font-semibold">{payout.id || payout.reference || "PAYOUT"}</p>
-                    <p className="text-xs text-white/60">{payout.date || payout.payoutDate || ""}</p>
+                    <p className="text-xs text-muted-foreground">{payout.date || payout.payoutDate || ""}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold">{formatINR(payout.amount)}</p>
                     <p
                       className={`text-xs ${
                         (payout.status || "").toUpperCase() === "COMPLETED"
-                          ? "text-emerald-300"
+                          ? "text-success"
                           : (payout.status || "").toUpperCase() === "PROCESSING"
-                          ? "text-amber-300"
+                          ? "text-warning"
                           : "text-rose-300"
                       }`}
                     >
@@ -696,17 +696,17 @@ const FinancialReporting = () => {
                 <div key={evt.id || evt.title || idx} className="flex items-center justify-between">
                   <div>
                     <p className="font-semibold">{evt.title || evt.name || "Event"}</p>
-                    <p className="text-xs text-white/60">
+                    <p className="text-xs text-muted-foreground">
                       {(evt.city || evt.location || "—") + " • " + (evt.type || evt.category || "—")}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold">{formatINR(evt.net ?? evt.revenue ?? evt.total ?? 0)}</p>
-                    <p className="text-xs text-white/60">{evt.sold ?? evt.ticketsSold ?? 0} tickets</p>
+                    <p className="text-xs text-muted-foreground">{evt.sold ?? evt.ticketsSold ?? 0} tickets</p>
                   </div>
                 </div>
               ))}
-              {topEvents?.length === 0 && <p className="text-sm text-white/60">No events in this period.</p>}
+              {topEvents?.length === 0 && <p className="text-sm text-muted-foreground">No events in this period.</p>}
             </div>
           </div>
         </div>
@@ -715,14 +715,14 @@ const FinancialReporting = () => {
         <div className={`${glassCard} p-6`}>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-sm text-white/60">Bookings, payouts, refunds</p>
+              <p className="text-sm text-muted-foreground">Bookings, payouts, refunds</p>
               <h3 className="text-lg font-semibold">Recent activity</h3>
             </div>
-            <ShieldCheck className="w-5 h-5 text-white/70" />
+            <ShieldCheck className="w-5 h-5 text-muted-foreground" />
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead className="text-left text-white/60 border-b border-white/10">
+              <thead className="text-left text-muted-foreground border-b border-border">
                 <tr>
                   <th className="py-3 pr-4">Ref</th>
                   <th className="py-3 pr-4">Date</th>
@@ -732,14 +732,14 @@ const FinancialReporting = () => {
               </thead>
               <tbody>
                 {(transactions || []).map((txn, idx) => (
-                  <tr key={txn.id || idx} className="border-b border-white/5">
+                  <tr key={txn.id || idx} className="border-b border-border">
                     <td className="py-3 pr-4 font-semibold">{txn.id || txn.reference || "TXN"}</td>
-                    <td className="py-3 pr-4 text-white/70">{txn.date || txn.createdAt || ""}</td>
-                    <td className="py-3 pr-4 text-white/80">{txn.description || txn.note || txn.type || "—"}</td>
+                    <td className="py-3 pr-4 text-muted-foreground">{txn.date || txn.createdAt || ""}</td>
+                    <td className="py-3 pr-4 text-muted-foreground">{txn.description || txn.note || txn.type || "—"}</td>
                     <td
                       className={`py-3 pr-4 text-right font-semibold ${
                         (txn.type || "").toLowerCase() === "credit" || (txn.amount || 0) >= 0
-                          ? "text-emerald-300"
+                          ? "text-success"
                           : "text-rose-300"
                       }`}
                     >
@@ -749,7 +749,7 @@ const FinancialReporting = () => {
                 ))}
                 {(transactions || []).length === 0 && (
                   <tr>
-                    <td className="py-3 text-white/60" colSpan={4}>
+                    <td className="py-3 text-muted-foreground" colSpan={4}>
                       No recent transactions.
                     </td>
                   </tr>

@@ -655,7 +655,7 @@ const PromoterDashboard = () => {
                   <>
                     {expanded && (
                       <span
-                        className={`absolute left-1 top-1/2 h-6 w-1 -translate-y-1/2 rounded-full bg-primary transition-all duration-200 ease-out ${
+                        className={`absolute left-1 top-1/2 h-6 w-1 -translate-y-1/2 rounded-full bg-primaryCTA transition-all duration-200 ease-out ${
                           isActive ? "opacity-100 scale-y-100" : "opacity-0 scale-y-50"
                         }`}
                       />
