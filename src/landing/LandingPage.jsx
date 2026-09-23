@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
   ArrowRight,
   CalendarRange,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock3,
@@ -962,146 +963,97 @@ const LandingPage = () => {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="landing-hero-stage relative isolate overflow-hidden pb-10 pt-20 sm:pb-12 sm:pt-24 md:min-h-[calc(100svh-0.5rem)] md:pb-8">
-          <div className="landing-hero-haze pointer-events-none absolute right-[12%] top-[22%] h-[22rem] w-[22rem] rounded-full bg-primary/25 blur-3xl" />
-          <div className="landing-hero-haze pointer-events-none absolute bottom-[12%] right-[28%] h-56 w-56 rounded-full bg-secondary/15 blur-3xl [animation-delay:1.2s]" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-background" />
+        <section className="relative isolate min-h-screen w-full overflow-hidden flex flex-col justify-center items-center text-center px-4 sm:px-6 lg:px-8 pt-16 pb-12">
+          <div
+            className="absolute inset-0 z-0"
+            role="region"
+            aria-roledescription="carousel"
+            aria-label="Featured event media"
+          >
+            {heroSlides.map((slide, index) => {
+              const isActive = index === activeHeroSlide;
 
-          <div className="container relative z-10 grid items-center gap-10 px-4 sm:px-6 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] md:gap-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.18fr)] lg:px-8 xl:gap-10">
-            <div className="landing-reveal max-w-[34rem] md:self-start md:pt-2 lg:pt-4">
-              <h1 className="hero-heading max-w-[11ch] text-left text-[2.65rem] font-extrabold leading-[0.98] tracking-tight text-foreground text-pretty sm:text-6xl md:text-5xl lg:text-[4.35rem] xl:text-[4.7rem]">
-                Find your{" "}
-                <span className="theme-gradient-primary bg-clip-text text-transparent">
-                  vibe.
-                </span>
-              </h1>
-              <p className="mt-6 max-w-[34rem] text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-                Create events, sell tickets, and thrill your guests. Or jump
-                in as an attendee and enjoy the city's best experiences.
-              </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link to="/auth">
-                  <Button
-                    size="lg"
-                    variant="default"
-                    className="landing-hero-cta h-auto w-full rounded-xl px-7 py-4 text-base font-semibold text-primary-foreground transition-all duration-300 hover:-translate-y-0.5 sm:w-auto"
-                  >
-                    Host an Event
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-
-            <div className="relative mx-auto h-[min(88vw,32rem)] w-full max-w-[42rem] overflow-visible md:h-[min(48vw,30rem)] lg:ml-auto lg:mr-0 lg:h-[min(46vw,38rem)]">
-              <div
-                aria-hidden="true"
-                className="landing-hero-dots pointer-events-none absolute left-0 top-[12%] h-[70%] w-[58%]"
-              />
-
-              <span
-                aria-hidden="true"
-                className="landing-hero-deco-ring pointer-events-none absolute right-[6%] top-[3%] size-12 rounded-full bg-transparent sm:size-14"
-              />
-              <span
-                aria-hidden="true"
-                className="landing-hero-deco-ring pointer-events-none absolute right-0 top-[38%] size-16 rounded-full bg-transparent sm:size-[4.5rem]"
-              />
-              <span
-                aria-hidden="true"
-                className="landing-hero-deco-ring pointer-events-none absolute bottom-[8%] right-[16%] size-10 rounded-full bg-transparent"
-              />
-              <span
-                aria-hidden="true"
-                className="landing-hero-deco-ring pointer-events-none absolute left-[22%] top-[30%] size-8 rounded-full bg-transparent"
-              />
-
-              <div
-                key={`satellite-a-${getHeroSlide(activeHeroSlide + 1).id}`}
-                className="landing-hero-satellite-glow pointer-events-none absolute left-[2%] top-[6%] z-10 size-[clamp(6.75rem,16vw,10.5rem)] overflow-hidden rounded-full"
-                aria-hidden="true"
-              >
-                <HeroMediaFill
-                  slide={getHeroSlide(activeHeroSlide + 1)}
-                  className="h-full w-full object-cover"
-                  autoPlay
-                  loop
-                />
-              </div>
-              <div
-                key={`satellite-b-${getHeroSlide(activeHeroSlide + 2).id}`}
-                className="landing-hero-satellite-glow pointer-events-none absolute bottom-[8%] left-0 z-10 size-[clamp(6.5rem,15vw,10rem)] overflow-hidden rounded-full"
-                aria-hidden="true"
-              >
-                <HeroMediaFill
-                  slide={getHeroSlide(activeHeroSlide + 2)}
-                  className="h-full w-full object-cover"
-                  autoPlay
-                  loop
-                />
-              </div>
-
-              <div className="absolute right-0 top-1/2 z-20 aspect-square h-[92%] max-h-[36.25rem] -translate-y-1/2">
-                <div className="relative aspect-square w-full">
-                  <div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute -inset-3 rounded-full border border-[color:var(--color-accent-secondary)]/25 sm:-inset-5"
+              return (
+                <div
+                  key={slide.id}
+                  className={`absolute inset-0 transition-opacity duration-700 ease-out ${isActive ? "opacity-100" : "pointer-events-none opacity-0"}`}
+                >
+                  <HeroMediaFill
+                    slide={slide}
+                    videoRef={index === 0 ? heroVideoRef : null}
+                    onEnded={handleHeroVideoEnded}
+                    className="h-full w-full object-cover object-center"
                   />
-                  <div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute -inset-7 rounded-full border border-[color:var(--color-accent-primary)]/15 sm:-inset-9"
-                  />
-                  <div
-                    className="landing-hero-main-glow relative h-full w-full overflow-hidden rounded-full"
-                    role="region"
-                    aria-roledescription="carousel"
-                    aria-label="Featured event media"
-                  >
-                    {heroSlides.map((slide, index) => {
-                      const isActive = index === activeHeroSlide;
-
-                      return (
-                        <div
-                          key={slide.id}
-                          className={`absolute inset-0 transition-opacity duration-700 ease-out ${isActive ? "opacity-100" : "pointer-events-none opacity-0"}`}
-                        >
-                          <HeroMediaFill
-                            slide={slide}
-                            videoRef={index === 0 ? heroVideoRef : null}
-                            onEnded={handleHeroVideoEnded}
-                            className={`h-full w-full object-cover transition-transform duration-700 ease-out ${isActive ? "scale-100" : "scale-[1.04]"}`}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="absolute -bottom-1 -right-1 z-30 flex items-center gap-2 sm:bottom-3 sm:right-3">
-                    <button
-                      type="button"
-                      aria-label="Previous hero slide"
-                      onClick={goToPreviousHeroSlide}
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--color-accent-secondary)]/45 bg-background/70 text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition-all duration-300 hover:border-[color:var(--color-accent-secondary)] hover:bg-background/90 hover:shadow-[0_0_18px_rgba(124,58,237,0.35)] sm:h-11 sm:w-11"
-                    >
-                      <ChevronLeft className="h-5 w-5" />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="Next hero slide"
-                      onClick={goToNextHeroSlide}
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--color-accent-secondary)]/45 bg-background/70 text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition-all duration-300 hover:border-[color:var(--color-accent-secondary)] hover:bg-background/90 hover:shadow-[0_0_18px_rgba(124,58,237,0.35)] sm:h-11 sm:w-11"
-                    >
-                      <ChevronRight className="h-5 w-5" />
-                    </button>
-                  </div>
                 </div>
-              </div>
+              );
+            })}
+          </div>
+
+          <div className="absolute inset-0 bg-black/40 z-[1] pointer-events-none" />
+
+          {/* Hero Content */}
+          <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center justify-center text-center pt-2">
+            {/* Main Heading */}
+            <h1 className="flex flex-col items-center justify-center font-black tracking-tight text-center leading-[0.92] text-white">
+              <span className="text-[clamp(2.75rem,6.2vw,6.25rem)] font-black uppercase tracking-[0.02em] text-white block">
+                FIND YOUR
+              </span>
+              <span className="text-[clamp(2.75rem,6.2vw,6.25rem)] font-black text-[#a855f7] block -mt-1">
+                vibe.
+              </span>
+            </h1>
+
+            {/* Supporting Description */}
+            <p className="mt-6 sm:mt-7 max-w-xl text-center text-base sm:text-lg md:text-xl font-normal leading-relaxed text-white/90">
+              Create events, sell tickets, and thrill your guests. Or jump
+              in as an attendee and enjoy the city's best experiences.
+            </p>
+
+            {/* Primary CTA */}
+            <div className="mt-8 sm:mt-9 flex items-center justify-center">
+              <Link to="/auth">
+                <Button
+                  size="lg"
+                  className="h-auto rounded-xl bg-[#4c2367] px-8 py-3.5 text-base font-bold text-white shadow-lg transition-all duration-200 hover:bg-[#5f2882] hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2.5 border-0 uppercase tracking-wider"
+                >
+                  HOST AN EVENT
+                  <ArrowRight className="h-4 w-4 stroke-[2.5]" />
+                </Button>
+              </Link>
             </div>
           </div>
+
+          <div className="pointer-events-none absolute inset-x-0 top-1/2 z-10 flex -translate-y-1/2 items-center justify-between sm:inset-x-2">
+            <button
+              type="button"
+              aria-label="Previous hero slide"
+              onClick={goToPreviousHeroSlide}
+              className="pointer-events-auto inline-flex h-11 w-11 items-center justify-center text-white transition-colors duration-200 hover:text-white/70"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              aria-label="Next hero slide"
+              onClick={goToNextHeroSlide}
+              className="pointer-events-auto inline-flex h-11 w-11 items-center justify-center text-white transition-colors duration-200 hover:text-white/70"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Bottom Scroll Indicator */}
+          <a
+            href="#pick-vibe-section"
+            aria-label="Scroll down"
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 text-white/80 hover:text-white transition-opacity duration-200"
+          >
+            <ChevronDown className="h-7 w-7 stroke-[1.5]" />
+          </a>
         </section>
 
         {/* Categories */}
-        <section className="relative overflow-hidden bg-background py-8 sm:py-10">
+        <section id="pick-vibe-section" className="relative overflow-hidden bg-background py-8 sm:py-10">
           <div className="theme-gradient-primary absolute -left-24 top-12 h-72 w-72 rounded-full opacity-10 blur-3xl" />
           <div className="container relative px-4 sm:px-6 lg:px-8">
             <div className="relative">

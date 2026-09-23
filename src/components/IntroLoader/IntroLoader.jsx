@@ -103,7 +103,7 @@ const IntroLoader = ({ children, enabled, onIntroConsumed }) => {
               width="986"
               height="975"
               decoding="async"
-              fetchPriority="high"
+              fetchpriority="high"
               draggable="false"
               onError={() => setPhase("complete")}
             />

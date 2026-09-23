@@ -10,6 +10,7 @@ import {
   X,
   User,
   Ticket,
+  Calendar,
   Settings,
   LogOut,
   MapPin,
@@ -416,18 +417,29 @@ const Header = ({
     "flex h-11 w-full items-center rounded-xl px-3 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-muted/55 hover:text-foreground active:scale-[0.99]";
   const mobileIconButtonClass =
     "h-9 w-9 rounded-full border border-border/45 bg-card/60 p-0 text-foreground shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted/70 hover:text-foreground active:translate-y-0";
+  const isDashboard =
+    location.pathname.startsWith("/dashboard") ||
+    location.pathname.startsWith("/organizer") ||
+    location.pathname.startsWith("/promoter");
+  const isLandingPage =
+    forceMainHeader &&
+    (location.pathname === "/" || location.pathname === "/landing/homepage");
+
   const mobileSectionClass =
     "rounded-[1rem] border border-border/35 bg-background/35 p-2";
   const mobileSectionLabelClass =
     "px-3 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground";
   const mobileLogoutButtonClass =
     "h-11 w-full justify-start gap-3 rounded-xl border border-border/45 bg-card/65 px-3 text-left text-sm font-medium text-destructive hover:border-destructive/45 hover:bg-destructive/10 hover:text-destructive active:scale-[0.99]";
-  const navLinkClass =
-    "text-[15px] font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground";
-  const actionButtonClass =
-    "group relative h-9 w-9 rounded-full border border-border/50 bg-card/55 p-0 text-foreground shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted/70 hover:text-foreground focus-visible:ring-ring disabled:hover:translate-y-0";
-  const expandingActionButtonClass =
-    "group h-9 w-9 justify-start gap-0 overflow-hidden rounded-full border border-border/50 bg-card/55 px-2.5 text-foreground shadow-[var(--shadow-card)] transition-[width,gap,background-color,border-color,color,transform] duration-300 ease-out hover:w-[7.75rem] hover:-translate-y-0.5 hover:gap-1.5 hover:bg-muted/70 hover:text-foreground focus-visible:w-[7.75rem] focus-visible:gap-1.5 focus-visible:ring-ring disabled:hover:w-9 disabled:hover:translate-y-0 disabled:hover:gap-0";
+  const navLinkClass = isLandingPage
+    ? "text-[15px] font-medium text-white/80 transition-colors duration-200 hover:text-white"
+    : "text-[15px] font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground";
+  const actionButtonClass = isLandingPage
+    ? "group relative h-[42px] w-[42px] shrink-0 rounded-full border border-white/15 bg-black/40 p-0 text-white shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/20 hover:text-white focus-visible:ring-ring disabled:hover:translate-y-0 flex items-center justify-center"
+    : "group relative h-9 w-9 rounded-full border border-border/50 bg-card/55 p-0 text-foreground shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted/70 hover:text-foreground focus-visible:ring-ring disabled:hover:translate-y-0";
+  const expandingActionButtonClass = isLandingPage
+    ? "group relative h-[42px] w-[42px] shrink-0 rounded-full border border-white/15 bg-black/40 p-0 text-white shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/20 hover:text-white focus-visible:ring-ring disabled:hover:translate-y-0 flex items-center justify-center"
+    : "group h-9 w-9 justify-start gap-0 overflow-hidden rounded-full border border-border/50 bg-card/55 px-2.5 text-foreground shadow-[var(--shadow-card)] transition-[width,gap,background-color,border-color,color,transform] duration-300 ease-out hover:w-[7.75rem] hover:-translate-y-0.5 hover:gap-1.5 hover:bg-muted/70 hover:text-foreground focus-visible:w-[7.75rem] focus-visible:gap-1.5 focus-visible:ring-ring disabled:hover:w-9 disabled:hover:translate-y-0 disabled:hover:gap-0";
   const expandingActionLabelClass =
     "max-w-0 overflow-hidden whitespace-nowrap text-[13px] font-medium leading-none opacity-0 transition-[max-width,opacity] duration-300 ease-out group-hover:max-w-[5.75rem] group-hover:opacity-100 group-focus-visible:max-w-[5.75rem] group-focus-visible:opacity-100";
   const tooltipClass =
@@ -436,14 +448,6 @@ const Header = ({
     "rounded-xl border border-border/50 bg-card/95 text-foreground shadow-[var(--shadow-card)] backdrop-blur-xl";
   const dropdownItemClass =
     "cursor-pointer hover:bg-muted/55 focus:bg-muted/55";
-
-  const isDashboard =
-    location.pathname.startsWith("/dashboard") ||
-    location.pathname.startsWith("/organizer") ||
-    location.pathname.startsWith("/promoter");
-  const isLandingPage =
-    forceMainHeader &&
-    (location.pathname === "/" || location.pathname === "/landing/homepage");
 
   const renderSearchDropdown = (isMobile = false) => {
     if (!searchOpen || normalizedSearchQuery.length < HEADER_SEARCH_MIN_LENGTH) {
@@ -529,11 +533,11 @@ const Header = ({
     <header
       className={`sticky top-0 z-50 w-full ${
         isLandingPage
-          ? "-mb-14 bg-gradient-to-b from-background/55 via-background/20 to-transparent backdrop-blur-sm shadow-none"
+          ? "-mb-16 bg-black/30 backdrop-blur-md shadow-none text-white border-b border-white/10"
           : "bg-card/70 shadow-[var(--shadow-card)] backdrop-blur-xl"
       } ${forceMainHeader ? "" : "border-b border-border/45"} relative`}
     >
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:px-5 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-5 lg:px-8">
         {/* Brand + Search */}
         <div className="flex min-w-0 flex-1 basis-0 items-center gap-3">
           <Link
@@ -545,7 +549,7 @@ const Header = ({
               alt="MapMyParty"
               className="h-8 w-8 object-contain"
             />
-            <span className="hidden text-foreground sm:inline">Map MyParty</span>
+            <span className={`hidden sm:inline font-bold ${isLandingPage ? "text-white" : "text-foreground"}`}>Map MyParty</span>
           </Link>
 
         </div>
@@ -585,8 +589,10 @@ const Header = ({
           <form
             ref={desktopSearchRef}
             onSubmit={handleSearchSubmit}
-            className={`relative hidden h-9 items-center justify-end rounded-full border border-border/50 bg-card/55 shadow-[var(--shadow-card)] transition-[width,background-color,border-color] duration-300 ease-out md:flex ${
-              desktopSearchExpanded ? "w-[19rem] lg:w-[20rem]" : "w-9"
+            className={`relative hidden ${isLandingPage ? "h-[42px]" : "h-9"} items-center justify-end rounded-full border ${
+              isLandingPage ? "border-white/15 bg-black/40 text-white" : "border-border/50 bg-card/55 shadow-[var(--shadow-card)]"
+            } transition-[width,background-color,border-color] duration-300 ease-out md:flex ${
+              desktopSearchExpanded ? "w-[19rem] lg:w-[20rem]" : isLandingPage ? "w-[42px]" : "w-9"
             }`}
           >
             <input
@@ -601,7 +607,7 @@ const Header = ({
                 }
               }}
               onKeyDown={handleSearchKeyDown}
-              className={`min-w-0 bg-transparent pl-3 text-[13px] text-foreground outline-none placeholder:text-muted-foreground transition-all duration-300 ${
+              className={`min-w-0 bg-transparent pl-3 text-[13px] ${isLandingPage ? "text-white placeholder:text-white/60" : "text-foreground placeholder:text-muted-foreground"} outline-none transition-all duration-300 ${
                 desktopSearchExpanded
                   ? "w-full opacity-100"
                   : "w-0 opacity-0 pointer-events-none"
@@ -611,7 +617,7 @@ const Header = ({
             <button
               type="button"
               onClick={openDesktopSearch}
-              className="group/search flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted/70 hover:text-foreground"
+              className={`group/search flex ${isLandingPage ? "h-[42px] w-[42px]" : "h-9 w-9"} shrink-0 items-center justify-center rounded-full ${isLandingPage ? "text-white hover:bg-white/20" : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"} transition-all duration-200 hover:-translate-y-0.5`}
               aria-label="Search events"
               aria-expanded={desktopSearchExpanded}
             >
@@ -765,6 +771,28 @@ const Header = ({
                   </Button>
                 </>
               )}
+            </>
+          ) : isLandingPage ? (
+            <>
+              <Link to="/browse-events">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={actionButtonClass}
+                  aria-label="Events Calendar"
+                >
+                  <Calendar className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleAuthClick}
+                className={actionButtonClass}
+                aria-label="Account / Login"
+              >
+                <User className="h-4 w-4" />
+              </Button>
             </>
           ) : (
             <Button
