@@ -1,3 +1,4 @@
+import { buildOrganizerProfile as buildInitialData } from '@/utils/organizerProfile';
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -72,60 +73,6 @@ const sanitizeOwnerProfile = (owner = {}) => ({
 
 // Profile Content Component
 const OrganizerProfileContent = ({ user }) => {
-  const buildInitialData = (payload = {}, owner = {}) => ({
-    id: payload.id || "",
-    name: payload.name || "",
-    description: payload.description || "",
-    gstNumber: payload.gstNumber || "",
-    logo: payload.logo || "",
-    state: payload.state || "",
-    address: payload.address || "",
-    isVerified: payload.isVerified ?? false,
-    ownerId: payload.ownerId || "",
-    createdAt: payload.createdAt || "",
-    updatedAt: payload.updatedAt || "",
-    contact: sanitizeTenDigitPhoneInput(payload.contact || ""),
-    email: payload.email || "",
-    instagram: payload.instagram || "",
-    linkedin: payload.linkedin || "",
-    facebook: payload.facebook || "",
-    reddit: payload.reddit || "",
-    x: payload.x || "",
-    snapchat: payload.snapchat || "",
-    ownerName: owner.name || payload.ownerName || "",
-    ownerEmail: owner.email || payload.ownerEmail || "",
-    ownerPhone: sanitizeTenDigitPhoneInput(owner.phone || payload.contact || payload.ownerPhone || ""),
-    ownerAvatar: owner.avatar || "",
-    counts: {
-      events: payload?._count?.events ?? 0,
-      images: payload?._count?.images ?? 0,
-      payouts: payload?._count?.payouts ?? 0,
-      tours: payload?._count?.tours ?? 0,
-      reviews: payload?._count?.reviews ?? 0,
-    },
-    bankDetails: {
-      accountHolder: payload?.bankDetails?.accountHolder || "",
-      accountNumber: "",
-      accountNumberMasked: payload?.bankDetails?.accountNumberMasked || "",
-      ifscCode: payload?.bankDetails?.ifscCode || "",
-      bankName: payload?.bankDetails?.bankName || "",
-      branchName: payload?.bankDetails?.branchName || "",
-      providerName: payload?.bankDetails?.providerName || "",
-      verificationStatus: payload?.bankDetails?.verificationStatus || "",
-      verificationTxnId: payload?.bankDetails?.verificationTxnId || "",
-      verificationMethod: payload?.bankDetails?.verificationMethod || "",
-      verifiedAt: payload?.bankDetails?.verifiedAt || "",
-      verificationFailureReason: payload?.bankDetails?.verificationFailureReason || "",
-      beneficiaryStatus: payload?.bankDetails?.beneficiaryStatus || "NOT_PROVISIONED",
-      payoutEnabled: Boolean(payload?.bankDetails?.payoutEnabled),
-      payoutCoolingOffUntil: payload?.bankDetails?.payoutCoolingOffUntil || "",
-      lastVerificationRequestedAt: payload?.bankDetails?.lastVerificationRequestedAt || "",
-      reviewNotes: payload?.bankDetails?.reviewNotes || "",
-      createdAt: payload?.bankDetails?.createdAt || "",
-      updatedAt: payload?.bankDetails?.updatedAt || "",
-    },
-  });
-
   const [profileData, setProfileData] = useState(() => buildInitialData(user?.organizer || {}, user));
   const [editData, setEditData] = useState(() => buildInitialData(user?.organizer || {}, user));
   const [bankDraft, setBankDraft] = useState(() => buildInitialData(user?.organizer || {}, user).bankDetails);
@@ -1749,7 +1696,7 @@ const OrganizerDashboard = () => {
             {activeTab === "attendees" && <EventAttendees />}
             {activeTab === "refunds" && <EventRefunds />}
             {activeTab === "financial" && <FinancialReporting />}
-            {activeTab === "profile" && <OrganizerProfileContent user={user} />}
+            {activeTab === "profile" && <OrganizerProfileContent user={authUser} />}
           </div>
         </main>
       </div>

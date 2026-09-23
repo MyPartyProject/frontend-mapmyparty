@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchOrganizerOnboardingStatus } from "@/services/organizerOnboardingService";
+import { useOrganizerCompact } from "@/hooks/useOrganizerCompact";
+import OrganizerMobile from "@/components/organizer/OrganizerMobile";
 
 const ProtectedRoute = ({ children, requiredRole = null, skipOrganizerOnboarding = false }) => {
   const location = useLocation();
@@ -11,6 +13,7 @@ const ProtectedRoute = ({ children, requiredRole = null, skipOrganizerOnboarding
   const [onboardingStatus, setOnboardingStatus] = useState(null);
 
   const normalizedRequiredRole = requiredRole?.toUpperCase() || null;
+  const compactOrganizer = useOrganizerCompact();
 
   useEffect(() => {
     const shouldCheckOnboarding =
@@ -123,12 +126,17 @@ const ProtectedRoute = ({ children, requiredRole = null, skipOrganizerOnboarding
   }
 
   if (requiresOrganizerOnboarding && onboardingStatus && !onboardingStatus.completed) {
+    if (compactOrganizer) return <OrganizerMobile setupRequired />;
     return (
       <Navigate
         to={`/organizer/onboarding?redirect=${encodeURIComponent(redirectTarget)}`}
         replace
       />
     );
+  }
+
+  if (normalizedRequiredRole === "ORGANIZER" && compactOrganizer) {
+    return <OrganizerMobile setupRequired={location.pathname.replace(/\/+$/, "").toLowerCase() === "/organizer/onboarding"} />;
   }
 
   return children;

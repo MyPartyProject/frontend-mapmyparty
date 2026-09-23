@@ -1,4 +1,31 @@
 @tailwind base;
+
+/* Compact organizer analytics shares content with the desktop snapshot. */
+.organizer-mobile-analytics .bg-gray-950 {
+  background: hsl(var(--muted) / 0.35);
+}
+.organizer-mobile-analytics .border-gray-800 {
+  border-color: hsl(var(--border));
+}
+.organizer-mobile-analytics .text-gray-300,
+.organizer-mobile-analytics .text-gray-400,
+.organizer-mobile-analytics .text-gray-500 {
+  color: hsl(var(--muted-foreground));
+}
+.organizer-mobile-analytics .text-white {
+  color: hsl(var(--foreground));
+}
+.organizer-mobile-analytics .flex {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.organizer-mobile-analytics .grid-cols-2 {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+}
+.organizer-mobile-analytics p {
+  overflow-wrap: anywhere;
+  font-size: 0.75rem;
+}
 @tailwind components;
 @tailwind utilities;
 

@@ -42,7 +42,7 @@ const KeyValueList = ({ data = {}, emptyLabel = "No data available" }) => {
   );
 };
 
-const OrganizerAnalyticsSnapshot = ({ analytics, loading, error }) => {
+const OrganizerAnalyticsSnapshot = ({ analytics, loading, error, compact = false }) => {
   const period = analytics?.summary?.period || {};
   const byStatus = analytics?.breakdown?.byStatus || {};
   const byCategory = analytics?.breakdown?.byCategory || {};
@@ -52,7 +52,7 @@ const OrganizerAnalyticsSnapshot = ({ analytics, loading, error }) => {
   const ticketTypeRows = Object.entries(byTicketType || {});
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+    <div className={compact ? "organizer-mobile-analytics rounded-xl border border-border bg-card p-4" : "bg-gray-900 border border-gray-800 rounded-xl p-5"}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-gray-400">Analytics</p>
@@ -75,7 +75,7 @@ const OrganizerAnalyticsSnapshot = ({ analytics, loading, error }) => {
           <p className="text-sm text-white mt-1">{error}</p>
         </div>
       ) : (
-        <div className="mt-4 space-y-4 max-h-[34rem] overflow-y-auto pr-1">
+        <div className={compact ? "mt-3 space-y-3" : "mt-4 space-y-4 max-h-[34rem] overflow-y-auto pr-1"}>
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-lg border border-gray-800 bg-gray-950 p-3">
               <p className="text-[11px] uppercase tracking-wide text-gray-500">Event Status Types</p>
