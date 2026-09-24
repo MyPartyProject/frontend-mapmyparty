@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import {
   ArrowRight,
   CalendarRange,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Clock3,
   Clapperboard,
   MapPin,
@@ -202,6 +205,31 @@ const steps = [
     icon: Clock3,
   },
 ];
+
+const heroSlides = [
+  { id: "party-video", type: "video", src: "/videos/party2.mp4" },
+  { id: "party-image-1", type: "image", src: "/images/ph1.jpg" },
+  { id: "party-image-2", type: "image", src: "/images/ph2.jpg" },
+  { id: "party-image-3", type: "image", src: "/images/ph3.jpg" },
+];
+
+const HeroMediaFill = ({ slide, className, videoRef, onEnded }) => {
+  if (slide.type === "video") {
+    return (
+      <video
+        ref={videoRef}
+        className={className}
+        src={slide.src}
+        muted
+        playsInline
+        preload="auto"
+        onEnded={onEnded}
+      />
+    );
+  }
+
+  return <img src={slide.src} alt="" className={className} />;
+};
 
 const landingStyles = `
   @keyframes landingReveal {
@@ -593,6 +621,8 @@ const LandingDiscoverySection = ({
 };
 
 const LandingPage = () => {
+  const [activeHeroSlide, setActiveHeroSlide] = useState(0);
+  const heroVideoRef = useRef(null);
   const [eventSections, setEventSections] = useState({});
   const [sectionsLoading, setSectionsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -608,6 +638,15 @@ const LandingPage = () => {
   const [searchError, setSearchError] = useState("");
   const [hasSearchResults, setHasSearchResults] = useState(false);
   const searchRequestRef = useRef(0);
+
+  useEffect(() => {
+    heroSlides
+      .filter((slide) => slide.type === "image")
+      .forEach((slide) => {
+        const image = new Image();
+        image.src = slide.src;
+      });
+  }, []);
 
   const runSearch = async ({ query }) => {
     const normalizedQuery = query.trim();
@@ -701,6 +740,31 @@ const LandingPage = () => {
   }, [searchQuery]);
 
   useEffect(() => {
+    const activeSlide = heroSlides[activeHeroSlide];
+
+    if (activeSlide.type === "video") {
+      const video = heroVideoRef.current;
+
+      if (!video) return undefined;
+
+      video.currentTime = 0;
+      const playAttempt = video.play();
+      if (playAttempt?.catch) playAttempt.catch(() => {});
+      return undefined;
+    }
+
+    if (heroVideoRef.current) {
+      heroVideoRef.current.pause();
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setActiveHeroSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 4000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [activeHeroSlide]);
+
+  useEffect(() => {
     let isMounted = true;
 
     const fetchSectionEvents = async () => {
@@ -752,6 +816,20 @@ const LandingPage = () => {
     };
   }, []);
 
+  const handleHeroVideoEnded = () => {
+    setActiveHeroSlide(1);
+  };
+
+  const goToPreviousHeroSlide = () => {
+    setActiveHeroSlide(
+      (prev) => (prev - 1 + heroSlides.length) % heroSlides.length,
+    );
+  };
+
+  const goToNextHeroSlide = () => {
+    setActiveHeroSlide((prev) => (prev + 1) % heroSlides.length);
+  };
+
   const handleSearchSubmit = () => {
     runSearch({ query: searchQuery });
   };
@@ -800,39 +878,97 @@ const LandingPage = () => {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="relative isolate overflow-hidden bg-background pb-16 pt-28 sm:pb-20 sm:pt-36" style={{ backgroundImage: "radial-gradient(circle at 80% 20%, rgba(162,89,201,0.08) 0%, transparent 60%)" }}>
-          <div className="container relative z-10 grid items-center gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8">
-            <div className="landing-reveal max-w-[36rem]">
-              <h1 className="hero-heading max-w-[11ch] text-left text-[2.65rem] font-extrabold leading-[0.98] tracking-tight text-foreground text-pretty sm:text-6xl lg:text-[4.7rem]">
-                Find your{" "}
-                <span className="text-primary">
-                  vibe.
-                </span>
-              </h1>
-              <p className="mt-6 max-w-[34rem] text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-                Create events, sell tickets, and thrill your guests. Or jump
-                in as an attendee and enjoy the city's best experiences.
-              </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <Button asChild
-                    size="lg"
-                    variant="default"
-                    className="landing-hero-cta h-auto w-full rounded-xl px-7 py-4 text-base font-semibold text-primary-foreground transition-all duration-300 hover:-translate-y-0.5 sm:w-auto"
-                  >
-                    <Link to="/auth">Host an Event
-                    <ArrowRight className="h-4 w-4" /></Link>
-                  </Button>
-              </div>
-            </div>
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-border bg-surface shadow-[var(--shadow-elegant)]">
-              <img src="/images/ph1.jpg" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
-              <video aria-hidden="true" className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden" src="/videos/party2.mp4" poster="/images/ph1.jpg" autoPlay muted loop playsInline preload="metadata" />
+        <section className="relative isolate min-h-screen w-full overflow-hidden flex flex-col justify-center items-center text-center px-4 sm:px-6 lg:px-8 pt-16 pb-12">
+          <div
+            className="absolute inset-0 z-0"
+            role="region"
+            aria-roledescription="carousel"
+            aria-label="Featured event media"
+          >
+            {heroSlides.map((slide, index) => {
+              const isActive = index === activeHeroSlide;
+
+              return (
+                <div
+                  key={slide.id}
+                  className={`absolute inset-0 transition-opacity duration-700 ease-out ${isActive ? "opacity-100" : "pointer-events-none opacity-0"}`}
+                >
+                  <HeroMediaFill
+                    slide={slide}
+                    videoRef={index === 0 ? heroVideoRef : null}
+                    onEnded={handleHeroVideoEnded}
+                    className="h-full w-full object-cover object-center"
+                  />
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="absolute inset-0 bg-black/40 z-[1] pointer-events-none" />
+
+          {/* Hero Content */}
+          <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center justify-center text-center pt-2">
+            {/* Main Heading */}
+            <h1 className="flex flex-col items-center justify-center font-black tracking-tight text-center leading-[0.92] text-white">
+              <span className="text-[clamp(2.75rem,6.2vw,6.25rem)] font-black uppercase tracking-[0.02em] text-white block">
+                FIND YOUR
+              </span>
+              <span className="text-[clamp(2.75rem,6.2vw,6.25rem)] font-black text-[#a855f7] block -mt-1">
+                vibe.
+              </span>
+            </h1>
+
+            {/* Supporting Description */}
+            <p className="mt-6 sm:mt-7 max-w-xl text-center text-base sm:text-lg md:text-xl font-normal leading-relaxed text-white/90">
+              Create events, sell tickets, and thrill your guests. Or jump
+              in as an attendee and enjoy the city's best experiences.
+            </p>
+
+            {/* Primary CTA */}
+            <div className="mt-8 sm:mt-9 flex items-center justify-center">
+              <Link to="/auth">
+                <Button
+                  size="lg"
+                  className="h-auto rounded-xl bg-[#4c2367] px-8 py-3.5 text-base font-bold text-white shadow-lg transition-all duration-200 hover:bg-[#5f2882] hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2.5 border-0 uppercase tracking-wider"
+                >
+                  HOST AN EVENT
+                  <ArrowRight className="h-4 w-4 stroke-[2.5]" />
+                </Button>
+              </Link>
             </div>
           </div>
+
+          <div className="pointer-events-none absolute inset-x-0 top-1/2 z-10 flex -translate-y-1/2 items-center justify-between sm:inset-x-2">
+            <button
+              type="button"
+              aria-label="Previous hero slide"
+              onClick={goToPreviousHeroSlide}
+              className="pointer-events-auto inline-flex h-11 w-11 items-center justify-center text-white transition-colors duration-200 hover:text-white/70"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              aria-label="Next hero slide"
+              onClick={goToNextHeroSlide}
+              className="pointer-events-auto inline-flex h-11 w-11 items-center justify-center text-white transition-colors duration-200 hover:text-white/70"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Bottom Scroll Indicator */}
+          <a
+            href="#pick-vibe-section"
+            aria-label="Scroll down"
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 text-white/80 hover:text-white transition-opacity duration-200"
+          >
+            <ChevronDown className="h-7 w-7 stroke-[1.5]" />
+          </a>
         </section>
 
         {/* Categories */}
-        <section className="relative overflow-hidden bg-background py-8 sm:py-10">
+        <section id="pick-vibe-section" className="relative overflow-hidden bg-background py-8 sm:py-10">
           <div className="theme-gradient-primary absolute -left-24 top-12 h-72 w-72 rounded-full opacity-10 blur-3xl" />
           <div className="container relative px-4 sm:px-6 lg:px-8">
             <div className="relative">
