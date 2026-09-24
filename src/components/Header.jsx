@@ -434,11 +434,13 @@ const Header = ({
   const navLinkClass = isLandingPage
     ? "text-[15px] font-medium text-white/80 transition-colors duration-200 hover:text-white"
     : "text-[15px] font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground";
+  const landingExpandingButtonClass =
+    "group relative h-[42px] w-[42px] shrink-0 justify-start gap-0 overflow-hidden rounded-full border border-white/15 bg-black/40 px-[12px] text-white shadow-none transition-[width,gap,background-color,border-color,color,transform] duration-300 ease-out hover:w-[8.5rem] hover:-translate-y-0.5 hover:gap-2 hover:bg-white/20 hover:text-white focus-visible:w-[8.5rem] focus-visible:gap-2 focus-visible:ring-ring disabled:hover:w-[42px] disabled:hover:translate-y-0 disabled:hover:gap-0";
   const actionButtonClass = isLandingPage
-    ? "group relative h-[42px] w-[42px] shrink-0 rounded-full border border-white/15 bg-black/40 p-0 text-white shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/20 hover:text-white focus-visible:ring-ring disabled:hover:translate-y-0 flex items-center justify-center"
+    ? landingExpandingButtonClass
     : "group relative h-9 w-9 rounded-full border border-border/50 bg-card/55 p-0 text-foreground shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted/70 hover:text-foreground focus-visible:ring-ring disabled:hover:translate-y-0";
   const expandingActionButtonClass = isLandingPage
-    ? "group relative h-[42px] w-[42px] shrink-0 rounded-full border border-white/15 bg-black/40 p-0 text-white shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/20 hover:text-white focus-visible:ring-ring disabled:hover:translate-y-0 flex items-center justify-center"
+    ? landingExpandingButtonClass
     : "group h-9 w-9 justify-start gap-0 overflow-hidden rounded-full border border-border/50 bg-card/55 px-2.5 text-foreground shadow-[var(--shadow-card)] transition-[width,gap,background-color,border-color,color,transform] duration-300 ease-out hover:w-[7.75rem] hover:-translate-y-0.5 hover:gap-1.5 hover:bg-muted/70 hover:text-foreground focus-visible:w-[7.75rem] focus-visible:gap-1.5 focus-visible:ring-ring disabled:hover:w-9 disabled:hover:translate-y-0 disabled:hover:gap-0";
   const expandingActionLabelClass =
     "max-w-0 overflow-hidden whitespace-nowrap text-[13px] font-medium leading-none opacity-0 transition-[max-width,opacity] duration-300 ease-out group-hover:max-w-[5.75rem] group-hover:opacity-100 group-focus-visible:max-w-[5.75rem] group-focus-visible:opacity-100";
@@ -781,7 +783,10 @@ const Header = ({
                   className={actionButtonClass}
                   aria-label="Events Calendar"
                 >
-                  <Calendar className="h-4 w-4" />
+                  <Calendar className="h-4 w-4 shrink-0" />
+                  <span aria-hidden="true" className={expandingActionLabelClass}>
+                    Events
+                  </span>
                 </Button>
               </Link>
               <Button
@@ -791,7 +796,10 @@ const Header = ({
                 className={actionButtonClass}
                 aria-label="Account / Login"
               >
-                <User className="h-4 w-4" />
+                <User className="h-4 w-4 shrink-0" />
+                <span aria-hidden="true" className={expandingActionLabelClass}>
+                  Login
+                </span>
               </Button>
             </>
           ) : (
