@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useMemo, useCallback } from "react";
 import { Ticket, Calendar, MapPin, Loader2, AlertCircle, Receipt, CreditCard, User, Download, Hash, Clock, CheckCircle2, XCircle, Search, Filter, ChevronRight, Star, TrendingUp, Mail, Eye, X, LifeBuoy } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +38,10 @@ const MyBookings = ({
   ];
 
   const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const refreshRequest = useRef(null);
+  const pollUntil = useRef(0);
+  const hasPendingPayment = useRef(false);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -62,11 +66,11 @@ const MyBookings = ({
     return booking?.publicId || booking?.id || "N/A";
   }, []);
 
-  const fetchBookings = useCallback(async () => {
+  const fetchBookings = useCallback(async (signal) => {
     try {
-      setLoading(true);
       setError(null);
-      const response = await apiFetch("/api/user/bookings", { method: "GET" });
+      const response = await apiFetch("/api/user/bookings", { method: "GET", cache: "no-store", signal });
+      if (signal.aborted) return;
       if (response?.success && Array.isArray(response?.data?.items)) {
         const normalized = response.data.items.map((item) => {
           const evt = item.event || {};
@@ -107,17 +111,21 @@ const MyBookings = ({
           };
         });
         setBookings(normalized);
-      } else { setBookings([]); }
+        hasPendingPayment.current = normalized.some((booking) =>
+          ["pending", "pending_payment"].includes(booking.status)
+          && !["failed", "refunded"].includes(booking.paymentStatus));
+      } else { throw new Error("Failed to load your bookings."); }
     } catch (err) {
+      if (signal.aborted) return;
       console.error("Failed to load bookings", err);
       setError(err?.message || "Failed to load your bookings.");
-      setBookings([]);
-    } finally { setLoading(false); }
+    }
   }, []);
 
-  const fetchBookingsAnalytics = useCallback(async () => {
+  const fetchBookingsAnalytics = useCallback(async (signal) => {
     try {
-      const response = await apiFetch("/api/user/bookings/analytics", { method: "GET" });
+      const response = await apiFetch("/api/user/bookings/analytics", { method: "GET", cache: "no-store", signal });
+      if (signal.aborted) return;
       if (response?.success && response?.data) {
         setBookingAnalytics({
           totalBookings: Number(response.data.totalBookings) || 0,
@@ -125,19 +133,53 @@ const MyBookings = ({
           totalSpent: Number(response.data.totalSpent) || 0,
         });
         setBookingAnalyticsLoaded(true);
-      }
+      } else { throw new Error("Failed to load booking summary."); }
     } catch (err) {
+      if (signal.aborted) return;
       console.error("Failed to load booking analytics", err);
-      setBookingAnalyticsLoaded(false);
+      setError((previous) => previous || "Could not refresh your booking summary.");
     }
   }, []);
 
-  useEffect(() => {
-    fetchBookings();
-    if (showSummarySections) {
-      fetchBookingsAnalytics();
+  const refreshBookings = useCallback(async (restartPolling = true) => {
+    if (restartPolling) pollUntil.current = Date.now() + 60_000;
+    if (refreshRequest.current) return;
+    const controller = new AbortController();
+    refreshRequest.current = controller;
+    setLoading(true);
+    try {
+      await Promise.all([
+        fetchBookings(controller.signal),
+        ...(showSummarySections ? [fetchBookingsAnalytics(controller.signal)] : []),
+      ]);
+    } finally {
+      if (refreshRequest.current === controller) {
+        refreshRequest.current = null;
+        setLoading(false);
+      }
     }
   }, [fetchBookings, fetchBookingsAnalytics, showSummarySections]);
+
+  useEffect(() => {
+    refreshBookings();
+    const onActive = () => {
+      if (document.visibilityState === "visible") refreshBookings();
+    };
+    window.addEventListener("focus", onActive);
+    document.addEventListener("visibilitychange", onActive);
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible" && hasPendingPayment.current && Date.now() < pollUntil.current) {
+        refreshBookings(false);
+      }
+    }, 5_000);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", onActive);
+      document.removeEventListener("visibilitychange", onActive);
+      refreshRequest.current?.abort();
+      refreshRequest.current = null;
+    };
+  }, [refreshBookings]);
 
   const fetchBookingTickets = useCallback(async (booking) => {
     setTicketsLoading(true);
@@ -375,7 +417,7 @@ const MyBookings = ({
 
   const hasBookings = bookings.length > 0;
   const hasFilteredBookings = filteredBookings.length > 0;
-  const showEmptyState = !loading && !hasBookings;
+  const showEmptyState = !loading && !error && !hasBookings;
   const upcomingBookings = useMemo(() => {
     if (!showSummarySections) {
       return [];
@@ -390,7 +432,12 @@ const MyBookings = ({
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-white">My Bookings</h1>
         <p className="text-sm text-white/40 mt-1">View and manage all your event bookings</p>
+        <Button className="mt-3" variant="outline" onClick={() => refreshBookings()} disabled={loading}>
+          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {loading ? "Refreshing…" : "Refresh"}
+        </Button>
       </div>
+      {error && <p role="alert" className="text-sm text-red-300">{error} Use Refresh to try again.</p>}
 
       <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-4 sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -518,12 +565,12 @@ const MyBookings = ({
       <section className="space-y-4">
         <h2 className="text-base font-bold text-white">All Bookings</h2>
 
-        {loading ? (
+        {loading && !hasBookings ? (
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-12 text-center">
             <Loader2 className="w-8 h-8 mx-auto animate-spin text-white/20 mb-3" />
             <p className="text-sm text-white/40">Loading bookings...</p>
           </div>
-        ) : showEmptyState ? (
+        ) : error && !hasBookings ? null : showEmptyState ? (
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-12 text-center">
             <Ticket className="w-10 h-10 text-white/15 mx-auto mb-3" />
             <h3 className="text-sm font-semibold text-white mb-1">No bookings yet</h3>
