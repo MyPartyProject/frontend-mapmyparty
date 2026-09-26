@@ -874,6 +874,16 @@ const EventDetailNew = () => {
         throw new Error("Booking response did not include a booking ID");
       }
       bookingIdempotencyKeyRef.current = null;
+      // Refresh saved billing details without blocking an already-created booking.
+      try {
+        const session = await fetchSession(true);
+        if (session?.isAuthenticated) {
+          setSessionUser(session.user);
+          await syncAuthSession(session);
+        }
+      } catch (error) {
+        console.warn("Unable to refresh saved billing details", error);
+      }
 
       const paymentRequired = bookingData?.paymentRequired !== false
         && bookingData?.checkoutProvider !== "FREE"

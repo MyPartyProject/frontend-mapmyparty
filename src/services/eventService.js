@@ -877,7 +877,6 @@ export async function updateTicket(ticketId, ticketData) {
  * - fullAddress: string (complete address)
  * - city: string (city name)
  * - state: string (state name)
- * - country: string (country name)
  * - postalCode: string (postal/zip code)
  * - latitude: number (latitude coordinate)
  * - longitude: number (longitude coordinate)
@@ -911,7 +910,6 @@ export async function createVenue(venueData) {
     fullAddress: venueData.fullAddress || "",
     city: venueData.city || "",
     state: venueData.state || "",
-    country: venueData.country || "India", // Default country
     postalCode: venueData.postalCode || "",
     latitude: Number.isFinite(Number(venueData.latitude)) ? Number(venueData.latitude) : null,
     longitude: Number.isFinite(Number(venueData.longitude)) ? Number(venueData.longitude) : null,
@@ -1172,6 +1170,7 @@ export async function publishEvent(eventId) {
  * @returns {Promise<Object>} Response with updated venue
  */
 export async function updateVenue(venueId, venueData) {
+  const { country: _country, ...payload } = venueData;
   const url = buildUrl(`/api/venue/update/${venueId}`);
   
   try {
@@ -1183,7 +1182,7 @@ export async function updateVenue(venueId, venueData) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(venueData)
+      body: JSON.stringify(payload)
     });
     
     console.log('✅ Venue updated successfully:', response);

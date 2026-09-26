@@ -1,3 +1,4 @@
+import IndiaLocationFields from "@/components/IndiaLocationFields";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -87,44 +88,6 @@ import {
 
 const DEFAULT_ARTIST_GENDER = "MALE";
 const ARTIST_GENDER_VALUES = ["MALE", "FEMALE", "OTHER"];
-const INDIAN_STATE_OPTIONS = [
-  "Maharashtra",
-  "Delhi",
-  "Karnataka",
-  "Telangana",
-  "Tamil Nadu",
-  "West Bengal",
-  "Gujarat",
-  "Goa",
-  "Rajasthan",
-  "Uttar Pradesh",
-  "Haryana",
-  "Chandigarh",
-  "Andaman and Nicobar Islands",
-  "Andhra Pradesh",
-  "Arunachal Pradesh",
-  "Assam",
-  "Bihar",
-  "Chhattisgarh",
-  "Dadra and Nagar Haveli and Daman and Diu",
-  "Himachal Pradesh",
-  "Jammu and Kashmir",
-  "Jharkhand",
-  "Kerala",
-  "Ladakh",
-  "Lakshadweep",
-  "Madhya Pradesh",
-  "Manipur",
-  "Meghalaya",
-  "Mizoram",
-  "Nagaland",
-  "Odisha",
-  "Puducherry",
-  "Punjab",
-  "Sikkim",
-  "Tripura",
-  "Uttarakhand",
-];
 
 const normalizeArtistGender = (gender) => {
   const normalized = (gender || "").toUpperCase();
@@ -612,7 +575,6 @@ const CreateEvent = () => {
   const [venueName, setVenueName] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
-  const [country, setCountry] = useState("India");
   const [postalCode, setPostalCode] = useState("");
   const [venueContact, setVenueContact] = useState("");
   const [venueEmail, setVenueEmail] = useState("");
@@ -803,7 +765,6 @@ const CreateEvent = () => {
             setVenueName(venueData.name || '');
             setCity(venueData.city || '');
             setState(venueData.state || '');
-            setCountry(venueData.country || '');
             setPostalCode(venueData.postalCode || '');
             setVenueContact(sanitizeTenDigitPhoneInput(venueData.contact || ''));
             setVenueEmail(venueData.email || '');
@@ -1053,7 +1014,6 @@ const CreateEvent = () => {
         setVenueName(pickVenueName(firstVenue));
         setCity(firstVenue.city || "");
         setState(firstVenue.state || "");
-        setCountry(firstVenue.country || eventToEdit.country || "India");
         setPostalCode(firstVenue.postalCode || eventToEdit.postalCode || "");
         setVenueContact(sanitizeTenDigitPhoneInput(firstVenue.contact || eventToEdit.venueContact || ""));
         setVenueEmail(firstVenue.email || eventToEdit.venueEmail || "");
@@ -1065,7 +1025,6 @@ const CreateEvent = () => {
           fullAddress: firstVenue.fullAddress || firstVenue.address || "",
           city: firstVenue.city || "",
           state: firstVenue.state || "",
-          country: firstVenue.country || eventToEdit.country || "India",
           postalCode: firstVenue.postalCode || eventToEdit.postalCode || "",
           latitude: Number.isFinite(Number(firstVenue.latitude)) ? Number(firstVenue.latitude) : null,
           longitude: Number.isFinite(Number(firstVenue.longitude)) ? Number(firstVenue.longitude) : null,
@@ -2039,7 +1998,7 @@ const CreateEvent = () => {
       }
 
       // Prepare venue data
-      const fallbackAddressParts = [venueName, city, state, postalCode, country || "India"].filter(Boolean);
+      const fallbackAddressParts = [venueName, city, state, postalCode, "India"].filter(Boolean);
       const venueData = {
         name: venueName,
         contact: venueContactDigits,
@@ -2047,7 +2006,6 @@ const CreateEvent = () => {
         fullAddress: fullAddress || fallbackAddressParts.join(", "),
         city: city,
         state: state,
-        country: country || "India",
         postalCode: postalCode,
         latitude: null,
         longitude: null,
@@ -2064,7 +2022,6 @@ const CreateEvent = () => {
         venueData.fullAddress !== originalVenueData.fullAddress ||
         venueData.city !== originalVenueData.city ||
         venueData.state !== originalVenueData.state ||
-        venueData.country !== originalVenueData.country ||
         venueData.postalCode !== originalVenueData.postalCode ||
         venueData.latitude !== originalVenueData.latitude ||
         venueData.longitude !== originalVenueData.longitude;
@@ -3740,7 +3697,7 @@ const CreateEvent = () => {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <ValueItem label="City" value={city} />
                   <ValueItem label="State" value={state} />
-                  <ValueItem label="Country" value={country} />
+                  <ValueItem label="Country" value="India" />
                   <ValueItem label="Postal code" value={postalCode} />
                 </div>
               </div>
@@ -5050,44 +5007,14 @@ const CreateEvent = () => {
                           className={fieldClass}
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="city">City *</Label>
-                        <Input
-                          id="city"
-                          placeholder="Enter city"
-                          value={city}
-                          onChange={(e) => setCity(e.target.value)}
-                          className={fieldClass}
-                        />
-                      </div>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="state">State *</Label>
-                        <Select value={state || undefined} onValueChange={setState}>
-                          <SelectTrigger id="state" className={`${fieldClass} ${state ? "" : "text-muted-foreground"}`}>
-                            <SelectValue placeholder="Select state / union territory" />
-                          </SelectTrigger>
-                          <SelectContent className={selectMenuClass}>
-                            {INDIAN_STATE_OPTIONS.map((stateOption) => (
-                              <SelectItem key={stateOption} value={stateOption}>
-                                {stateOption}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="country">Country *</Label>
-                        <Input
-                          id="country"
-                          placeholder="Enter country"
-                          value={country}
-                          onChange={(e) => setCountry(e.target.value)}
-                          className={fieldClass}
-                        />
-                      </div>
+                      <IndiaLocationFields idPrefix="venue" state={state} city={city} required
+                        onChange={(location) => {
+                          if (location.state !== undefined) setState(location.state);
+                          if (location.city !== undefined) setCity(location.city);
+                        }} className={fieldClass} menuClassName={selectMenuClass} />
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-4">

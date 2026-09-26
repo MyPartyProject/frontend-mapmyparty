@@ -1,3 +1,4 @@
+import IndiaLocationFields from "@/components/IndiaLocationFields";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { BadgeCheck, Building2, CreditCard, ImagePlus, Loader2, Upload, X } from "lucide-react";
@@ -568,15 +569,9 @@ const OrganizerOnboarding = () => {
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="org-state">State</Label>
-                    <Input
-                      id="org-state"
-                      value={profileForm.state}
-                      onChange={(e) => onProfileInputChange("state", e.target.value)}
-                      className="bg-[#070b14] border-white/15 text-white"
-                    />
-                  </div>
+                  <IndiaLocationFields idPrefix="org" state={profileForm.state}
+                    onChange={({ state }) => onProfileInputChange("state", state)} disabled={savingProfile}
+                    className="bg-[#070b14] border-white/15 text-white" />
                   <div className="space-y-2">
                     <Label htmlFor="org-gst">GST Number</Label>
                     <Input

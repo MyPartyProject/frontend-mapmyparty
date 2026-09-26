@@ -1,3 +1,4 @@
+import IndiaLocationFields from "@/components/IndiaLocationFields";
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -31,13 +32,17 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
 
   // Pre-fill user data when modal opens
   useEffect(() => {
-    if (isOpen && user) {
-      setFormData((prev) => ({
-        ...prev,
-        fullName: user.name || "",
-        email: user.email || "",
-        phone: sanitizeTenDigitPhoneInput(user.phone || ""),
-      }));
+    if (isOpen) {
+      setFormData({
+        fullName: user?.name || "",
+        email: user?.email || "",
+        phone: sanitizeTenDigitPhoneInput(user?.phone || ""),
+        addressLine1: user?.addressLine1 || "",
+        addressLine2: user?.addressLine2 || "",
+        city: user?.city || "",
+        state: user?.state || "",
+        pincode: user?.pincode || "",
+      });
     }
   }, [isOpen, user]);
 
@@ -45,7 +50,8 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "phone" ? sanitizeTenDigitPhoneInput(value) : value,
+      [name]: name === "phone" ? sanitizeTenDigitPhoneInput(value)
+        : name === "pincode" ? value.replace(/\D/g, "").slice(0, 6) : value,
     }));
   };
 
@@ -70,11 +76,11 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
       return;
     }
     if (!formData.city.trim()) {
-      toast.error("Please enter your city");
+      toast.error("Please select your city");
       return;
     }
     if (!formData.state.trim()) {
-      toast.error("Please enter your state");
+      toast.error("Please select your state");
       return;
     }
     if (!formData.pincode.trim()) {
@@ -90,9 +96,8 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
     }
 
     // Validate pincode
-    const pincodeDigits = formData.pincode.replace(/\D/g, "");
-    if (pincodeDigits.length < 4 || pincodeDigits.length > 10) {
-      toast.error("Please enter a valid pincode");
+    if (!/^[1-9][0-9]{5}$/.test(formData.pincode)) {
+      toast.error("Please enter a valid 6-digit Indian pincode");
       return;
     }
 
@@ -205,35 +210,9 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
             </div>
 
             <div className="grid md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="city" className="text-white/80">
-                  City *
-                </Label>
-                <Input
-                  id="city"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  placeholder="Mumbai"
-                  className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="state" className="text-white/80">
-                  State *
-                </Label>
-                <Input
-                  id="state"
-                  name="state"
-                  value={formData.state}
-                  onChange={handleChange}
-                  placeholder="Maharashtra"
-                  className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
-                  required
-                />
-              </div>
+              <IndiaLocationFields idPrefix="billing" state={formData.state} city={formData.city}
+                onChange={(location) => setFormData((current) => ({ ...current, ...location }))}
+                required disabled={isLoading} className="bg-white/5 border-white/20 text-white" />
 
               <div>
                 <Label htmlFor="pincode" className="text-white/80">
@@ -242,6 +221,9 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                 <Input
                   id="pincode"
                   name="pincode"
+                  inputMode="numeric"
+                  maxLength={6}
+                  pattern="[1-9][0-9]{5}"
                   value={formData.pincode}
                   onChange={handleChange}
                   placeholder="400001"
