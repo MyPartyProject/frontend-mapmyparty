@@ -1089,16 +1089,16 @@ const LandingPage = () => {
                     <Link
                       key={section.key}
                       to={buildBrowseEventsPath(section.filters)}
-                      className={`group landing-reveal block h-full text-left ${mobileHorizontalItemClass}`}
+                      className="group landing-reveal block h-full w-[calc(78vw-5px)] max-w-[calc(20rem-5px)] shrink-0 snap-start text-left sm:w-[calc(100%-5px)] sm:max-w-none sm:shrink sm:snap-none"
                       style={{ "--landing-delay": `${index * 70}ms` }}
                     >
                       <div className="relative flex h-full min-h-[16.75rem] flex-col overflow-hidden rounded-[1.5rem] border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-2 hover:border-border hover:shadow-[var(--shadow-elegant)]">
-                        <div className="relative flex-1 overflow-hidden">
+                        <div className="relative h-[10.25rem] shrink-0 overflow-hidden">
                           <img
                             src={section.image}
                             alt=""
                             aria-hidden="true"
-                            className="h-full min-h-[10.25rem] w-full object-cover opacity-75 transition duration-700 group-hover:scale-110 group-hover:opacity-95"
+                            className="h-full w-full object-cover opacity-75 transition duration-700 group-hover:scale-110 group-hover:opacity-95"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-transparent" />
                           <div className="theme-gradient-primary absolute inset-0 opacity-10" />
@@ -1107,15 +1107,14 @@ const LandingPage = () => {
                             {section.eyebrow}
                           </div>
                         </div>
-                        <div className="relative p-4">
-                          <h3 className="text-xl font-black text-foreground">
+                        <div className="relative flex flex-1 flex-col p-4 pb-[11px]">
+                          <h3 className="h-14 shrink-0 line-clamp-2 text-xl font-black text-foreground">
                             {section.label}
                           </h3>
-                          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                          <p className="mt-2 h-[4.5rem] shrink-0 line-clamp-3 text-sm leading-6 text-muted-foreground">
                             {section.description}
                           </p>
-                          <div className="mt-4 flex items-center justify-between gap-3 text-sm font-medium text-foreground">
-                            <span>Explore this vibe</span>
+                          <div className="mt-auto flex items-center justify-end gap-3 pt-4 text-sm font-medium text-foreground">
                             <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-muted/50 transition group-hover:bg-primaryCTA group-hover:text-primary-foreground">
                               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
                             </span>
