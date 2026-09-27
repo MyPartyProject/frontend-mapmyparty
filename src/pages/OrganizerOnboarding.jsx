@@ -1,3 +1,4 @@
+import { useBankInput } from "@/hooks/useBankInput";
 import IndiaLocationFields from "@/components/IndiaLocationFields";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -239,6 +240,8 @@ const OrganizerOnboarding = () => {
     }
   };
 
+  const bankInput = useBankInput(isEditingBank);
+
   const onBankInputChange = (field, value) => {
     setBankForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -338,16 +341,12 @@ const OrganizerOnboarding = () => {
     const accountHolder = bankForm.accountHolder.trim();
     const accountNumber = bankForm.accountNumber.trim();
     const ifscCode = bankForm.ifscCode.trim().toUpperCase();
-    if (!accountHolder || !ifscCode || (!existing && !accountNumber)) {
-      toast.error("Enter the account holder, account number, and IFSC");
-      return;
-    }
-
     const payload = existing ? {
       ...(accountHolder !== status.bankDetails.accountHolder ? { accountHolder } : {}),
       ...(accountNumber ? { accountNumber } : {}),
       ...(ifscCode !== status.bankDetails.ifscCode ? { ifscCode } : {}),
     } : { accountHolder, accountNumber, ifscCode };
+    if (!bankInput.validate(payload)) return;
     if (existing && !Object.keys(payload).length) {
       toast.info("No bank details changed");
       return;
@@ -615,16 +614,17 @@ const OrganizerOnboarding = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="space-y-4" onSubmit={handleSaveBankDetails}>
+              <form className="space-y-4" onSubmit={handleSaveBankDetails} noValidate>
                 <div className="space-y-2">
                   <Label htmlFor="bank-account-holder">Account Holder Name</Label>
                   <Input
                     id="bank-account-holder"
                     value={bankForm.accountHolder}
-                    onChange={(e) => onBankInputChange("accountHolder", e.target.value)}
                     className="bg-[#070b14] border-white/15 text-white"
                     required
-                  />
+                  {...bankInput.props("accountHolder", bankForm.accountHolder, (value) => onBankInputChange("accountHolder", value), { optional: false, unchanged: Boolean(status?.hasBankDetails) && bankForm.accountHolder === status?.bankDetails?.accountHolder })}
+                    />
+                    {bankInput.errors.accountHolder && <p id="bank-accountHolder-error" role="alert" className="text-sm text-destructive">{bankInput.errors.accountHolder}</p>}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -632,22 +632,24 @@ const OrganizerOnboarding = () => {
                     <Input
                       id="bank-account-number"
                       value={bankForm.accountNumber}
-                      onChange={(e) => onBankInputChange("accountNumber", e.target.value)}
                       placeholder={status?.hasBankDetails ? `Leave blank to keep ${bankForm.accountNumberMasked}` : ""}
                       autoComplete="off"
                       className="bg-[#070b14] border-white/15 text-white"
                       required={!status?.hasBankDetails}
+                    {...bankInput.props("accountNumber", bankForm.accountNumber, (value) => onBankInputChange("accountNumber", value), { optional: Boolean(status?.hasBankDetails), unchanged: Boolean(status?.hasBankDetails) && bankForm.accountNumber === status?.bankDetails?.accountNumber })}
                     />
+                    {bankInput.errors.accountNumber && <p id="bank-accountNumber-error" role="alert" className="text-sm text-destructive">{bankInput.errors.accountNumber}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="bank-ifsc">IFSC Code</Label>
                     <Input
                       id="bank-ifsc"
                       value={bankForm.ifscCode}
-                      onChange={(e) => onBankInputChange("ifscCode", e.target.value.toUpperCase())}
                       className="bg-[#070b14] border-white/15 text-white"
                       required
+                    {...bankInput.props("ifscCode", bankForm.ifscCode, (value) => onBankInputChange("ifscCode", value), { optional: false, unchanged: Boolean(status?.hasBankDetails) && bankForm.ifscCode === status?.bankDetails?.ifscCode })}
                     />
+                    {bankInput.errors.ifscCode && <p id="bank-ifscCode-error" role="alert" className="text-sm text-destructive">{bankInput.errors.ifscCode}</p>}
                   </div>
                 </div>
                 {status?.hasBankDetails && (

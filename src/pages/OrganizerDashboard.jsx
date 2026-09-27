@@ -1,3 +1,4 @@
+import { useBankInput } from "@/hooks/useBankInput";
 import { buildOrganizerProfile as buildInitialData } from '@/utils/organizerProfile';
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
@@ -309,6 +310,8 @@ const OrganizerProfileContent = ({ user }) => {
     }
   };
 
+  const bankInput = useBankInput(isBankEditing);
+
   const handleBankFieldChange = (field, value) => {
     setBankDraft((prev) => ({ ...prev, [field]: value }));
   };
@@ -324,15 +327,12 @@ const OrganizerProfileContent = ({ user }) => {
     const accountHolder = bankDraft.accountHolder.trim();
     const accountNumber = bankDraft.accountNumber.trim();
     const ifscCode = bankDraft.ifscCode.trim().toUpperCase();
-    if (!accountHolder || !ifscCode || (!bankExists && !accountNumber)) {
-      toast.error("Enter the account holder, account number, and IFSC");
-      return;
-    }
     const payload = bankExists ? {
       ...(accountHolder !== profileData.bankDetails.accountHolder ? { accountHolder } : {}),
       ...(accountNumber ? { accountNumber } : {}),
       ...(ifscCode !== profileData.bankDetails.ifscCode ? { ifscCode } : {}),
     } : { accountHolder, accountNumber, ifscCode };
+    if (!bankInput.validate(payload)) return;
     if (bankExists && !Object.keys(payload).length) {
       toast.info("No bank details changed");
       return;
@@ -1399,7 +1399,7 @@ const OrganizerProfileContent = ({ user }) => {
                           type="text"
                           value={bankDraft[field.key] || ""}
                           placeholder={field.key === "accountNumber" && bankExists ? "Enter a new account number only to replace it" : ""}
-                          onChange={(e) => handleBankFieldChange(field.key, field.key === "ifscCode" ? e.target.value.toUpperCase() : e.target.value)}
+                          {...bankInput.props(field.key, bankDraft[field.key] || "", (value) => handleBankFieldChange(field.key, value), { optional: bankExists && field.key === "accountNumber", unchanged: bankExists && bankDraft[field.key] === profileData.bankDetails[field.key] })}
                           autoComplete={field.key === "accountNumber" ? "off" : undefined}
                           required={!bankExists || field.key !== "accountNumber"}
                           className="mt-1 w-full px-4 py-2 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/50 focus:outline-none"
@@ -1409,6 +1409,7 @@ const OrganizerProfileContent = ({ user }) => {
                           {field.key === "accountNumber" ? bankDraft.accountNumberMasked : bankDraft[field.key]}
                         </p>
                       )}
+                      {isBankEditing && bankInput.errors[field.key] && <p id={`bank-${field.key}-error`} role="alert" className="text-sm text-destructive">{bankInput.errors[field.key]}</p>}
                     </div>
                   ))}
                 </div>
