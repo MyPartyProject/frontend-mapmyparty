@@ -1,6 +1,8 @@
+import { formatShareDateRange } from "../src/utils/eventShare.js";
+
 const DEFAULT_API_BASE_URL = "https://api.mapmyparty.com/api";
 const DEFAULT_PUBLIC_ORIGIN = "https://www.mapmyparty.com";
-const FALLBACK_IMAGE_PATH = "/images/ph1.jpg";
+const FALLBACK_IMAGE_PATH = "/logo.png";
 
 const firstValue = (value) => (Array.isArray(value) ? value[0] : value);
 
@@ -60,10 +62,11 @@ const buildEventPath = (organizerSlug, eventSlug) =>
 const fetchJson = async (path) => {
   const response = await fetch(buildApiUrl(path), {
     headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(5000),
   });
 
   if (!response.ok) {
-    throw new Error(`API ${response.status}`);
+    throw Object.assign(new Error(`API ${response.status}`), { status: response.status });
   }
 
   const body = await response.json();
@@ -78,46 +81,6 @@ const fetchOptionalJson = async (path) => {
   }
 };
 
-const formatShareDateRange = (startDate, endDate) => {
-  if (!startDate) return "";
-
-  const start = new Date(startDate);
-  if (Number.isNaN(start.getTime())) return "";
-
-  const dateOptions = { month: "short", day: "numeric", year: "numeric" };
-  const timeOptions = { hour: "numeric", minute: "2-digit" };
-  const startLabel = `${start.toLocaleDateString("en-US", dateOptions)} at ${start.toLocaleTimeString("en-US", timeOptions)}`;
-
-  if (!endDate) return startLabel;
-
-  const end = new Date(endDate);
-  if (Number.isNaN(end.getTime())) return startLabel;
-
-  if (start.toDateString() === end.toDateString()) {
-    return `${startLabel} - ${end.toLocaleTimeString("en-US", timeOptions)}`;
-  }
-
-  return `${startLabel} - ${end.toLocaleDateString("en-US", dateOptions)}`;
-};
-
-const formatTicketPrice = (value) => {
-  const amount = Number(value);
-  if (!Number.isFinite(amount)) return "";
-  if (amount <= 0) return "Free";
-  return `From INR ${Math.round(amount).toLocaleString("en-IN")}`;
-};
-
-const getStartingPriceLabel = (tickets) => {
-  if (!Array.isArray(tickets)) return "";
-
-  const prices = tickets
-    .map((ticket) => Number(ticket?.price))
-    .filter((price) => Number.isFinite(price));
-
-  if (prices.length === 0) return "";
-  return formatTicketPrice(Math.min(...prices));
-};
-
 const getVenueLabel = (venues) => {
   if (!Array.isArray(venues) || venues.length === 0) return "";
   const primary = venues.find((venue) => venue?.isPrimary) || venues[0];
@@ -128,49 +91,46 @@ const getVenueLabel = (venues) => {
   );
 };
 
-const normalizeImageUrl = (imageUrl, origin) => {
-  const image = toText(imageUrl);
-  if (!image) return `${origin}${FALLBACK_IMAGE_PATH}`;
-  if (/^https?:\/\//i.test(image)) return image;
-  if (image.startsWith("//")) return `https:${image}`;
-  if (image.startsWith("/")) return `${origin}${image}`;
-  return buildApiUrl(image);
+const normalizeImageUrl = (imageUrl) => {
+  const image = toText(imageUrl).replace(/[\\,]+$/, "");
+  if (!image || /^(data:|blob:)/i.test(image)) return "";
+  try {
+    const url = new URL(image.startsWith("//") ? `https:${image}` : /^https?:\/\//i.test(image) ? image : buildApiUrl(image));
+    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+  } catch {
+    return "";
+  }
 };
 
-const buildMeta = ({ core, tickets, venues, origin, eventUrl }) => {
+const buildMeta = ({ core, venues, origin, eventUrl, shareUrl }) => {
   const title = toText(core?.title) || "MapMyParty event";
-  const organizer = toText(core?.organizer?.name);
   const date = formatShareDateRange(core?.startDate, core?.endDate);
   const venue = getVenueLabel(venues);
-  const category = [core?.category, core?.subCategory].map(toText).filter(Boolean).join(" / ");
-  const price = getStartingPriceLabel(tickets);
+  const category = [core?.category, core?.subCategory].map(toText).filter(Boolean).join(" · ");
 
   const details = [
+    category,
     date ? `When: ${date}` : "",
     venue ? `Where: ${venue}` : "",
-    category ? `Vibe: ${category}` : "",
-    price ? `Tickets: ${price}` : "",
   ].filter(Boolean);
 
-  const description =
-    details.length > 0
-      ? `${details.join(" | ")}. View the flyer, details, and tickets on MapMyParty.`
-      : truncate(core?.description || "View the flyer, details, and tickets on MapMyParty.");
+  const description = [...details, "Explore the event and book your spot on MapMyParty."].join(" | ");
 
   return {
-    title: organizer ? `${title} by ${organizer} | MapMyParty` : `${title} | MapMyParty`,
+    title,
     description: truncate(description),
-    image: normalizeImageUrl(core?.bannerImage || core?.flyerImage, origin),
+    image: [core?.bannerImage, core?.flyerImage, core?.flyerImageUrl].map(normalizeImageUrl).find(Boolean) || `${origin}${FALLBACK_IMAGE_PATH}`,
     url: eventUrl,
+    shareUrl,
   };
 };
 
-const renderShareHtml = ({ title, description, image, url }) => {
+const renderShareHtml = ({ title, description, image, url, shareUrl = url }, statusCode) => {
   const safeTitle = escapeHtml(title);
   const safeDescription = escapeHtml(description);
   const safeImage = escapeHtml(image);
   const safeUrl = escapeHtml(url);
-  const scriptUrl = JSON.stringify(url);
+  const scriptUrl = JSON.stringify(url).replace(/</g, "\\u003c");
 
   return `<!doctype html>
 <html lang="en">
@@ -186,12 +146,12 @@ const renderShareHtml = ({ title, description, image, url }) => {
     <meta property="og:description" content="${safeDescription}">
     <meta property="og:image" content="${safeImage}">
     <meta property="og:image:alt" content="${safeTitle}">
-    <meta property="og:url" content="${safeUrl}">
+    <meta property="og:url" content="${escapeHtml(shareUrl)}">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="${safeTitle}">
     <meta name="twitter:description" content="${safeDescription}">
     <meta name="twitter:image" content="${safeImage}">
-    <meta name="robots" content="index,follow">
+    <meta name="robots" content="${statusCode === 200 ? "index,follow" : "noindex"}">
   </head>
   <body>
     <p>Opening <a href="${safeUrl}">${safeTitle}</a>...</p>
@@ -200,16 +160,17 @@ const renderShareHtml = ({ title, description, image, url }) => {
 </html>`;
 };
 
-const sendHtml = (res, statusCode, meta) => {
+const sendHtml = (req, res, statusCode, meta) => {
   res.statusCode = statusCode;
   res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.setHeader("Cache-Control", "public, max-age=300, s-maxage=900, stale-while-revalidate=86400");
-  res.end(renderShareHtml(meta));
+  res.setHeader("Cache-Control", statusCode === 200 ? "public, max-age=300, s-maxage=900" : "no-store");
+  res.end(req.method === "HEAD" ? undefined : renderShareHtml(meta, statusCode));
 };
 
 export default async function handler(req, res) {
   if (!["GET", "HEAD"].includes(req.method)) {
     res.setHeader("Allow", "GET, HEAD");
+    res.setHeader("Cache-Control", "no-store");
     res.statusCode = 405;
     res.end("Method Not Allowed");
     return;
@@ -224,7 +185,7 @@ export default async function handler(req, res) {
       : origin;
 
   if (!organizerSlug || !eventSlug) {
-    sendHtml(res, 400, {
+    sendHtml(req, res, 400, {
       title: "MapMyParty event",
       description: "View event flyers, details, and tickets on MapMyParty.",
       image: `${origin}${FALLBACK_IMAGE_PATH}`,
@@ -237,16 +198,16 @@ export default async function handler(req, res) {
     const core = await fetchJson(
       `/public/events/${encodeURIComponent(organizerSlug)}/${encodeURIComponent(eventSlug)}`,
     );
+    if (!core?.id) throw Object.assign(new Error("Event unavailable"), { status: 404 });
 
-    const [tickets, venues] = await Promise.all([
-      fetchOptionalJson(`/public/events/${encodeURIComponent(core.id)}/tickets`),
-      fetchOptionalJson(`/public/events/${encodeURIComponent(core.id)}/venues`),
-    ]);
+    const venues = await fetchOptionalJson(`/public/events/${encodeURIComponent(core.id)}/venues`);
+    const shareUrl = `${origin}/api/event-share?${new URLSearchParams({ organizer: organizerSlug, event: eventSlug })}`;
 
-    const meta = buildMeta({ core, tickets, venues, origin, eventUrl });
-    sendHtml(res, 200, meta);
-  } catch {
-    sendHtml(res, 200, {
+    const meta = buildMeta({ core, venues, origin, eventUrl, shareUrl });
+    sendHtml(req, res, 200, meta);
+  } catch (error) {
+    const status = [403, 404, 410].includes(error.status) ? 404 : 502;
+    sendHtml(req, res, status, {
       title: "MapMyParty event",
       description: "View the flyer, event details, and tickets on MapMyParty.",
       image: `${origin}${FALLBACK_IMAGE_PATH}`,

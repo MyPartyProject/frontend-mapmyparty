@@ -1,5 +1,3 @@
-import { formatEventPriceLabel } from "@/utils/priceFormatter";
-
 const SHARE_PREVIEW_PATH = "/api/event-share";
 
 const toText = (value) =>
@@ -10,49 +8,36 @@ const getBrowserOrigin = () =>
     ? window.location.origin
     : "";
 
-const formatShareDateRange = (startDate, endDate) => {
+export const formatShareDateRange = (startDate, endDate) => {
   if (!startDate) return "";
 
   const start = new Date(startDate);
   if (Number.isNaN(start.getTime())) return "";
 
-  const dateOptions = { month: "short", day: "numeric", year: "numeric" };
-  const timeOptions = { hour: "numeric", minute: "2-digit" };
-  const startLabel = `${start.toLocaleDateString(undefined, dateOptions)} at ${start.toLocaleTimeString(undefined, timeOptions)}`;
+  const dateOptions = { month: "short", day: "numeric", year: "numeric", timeZone: "Asia/Kolkata" };
+  const timeOptions = { hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" };
+  const startLabel = `${start.toLocaleDateString("en-IN", dateOptions)} at ${start.toLocaleTimeString("en-IN", timeOptions)}`;
 
-  if (!endDate) return startLabel;
+  if (!endDate) return `${startLabel} IST`;
 
   const end = new Date(endDate);
-  if (Number.isNaN(end.getTime())) return startLabel;
+  if (Number.isNaN(end.getTime())) return `${startLabel} IST`;
 
-  const sameDate = start.toDateString() === end.toDateString();
+  const sameDate = start.toLocaleDateString("en-IN", dateOptions) === end.toLocaleDateString("en-IN", dateOptions);
   if (sameDate) {
-    return `${startLabel} - ${end.toLocaleTimeString(undefined, timeOptions)}`;
+    return `${startLabel} - ${end.toLocaleTimeString("en-IN", timeOptions)} IST`;
   }
 
-  return `${startLabel} - ${end.toLocaleDateString(undefined, dateOptions)}`;
-};
-
-const getStartingPriceLabel = (tickets = []) => {
-  if (!Array.isArray(tickets) || tickets.length === 0) return "";
-
-  const prices = tickets
-    .map((ticket) => Number(ticket?.price))
-    .filter((price) => Number.isFinite(price));
-
-  if (prices.length === 0) return "";
-
-  return formatEventPriceLabel(Math.min(...prices), { prefix: "From" }) || "";
+  return `${startLabel} - ${end.toLocaleDateString("en-IN", dateOptions)} IST`;
 };
 
 const getVenueLabel = (event) =>
-  toText(event?.venue) ||
-  toText(event?.location) ||
-  toText(event?.primaryVenue?.name) ||
-  toText(event?.primaryVenue?.fullAddress);
+  [event?.venue, event?.location, event?.primaryVenue?.name, event?.primaryVenue?.fullAddress]
+    .map(toText)
+    .find((value) => value && !/^(venue|location|address) tba$/i.test(value)) || "";
 
 const getCategoryLabel = (event) =>
-  [event?.category, event?.subCategory].map(toText).filter(Boolean).join(" / ");
+  [event?.category, event?.subCategory].map(toText).filter(Boolean).join(" · ");
 
 export const buildEventDetailPath = (organizerSlug, eventSlug) => {
   const organizer = toText(organizerSlug);
@@ -91,15 +76,12 @@ export const buildEventSharePayload = (
   const dateLabel = formatShareDateRange(event?.startDate, event?.endDate);
   const venueLabel = getVenueLabel(event);
   const categoryLabel = getCategoryLabel(event);
-  const priceLabel = getStartingPriceLabel(event?.tickets);
 
   const lines = [
-    `You're invited to ${title}.`,
-    dateLabel ? `When: ${dateLabel}` : "",
-    venueLabel ? `Where: ${venueLabel}` : "",
-    categoryLabel ? `Vibe: ${categoryLabel}` : "",
-    priceLabel ? `Tickets: ${priceLabel}` : "",
-    "See the full event, flyer, and tickets on MapMyParty.",
+    title,
+    categoryLabel,
+    [dateLabel, venueLabel].filter(Boolean).join(" · "),
+    "Explore the event and book your spot on MapMyParty.",
   ].filter(Boolean);
 
   return {
