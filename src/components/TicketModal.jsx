@@ -7,7 +7,7 @@ import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { buildCanonicalQrPayload } from "@/utils/qrPayload";
 
-const TicketModal = ({ isOpen, onClose, ticket }) => {
+const TicketModal = ({ isOpen, onClose, ticket, onDownload }) => {
   const [qrCodeUrl, setQrCodeUrl] = useState("");
 
   useEffect(() => {
@@ -23,8 +23,11 @@ const TicketModal = ({ isOpen, onClose, ticket }) => {
     }
   }, [ticket, isOpen]);
 
-  const handleDownload = () => {
-    alert("Ticket downloaded! (This is a demo)");
+  const [downloading, setDownloading] = useState(false);
+  const handleDownload = async () => {
+    if (!onDownload || downloading) return;
+    setDownloading(true);
+    try { await onDownload(ticket); } finally { setDownloading(false); }
   };
 
   const handleShare = () => {
@@ -130,6 +133,7 @@ const TicketModal = ({ isOpen, onClose, ticket }) => {
           <div className="grid grid-cols-2 gap-3">
             <Button 
               className="bg-primaryCTA text-primary-foreground font-semibold hover:bg-primaryCTA-hover active:bg-primaryCTA-active"
+              disabled={downloading || !onDownload}
               onClick={handleDownload}
             >
               <Download className="w-4 h-4 mr-2" />

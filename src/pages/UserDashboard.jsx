@@ -20,13 +20,10 @@ import Footer from "@/components/Footer";
 import TicketModal from "@/components/TicketModal";
 import StarRating from "@/components/StarRating";
 import eventPlaceholder from "@/assets/event-music.jpg";
-import { jsPDF } from "jspdf";
-import QRCode from "qrcode";
-import { apiFetch } from "@/config/api";
+import { apiFetch, downloadFile } from "@/config/api";
 import { fetchSession, resetSessionCache } from "@/utils/auth";
 import { toast } from "sonner";
 import { resolveEventBannerImage } from "@/utils/eventBannerImage";
-import { registerAmikoPdfFonts } from "@/utils/pdfFonts";
 
 const UserDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -230,88 +227,13 @@ const UserDashboard = () => {
     fetchBookings();
   };
 
-  const getEventImage = (ticket) => {
-    return ticket?.image || null;
-  };
-
   const handleDownloadTicket = async (ticket) => {
+    if (!ticket?.id) return;
     try {
-      const doc = new jsPDF({ unit: "pt", format: "a4" });
-      await registerAmikoPdfFonts(doc);
-
-      // Build QR text (include booking id and event title)
-      const qrText = `EVENT:${ticket.eventTitle} | EVENT_ID:${ticket.eventId || "N/A"} | BOOKING:${ticket.id}`;
-      const qrDataUrl = await QRCode.toDataURL(qrText, { margin: 1, width: 200 });
-
-      // Add QR code top-left
-      doc.addImage(qrDataUrl, "PNG", 40, 40, 120, 120);
-
-      // Ticket header (right side)
-      doc.setFontSize(14);
-      doc.setFont("Amiko", "bold");
-      doc.text(ticket.eventTitle || "Event", 180, 60, { maxWidth: 340 });
-
-      doc.setFontSize(10);
-      doc.setFont("Amiko", "normal");
-      const details = [
-        ticket.eventDate ? `Date: ${ticket.eventDate}` : null,
-        ticket.eventTime ? `Time: ${ticket.eventTime}` : null,
-        `Venue: ${ticket.location || "TBA"}`,
-        `Ticket Type: ${ticket.ticketTypesList || ticket.primaryTicketType}`,
-        `Quantity: ${ticket.totalTickets}`,
-        `Booking ID: ${ticket.id}`,
-        `Amount Paid: ₹${ticket.totalPrice.toFixed(2)}`,
-      ].filter(Boolean);
-
-      let y = 90;
-      details.forEach((line) => {
-        doc.text(line, 180, y);
-        y += 16;
-      });
-
-      // Optional small event image on top-right if available
-      const imgUrl = getEventImage(ticket);
-      if (imgUrl) {
-        try {
-          // fetch image and convert to data URL
-          const resp = await fetch(imgUrl);
-          const blob = await resp.blob();
-          const reader = await new Promise((res, rej) => {
-            const r = new FileReader();
-            r.onload = () => res(r.result);
-            r.onerror = rej;
-            r.readAsDataURL(blob);
-          });
-          doc.addImage(reader, "JPEG", 420, 40, 120, 120);
-        } catch (imgErr) {
-          // ignore image errors
-          // console.warn('Image not added to PDF', imgErr);
-        }
-      }
-
-      // Terms block at bottom
-      doc.setLineWidth(0.5);
-      doc.line(40, 520, 555, 520);
-      doc.setFontSize(9);
-      doc.text("Terms and Conditions", 40, 540);
-      const terms = [
-        "• Bring a printed ticket confirmation & valid ID for entry.",
-        "• This e-ticket is valid only for the ticket holder.",
-        "• Organizer reserves the right to admission.",
-        "• Tickets are only valid for the event, date, and time specified on the ticket.",
-      ];
-      let ty = 556;
-      terms.forEach((t) => {
-        doc.text(t, 40, ty, { maxWidth: 515 });
-        ty += 14;
-      });
-
-      const filename = `${(ticket.eventTitle || 'ticket').replace(/[^a-z0-9-_]/gi, '_')}_${ticket.id}.pdf`;
-      doc.save(filename);
-      toast.success("Ticket PDF downloaded");
+      await downloadFile(`/api/booking/${encodeURIComponent(ticket.id)}/ticket/download`, `ticket-${ticket.id}.pdf`);
+      toast.success("Ticket downloaded!");
     } catch (err) {
-      console.error("Failed to generate ticket PDF", err);
-      toast.error("Failed to generate ticket PDF. Try again.");
+      toast.error(err?.message || "Failed to download ticket");
     }
   };
 
@@ -527,6 +449,7 @@ const UserDashboard = () => {
               isOpen={!!selectedTicket}
               onClose={() => setSelectedTicket(null)}
               ticket={selectedTicket}
+              onDownload={handleDownloadTicket}
             />
           )}
 

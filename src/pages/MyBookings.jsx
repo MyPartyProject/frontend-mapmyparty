@@ -1,6 +1,5 @@
-﻿import { useState, useEffect, useMemo, useCallback } from "react";
-import { Ticket, Calendar, MapPin, Loader2, AlertCircle, Receipt, CreditCard, User, Download, Hash, Clock, CheckCircle2, XCircle, Search, Filter, ChevronRight, Star, TrendingUp, Mail, Eye, X, LifeBuoy } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { Ticket, Calendar, MapPin, Loader2, Receipt, CreditCard, Download, Search, ChevronRight, Star, Eye, LifeBuoy } from "lucide-react";
 import { useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -18,13 +18,10 @@ import { Link } from "react-router-dom";
 import VintageTicket from "@/components/VintageTicket";
 import { apiFetch, downloadFile } from "@/config/api";
 import { toast } from "sonner";
-import { jsPDF } from "jspdf";
-import QRCode from "qrcode";
 import StarRating from "@/components/StarRating";
-import { buildCanonicalQrPayload } from "@/utils/qrPayload";
 import { resolveEventBannerImage } from "@/utils/eventBannerImage";
 import { formatIndianRupee } from "@/utils/priceFormatter";
-import { registerAmikoPdfFonts } from "@/utils/pdfFonts";
+import { getUpcomingBookings, loadAllBookings } from "@/utils/userBookings";
 
 const MyBookings = ({
   browseEventsPath = "/dashboard/browse-events",
@@ -40,9 +37,11 @@ const MyBookings = ({
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const refreshRequest = useRef(null);
-  const pollUntil = useRef(0);
-  const hasPendingPayment = useRef(false);
+  const upcomingTrigger = useRef(null);
+  const ticketTrigger = useRef(null);
+  const [upcomingModalOpen, setUpcomingModalOpen] = useState(false);
   const [error, setError] = useState(null);
+  const [analyticsError, setAnalyticsError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
@@ -57,7 +56,6 @@ const MyBookings = ({
   const [downloadingInvoiceId, setDownloadingInvoiceId] = useState(null);
   const [bookingAnalytics, setBookingAnalytics] = useState({
     totalBookings: 0,
-    upcomingBookings: 0,
     totalSpent: 0,
   });
   const [bookingAnalyticsLoaded, setBookingAnalyticsLoaded] = useState(false);
@@ -69,52 +67,47 @@ const MyBookings = ({
   const fetchBookings = useCallback(async (signal) => {
     try {
       setError(null);
-      const response = await apiFetch("/api/user/bookings", { method: "GET", cache: "no-store", signal });
+      const items = await loadAllBookings(apiFetch, signal);
       if (signal.aborted) return;
-      if (response?.success && Array.isArray(response?.data?.items)) {
-        const normalized = response.data.items.map((item) => {
-          const evt = item.event || {};
-          const startDate = evt.startDate || null;
-          const endDate = evt.endDate || null;
-          const statusNormalized = (item.status || "").toLowerCase();
-          const paymentStatus = (item.payment?.status || "").toLowerCase();
-          const location = evt.venue ? [evt.venue.city, evt.venue.state].filter(Boolean).join(", ") : null;
-          const formatTime = (date) => {
-            if (!date) return "Time TBA";
-            const d = new Date(date);
-            if (isNaN(d)) return "Time TBA";
-            return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-          };
-          return {
-            id: item.id,
-            publicId: item.publicId || item.id,
-            paymentTransactionId: item.payment?.transactionId || null,
-            bookingDate: item.createdAt || evt.createdAt,
-            status: statusNormalized,
-            paymentStatus,
-            eventId: evt.id,
-            eventTitle: evt.title || "Event",
-            eventDate: startDate || endDate,
-            eventEndDate: endDate,
-            eventTime: formatTime(startDate),
-            image: resolveEventBannerImage(evt, null),
-            category: evt.category || evt.subCategory || null,
-            location,
-            totalPrice: Number(item.totalAmount) || 0,
-            payment: item.payment,
-            review: item.review || null,
-            status1: evt.status1,
-            status2: evt.status2,
-            eventStatus: evt.eventStatus,
-            venue: evt.venue,
-            organizer: evt.organizer,
-          };
-        });
-        setBookings(normalized);
-        hasPendingPayment.current = normalized.some((booking) =>
-          ["pending", "pending_payment"].includes(booking.status)
-          && !["failed", "refunded"].includes(booking.paymentStatus));
-      } else { throw new Error("Failed to load your bookings."); }
+      const normalized = items.map((item) => {
+        const evt = item.event || {};
+        const startDate = evt.startDate || null;
+        const endDate = evt.endDate || null;
+        const statusNormalized = (item.status || "").toLowerCase();
+        const paymentStatus = (item.payment?.status || "").toLowerCase();
+        const location = evt.venue ? [evt.venue.city, evt.venue.state].filter(Boolean).join(", ") : null;
+        const formatTime = (date) => {
+          if (!date) return "Time TBA";
+          const d = new Date(date);
+          if (isNaN(d)) return "Time TBA";
+          return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+        };
+        return {
+          id: item.id,
+          publicId: item.publicId || item.id,
+          paymentTransactionId: item.payment?.transactionId || null,
+          bookingDate: item.createdAt || evt.createdAt,
+          status: statusNormalized,
+          paymentStatus,
+          eventId: evt.id,
+          eventTitle: evt.title || "Event",
+          eventDate: startDate || endDate,
+          eventEndDate: endDate,
+          eventTime: formatTime(startDate),
+          image: resolveEventBannerImage(evt, null),
+          category: evt.category || evt.subCategory || null,
+          location,
+          totalPrice: Number(item.totalAmount) || 0,
+          payment: item.payment,
+          review: item.review || null,
+          status1: evt.status1,
+          status2: evt.status2,
+          eventStatus: evt.eventStatus,
+          venue: evt.venue,
+          organizer: evt.organizer,
+        };
+      });
+      setBookings(normalized);
     } catch (err) {
       if (signal.aborted) return;
       console.error("Failed to load bookings", err);
@@ -124,12 +117,12 @@ const MyBookings = ({
 
   const fetchBookingsAnalytics = useCallback(async (signal) => {
     try {
+      setAnalyticsError(null);
       const response = await apiFetch("/api/user/bookings/analytics", { method: "GET", cache: "no-store", signal });
       if (signal.aborted) return;
       if (response?.success && response?.data) {
         setBookingAnalytics({
           totalBookings: Number(response.data.totalBookings) || 0,
-          upcomingBookings: Number(response.data.upcomingBookings) || 0,
           totalSpent: Number(response.data.totalSpent) || 0,
         });
         setBookingAnalyticsLoaded(true);
@@ -137,12 +130,11 @@ const MyBookings = ({
     } catch (err) {
       if (signal.aborted) return;
       console.error("Failed to load booking analytics", err);
-      setError((previous) => previous || "Could not refresh your booking summary.");
+      setAnalyticsError("Could not load your booking summary.");
     }
   }, []);
 
-  const refreshBookings = useCallback(async (restartPolling = true) => {
-    if (restartPolling) pollUntil.current = Date.now() + 60_000;
+  const refreshBookings = useCallback(async () => {
     if (refreshRequest.current) return;
     const controller = new AbortController();
     refreshRequest.current = controller;
@@ -162,26 +154,15 @@ const MyBookings = ({
 
   useEffect(() => {
     refreshBookings();
-    const onActive = () => {
-      if (document.visibilityState === "visible") refreshBookings();
-    };
-    window.addEventListener("focus", onActive);
-    document.addEventListener("visibilitychange", onActive);
-    const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible" && hasPendingPayment.current && Date.now() < pollUntil.current) {
-        refreshBookings(false);
-      }
-    }, 5_000);
     return () => {
-      window.clearInterval(timer);
-      window.removeEventListener("focus", onActive);
-      document.removeEventListener("visibilitychange", onActive);
       refreshRequest.current?.abort();
       refreshRequest.current = null;
     };
   }, [refreshBookings]);
 
   const fetchBookingTickets = useCallback(async (booking) => {
+    ticketTrigger.current = document.activeElement;
+    setUpcomingModalOpen(false);
     setTicketsLoading(true);
     setSelectedBookingForTickets(booking);
     setTicketsModalOpen(true);
@@ -264,49 +245,12 @@ const MyBookings = ({
   };
 
   const handleDownloadTicket = async (ticket) => {
-    if (!ticket) return;
+    if (!ticket?.id) return;
     try {
-      const doc = new jsPDF();
-      await registerAmikoPdfFonts(doc);
-      const pageWidth = doc.internal.pageSize.getWidth();
-      doc.setFillColor(119, 34, 86);
-      doc.rect(0, 0, pageWidth, 45, 'F');
-      doc.setTextColor(201, 151, 116);
-      doc.setFontSize(28);
-      doc.setFont("Amiko", "bold");
-      doc.text('EVENT TICKET', pageWidth / 2, 28, { align: 'center' });
-      doc.setTextColor(72, 40, 93);
-      doc.setFontSize(18);
-      doc.text(ticket.eventTitle || 'Event', 20, 65);
-      doc.setFontSize(11);
-      doc.setFont("Amiko", "normal");
-      doc.setTextColor(119, 34, 86);
-      doc.text(`Ticket Type: ${ticket.ticketName}`, 20, 80);
-      doc.text(`Quantity: ${ticket.quantity || 1}`, 20, 90);
-      doc.text(`Date: ${ticket.eventStartDate ? new Date(ticket.eventStartDate).toLocaleDateString() : 'TBA'}`, 20, 100);
-      const venue = [ticket.venueName, ticket.venueCity].filter(Boolean).join(', ') || 'TBA';
-      doc.text(`Venue: ${venue}`, 20, 110);
-      if (ticket.ticketPrice) doc.text(`Price: ${formatIndianRupee(ticket.ticketPrice)}`, 20, 120);
-      if (ticket.qrCode) {
-        const qrData = buildCanonicalQrPayload(ticket.qrCode);
-        if (qrData) {
-          const qrUrl = await QRCode.toDataURL(qrData, { width: 120 });
-          doc.addImage(qrUrl, 'PNG', pageWidth - 60, 60, 45, 45);
-        }
-      }
-      if (ticket.manualCheckInCode) doc.text(`Check-in Code: ${ticket.manualCheckInCode.toUpperCase()}`, 20, 135);
-      doc.setFontSize(10);
-      doc.setTextColor(150, 150, 150);
-      doc.text('Present this ticket at the venue entrance', pageWidth / 2, 280, { align: 'center' });
-      doc.setDrawColor(201, 151, 116);
-      doc.setLineWidth(0.5);
-      doc.line(20, 270, pageWidth - 20, 270);
-      const fileName = `ticket-${ticket.eventTitle?.replace(/\s+/g, '-') || 'event'}-${ticket.id}.pdf`;
-      doc.save(fileName);
-      toast.success('Ticket downloaded!');
+      await downloadFile(`/api/booking/${encodeURIComponent(ticket.bookingId)}/tickets/${encodeURIComponent(ticket.id)}/download`, `ticket-${ticket.id}.pdf`);
+      toast.success("Ticket downloaded!");
     } catch (err) {
-      console.error('Failed to download ticket:', err);
-      toast.error('Failed to download ticket');
+      toast.error(err?.message || "Failed to download ticket");
     }
   };
 
@@ -333,10 +277,6 @@ const MyBookings = ({
     }
   }, [canDownloadInvoice]);
 
-  const handleResendTicket = (booking) => {
-    toast.success(`Ticket for ${booking.eventTitle} has been sent to your email!`);
-  };
-
   const filteredBookings = useMemo(() => {
     return bookings.filter(booking => {
       const query = searchQuery.toLowerCase();
@@ -348,21 +288,6 @@ const MyBookings = ({
       return matchesSearch && matchesFilter;
     });
   }, [bookings, searchQuery, filterStatus]);
-
-  const stats = useMemo(() => {
-    if (!bookingAnalyticsLoaded) {
-      const total = bookings.length;
-      const totalSpent = bookings.reduce((sum, b) => sum + (b?.totalPrice || 0), 0);
-      const upcoming = bookings.filter((b) => b?.eventDate && new Date(b.eventDate) > new Date()).length;
-      return { total, totalSpent, upcoming };
-    }
-
-    return {
-      total: bookingAnalytics.totalBookings,
-      totalSpent: bookingAnalytics.totalSpent,
-      upcoming: bookingAnalytics.upcomingBookings,
-    };
-  }, [bookingAnalytics, bookingAnalyticsLoaded, bookings]);
 
   const isEventPast = (booking) => {
     const endDate = booking?.eventEndDate || booking?.eventDate;
@@ -423,60 +348,53 @@ const MyBookings = ({
       return [];
     }
 
-    return filteredBookings.filter((booking) => booking?.eventDate && new Date(booking.eventDate) > new Date());
-  }, [filteredBookings, showSummarySections]);
+    return getUpcomingBookings(bookings);
+  }, [bookings, showSummarySections]);
+
+  const renderUpcomingBooking = (booking) => (
+    <button key={booking.id} type="button" onClick={() => fetchBookingTickets(booking)}
+      className="flex w-full min-w-0 items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3 text-left transition-colors hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaryCTA">
+      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-white/5">
+        {booking.image ? <img src={booking.image} alt="" className="h-full w-full object-cover" /> : <Calendar aria-hidden="true" className="m-5 h-6 w-6 text-white/30" />}
+      </div>
+      <div className="min-w-0 flex-1 space-y-1">
+        <h3 className="line-clamp-2 break-words text-sm font-semibold">{booking.eventTitle}</h3>
+        <p className="text-xs text-white/60">{formatDate(booking.eventDate)} · {booking.eventTime}</p>
+        <p className="truncate text-xs text-white/50">{booking.location || "Venue TBA"}</p>
+        <span className="inline-flex items-center gap-1 text-xs font-medium text-rose-400">View tickets <ChevronRight aria-hidden="true" className="h-3 w-3" /></span>
+      </div>
+    </button>
+  );
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 text-white space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white">My Bookings</h1>
-        <p className="text-sm text-white/40 mt-1">View and manage all your event bookings</p>
-        <Button className="mt-3" variant="outline" onClick={() => refreshBookings()} disabled={loading}>
-          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {loading ? "Refreshing…" : "Refresh"}
-        </Button>
-      </div>
-      {error && <p role="alert" className="text-sm text-red-300">{error} Use Refresh to try again.</p>}
-
-      <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-4 sm:p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-white">Need help with a booking?</p>
-            <p className="text-xs text-white/40 mt-1">
-              Raise a support ticket for payment issues, missing tickets, refunds, or access problems.
-            </p>
-          </div>
-          <Link to="/dashboard/support?sourceSurface=ATTENDEE_BOOKINGS&category=BOOKING_PAYMENT">
-            <Button className="h-9 text-sm">
-              <LifeBuoy className="h-4 w-4" />
-              Contact support
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      {/* Stats */}
-      {showSummarySections && <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: "Total Bookings", value: stats.total, icon: Receipt, color: "#D60024" },
-          { label: "Upcoming", value: stats.upcoming, icon: Calendar, color: "#60a5fa" },
-          { label: "Total Spent", value: formatIndianRupee(stats.totalSpent), icon: CreditCard, color: "#22c55e" },
-        ].map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div key={stat.label} className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${stat.color}12` }}>
-                  <Icon className="h-4 w-4" style={{ color: stat.color }} />
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 text-white space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {showSummarySections && (
+          <dl className="flex min-w-0 w-full sm:w-auto sm:flex-1 flex-wrap items-center gap-x-5 gap-y-3">
+            {[
+              { label: "Total bookings", value: bookingAnalyticsLoaded ? bookingAnalytics.totalBookings : "—", icon: Receipt, color: "text-rose-400" },
+              { label: "Upcoming", value: loading || error ? "—" : upcomingBookings.length, icon: Calendar, color: "text-blue-400" },
+              { label: "Total spent", value: bookingAnalyticsLoaded ? formatIndianRupee(bookingAnalytics.totalSpent) : "—", icon: CreditCard, color: "text-emerald-400" },
+            ].map(({ label, value, icon: Icon, color }) => (
+              <div key={label} className="flex min-w-0 items-center gap-2 py-1">
+                <Icon aria-hidden="true" className={`h-4 w-4 shrink-0 ${color}`} />
+                <div className="min-w-0">
+                  <dt className="text-[10px] sm:text-xs text-white/50">{label}</dt>
+                  <dd className="text-sm font-semibold text-white break-words">{value}</dd>
                 </div>
               </div>
-              <p className="text-xl sm:text-2xl font-bold text-white">{stat.value}</p>
-              <p className="text-xs text-white/40 mt-0.5">{stat.label}</p>
-            </div>
-          );
-        })}
-      </div>}
+            ))}
+          </dl>
+        )}
+        <Button asChild variant="outline" className="h-11 shrink-0 border-white/10 text-xs">
+          <Link to="/dashboard/support?sourceSurface=ATTENDEE_BOOKINGS&category=BOOKING_PAYMENT">
+            <LifeBuoy aria-hidden="true" /> Contact support
+          </Link>
+        </Button>
+      </div>
+      {(error || analyticsError) && (
+        <p role="alert" className="text-sm text-red-300">{[error, analyticsError].filter(Boolean).join(" ")} Reload the page to try again.</p>
+      )}
 
       {/* Search & Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -507,59 +425,48 @@ const MyBookings = ({
         </div>
       </div>
 
-      {/* Upcoming Events Section */}
-      {showSummarySections && upcomingBookings.length > 0 && (
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-white">Upcoming Events</h2>
-            <span className="text-xs text-white/30">{upcomingBookings.length} events</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {upcomingBookings.slice(0, 3).map((booking) => (
-              <div
-                key={booking.id}
-                className="rounded-xl overflow-hidden border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.05] hover:border-white/[0.12] transition-all duration-200 cursor-pointer"
-                onClick={() => fetchBookingTickets(booking)}
-              >
-                <div className="relative h-36 overflow-hidden">
-                  {booking.image ? (
-                    <img src={booking.image} alt={booking.eventTitle} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-[#1b1b2d] via-[#141422] to-[#0e0e18] flex items-center justify-center px-4 text-center text-sm font-semibold text-white/60">
-                      {booking.eventTitle}
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                  {booking.category && (
-                    <Badge className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm text-white text-[10px] border-0">{booking.category}</Badge>
-                  )}
-                  <div className="absolute bottom-3 left-3 right-3">
-                    <h3 className="text-white font-semibold text-sm line-clamp-1">{booking.eventTitle}</h3>
-                  </div>
+      {showSummarySections && !loading && !error && (
+        <section className="space-y-3" aria-label="Upcoming events">
+          {upcomingBookings.length > 0 ? (
+            <>
+              <Button variant="outline" className="h-11 w-full justify-between border-white/10 sm:hidden"
+                onClick={(event) => { upcomingTrigger.current = event.currentTarget; setUpcomingModalOpen(true); }}>
+                <span className="flex items-center gap-2"><Calendar aria-hidden="true" /> Upcoming events ({upcomingBookings.length})</span>
+                <ChevronRight aria-hidden="true" />
+              </Button>
+              <div className="hidden sm:block space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-base font-bold">Upcoming Events</h2>
+                  <Button variant="ghost" className="h-11 text-xs"
+                    onClick={(event) => { upcomingTrigger.current = event.currentTarget; setUpcomingModalOpen(true); }}>
+                    View all ({upcomingBookings.length}) <ChevronRight aria-hidden="true" />
+                  </Button>
                 </div>
-                <div className="p-4 space-y-2.5">
-                  <div className="space-y-1.5 text-xs text-white/50">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
-                      <span>{formatDate(booking.eventDate)}</span>
-                      <span className="text-white/20">|</span>
-                      <span>{booking.eventTime}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                      <span className="line-clamp-1">{booking.location || "Venue TBA"}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between pt-2.5 border-t border-white/[0.06]">
-                    <span className="text-xs text-white/40">{getBookingDisplayId(booking)}</span>
-                    <span className="text-sm font-bold text-[#D60024]">{formatIndianRupee(booking.totalPrice || 0)}</span>
-                  </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {upcomingBookings.slice(0, 2).map(renderUpcomingBooking)}
                 </div>
               </div>
-            ))}
-          </div>
+            </>
+          ) : (
+            <p className="flex items-center gap-2 text-xs text-white/50"><Calendar className="h-4 w-4" aria-hidden="true" /> No upcoming events yet.</p>
+          )}
         </section>
       )}
+
+      <Dialog open={upcomingModalOpen} onOpenChange={setUpcomingModalOpen}>
+        <DialogContent
+          className="w-[calc(100%-2rem)] max-w-2xl max-h-[85dvh] flex flex-col overflow-hidden bg-[#0e0e18] text-white border-white/10 rounded-xl p-4 sm:p-5 motion-reduce:!animate-none"
+          onCloseAutoFocus={(event) => { event.preventDefault(); if (!ticketsModalOpen) upcomingTrigger.current?.focus(); }}
+        >
+          <DialogHeader className="pr-6 text-left">
+            <DialogTitle>Upcoming Events</DialogTitle>
+            <DialogDescription>Your confirmed upcoming bookings, nearest first.</DialogDescription>
+          </DialogHeader>
+          <div className="min-h-0 overflow-y-auto space-y-3">
+            {upcomingBookings.map(renderUpcomingBooking)}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* All Bookings */}
       <section className="space-y-4">
@@ -593,8 +500,8 @@ const MyBookings = ({
               <div key={booking.id} className="rounded-xl border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.04] hover:border-white/[0.1] transition-all overflow-hidden">
                 {/* Header bar */}
                 <div className="px-4 py-2.5 border-b border-white/[0.04] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <div className="flex items-center gap-2 text-xs text-white/40">
-                    <span className="text-white/70">{getBookingDisplayId(booking)}</span>
+                  <div className="flex flex-wrap items-center gap-2 min-w-0 text-xs text-white/40">
+                    <span className="text-white/70 break-all">{getBookingDisplayId(booking)}</span>
                     <span className="text-white/15">|</span>
                     <span>{formatBookingDate(booking.bookingDate)}</span>
                   </div>
@@ -628,7 +535,7 @@ const MyBookings = ({
                         )}
                         <h3 className="text-sm font-semibold text-white line-clamp-1 mb-1.5">{booking.eventTitle}</h3>
                         <div className="space-y-1 text-xs text-white/40">
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                             <Calendar className="h-3 w-3 flex-shrink-0" />
                             <span>{formatDate(booking.eventDate)}</span>
                             <span className="text-white/15">|</span>
@@ -645,34 +552,34 @@ const MyBookings = ({
                     {/* Amount summary */}
                     <div className="px-4 py-3 rounded-lg bg-white/[0.03] border border-white/[0.04] flex-shrink-0 min-w-[110px]">
                       <p className="text-[10px] text-white/30 mb-0.5 uppercase tracking-wide">Total</p>
-                      <p className="text-sm font-bold text-[#D60024]">{formatIndianRupee(booking.totalPrice || 0)}</p>
+                      <p className="text-sm font-bold text-[#D60024] break-all">{formatIndianRupee(booking.totalPrice || 0)}</p>
                       {booking.payment?.paymentMethod && (
                         <p className="text-[10px] text-white/40 mt-1 uppercase tracking-wide">{booking.payment.paymentMethod}</p>
                       )}
                     </div>
 
                     {/* Actions */}
-                    <div className="flex lg:flex-col gap-2 flex-shrink-0">
-                      <Button size="sm" className="flex-1 lg:flex-none h-8 text-xs font-medium px-3" onClick={() => fetchBookingTickets(booking)}>
-                        <Eye className="h-3 w-3 mr-1.5" /> View Tickets
+                    <div className="grid grid-cols-1 min-[400px]:grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-col gap-2 lg:w-36 shrink-0">
+                      <Button size="sm" className="col-span-full w-full min-h-11 h-auto gap-2 text-xs font-medium px-3 py-2" onClick={() => fetchBookingTickets(booking)}>
+                        <Eye className="h-3 w-3" /> View Tickets
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        className="flex-1 lg:flex-none h-8 border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.06] text-xs px-3 disabled:opacity-50"
+                        className="w-full min-h-11 h-auto gap-2 py-2 border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.06] text-xs px-3 disabled:opacity-50"
                         onClick={() => handleDownloadInvoice(booking)}
                         disabled={downloadingInvoiceId === booking.id || !canDownloadInvoice(booking)}
                       >
                         {downloadingInvoiceId === booking.id ? (
-                          <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
+                          <Loader2 className="h-3 w-3 animate-spin" />
                         ) : (
-                          <Receipt className="h-3 w-3 mr-1.5" />
+                          <Receipt className="h-3 w-3" />
                         )}
                         Invoice
                       </Button>
                       {isEventPast(booking) && (
-                        <Button size="sm" variant="ghost" className="flex-1 lg:flex-none h-8 text-white/40 hover:text-white hover:bg-white/[0.06] text-xs px-3 border border-dashed border-white/[0.08]" onClick={() => handleOpenReview(booking)}>
-                          <Star className="h-3 w-3 mr-1.5" />
+                        <Button size="sm" variant="ghost" className="w-full min-h-11 h-auto gap-2 py-2 text-white/40 hover:text-white hover:bg-white/[0.06] text-xs px-3 border border-dashed border-white/[0.08]" onClick={() => handleOpenReview(booking)}>
+                          <Star className="h-3 w-3" />
                           {booking.review ? "Edit Feedback" : "Feedback"}
                         </Button>
                       )}
@@ -682,9 +589,9 @@ const MyBookings = ({
                         <Button
                           size="sm"
                           variant="outline"
-                          className="flex-1 lg:flex-none h-8 border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.06] text-xs px-3"
+                          className="w-full min-h-11 h-auto gap-2 py-2 border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.06] text-xs px-3"
                         >
-                          <LifeBuoy className="h-3 w-3 mr-1.5" />
+                          <LifeBuoy className="h-3 w-3" />
                           Support
                         </Button>
                       </Link>
@@ -699,7 +606,12 @@ const MyBookings = ({
 
       {/* Tickets Modal */}
       <Dialog open={ticketsModalOpen} onOpenChange={closeTicketsModal}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden bg-[#0e0e18] text-white border border-white/[0.08] rounded-2xl p-0">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-3xl max-h-[85vh] overflow-hidden bg-[#0e0e18] text-white border border-white/[0.08] rounded-2xl p-0"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            const target = ticketTrigger.current?.isConnected ? ticketTrigger.current : upcomingTrigger.current;
+            target?.focus();
+          }}>
           <DialogHeader className="p-5 pb-4 border-b border-white/[0.06]">
             <DialogTitle className="flex items-center gap-3 text-base">
               <div className="h-8 w-8 rounded-lg bg-[#D60024]/10 flex items-center justify-center">
@@ -787,4 +699,3 @@ const MyBookings = ({
 };
 
 export default MyBookings;
-
