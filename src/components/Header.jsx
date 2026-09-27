@@ -136,6 +136,11 @@ const Header = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileViewport, setMobileViewport] = useState(() =>
+    window.matchMedia("(max-width: 767px)").matches,
+  );
+  const [landingNavRevealed, setLandingNavRevealed] = useState(false);
+  const headerRef = useRef(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState(EMPTY_SEARCH_RESULTS);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -424,6 +429,47 @@ const Header = ({
   const isLandingPage =
     forceMainHeader &&
     (location.pathname === "/" || location.pathname === "/landing/homepage");
+  const landingNavHidden = isLandingPage && mobileViewport && !landingNavRevealed;
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const updateViewport = () => setMobileViewport(media.matches);
+    media.addEventListener("change", updateViewport);
+    return () => media.removeEventListener("change", updateViewport);
+  }, []);
+
+  useEffect(() => {
+    setLandingNavRevealed(false);
+  }, [location.key]);
+
+  useEffect(() => {
+    if (!landingNavHidden) return undefined;
+
+    let previousScrollY = window.scrollY;
+    const reveal = (event) => {
+      // The intro keeps the page inert until it is ready for interaction.
+      if (headerRef.current?.parentElement?.closest("[inert]")) return;
+      if (
+        event.type === "keydown" &&
+        !["Tab", "Enter", " ", "ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End"].includes(event.key)
+      ) return;
+      setLandingNavRevealed(true);
+    };
+    const onScroll = (event) => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY !== previousScrollY) reveal(event);
+      previousScrollY = currentScrollY;
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    document.addEventListener("click", reveal, true);
+    document.addEventListener("keydown", reveal, true);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      document.removeEventListener("click", reveal, true);
+      document.removeEventListener("keydown", reveal, true);
+    };
+  }, [landingNavHidden]);
 
   const mobileSectionClass =
     "rounded-[1rem] border border-border/35 bg-background/35 p-2";
@@ -533,15 +579,19 @@ const Header = ({
 
   return (
     <header
+      ref={headerRef}
+      data-landing-revealed={isLandingPage ? landingNavRevealed : undefined}
+      inert={landingNavHidden ? "" : undefined}
+      aria-hidden={landingNavHidden ? true : undefined}
       className={`sticky top-0 z-50 w-full ${
         isLandingPage
-          ? "-mb-16 bg-black/30 backdrop-blur-md shadow-none text-white border-b border-white/10"
+          ? "landing-mobile-nav -mb-16 bg-black/30 backdrop-blur-md shadow-none text-white border-b border-white/10"
           : "bg-card/70 shadow-[var(--shadow-card)] backdrop-blur-xl"
       } ${forceMainHeader ? "" : "border-b border-border/45"} relative`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-5 lg:px-8">
         {/* Brand + Search */}
-        <div className="flex min-w-0 flex-1 basis-0 items-center gap-3">
+        <div className="landing-nav-brand flex min-w-0 flex-1 basis-0 items-center gap-3">
           <Link
             to="/"
             className="group flex min-w-0 items-center gap-2.5 whitespace-nowrap text-base font-semibold text-foreground"
@@ -814,7 +864,7 @@ const Header = ({
         </div>
 
         {/* Mobile Menu Toggle */}
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="landing-nav-actions flex items-center gap-2 md:hidden">
           <Button
             type="button"
             variant="ghost"

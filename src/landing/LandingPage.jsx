@@ -1005,18 +1005,18 @@ const LandingPage = () => {
 
             {/* Supporting Description */}
             <p className="mt-6 sm:mt-7 max-w-xl text-center text-base sm:text-lg md:text-xl font-normal leading-relaxed text-white/90">
-              Create events, sell tickets, and thrill your guests. Or jump
-              in as an attendee and enjoy the city's best experiences.
+              Discover the best events in your city, book your spot, and
+              make your next night unforgettable.
             </p>
 
             {/* Primary CTA */}
             <div className="mt-8 sm:mt-9 flex items-center justify-center">
-              <Link to="/auth">
+              <Link to="/browse-events">
                 <Button
                   size="lg"
                   className="h-auto rounded-xl bg-[#4c2367] px-8 py-3.5 text-base font-bold text-white shadow-lg transition-all duration-200 hover:bg-[#5f2882] hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2.5 border-0 uppercase tracking-wider"
                 >
-                  HOST AN EVENT
+                  Map The Party
                   <ArrowRight className="h-4 w-4 stroke-[2.5]" />
                 </Button>
               </Link>
