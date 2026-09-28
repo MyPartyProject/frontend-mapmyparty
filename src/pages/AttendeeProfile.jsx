@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Building2, Calendar, LifeBuoy, Loader2, Mail, Phone, ShieldCheck, User } from "lucide-react";
 import { apiFetch } from "@/config/api";
+import { toast } from "sonner";
 
 const formatDate = (value) => {
   if (!value) return "N/A";
@@ -31,6 +32,20 @@ export default function AttendeeProfile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [savingWhatsApp, setSavingWhatsApp] = useState(false);
+
+  const saveWhatsAppPreference = async (enabled) => {
+    setSavingWhatsApp(true);
+    try {
+      await apiFetch("/api/user/profile", { method: "PUT", body: JSON.stringify({ whatsAppNotification: enabled }) });
+      setProfile((current) => ({ ...current, whatsAppNotification: enabled }));
+      toast.success(enabled ? "WhatsApp alerts enabled" : "WhatsApp alerts disabled");
+    } catch (err) {
+      toast.error(err?.message || "Unable to update WhatsApp alerts");
+    } finally {
+      setSavingWhatsApp(false);
+    }
+  };
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -156,7 +171,10 @@ export default function AttendeeProfile() {
               </div>
               <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 flex items-center gap-2">
                 <User className="h-4 w-4 text-white/50" />
-                <span className="text-white/80">WhatsApp Alerts: {profile.whatsAppNotification ? "Enabled" : "Disabled"}</span>
+                <label className="flex flex-1 items-start justify-between gap-3 text-white/80">
+                  <span>WhatsApp alerts<span className="block text-xs text-white/50 mt-1">Booking details, event updates, reminders and refunds. Turn off anytime.</span></span>
+                  <input type="checkbox" className="mt-1 h-4 w-4 accent-purple-500" checked={Boolean(profile.whatsAppNotification)} disabled={savingWhatsApp || !profile.phone} onChange={(event) => saveWhatsAppPreference(event.target.checked)} />
+                </label>
               </div>
             </div>
           </div>
