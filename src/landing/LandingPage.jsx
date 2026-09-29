@@ -387,6 +387,11 @@ const heroCarouselStyles = `
     filter: saturate(1.12) contrast(1.05);
   }
 
+  .light .landing-event-card:hover .landing-event-card__image {
+    transform: scale(1.03);
+    filter: none;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .landing-reveal,
     .landing-glow,
@@ -583,7 +588,7 @@ const LandingEventCard = ({
       rel={opensEventDetail ? "noopener noreferrer" : undefined}
       className={`group block h-full ${mobileHorizontalItemClass}`}
     >
-      <article className="landing-event-card relative h-full min-h-[11.25rem] overflow-hidden rounded-lg border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1 hover:border-border hover:shadow-[var(--shadow-elegant)]">
+      <article className="landing-event-card relative h-full min-h-[11.25rem] overflow-hidden rounded-lg border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1 hover:border-border hover:shadow-[var(--shadow-elegant)] light:border-border light:shadow-none light:duration-200 light:hover:-translate-y-0.5 light:hover:shadow-none">
         <div className="absolute inset-0 overflow-hidden">
           <img
             src={imageSrc}
@@ -591,42 +596,42 @@ const LandingEventCard = ({
             className="landing-event-card__image h-full w-full object-cover"
             onError={handleImageError}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-background/5 light:to-transparent" />
-          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-background/55 to-transparent" />
-          <div className="theme-gradient-primary absolute inset-0 opacity-10 transition-opacity duration-500 group-hover:opacity-20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-background/5 light:hidden" />
+          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-background/55 to-transparent light:hidden" />
+          <div className="theme-gradient-primary absolute inset-0 opacity-10 transition-opacity duration-500 group-hover:opacity-20 light:hidden" />
         </div>
 
         <div className="relative flex h-full min-h-[11.25rem] flex-col justify-between p-3 sm:min-h-[inherit]">
           <div className="flex items-start justify-between gap-2">
             {category && (
-              <div className="max-w-[62%] truncate rounded-full border border-border/40 bg-card/85 px-2.5 py-1 text-[0.68rem] font-medium leading-none text-foreground shadow-[var(--shadow-card)] backdrop-blur-md">
+              <div className="max-w-[62%] truncate rounded-full border border-border/40 bg-card/85 px-2.5 py-1 text-[0.68rem] font-medium leading-none text-foreground shadow-[var(--shadow-card)] backdrop-blur-md light:border-white/30 light:bg-black/70 light:text-white light:shadow-none light:backdrop-blur-none">
                 {category}
               </div>
             )}
             {price && (
-              <div className="inline-flex min-w-[4.75rem] shrink-0 items-center justify-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-[0.68rem] font-bold leading-none tabular-nums text-accent shadow-[var(--shadow-card)] backdrop-blur-md light:border-border light:bg-secondary light:text-secondary-foreground">
+              <div className="inline-flex min-w-[4.75rem] shrink-0 items-center justify-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-[0.68rem] font-bold leading-none tabular-nums text-accent shadow-[var(--shadow-card)] backdrop-blur-md light:border-white/30 light:bg-black/70 light:text-white light:shadow-none light:backdrop-blur-none">
                 {price}
               </div>
             )}
           </div>
 
           <div className="mt-auto">
-            <h3 className="line-clamp-2 text-sm font-black leading-tight text-foreground drop-shadow-xl transition-colors group-hover:text-accent sm:text-base light:group-hover:text-accent-foreground light:drop-shadow-none">
+            <h3 className="line-clamp-2 text-sm font-black leading-tight text-foreground drop-shadow-xl transition-colors group-hover:text-accent sm:text-base light:text-white light:group-hover:text-white light:drop-shadow-none light:[text-shadow:0_1px_4px_rgba(0,0,0,0.95)]">
               {title}
             </h3>
-            <div className="mt-2 grid gap-1 text-[0.7rem] text-muted-foreground">
+            <div className="mt-2 grid gap-1 text-[0.7rem] text-muted-foreground light:text-white light:[text-shadow:0_1px_3px_rgba(0,0,0,0.95)]">
               <div className="flex items-center gap-1.5">
-                <CalendarRange className="h-3 w-3 shrink-0 text-accent light:text-accent-foreground" />
+                <CalendarRange className="h-3 w-3 shrink-0 text-accent light:text-white" />
                 <span className="line-clamp-1">{date}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <MapPin className="h-3 w-3 shrink-0 text-accent light:text-accent-foreground" />
+                <MapPin className="h-3 w-3 shrink-0 text-accent light:text-white" />
                 <span className="line-clamp-1">{location}</span>
               </div>
             </div>
             <div className="mt-3 flex items-center justify-between gap-2.5">
               <span className="h-px flex-1 bg-gradient-to-r from-border/70 via-border/30 to-transparent" />
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/40 bg-card/75 px-3 py-1.5 text-[0.68rem] font-semibold text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition-all duration-300 group-hover:border-border group-hover:bg-primaryCTA group-hover:text-primary-foreground">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/40 bg-card/75 px-3 py-1.5 text-[0.68rem] font-semibold text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition-all duration-300 group-hover:border-border group-hover:bg-primaryCTA group-hover:text-primary-foreground light:border-white/30 light:bg-black/75 light:text-white light:shadow-none light:backdrop-blur-none light:group-hover:border-white/50 light:group-hover:bg-black/90 light:group-hover:text-white">
                 View Details
                 <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-1" />
               </span>
@@ -1065,7 +1070,7 @@ const LandingPage = () => {
                   <h2 className="mt-3 text-3xl font-black text-foreground sm:text-4xl">
                     Pick your vibe
                   </h2>
-                  <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
+                  <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground light:text-foreground/80">
                     Switch between real event moods and jump straight into a
                     filtered browse page when one feels right.
                   </p>
@@ -1092,17 +1097,17 @@ const LandingPage = () => {
                       className="group landing-reveal block h-full w-[calc(78vw-5px)] max-w-[calc(20rem-5px)] shrink-0 snap-start text-left sm:w-[calc(100%-5px)] sm:max-w-none sm:shrink sm:snap-none"
                       style={{ "--landing-delay": `${index * 70}ms` }}
                     >
-                      <div className="relative flex h-full min-h-[16.75rem] flex-col overflow-hidden rounded-[1.5rem] border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-2 hover:border-border hover:shadow-[var(--shadow-elegant)] light:hover:border-primary">
+                      <div className="relative flex h-full min-h-[16.75rem] flex-col overflow-hidden rounded-[1.5rem] border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-2 hover:border-border hover:shadow-[var(--shadow-elegant)] light:rounded-xl light:border-border light:shadow-none light:duration-200 light:hover:-translate-y-1 light:hover:shadow-none">
                         <div className="relative h-[10.25rem] shrink-0 overflow-hidden">
                           <img
                             src={section.image}
                             alt=""
                             aria-hidden="true"
-                            className="h-full w-full object-cover opacity-75 transition duration-700 group-hover:scale-110 group-hover:opacity-95"
+                            className="h-full w-full object-cover opacity-75 transition duration-700 group-hover:scale-110 group-hover:opacity-95 light:opacity-100 light:duration-300 light:group-hover:scale-[1.03] light:group-hover:opacity-100"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-transparent" />
-                          <div className="theme-gradient-primary absolute inset-0 opacity-10" />
-                          <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full border border-border/40 bg-card/75 px-3 py-1.5 text-xs font-medium text-foreground shadow-[var(--shadow-card)] backdrop-blur-md light:border-border light:bg-secondary">
+                          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-transparent light:hidden" />
+                          <div className="theme-gradient-primary absolute inset-0 opacity-10 light:hidden" />
+                          <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full border border-border/40 bg-card/75 px-3 py-1.5 text-xs font-medium text-foreground shadow-[var(--shadow-card)] backdrop-blur-md light:border-border light:bg-secondary light:shadow-none light:backdrop-blur-none">
                             <Icon className="h-3.5 w-3.5 text-accent light:text-accent-foreground" />
                             {section.eyebrow}
                           </div>
@@ -1111,11 +1116,11 @@ const LandingPage = () => {
                           <h3 className="h-14 shrink-0 line-clamp-2 text-xl font-black text-foreground">
                             {section.label}
                           </h3>
-                          <p className="mt-2 h-[4.5rem] shrink-0 line-clamp-3 text-sm leading-6 text-muted-foreground">
+                          <p className="mt-2 h-[4.5rem] shrink-0 line-clamp-3 text-sm leading-6 text-muted-foreground light:text-foreground/85">
                             {section.description}
                           </p>
                           <div className="mt-auto flex items-center justify-end gap-3 pt-4 text-sm font-medium text-foreground">
-                            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-muted/50 transition group-hover:bg-primaryCTA group-hover:text-primary-foreground">
+                            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-muted/50 transition group-hover:bg-primaryCTA group-hover:text-primary-foreground light:bg-muted">
                               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
                             </span>
                           </div>

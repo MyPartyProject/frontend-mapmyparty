@@ -461,8 +461,8 @@ const EventAnalyticsPage = () => {
                 <YAxis yAxisId="revenue" tick={{ fill: "var(--chart-label)", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis yAxisId="tickets" orientation="right" tick={{ fill: "var(--chart-label)", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <Tooltip content={<ChartTooltip />} />
-                <Area yAxisId="revenue" type="monotone" dataKey="revenue" stroke="var(--chart-violet)" fill="url(#revenueGrad)" strokeWidth={2} />
-                <Area yAxisId="tickets" type="monotone" dataKey="tickets" stroke="#06b6d4" fill="url(#ticketsGrad)" strokeWidth={2} />
+                <Area yAxisId="revenue" type="monotone" dataKey="revenue" stroke="var(--chart-violet)" fill="var(--organizer-revenue-fill, url(#revenueGrad))" strokeWidth={2} />
+                <Area yAxisId="tickets" type="monotone" dataKey="tickets" stroke="#06b6d4" fill="var(--organizer-tickets-fill, url(#ticketsGrad))" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </div>

@@ -31,7 +31,7 @@ const pillars = [
 
 const About = () => {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50 light:bg-surface">
+    <div className="min-h-screen bg-slate-950 text-slate-50 light:bg-surface light:text-foreground">
       <Header forceMainHeader />
 
       <section className="relative overflow-hidden bg-[#140a2b] light:bg-background">
@@ -71,7 +71,7 @@ const About = () => {
                 {highlights.map(({ title, value, icon: Icon }) => (
                   <div key={title} className="space-y-2 rounded-xl border border-white/10 bg-white/10 p-4 light:border-border light:bg-muted">
                     <div className="flex items-center gap-2 text-sm text-slate-200/75 light:text-muted-foreground">
-                      <Icon className="h-4 w-4 text-pink-200" />
+                      <Icon className="h-4 w-4 text-pink-200 light:text-accent-foreground" />
                       <span>{title}</span>
                     </div>
                     <div className="text-2xl font-bold text-white light:text-foreground">{value}</div>
@@ -92,7 +92,7 @@ const About = () => {
                 className="border-white/10 bg-white/5 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-amber-300/40 hover:shadow-[0_25px_80px_-24px_rgba(0,0,0,0.65)] light:border-border light:bg-muted"
               >
                 <CardContent className="space-y-3 p-6">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 text-pink-200 light:bg-muted">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 text-pink-200 light:bg-muted light:text-accent-foreground">
                     <Icon className="h-5 w-5" />
                   </div>
                   <h3 className="text-xl font-semibold text-white light:text-foreground">{title}</h3>
@@ -108,7 +108,7 @@ const About = () => {
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid items-center gap-8 rounded-3xl border border-white/15 bg-white/10 p-8 backdrop-blur-xl md:grid-cols-2 md:p-10 light:border-border light:bg-muted">
             <div className="space-y-4">
-              <Badge className="border border-amber-300/30 bg-amber-400/15 text-amber-100">Our promise</Badge>
+              <Badge className="border border-amber-300/30 bg-amber-400/15 text-amber-100 light:border-warning/30 light:bg-warning-soft light:text-warning">Our promise</Badge>
               <h2 className="text-3xl font-bold text-white light:text-foreground">Every event feels premium</h2>
               <p className="text-slate-200/80 light:text-muted-foreground">
                 Lightning-fast checkout, transparent fees, curated recommendations, and a team that has your back from

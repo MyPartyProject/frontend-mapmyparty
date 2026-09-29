@@ -692,52 +692,52 @@ export default function BrowseEvents({ showPublicHeader = false }) {
       rel="noopener noreferrer"
       className={`group block h-full ${MOBILE_EVENT_ITEM_CLASS}`}
     >
-      <article className="relative h-full min-h-[11.25rem] overflow-hidden rounded-lg border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1 hover:border-border hover:shadow-[var(--shadow-elegant)]">
+      <article className="relative h-full min-h-[11.25rem] overflow-hidden rounded-lg border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1 hover:border-border hover:shadow-[var(--shadow-elegant)] light:border-border light:shadow-none light:duration-200 light:hover:-translate-y-0.5 light:hover:border-[#C99774] light:hover:shadow-none light:group-focus-visible:border-[#C99774]">
         <div className="absolute inset-0 overflow-hidden">
           <img
             src={getEventImage(event)}
             alt={event.title || event.eventTitle || "Event"}
-            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 light:transition-[transform,filter] light:duration-200 light:group-hover:scale-[1.015] light:group-hover:blur-[2px] light:group-focus-visible:blur-[2px]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-background/5 light:from-background/92 light:via-background/42" />
-          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-background/55 to-transparent" />
-          <div className="theme-gradient-primary absolute inset-0 opacity-10 transition-opacity duration-500 group-hover:opacity-20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-background/5 light:hidden" />
+          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-background/55 to-transparent light:hidden" />
+          <div className="theme-gradient-primary absolute inset-0 opacity-10 transition-opacity duration-500 group-hover:opacity-20 light:hidden" />
         </div>
 
         <div className="relative flex h-full min-h-[11.25rem] flex-col justify-between p-3">
           <div className="flex items-start justify-between gap-2">
             {(event.subCategory || event.subcategory || event.category) && (
-              <div className="max-w-[62%] truncate rounded-full border border-border/40 bg-card/85 px-2.5 py-1 text-[0.68rem] font-medium leading-none text-foreground shadow-[var(--shadow-card)] backdrop-blur-md">
+              <div className="max-w-[62%] truncate rounded-full border border-border/40 bg-card/85 px-2.5 py-1 text-[0.68rem] font-medium leading-none text-foreground shadow-[var(--shadow-card)] backdrop-blur-md light:bg-card/95 light:shadow-none light:backdrop-blur-none">
                 {event.subCategory || event.subcategory || event.category}
               </div>
             )}
-            <div className="inline-flex min-w-[4.75rem] shrink-0 items-center justify-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-[0.68rem] font-bold leading-none tabular-nums text-accent shadow-[var(--shadow-card)] backdrop-blur-md light:text-accent-foreground">
+            <div className="inline-flex min-w-[4.75rem] shrink-0 items-center justify-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-[0.68rem] font-bold leading-none tabular-nums text-accent shadow-[var(--shadow-card)] backdrop-blur-md light:shadow-none light:backdrop-blur-none light:text-accent-foreground light:group-hover:border-[#C99774] light:group-hover:bg-[#C99774] light:group-hover:text-foreground light:group-focus-visible:border-[#C99774] light:group-focus-visible:bg-[#C99774] light:group-focus-visible:text-foreground">
               {getEventPriceDisplay(event)}
             </div>
           </div>
 
           <div className="mt-auto">
-            <h3 className="line-clamp-2 text-sm font-black leading-tight text-foreground drop-shadow-xl transition-colors group-hover:text-accent sm:text-base light:group-hover:text-accent-foreground">
+            <h3 className="line-clamp-2 text-sm font-black leading-tight text-foreground drop-shadow-xl transition-colors group-hover:text-accent sm:text-base light:text-white light:drop-shadow-none light:[text-shadow:0_1px_4px_rgba(0,0,0,0.95)] light:transition-transform light:duration-200 light:group-hover:-translate-y-0.5 light:group-hover:text-white light:group-focus-visible:-translate-y-0.5 light:group-focus-visible:text-white light:motion-reduce:transition-none">
               {event.title || event.eventTitle}
             </h3>
-            <div className="mt-2 grid gap-1 text-[0.7rem] text-muted-foreground">
+            <div className="mt-2 grid gap-1 text-[0.7rem] text-muted-foreground light:text-white light:[text-shadow:0_1px_3px_rgba(0,0,0,0.95)]">
               <div className="flex items-center gap-1.5">
-                <Calendar className="h-3 w-3 shrink-0 text-accent light:text-accent-foreground" />
+                <Calendar className="h-3 w-3 shrink-0 text-accent light:text-accent-foreground light:group-hover:text-[#C99774] light:group-focus-visible:text-[#C99774]" />
                 <span className="line-clamp-1">{formatDate(event.startDate || event.date)}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <MapPin className="h-3 w-3 shrink-0 text-accent light:text-accent-foreground" />
+                <MapPin className="h-3 w-3 shrink-0 text-accent light:text-accent-foreground light:group-hover:text-[#C99774] light:group-focus-visible:text-[#C99774]" />
                 <span className="line-clamp-1">{getEventLocation(event)}</span>
               </div>
               {Number.isFinite(Number(event.distanceKm)) && formatDistanceKm(event.distanceKm) && (
-                <div className="flex items-center gap-1.5 font-medium text-foreground">
+                <div className="flex items-center gap-1.5 font-medium text-foreground light:text-white">
                   <span className="line-clamp-1">{formatDistanceKm(event.distanceKm)}</span>
                 </div>
               )}
             </div>
             <div className="mt-3 flex items-center justify-between gap-2.5">
               <span className="h-px flex-1 bg-gradient-to-r from-border/70 via-border/30 to-transparent" />
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/40 bg-card/75 px-3 py-1.5 text-[0.68rem] font-semibold text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition-all duration-300 group-hover:border-border group-hover:bg-primaryCTA group-hover:text-primary-foreground">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/40 bg-card/75 px-3 py-1.5 text-[0.68rem] font-semibold text-foreground shadow-[var(--shadow-card)] backdrop-blur-md transition-all duration-300 group-hover:border-border group-hover:bg-primaryCTA group-hover:text-primary-foreground light:bg-card/95 light:shadow-none light:backdrop-blur-none light:duration-200 light:group-hover:border-[#C99774] light:group-hover:bg-[#C99774] light:group-hover:text-foreground light:group-focus-visible:border-[#C99774] light:group-focus-visible:bg-[#C99774] light:group-focus-visible:text-foreground">
                 View Details
                 <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-1" />
               </span>
@@ -774,9 +774,9 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                     active:
                       "absolute left-1/2 top-1/2 z-20 h-[18rem] w-[74%] -translate-x-1/2 -translate-y-1/2 scale-100 opacity-100 sm:left-[43%] sm:h-[21rem] sm:w-[76%] md:left-[42%] md:w-[72%] lg:left-1/2 lg:h-[23rem] lg:w-[66%] xl:h-[24rem]",
                     previous:
-                      "pointer-events-none absolute left-0 top-1/2 z-10 h-[15.75rem] w-[27%] -translate-y-1/2 scale-[0.88] opacity-55 blur-[1px] saturate-[0.72] lg:h-[20rem] lg:w-[18%]",
+                      "pointer-events-none absolute left-0 top-1/2 z-10 h-[15.75rem] w-[27%] -translate-y-1/2 scale-[0.88] opacity-55 blur-[1px] saturate-[0.72] lg:h-[20rem] lg:w-[18%] light:opacity-100 light:blur-none light:saturate-100",
                     next:
-                      "pointer-events-none absolute right-0 top-1/2 z-10 h-[15.75rem] w-[27%] -translate-y-1/2 scale-[0.88] opacity-55 blur-[1px] saturate-[0.72] sm:h-[19rem] sm:w-[24%] md:w-[22%] lg:h-[20rem] lg:w-[18%]",
+                      "pointer-events-none absolute right-0 top-1/2 z-10 h-[15.75rem] w-[27%] -translate-y-1/2 scale-[0.88] opacity-55 blur-[1px] saturate-[0.72] sm:h-[19rem] sm:w-[24%] md:w-[22%] lg:h-[20rem] lg:w-[18%] light:opacity-100 light:blur-none light:saturate-100",
                     hidden:
                       "pointer-events-none absolute left-1/2 top-1/2 z-0 h-[15rem] w-[24%] -translate-x-1/2 -translate-y-1/2 scale-[0.78] opacity-0 sm:h-[19rem] sm:w-[18%]",
                   }[visualRole];
@@ -785,33 +785,33 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                     <article
                       key={event.id || index}
                       aria-hidden={!isActive && !isSideCard}
-                      className={`${cardPositionClass} group overflow-hidden rounded-[16px] border border-border/45 bg-card shadow-[var(--shadow-card)] transition-all duration-700 ease-out sm:rounded-[1.35rem] sm:shadow-[var(--shadow-elegant)]`}
+                      className={`${cardPositionClass} group overflow-hidden rounded-[16px] border border-border/45 bg-card shadow-[var(--shadow-card)] transition-all duration-700 ease-out sm:rounded-[1.35rem] sm:shadow-[var(--shadow-elegant)] light:border-border light:shadow-none light:duration-300 light:hover:border-[#C99774] light:focus-within:border-[#C99774]`}
                     >
                       <div className="relative h-full w-full overflow-hidden">
                         <img
                           src={getEventImage(event)}
                           alt={event.title || event.eventTitle || "Event"}
-                          className={`h-full w-full object-cover object-center transition-all duration-700 ${
-                            isActive ? "scale-100 opacity-100" : "scale-[1.04] opacity-95"
+                          className={`h-full w-full object-cover object-center transition-all duration-700 light:duration-200 light:group-hover:blur-[2px] light:group-focus-within:blur-[2px] ${
+                            isActive ? "scale-100 opacity-100" : "scale-[1.04] opacity-95 light:opacity-100"
                           }`}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-background/92 via-background/42 to-background/5" />
-                        <div className="absolute inset-0 bg-gradient-to-r from-background/58 via-background/12 to-transparent" />
-                        <div className="theme-gradient-primary absolute inset-0 opacity-10 transition-opacity duration-700 group-hover:opacity-15" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/92 via-background/42 to-background/5 light:hidden" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-background/58 via-background/12 to-transparent light:hidden" />
+                        <div className="theme-gradient-primary absolute inset-0 opacity-10 transition-opacity duration-700 group-hover:opacity-15 light:hidden" />
 
                         <div className="absolute right-3 top-3 z-10 sm:right-4 sm:top-4">
-                          <span className="inline-flex items-center justify-center rounded-full border border-accent/30 bg-card/70 px-2.5 py-1 text-[10px] font-bold leading-none text-accent shadow-[var(--shadow-card)] backdrop-blur-md sm:px-3 sm:py-1.5 sm:text-[11px] light:text-accent-foreground">
+                          <span className="inline-flex items-center justify-center rounded-full border border-accent/30 bg-card/70 px-2.5 py-1 text-[10px] font-bold leading-none text-accent shadow-[var(--shadow-card)] backdrop-blur-md sm:px-3 sm:py-1.5 sm:text-[11px] light:bg-card/95 light:shadow-none light:backdrop-blur-none light:text-accent-foreground light:group-hover:border-[#C99774] light:group-hover:bg-[#C99774] light:group-hover:text-foreground light:group-focus-within:border-[#C99774] light:group-focus-within:bg-[#C99774] light:group-focus-within:text-foreground">
                             {getEventPriceDisplay(event)}
                           </span>
                         </div>
 
                         <div
                           className={`absolute inset-x-0 bottom-0 z-10 flex flex-col p-4 transition-all duration-500 sm:p-5 lg:p-6 ${
-                            isActive ? "translate-y-0 opacity-100" : "translate-y-1 opacity-90"
+                            isActive ? "translate-y-0 opacity-100" : "translate-y-1 opacity-90 light:opacity-100"
                           }`}
                         >
                           <h1
-                            className={`line-clamp-2 font-black leading-tight text-foreground drop-shadow-xl ${
+                            className={`line-clamp-2 font-black leading-tight text-foreground drop-shadow-xl light:text-white light:drop-shadow-none light:[text-shadow:0_2px_5px_rgba(0,0,0,0.95)] light:transition-transform light:duration-200 light:group-hover:-translate-y-0.5 light:group-focus-within:-translate-y-0.5 light:motion-reduce:transition-none ${
                               isActive
                                 ? "text-xl sm:text-[2rem] lg:text-[2.35rem]"
                                 : "text-[0.7rem] sm:text-[1.05rem] lg:text-lg"
@@ -825,16 +825,16 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                               isSideCard ? "grid gap-1.5" : ""
                             }`}
                           >
-                            <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-border/35 bg-card/65 px-2 py-1 text-[10px] text-foreground/90 shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs">
-                              <Calendar className="h-3.5 w-3.5 shrink-0 text-accent light:text-accent-foreground" />
+                            <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-border/35 bg-card/65 px-2 py-1 text-[10px] text-foreground/90 shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs light:bg-card/90 light:shadow-none light:backdrop-blur-none">
+                              <Calendar className="h-3.5 w-3.5 shrink-0 text-accent light:text-accent-foreground light:group-hover:text-[#C99774] light:group-focus-within:text-[#C99774]" />
                               <span className="truncate">{formatDate(event.startDate || event.date)}</span>
                             </span>
-                            <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-border/35 bg-card/65 px-2 py-1 text-[10px] text-foreground/90 shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs">
-                              <MapPin className="h-3.5 w-3.5 shrink-0 text-accent light:text-accent-foreground" />
+                            <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-border/35 bg-card/65 px-2 py-1 text-[10px] text-foreground/90 shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs light:bg-card/90 light:shadow-none light:backdrop-blur-none">
+                              <MapPin className="h-3.5 w-3.5 shrink-0 text-accent light:text-accent-foreground light:group-hover:text-[#C99774] light:group-focus-within:text-[#C99774]" />
                               <span className="truncate">{getEventLocation(event)}</span>
                             </span>
                             {formatDistanceKm(event.distanceKm) && (
-                              <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2 py-1 text-[10px] font-medium text-accent shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs light:text-accent-foreground">
+                              <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2 py-1 text-[10px] font-medium text-accent shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs light:shadow-none light:backdrop-blur-none light:text-accent-foreground light:group-hover:border-[#C99774] light:group-hover:bg-[#C99774] light:group-hover:text-foreground light:group-focus-within:border-[#C99774] light:group-focus-within:bg-[#C99774] light:group-focus-within:text-foreground">
                                 {formatDistanceKm(event.distanceKm)}
                               </span>
                             )}
@@ -844,7 +844,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                             <Button
                               asChild
                               variant="accent"
-                              className="h-9 w-fit rounded-[10px] px-4 text-[13px] font-semibold shadow-[var(--shadow-accent)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-elegant)] active:scale-[0.97] sm:h-10 sm:rounded-full sm:px-5 sm:text-sm"
+                              className="h-9 w-fit rounded-[10px] px-4 text-[13px] font-semibold shadow-[var(--shadow-accent)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-elegant)] active:scale-[0.97] sm:h-10 sm:rounded-full sm:px-5 sm:text-sm light:group-hover:bg-[#C99774] light:group-hover:text-foreground light:group-hover:shadow-none light:group-focus-within:bg-[#C99774] light:group-focus-within:text-foreground light:group-focus-within:shadow-none light:focus-visible:ring-[#C99774]"
                             >
                               <Link to={eventHref} target="_blank" rel="noopener noreferrer">
                                 View Details

@@ -663,10 +663,10 @@ const AudienceAnalytics = () => {
                 </h3>
                 <div className="flex items-center gap-2 text-[11px] text-white/60 light:text-muted-foreground">
                   <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 border border-white/10 light:bg-muted light:border-border">
-                    <span className="w-3 h-2 rounded-full bg-emerald-400" /> Revenue
+                    <span className="w-3 h-2 rounded-full bg-emerald-400 light:bg-success" /> Revenue
                   </span>
                   <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 border border-white/10 light:bg-muted light:border-border">
-                    <span className="w-3 h-2 rounded-full bg-sky-400" /> Bookings
+                    <span className="w-3 h-2 rounded-full bg-sky-400 light:bg-info" /> Bookings
                   </span>
                 </div>
               </div>
@@ -696,13 +696,13 @@ const AudienceAnalytics = () => {
                       <AnalyticsProgressBar
                         value={revPct}
                         trackStyle={{ backgroundColor: "var(--chart-progress-track)" }}
-                        fillStyle={{ backgroundColor: "#34d399" }}
+                        fillStyle={{ backgroundColor: "var(--organizer-revenue-bar, #34d399)" }}
                         minVisiblePercent={4}
                       />
                       <AnalyticsProgressBar
                         value={bookPct}
                         trackStyle={{ backgroundColor: "var(--chart-progress-track)" }}
-                        fillStyle={{ backgroundColor: "#38bdf8" }}
+                        fillStyle={{ backgroundColor: "var(--organizer-bookings-bar, #38bdf8)" }}
                         minVisiblePercent={4}
                       />
                     </div>
@@ -945,7 +945,7 @@ const AudienceAnalytics = () => {
                           <AnalyticsProgressBar
                             value={width}
                             trackStyle={{ backgroundColor: "var(--chart-progress-track)" }}
-                            fillStyle={{ background: "linear-gradient(90deg, #34d399 0%, #3b82f6 55%, #22d3ee 100%)" }}
+                            fillStyle={{ background: "var(--organizer-sales-fill, linear-gradient(90deg, #34d399 0%, #3b82f6 55%, #22d3ee 100%))" }}
                             minVisiblePercent={6}
                           />
                         </div>

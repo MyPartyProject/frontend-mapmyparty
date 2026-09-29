@@ -44,6 +44,19 @@ async function connect(url) {
     } else if (message.method === 'Fetch.requestPaused') {
       const { requestId, request } = message.params;
       let payload = { success: true, data: { items: [], events: [], bookings: [], pagination: { total: 0, totalPages: 1 }, categories: [], tickets: [], analytics: {} } };
+      const apiPath = new URL(request.url).pathname;
+      if (apiPath.endsWith('/organizer/me/statistics')) payload.data = Object.fromEntries(
+        ['events', 'attendees', 'revenue', 'ticketSales'].map(key => [key, { overall: 120, currentPeriod: 40, previousPeriod: 30, change: 25 }])
+      );
+      if (apiPath.endsWith('/organizer/me/analytics')) payload.data = {
+        demographics: { age: [{ label: '25–34', value: 60 }], gender: { female: 55, male: 45 } },
+        trends: { revenue: [{ label: 'Sep 28', revenue: 12000 }], bookings: [{ label: 'Sep 28', bookings: 30 }] },
+        topEvents: [{ id: 'theme-event', title: 'Analytics Preview Event', revenue: 12000, ticketsSold: 40, bookings: 30 }],
+      };
+      if (apiPath.endsWith('/analytics/trends')) payload.data = { revenue: [{ label: 'Sep 28', revenue: 12000 }], bookings: [{ label: 'Sep 28', bookings: 30 }] };
+      if (apiPath.endsWith('/analytics/breakdown')) payload.data = { breakdown: { confirmed: 30, pending: 10 } };
+      if (apiPath.endsWith('/analytics/tickets')) payload.data = { tickets: [{ name: 'General', soldQuantity: 40, revenue: 12000, totalQuantity: 100 }] };
+      if (apiPath.endsWith('/analytics/sales-timeline')) payload.data = { timeline: [{ label: 'Sep 28', date: '2026-09-28', revenue: 12000, bookings: 30 }], totals: { revenue: 12000, ticketsSold: 40 } };
       if (/\/user\/bookings\?/.test(request.url)) payload.data.items = [{
         id: 'theme-booking', publicId: 'THEME-001', status: 'CONFIRMED', totalAmount: 1200,
         createdAt: new Date().toISOString(), payment: { status: 'SUCCESS' },
@@ -160,6 +173,59 @@ try {
     }
   }
   console.log('PASS visitor and role screens, populated bookings, portal theme, dialog and filter preservation (local fixtures)');
+
+  role = 'ORGANIZER';
+  await page.resize(1440);
+  await page.visit('/organizer/analytics');
+  await page.until(`document.body.innerText.includes('Analytics Preview Event')`);
+  await page.evaluate(`localStorage.setItem('mapmyparty-theme','light'); window.dispatchEvent(new StorageEvent('storage',{key:'mapmyparty-theme',newValue:'light'}));`);
+  await page.until(theme('light'));
+  const visibleGradients = `Array.from(document.querySelectorAll('body *')).filter(el => el.getBoundingClientRect().width && el.getBoundingClientRect().height && getComputedStyle(el).backgroundImage.includes('gradient')).map(el => el.className)`;
+  assert.deepEqual(await page.evaluate(visibleGradients), [], 'Populated light analytics has no gradients');
+  assert.equal(await page.evaluate(`document.querySelector('nav [data-theme-toggle]').getAttribute('role')`), 'switch');
+  await page.evaluate(`Array.from(document.querySelectorAll('button')).find(el => el.textContent === '7d').click()`);
+  await page.until(`document.body.innerText.includes('Last 7 days')`);
+  await page.until(`!!document.querySelector('[title="Revenue: ₹12.0K, Bookings: 30"]')`);
+  await page.screenshot('organizer-analytics-light');
+  await page.evaluate(clickToggle);
+  await page.until(theme('dark'));
+  assert.ok((await page.evaluate(visibleGradients)).length > 0, 'Dark analytics retains gradients');
+  assert.equal(await page.evaluate(`(() => {
+    const panels = Array.from(document.querySelectorAll('main div'));
+    const styles = () => panels.map(el => { const s = getComputedStyle(el); return [s.backgroundImage,s.backgroundColor,s.borderRadius,s.boxShadow,s.color].join('|'); }).join('\\n');
+    const before = styles();
+    document.documentElement.removeAttribute('data-organizer-ui');
+    const after = styles();
+    document.documentElement.setAttribute('data-organizer-ui','');
+    return before === after;
+  })()`), true, 'Organizer scope has no effect on dark content styles');
+  assert.equal(await page.evaluate(`document.body.innerText.includes('Last 7 days')`), true, 'Switch retains analytics filter');
+  await page.screenshot('organizer-analytics-dark');
+  await page.evaluate(`document.querySelector('aside > div button:last-child').click()`);
+  assert.equal(await page.evaluate(`document.querySelector('nav [data-theme-toggle]').getAttribute('aria-label')`), 'Dark mode', 'Collapsed toggle remains accessible');
+  await page.evaluate(clickToggle);
+  await page.until(theme('light'));
+  for (const path of ['/organizer/dashboard', '/organizer/live', '/organizer/reception', '/organizer/support', '/organizer/select-event-type', '/organizer/create-event']) {
+    await page.send('Page.navigate', { url: base + path });
+    await page.until(`document.documentElement.hasAttribute('data-organizer-ui') && !!document.querySelector('button')`);
+    await delay(500);
+    assert.deepEqual(await page.evaluate(visibleGradients), [], `${path}: no light gradients`);
+    assert.equal(await page.evaluate('document.documentElement.scrollWidth <= innerWidth'), true, `${path}: no horizontal overflow`);
+    if (path === '/organizer/support') {
+      await page.evaluate(`Array.from(document.querySelectorAll('button')).find(el => el.textContent.includes('Create ticket')).click()`);
+      await page.until(`!!document.querySelector('[role="dialog"]')`);
+      assert.deepEqual(await page.evaluate(`(() => { const s = getComputedStyle(document.querySelector('[role="dialog"]')); return [s.backgroundColor, s.borderRadius, s.backgroundImage]; })()`), ['rgb(255, 255, 255)', '16px', 'none'], 'Organizer portal uses rounded solid styling');
+      assert.equal(await page.evaluate(`getComputedStyle(document.querySelector('.fixed.inset-0[data-state="open"]')).backgroundColor`), 'rgba(255, 255, 255, 0.4)', 'Modal scrim remains translucent');
+      await page.screenshot('organizer-support-dialog-light');
+    }
+  }
+  await page.screenshot('organizer-create-event-light');
+  assert.equal(await page.evaluate(`getComputedStyle(document.querySelector('input')).borderRadius`), '10px', 'Event builder inputs have soft corners');
+  await page.evaluate(`history.pushState({},'', '/organizer/events/theme-event/preview'); dispatchEvent(new PopStateEvent('popstate'));`);
+  await page.until(`!document.documentElement.hasAttribute('data-organizer-ui')`);
+  await page.visit('/about');
+  assert.equal(await page.evaluate(`document.documentElement.hasAttribute('data-organizer-ui')`), false, 'Organizer scope clears on public pages');
+  console.log('PASS populated organizer analytics, solid light fills, dark gradients, sidebar switch and route scope');
 
   role = null;
   await page.resize(1440);

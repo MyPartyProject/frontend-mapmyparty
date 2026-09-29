@@ -1,6 +1,6 @@
 # MapMyParty Color Theme Guide
 
-The app supports Light and Dark themes. Light is the default, regardless of OS preference. The light palette comes from the `light` branch; the dark palette and application structure come from `main`.
+The app supports Light and Dark themes. Light is the default, regardless of OS preference. The light palette began with the `light` branch and has been refined for contrast; the dark palette and application structure come from `main`.
 
 ## Theme Selection
 
@@ -15,19 +15,20 @@ The app supports Light and Dark themes. Light is the default, regardless of OS p
 | Role | Color | Utility |
 | --- | --- | --- |
 | Canvas, card, popover | #FFFFFF | bg-background, bg-card, bg-popover |
-| Subtle surface | #F8F9FC | bg-surface, bg-muted |
+| Subtle surface | #F4F6FA / #F1F3F7 | bg-surface / bg-muted |
 | Brand highlight | #A259C9 | text-primary, border-primary |
 | Primary action / link | #8438B0 | bg-primaryCTA, text-accent-foreground |
 | Action hover / active | #732F9B / #622783 | bg-primaryCTA-hover / active |
 | Soft purple | #F3E8FF | bg-secondary, bg-accent |
 | Primary text | #111827 | text-foreground |
 | Secondary text | #4B5563 | text-muted-foreground |
-| Metadata | #6B7280 | text-subtle |
-| Decorative border | #E5E7EB | border-border |
+| Metadata | #475569 | text-subtle |
+| Decorative border | #CBD5E1 | border-border, border-sidebar |
 | Input boundary | #6B7280 | border-input |
 | Success / warning / error / info | #166534 / #92400E / #B91C1C / #1E40AF | Semantic status utilities |
 
 Use the deeper CTA color for normal-size white button labels. The footer uses the reference inverse palette; media overlays and QR surfaces retain their required contrast.
+Light cards use a slightly stronger shadow to stay distinct from white surfaces.
 
 ## Applying Colors
 

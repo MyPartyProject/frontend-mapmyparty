@@ -21,6 +21,7 @@ const AnalyticsProgressBar = ({
 
   return (
     <div
+      data-analytics-progress
       className={`w-full overflow-hidden rounded-full ${heightClassName} ${trackClassName} ${className}`.trim()}
       style={trackStyle}
     >

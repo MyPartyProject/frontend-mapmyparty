@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import Index from "./pages/Index";
 import Events from "./pages/Events";
@@ -95,6 +95,13 @@ const PublicShell = ({ showLandingIntro, onIntroConsumed }) => (
 
 const ScrollToTop = () => {
   const { pathname, hash } = useLocation();
+
+  // Root scope includes portalled dialogs, but excludes the public event preview.
+  useLayoutEffect(() => {
+    const organizer = pathname.startsWith("/organizer/") && !/\/preview\/?$/.test(pathname);
+    document.documentElement.toggleAttribute("data-organizer-ui", organizer);
+    return () => document.documentElement.removeAttribute("data-organizer-ui");
+  }, [pathname]);
 
   useEffect(() => {
     if (hash) return;

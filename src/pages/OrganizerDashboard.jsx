@@ -1592,7 +1592,7 @@ const OrganizerDashboard = () => {
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-4">
+        <nav className="flex flex-col flex-1 overflow-y-auto py-4">
           <div className="px-3 space-y-1">
             {navItems.map((item) => (
               <button
@@ -1609,9 +1609,8 @@ const OrganizerDashboard = () => {
               </button>
             ))}
           </div>
+          <div className="mt-auto px-4 pt-6"><ThemeToggle presentation="switch" compact={!sidebarOpen} className="w-full" /></div>
         </nav>
-
-        <div className="px-4 pb-3"><ThemeToggle compact={!sidebarOpen} className={sidebarOpen ? "w-full" : ""} /></div>
         {/* Sidebar Footer with profile + logout */}
         <div className="mt-auto p-4 border-t border-white/10 light:border-border">
           <div

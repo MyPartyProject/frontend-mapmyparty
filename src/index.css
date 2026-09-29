@@ -41,7 +41,7 @@
     --foreground: 220.9091 39.2857% 10.9804%; /* #111827 */
     --card: 0.0000 0.0000% 100.0000%; /* #FFFFFF */
     --card-foreground: 220.9091 39.2857% 10.9804%; /* #111827 */
-    --surface: 225.0000 40.0000% 98.0392%; /* #F8F9FC */
+    --surface: 220.0000 37.5000% 96.8627%; /* #F4F6FA */
     --popover: 0.0000 0.0000% 100.0000%; /* #FFFFFF */
     --popover-foreground: 220.9091 39.2857% 10.9804%; /* #111827 */
     --primary: 279.1071 50.9091% 56.8627%; /* #A259C9 */
@@ -53,9 +53,9 @@
     --secondary-foreground: 278.0000 51.7241% 45.4902%; /* #8438B0 */
     --accent: 268.6957 100.0000% 95.4902%; /* #F3E8FF */
     --accent-foreground: 278.0000 51.7241% 45.4902%; /* #8438B0 */
-    --muted: 225.0000 40.0000% 98.0392%; /* #F8F9FC */
+    --muted: 220.0000 27.2727% 95.6863%; /* #F1F3F7 */
     --muted-foreground: 215.0000 13.7931% 34.1176%; /* #4B5563 */
-    --text-subtle: 220.0000 8.9362% 46.0784%; /* #6B7280 */
+    --text-subtle: 215.2941 19.3182% 34.5098%; /* #475569 */
     --inverse: 0.0000 0.0000% 100.0000%; /* #FFFFFF */
     --destructive: 0.0000 73.7089% 41.7647%; /* #B91C1C */
     --destructive-foreground: 0.0000 0.0000% 100.0000%; /* #FFFFFF */
@@ -67,7 +67,7 @@
     --warning-soft: 48.0000 100.0000% 96.0784%; /* #FFFBEB */
     --info: 225.9310 70.7317% 40.1961%; /* #1E40AF */
     --info-soft: 213.7500 100.0000% 96.8627%; /* #EFF6FF */
-    --border: 220.0000 13.0435% 90.9804%; /* #E5E7EB */
+    --border: 212.7273 26.8293% 83.9216%; /* #CBD5E1 */
     --input: 220.0000 8.9362% 46.0784%; /* #6B7280 */
     --ring: 278.0000 51.7241% 45.4902%; /* #8438B0 */
     --sidebar-background: 0.0000 0.0000% 100.0000%; /* #FFFFFF */
@@ -76,10 +76,10 @@
     --sidebar-primary-foreground: 0.0000 0.0000% 100.0000%; /* #FFFFFF */
     --sidebar-accent: 268.6957 100.0000% 95.4902%; /* #F3E8FF */
     --sidebar-accent-foreground: 278.0000 51.7241% 45.4902%; /* #8438B0 */
-    --sidebar-border: 220.0000 13.0435% 90.9804%; /* #E5E7EB */
+    --sidebar-border: 212.7273 26.8293% 83.9216%; /* #CBD5E1 */
     --sidebar-ring: 278.0000 51.7241% 45.4902%; /* #8438B0 */
     --radius: 1rem;
-    --shadow-card: 0 4px 20px -2px rgba(17,24,39,0.05);
+    --shadow-card: 0 4px 20px -2px rgba(17,24,39,0.09);
     --shadow-elegant: 0 12px 30px -4px rgba(162,89,201,0.12);
     --shadow-accent: 0 4px 16px -4px rgba(162,89,201,0.2);
     --color-primary-cta: hsl(var(--primary-cta));
@@ -92,7 +92,7 @@
     --color-text-primary: hsl(var(--foreground));
     --color-text-muted: hsl(var(--muted-foreground));
     --gradient-primary: linear-gradient(135deg, #8438B0, #A259C9);
-    --gradient-surface: linear-gradient(180deg, #FFFFFF, #F8F9FC, #FFFFFF);
+    --gradient-surface: linear-gradient(180deg, #FFFFFF, #F4F6FA, #FFFFFF);
     --transition-smooth: all 0.25s cubic-bezier(0.4,0,0.2,1);
   }
   html.dark {
@@ -1015,7 +1015,7 @@
   }
 }
 
-/* Light surfaces use the reference palette without changing layout. */
+/* Light surfaces use theme tokens without changing layout. */
 html.light .theme-card { background-color: hsl(var(--card)); border-color: hsl(var(--border)); }
 html.light .dashboard-theme { background-color: hsl(var(--surface)); }
 html.light ::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.3); }
@@ -1052,3 +1052,70 @@ html.light .ql-snow .ql-fill { fill: hsl(var(--muted-foreground)); }
 html.light .ql-snow .ql-picker { color: hsl(var(--foreground)); }
 html.light .ql-snow .ql-picker-options { background: hsl(var(--popover)); border-color: hsl(var(--border)); }
 html.light .ql-editor.ql-blank::before { color: hsl(var(--text-subtle)); }
+
+/* Organizer surfaces, including portals. Public previews keep their own design. */
+html.light[data-organizer-ui] {
+  --shadow-card: none;
+  --shadow-elegant: none;
+  --organizer-sales-fill: hsl(var(--primary-cta));
+  --organizer-revenue-fill: hsl(var(--secondary));
+  --organizer-tickets-fill: hsl(var(--info-soft));
+  --organizer-revenue-bar: hsl(var(--success));
+  --organizer-bookings-bar: hsl(var(--info));
+}
+
+html.light[data-organizer-ui] :is([class*="bg-gradient"], [class*="bg-[radial-gradient"]) {
+  background-image: none !important;
+  background-color: hsl(var(--secondary));
+}
+html.light[data-organizer-ui] :is([class*="bg-gradient"].min-h-screen, .organizer-dashboard-theme) {
+  background-color: hsl(var(--surface));
+}
+html.light[data-organizer-ui] :is([class*="bg-gradient"].h-full, button[class*="bg-gradient"]) {
+  background-color: hsl(var(--primary-cta));
+  color: hsl(var(--primary-foreground));
+}
+html.light[data-organizer-ui] .h-full[class*="bg-gradient"][class*="from-emerald"] {
+  background-color: hsl(var(--success));
+}
+html.light[data-organizer-ui] [class*="bg-clip-text"] {
+  background: none !important;
+  color: hsl(var(--foreground));
+}
+html.light[data-organizer-ui] :is(.absolute[class*="blur-"], .absolute.inset-0[class*="gradient"]) {
+  display: none;
+}
+
+/* Soft panel and control corners; avatars, charts and switches stay round. */
+html.light[data-organizer-ui] :is(.rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl, [class*="rounded-["]) {
+  border-radius: 16px;
+}
+html.light[data-organizer-ui] :is(button:not([role="switch"]), input:not([type="radio"]), select, textarea, [role="combobox"]) {
+  border-radius: 10px !important;
+}
+html.light[data-organizer-ui] [class*="shadow"] {
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  /* Retain Tailwind's keyboard focus rings. */
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000);
+}
+html.light[data-organizer-ui] [class*="backdrop-blur"] {
+  backdrop-filter: none;
+}
+html.light[data-organizer-ui] :is([class*="border-white/"], [class*="border-border/"], [class*="border-sidebar-border/"]) {
+  border-color: hsl(var(--border));
+}
+html.light[data-organizer-ui] :is(div, section, article)[class*="border"][class*="bg-white/"] {
+  background-color: hsl(var(--card));
+}
+html.light[data-organizer-ui] :is([class*="bg-card/"], [class*="bg-background/"]):not(.fixed.inset-0) {
+  background-color: hsl(var(--card));
+}
+html.light[data-organizer-ui] [class*="bg-muted/"] {
+  background-color: hsl(var(--muted));
+}
+html.light[data-organizer-ui] :is([role="dialog"], [role="menu"], [role="listbox"]) {
+  background-color: hsl(var(--popover));
+  border-radius: 16px;
+  border-color: hsl(var(--border));
+}

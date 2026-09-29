@@ -160,7 +160,7 @@ const Contact = () => {
       : "border-white/15 bg-slate-950/40 text-white light:border-border light:bg-surface light:text-foreground";
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50 light:bg-surface">
+    <div className="min-h-screen bg-slate-950 text-slate-50 light:bg-surface light:text-foreground">
       <Header forceMainHeader />
 
       <section className="relative overflow-hidden bg-[#140a2b] light:bg-background">
@@ -204,7 +204,7 @@ const Contact = () => {
             >
               <CardContent className="flex h-full flex-col items-start justify-between p-6">
                 <div className="space-y-4">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/15 text-pink-200 ring-1 ring-white/10 light:bg-muted light:ring-border">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/15 text-pink-200 ring-1 ring-white/10 light:bg-muted light:text-accent-foreground light:ring-border">
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="space-y-2">
