@@ -1,3 +1,4 @@
+import ThemeToggle from "@/components/ThemeToggle";
 import { useBankInput } from "@/hooks/useBankInput";
 import { buildOrganizerProfile as buildInitialData } from '@/utils/organizerProfile';
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -616,19 +617,19 @@ const OrganizerProfileContent = ({ user }) => {
   const displayedOrganizerLogo = logoPreview || editData.logo;
 
   return (
-    <div className="space-y-6 text-white">
+    <div className="space-y-6 text-white light:text-foreground">
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="space-y-1">
-          <p className="text-[11px] uppercase tracking-[0.25em] text-white/50">Organizer Profile</p>
+          <p className="text-[11px] uppercase tracking-[0.25em] text-white/50 light:text-muted-foreground">Organizer Profile</p>
           <h2 className="text-3xl font-extrabold">Profile &amp; Payouts</h2>
-          <p className="text-sm text-white/60">Keep organizer contact, socials, and payouts current.</p>
+          <p className="text-sm text-white/60 light:text-muted-foreground">Keep organizer contact, socials, and payouts current.</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handleOpenBankPanel}
             disabled={isBankLoading}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed light:bg-primaryCTA light:hover:bg-primaryCTA-hover"
           >
             <CreditCard className="w-4 h-4" />
             {isBankLoading ? "Loading..." : "Bank Details"}
@@ -636,7 +637,7 @@ const OrganizerProfileContent = ({ user }) => {
           {!isEditing && (
             <button
               onClick={() => setIsEditing(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/15 text-white hover:bg-white/15 transition"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/15 text-white hover:bg-white/15 transition light:bg-muted light:border-border light:text-foreground light:hover:bg-muted"
             >
               <Edit2 className="w-4 h-4" />
               Edit Organization
@@ -651,17 +652,17 @@ const OrganizerProfileContent = ({ user }) => {
           <div className="w-full max-w-2xl max-h-[88vh] rounded-2xl border border-border/60 bg-card shadow-[var(--shadow-elegant)] ring-1 ring-border/30 flex flex-col overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-border/60 bg-card/80 backdrop-blur-sm rounded-t-2xl">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-white/50">Owner</p>
-                <h3 className="text-xl font-semibold text-white">Edit Owner Details</h3>
+                <p className="text-xs uppercase tracking-[0.2em] text-white/50 light:text-muted-foreground">Owner</p>
+                <h3 className="text-xl font-semibold text-white light:text-foreground">Edit Owner Details</h3>
               </div>
-              <button onClick={handleCancelOwner} className="text-white/60 hover:text-white rounded-full p-2 hover:bg-white/10 transition">
+              <button onClick={handleCancelOwner} className="text-white/60 hover:text-white rounded-full p-2 hover:bg-white/10 transition light:text-muted-foreground light:hover:text-foreground light:hover:bg-muted">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="px-6 py-5 space-y-5 flex-1 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 gap-5">
                 <div className="space-y-2">
-                  <label className="text-sm text-white/70">Name</label>
+                  <label className="text-sm text-white/70 light:text-muted-foreground">Name</label>
                   <input
                     type="text"
                     value={ownerDraft.name || ""}
@@ -670,7 +671,7 @@ const OrganizerProfileContent = ({ user }) => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm text-white/70">Email</label>
+                  <label className="text-sm text-white/70 light:text-muted-foreground">Email</label>
                   <input
                     type="email"
                     value={ownerDraft.email || ""}
@@ -679,7 +680,7 @@ const OrganizerProfileContent = ({ user }) => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm text-white/70">Phone</label>
+                  <label className="text-sm text-white/70 light:text-muted-foreground">Phone</label>
                   <div className="flex gap-2">
                     <input
                       {...PHONE_INPUT_PROPS}
@@ -691,20 +692,20 @@ const OrganizerProfileContent = ({ user }) => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm text-white/70">Avatar</label>
-                  <div className="flex items-center gap-3 flex-wrap rounded-xl border border-white/10 bg-white/5/70 px-3 py-3">
-                    <div className="h-12 w-12 rounded-full overflow-hidden border border-white/10 bg-white/10 flex items-center justify-center text-sm font-semibold shadow-inner shrink-0">
+                  <label className="text-sm text-white/70 light:text-muted-foreground">Avatar</label>
+                  <div className="flex items-center gap-3 flex-wrap rounded-xl border border-white/10 bg-white/5/70 px-3 py-3 light:border-border light:bg-muted/70">
+                    <div className="h-12 w-12 rounded-full overflow-hidden border border-white/10 bg-white/10 flex items-center justify-center text-sm font-semibold shadow-inner shrink-0 light:border-border light:bg-muted">
                       {ownerDraft.avatar ? (
                         <img src={ownerDraft.avatar} alt="Owner avatar" className="h-full w-full object-cover" />
                       ) : (
-                        <span className="text-white/70">{(ownerDraft.name || ownerDraft.email || "O").slice(0, 2).toUpperCase()}</span>
+                        <span className="text-white/70 light:text-muted-foreground">{(ownerDraft.name || ownerDraft.email || "O").slice(0, 2).toUpperCase()}</span>
                       )}
                     </div>
                     <div className="flex flex-1 flex-wrap items-center gap-2 min-w-[260px]">
                       <button
                         type="button"
                         onClick={openOwnerAvatarPicker}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/15 border border-primary/30 text-foreground hover:bg-primary/25 transition font-semibold"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/15 border border-primary/30 text-foreground hover:bg-primary/25 transition font-semibold light:hover:bg-primaryCTA-hover"
                       >
                         <Edit2 className="w-4 h-4" />
                         Choose avatar
@@ -716,7 +717,7 @@ const OrganizerProfileContent = ({ user }) => {
                         className="flex-1 min-w-[240px] px-4 py-2.5 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/60 focus:border-ring/50 focus:outline-none transition"
                         placeholder="https://..."
                       />
-                      <p className="text-xs text-white/50 w-full leading-relaxed">Upload, capture, or paste a URL for the owner avatar.</p>
+                      <p className="text-xs text-white/50 w-full leading-relaxed light:text-muted-foreground">Upload, capture, or paste a URL for the owner avatar.</p>
                     </div>
                   </div>
                 </div>
@@ -726,22 +727,22 @@ const OrganizerProfileContent = ({ user }) => {
                     type="checkbox"
                     checked={!!ownerDraft.whatsAppNotification}
                     onChange={(e) => handleOwnerFieldChange("whatsAppNotification", e.target.checked)}
-                    className="h-4 w-4 rounded border-border/60 bg-background/60 text-accent focus:ring-ring/50"
+                    className="h-4 w-4 rounded border-border/60 bg-background/60 text-accent focus:ring-ring/50 light:text-accent-foreground"
                   />
-                  <label htmlFor="whatsapp-toggle" className="text-sm text-white/80">
+                  <label htmlFor="whatsapp-toggle" className="text-sm text-white/80 light:text-muted-foreground">
                     Enable WhatsApp notifications
                   </label>
                 </div>
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-white/10 flex items-center gap-3 bg-white/5/40 backdrop-blur-sm rounded-b-2xl">
+            <div className="px-6 py-4 border-t border-white/10 flex items-center gap-3 bg-white/5/40 backdrop-blur-sm rounded-b-2xl light:border-border light:bg-muted/40">
               <button
                 onClick={handleSaveOwner}
                 disabled={isOwnerSaving}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-semibold shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-semibold shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed light:bg-primaryCTA light:hover:bg-primaryCTA-hover"
               >
                 {isOwnerSaving ? (
-                  <span className="h-4 w-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin" />
+                  <span className="h-4 w-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin light:border-border" />
                 ) : (
                   <Save className="w-4 h-4" />
                 )}
@@ -749,7 +750,7 @@ const OrganizerProfileContent = ({ user }) => {
               </button>
               <button
                 onClick={handleCancelOwner}
-                className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+                className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition light:bg-muted light:border-border light:text-foreground light:hover:bg-muted"
               >
                 Cancel
               </button>
@@ -762,12 +763,12 @@ const OrganizerProfileContent = ({ user }) => {
       {isOwnerAvatarPickerOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
           <div className="bg-card border border-border/60 rounded-2xl w-full max-w-2xl shadow-[var(--shadow-elegant)]">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 light:border-border">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-white/50">Owner</p>
-                <h3 className="text-xl font-semibold text-white">Choose Your Avatar</h3>
+                <p className="text-xs uppercase tracking-[0.2em] text-white/50 light:text-muted-foreground">Owner</p>
+                <h3 className="text-xl font-semibold text-white light:text-foreground">Choose Your Avatar</h3>
               </div>
-              <button onClick={closeOwnerAvatarPicker} className="text-white/60 hover:text-white">
+              <button onClick={closeOwnerAvatarPicker} className="text-white/60 hover:text-white light:text-muted-foreground light:hover:text-foreground">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -778,14 +779,14 @@ const OrganizerProfileContent = ({ user }) => {
                     key={option.id}
                     type="button"
                     onClick={() => setOwnerPendingAvatar(option.url)}
-                    className={`group flex flex-col items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-4 transition-all hover:bg-white/10 ${
+                    className={`group flex flex-col items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-4 transition-all hover:bg-white/10  light:border-border light:bg-muted light:hover:bg-muted ${
                       ownerPendingAvatar === option.url ? "border-accent/60 ring-2 ring-accent/30" : ""
                     }`}
                   >
-                    <div className="h-20 w-20 rounded-full overflow-hidden border border-white/15 bg-white/10">
+                    <div className="h-20 w-20 rounded-full overflow-hidden border border-white/15 bg-white/10 light:border-border light:bg-muted">
                       <img src={option.url} alt={option.label} className="h-full w-full object-cover" />
                     </div>
-                    <span className="text-sm font-semibold text-white group-hover:text-accent">{option.label}</span>
+                    <span className="text-sm font-semibold text-white group-hover:text-accent light:text-foreground light:group-hover:text-accent-foreground">{option.label}</span>
                   </button>
                 ))}
               </div>
@@ -794,7 +795,7 @@ const OrganizerProfileContent = ({ user }) => {
                 <button
                   type="button"
                   onClick={() => ownerFileInputRef.current?.click()}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary/15 border border-primary/30 text-foreground hover:bg-primary/25 transition"
+                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary/15 border border-primary/30 text-foreground hover:bg-primary/25 transition light:hover:bg-primaryCTA-hover"
                 >
                   <Upload className="w-4 h-4" />
                   Upload from device
@@ -802,7 +803,7 @@ const OrganizerProfileContent = ({ user }) => {
                 <button
                   type="button"
                   onClick={handleOwnerAvatarUseCamera}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/5 border border-dashed border-white/15 text-white hover:bg-white/10 transition"
+                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/5 border border-dashed border-white/15 text-white hover:bg-white/10 transition light:bg-muted light:border-border light:text-foreground light:hover:bg-muted"
                 >
                   <Camera className="w-4 h-4" />
                   Use camera
@@ -817,10 +818,10 @@ const OrganizerProfileContent = ({ user }) => {
               </div>
 
               {(ownerPendingAvatar || ownerCapturedPhoto) && (
-                <div className="space-y-2 border border-white/10 rounded-lg p-4 bg-white/5">
-                  <p className="text-sm text-white/70">Preview &amp; confirm</p>
+                <div className="space-y-2 border border-white/10 rounded-lg p-4 bg-white/5 light:border-border light:bg-muted">
+                  <p className="text-sm text-white/70 light:text-muted-foreground">Preview &amp; confirm</p>
                   <div className="flex items-center gap-3">
-                    <div className="h-16 w-16 rounded-full overflow-hidden border border-white/10 bg-white/10">
+                    <div className="h-16 w-16 rounded-full overflow-hidden border border-white/10 bg-white/10 light:border-border light:bg-muted">
                       <img
                         src={ownerCapturedPhoto || ownerPendingAvatar || ownerDraft.avatar || owner.avatar || ""}
                         alt="Selected avatar preview"
@@ -834,14 +835,14 @@ const OrganizerProfileContent = ({ user }) => {
                           setOwnerPendingAvatar(null);
                           setOwnerCapturedPhoto(null);
                         }}
-                        className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+                        className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition light:bg-muted light:border-border light:text-foreground light:hover:bg-muted"
                       >
                         Clear
                       </button>
                       <button
                         type="button"
                         onClick={() => handleOwnerAvatarApply(ownerCapturedPhoto || ownerPendingAvatar)}
-                        className="px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
+                        className="px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition light:bg-primaryCTA light:hover:bg-primaryCTA-hover"
                       >
                         Use this avatar
                       </button>
@@ -857,13 +858,13 @@ const OrganizerProfileContent = ({ user }) => {
       {/* Owner camera modal */}
       {isOwnerCameraOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
-          <div className="bg-[#0b1220] border border-white/10 rounded-2xl w-full max-w-xl shadow-2xl shadow-black/60">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+          <div className="bg-[#0b1220] border border-white/10 rounded-2xl w-full max-w-xl shadow-2xl shadow-black/60 light:bg-background light:border-border light:shadow-black/5">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 light:border-border">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-white/50">Owner</p>
-                <h3 className="text-xl font-semibold text-white">Capture with Camera</h3>
+                <p className="text-xs uppercase tracking-[0.2em] text-white/50 light:text-muted-foreground">Owner</p>
+                <h3 className="text-xl font-semibold text-white light:text-foreground">Capture with Camera</h3>
               </div>
-              <button onClick={closeOwnerCamera} className="text-white/60 hover:text-white">
+              <button onClick={closeOwnerCamera} className="text-white/60 hover:text-white light:text-muted-foreground light:hover:text-foreground">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -871,14 +872,14 @@ const OrganizerProfileContent = ({ user }) => {
               {!ownerCapturedPhoto ? (
                 <>
                   <div className="relative w-full">
-                    <video ref={ownerVideoRef} className="w-full rounded-xl border border-white/10" autoPlay muted />
+                    <video ref={ownerVideoRef} className="w-full rounded-xl border border-white/10 light:border-border" autoPlay muted />
                   </div>
                   <canvas ref={ownerCanvasRef} className="hidden" />
                   <div className="flex gap-2 justify-end">
                     <button
                       type="button"
                       onClick={closeOwnerCamera}
-                      className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+                      className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition light:bg-muted light:border-border light:text-foreground light:hover:bg-muted"
                     >
                       Cancel
                     </button>
@@ -893,12 +894,12 @@ const OrganizerProfileContent = ({ user }) => {
                 </>
               ) : (
                 <>
-                  <img src={ownerCapturedPhoto} alt="Captured" className="w-full rounded-xl border border-white/10 object-contain max-h-96" />
+                  <img src={ownerCapturedPhoto} alt="Captured" className="w-full rounded-xl border border-white/10 object-contain max-h-96 light:border-border" />
                   <div className="flex flex-wrap gap-2 justify-end">
                     <button
                       type="button"
                       onClick={startOwnerCamera}
-                      className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+                      className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition light:bg-muted light:border-border light:text-foreground light:hover:bg-muted"
                     >
                       Retake
                     </button>
@@ -921,43 +922,43 @@ const OrganizerProfileContent = ({ user }) => {
       )}
 
       {/* Profile Card */}
-      <div className="bg-[#0f1628] rounded-2xl border border-white/10 shadow-lg shadow-black/30 overflow-hidden backdrop-blur">
+      <div className="bg-[#0f1628] rounded-2xl border border-white/10 shadow-lg shadow-black/30 overflow-hidden backdrop-blur light:bg-card light:border-border light:shadow-black/5">
         {/* Profile Header Section */}
-        <div className="relative px-8 py-8 border-b border-white/10 bg-gradient-to-r from-[#0b1220] via-[#0f172a] to-[#111827]">
+        <div className="relative px-8 py-8 border-b border-white/10 bg-gradient-to-r from-[#0b1220] via-[#0f172a] to-[#111827] light:border-border light:from-background light:via-surface light:to-surface">
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_15%_30%,#ffffff,transparent_35%)]" />
           <div className="relative flex flex-col gap-6">
             <div className="flex items-center gap-5 flex-wrap">
-              <div className="w-20 h-20 rounded-2xl bg-white/5 flex items-center justify-center text-white font-bold text-3xl shadow-inner border border-white/10 overflow-hidden">
+              <div className="w-20 h-20 rounded-2xl bg-white/5 flex items-center justify-center text-white font-bold text-3xl shadow-inner border border-white/10 overflow-hidden light:bg-muted light:text-foreground light:border-border">
                 {displayedOrganizerLogo ? (
                   <img src={displayedOrganizerLogo} alt={editData.name} className="w-full h-full object-contain p-2" />
                 ) : (
                   (editData.name || "U").charAt(0).toUpperCase()
                 )}
               </div>
-              <div className="text-white space-y-2">
+              <div className="text-white space-y-2 light:text-foreground">
                 <div className="flex items-center gap-3 flex-wrap">
                   <h2 className="text-2xl font-semibold">{editData.name}</h2>
                   {editData.isVerified && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-100 text-xs font-semibold border border-emerald-500/30">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-100 text-xs font-semibold border border-emerald-500/30 light:text-success">
                       <BadgeCheck className="w-4 h-4" />
                       Verified
                     </span>
                   )}
                 </div>
-                <p className="text-white/70 text-sm leading-relaxed max-w-2xl">{editData.description}</p>
+                <p className="text-white/70 text-sm leading-relaxed max-w-2xl light:text-muted-foreground">{editData.description}</p>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-4 text-white/70 text-sm">
+            <div className="flex flex-wrap items-center gap-4 text-white/70 text-sm light:text-muted-foreground">
               <span className="inline-flex items-center gap-2">
                 <Mail className="w-4 h-4" />
                 {editData.email}
               </span>
-              <span className="h-1 w-1 rounded-full bg-white/20" />
+              <span className="h-1 w-1 rounded-full bg-white/20 light:bg-muted" />
               <span className="inline-flex items-center gap-2">
                 <Phone className="w-4 h-4" />
                 {editData.contact}
               </span>
-              <span className="h-1 w-1 rounded-full bg-white/20" />
+              <span className="h-1 w-1 rounded-full bg-white/20 light:bg-muted" />
               <span className="inline-flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
                 {editData.state}
@@ -967,9 +968,9 @@ const OrganizerProfileContent = ({ user }) => {
         </div>
 
         {/* Profile Details */}
-        <div className="p-8 space-y-6 bg-[#0b1220]">
+        <div className="p-8 space-y-6 bg-[#0b1220] light:bg-background">
           {loadingProfile ? (
-            <div className="text-white/70 text-sm">Loading organizer profile…</div>
+            <div className="text-white/70 text-sm light:text-muted-foreground">Loading organizer profile…</div>
           ) : !isEditing ? (
             // View Mode
             <div className="space-y-6">
@@ -977,16 +978,16 @@ const OrganizerProfileContent = ({ user }) => {
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 {[
                   { label: "Events", value: editData.counts.events, accent: "text-sky-200", border: "border-sky-500/30" },
-                  { label: "Images", value: editData.counts.images, accent: "text-purple-200", border: "border-purple-500/30" },
-                  { label: "Payouts", value: editData.counts.payouts, accent: "text-emerald-200", border: "border-emerald-500/30" },
-                  { label: "Tours", value: editData.counts.tours, accent: "text-amber-200", border: "border-amber-500/30" },
+                  { label: "Images", value: editData.counts.images, accent: "text-purple-200 light:text-accent-foreground", border: "border-purple-500/30" },
+                  { label: "Payouts", value: editData.counts.payouts, accent: "text-emerald-200 light:text-success", border: "border-emerald-500/30" },
+                  { label: "Tours", value: editData.counts.tours, accent: "text-amber-200 light:text-warning", border: "border-amber-500/30" },
                   { label: "Reviews", value: editData.counts.reviews, accent: "text-indigo-200", border: "border-indigo-500/30" },
                 ].map((stat) => (
                   <div
                     key={stat.label}
-                    className={`rounded-xl border ${stat.border} bg-white/5 p-3 shadow-lg shadow-black/20`}
+                    className={`rounded-xl border ${stat.border} bg-white/5 p-3 shadow-lg shadow-black/20 light:bg-muted light:shadow-black/5`}
                   >
-                    <p className="text-xs uppercase tracking-wide text-white/70">{stat.label}</p>
+                    <p className="text-xs uppercase tracking-wide text-white/70 light:text-muted-foreground">{stat.label}</p>
                     <p className={`text-2xl font-bold mt-1 ${stat.accent}`}>{stat.value}</p>
                   </div>
                 ))}
@@ -998,40 +999,40 @@ const OrganizerProfileContent = ({ user }) => {
                   <h3 className="text-lg font-semibold">Contact &amp; Reach</h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4">
+                  <div className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4 light:bg-muted light:border-border">
                     <div className="w-10 h-10 rounded-lg bg-rose-500/20 flex items-center justify-center flex-shrink-0 border border-rose-500/30">
                       <Mail className="w-5 h-5 text-rose-100" />
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-white/50">Email Address</p>
-                      <p className="text-base font-semibold text-white mt-1">{editData.email}</p>
+                      <p className="text-xs uppercase tracking-wide text-white/50 light:text-muted-foreground">Email Address</p>
+                      <p className="text-base font-semibold text-white mt-1 light:text-foreground">{editData.email}</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4">
+                  <div className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4 light:bg-muted light:border-border">
                     <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0 border border-emerald-500/30">
-                      <Phone className="w-5 h-5 text-emerald-100" />
+                      <Phone className="w-5 h-5 text-emerald-100 light:text-success" />
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-white/50">Contact</p>
-                      <p className="text-base font-semibold text-white mt-1">{editData.contact}</p>
+                      <p className="text-xs uppercase tracking-wide text-white/50 light:text-muted-foreground">Contact</p>
+                      <p className="text-base font-semibold text-white mt-1 light:text-foreground">{editData.contact}</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4">
+                  <div className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4 light:bg-muted light:border-border">
                     <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0 border border-blue-500/30">
-                      <MapPin className="w-5 h-5 text-blue-100" />
+                      <MapPin className="w-5 h-5 text-blue-100 light:text-info" />
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-white/50">State</p>
-                      <p className="text-base font-semibold text-white mt-1">{editData.state}</p>
+                      <p className="text-xs uppercase tracking-wide text-white/50 light:text-muted-foreground">State</p>
+                      <p className="text-base font-semibold text-white mt-1 light:text-foreground">{editData.state}</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4">
+                  <div className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4 light:bg-muted light:border-border">
                     <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0 border border-indigo-500/30">
-                      <Globe className="w-5 h-5 text-indigo-100" />
+                      <Globe className="w-5 h-5 text-indigo-100 light:text-info" />
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-white/50">Address</p>
-                      <p className="text-base font-semibold text-white mt-1">{editData.address}</p>
+                      <p className="text-xs uppercase tracking-wide text-white/50 light:text-muted-foreground">Address</p>
+                      <p className="text-base font-semibold text-white mt-1 light:text-foreground">{editData.address}</p>
                     </div>
                   </div>
                 </div>
@@ -1043,13 +1044,13 @@ const OrganizerProfileContent = ({ user }) => {
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold">Tax Information</h3>
                   </div>
-                  <div className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4">
+                  <div className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-4 light:bg-muted light:border-border">
                     <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0 border border-emerald-500/30">
-                      <BadgeCheck className="w-5 h-5 text-emerald-100" />
+                      <BadgeCheck className="w-5 h-5 text-emerald-100 light:text-success" />
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-white/50">GST Number</p>
-                      <p className="text-base font-semibold text-white mt-1">{editData.gstNumber}</p>
+                      <p className="text-xs uppercase tracking-wide text-white/50 light:text-muted-foreground">GST Number</p>
+                      <p className="text-base font-semibold text-white mt-1 light:text-foreground">{editData.gstNumber}</p>
                     </div>
                   </div>
                 </div>
@@ -1058,15 +1059,15 @@ const OrganizerProfileContent = ({ user }) => {
               {/* About */}
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold">About Organizer</h3>
-                <p className="text-white/80 leading-relaxed bg-white/5 border border-white/10 p-4 rounded-xl">
+                <p className="text-white/80 leading-relaxed bg-white/5 border border-white/10 p-4 rounded-xl light:text-muted-foreground light:bg-muted light:border-border">
                   {editData.description}
                 </p>
               </div>
 
               {/* Owner Snapshot */}
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 light:border-border light:bg-muted">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white font-semibold overflow-hidden">
+                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white font-semibold overflow-hidden light:bg-muted light:text-foreground">
                     {owner?.avatar ? (
                       <img src={owner.avatar} alt={owner.name} className="w-full h-full object-cover" />
                     ) : (
@@ -1074,21 +1075,21 @@ const OrganizerProfileContent = ({ user }) => {
                     )}
                   </div>
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-white/50">Owner</p>
-                    <p className="text-base font-semibold text-white">{owner?.name || "—"}</p>
-                    <p className="text-xs text-white/60">{owner?.email}</p>
+                    <p className="text-xs uppercase tracking-wide text-white/50 light:text-muted-foreground">Owner</p>
+                    <p className="text-base font-semibold text-white light:text-foreground">{owner?.name || "—"}</p>
+                    <p className="text-xs text-white/60 light:text-muted-foreground">{owner?.email}</p>
                   </div>
                 </div>
-                <div className="text-sm text-white/70 flex flex-wrap gap-3">
+                <div className="text-sm text-white/70 flex flex-wrap gap-3 light:text-muted-foreground">
                   {owner?.phone && (
-                    <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
+                    <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 light:bg-muted light:border-border">
                       <Phone className="w-4 h-4" />
                       {owner.phone}
                     </span>
                   )}
                   <button
                     onClick={openOwnerModal}
-                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition light:bg-muted light:border-border light:text-foreground light:hover:bg-muted"
                   >
                     <Edit2 className="w-4 h-4" />
                     Edit Owner
@@ -1113,13 +1114,13 @@ const OrganizerProfileContent = ({ user }) => {
                       href={social.value || "#"}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center justify-between gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/80 hover:bg-white/10 transition"
+                      className="flex items-center justify-between gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/80 hover:bg-white/10 transition light:bg-muted light:border-border light:text-muted-foreground light:hover:bg-muted"
                     >
                       <span className="flex items-center gap-2">
                         {social.icon}
                         {social.label}
                       </span>
-                      <ExternalLink className="w-4 h-4 text-white/50" />
+                      <ExternalLink className="w-4 h-4 text-white/50 light:text-muted-foreground" />
                     </a>
                   ))}
                 </div>
@@ -1129,8 +1130,8 @@ const OrganizerProfileContent = ({ user }) => {
           ) : (
             // Edit Mode
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row gap-4 border-b border-white/10 pb-6">
-                <div className="w-28 h-28 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+              <div className="flex flex-col sm:flex-row gap-4 border-b border-white/10 pb-6 light:border-border">
+                <div className="w-28 h-28 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0 light:bg-muted light:border-border">
                   {displayedOrganizerLogo ? (
                     <img
                       src={displayedOrganizerLogo}
@@ -1138,13 +1139,13 @@ const OrganizerProfileContent = ({ user }) => {
                       className="w-full h-full object-contain p-3"
                     />
                   ) : (
-                    <ImagePlus className="w-9 h-9 text-white/35" />
+                    <ImagePlus className="w-9 h-9 text-white/35 light:text-muted-foreground" />
                   )}
                 </div>
                 <div className="flex-1 space-y-3">
                   <div>
-                    <p className="text-sm font-medium text-white/80">Organizer Logo</p>
-                    <p className="text-xs text-white/50 mt-1">{ORGANIZER_LOGO_HELP_TEXT}</p>
+                    <p className="text-sm font-medium text-white/80 light:text-muted-foreground">Organizer Logo</p>
+                    <p className="text-xs text-white/50 mt-1 light:text-muted-foreground">{ORGANIZER_LOGO_HELP_TEXT}</p>
                   </div>
                   <input
                     ref={organizerLogoInputRef}
@@ -1157,7 +1158,7 @@ const OrganizerProfileContent = ({ user }) => {
                     <button
                       type="button"
                       onClick={() => organizerLogoInputRef.current?.click()}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/15 text-white hover:bg-white/15 transition"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/15 text-white hover:bg-white/15 transition light:bg-muted light:border-border light:text-foreground light:hover:bg-muted"
                     >
                       <Upload className="w-4 h-4" />
                       Upload Logo
@@ -1166,7 +1167,7 @@ const OrganizerProfileContent = ({ user }) => {
                       <button
                         type="button"
                         onClick={clearOrganizerLogoSelection}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition light:bg-muted light:border-border light:text-foreground light:hover:bg-muted"
                       >
                         <X className="w-4 h-4" />
                         Remove
@@ -1178,7 +1179,7 @@ const OrganizerProfileContent = ({ user }) => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-white/80">Organizer Name</label>
+                  <label className="block text-sm font-medium text-white/80 light:text-muted-foreground">Organizer Name</label>
                   <input
                     type="text"
                     value={editData.name}
@@ -1187,7 +1188,7 @@ const OrganizerProfileContent = ({ user }) => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-white/80">Email Address</label>
+                  <label className="block text-sm font-medium text-white/80 light:text-muted-foreground">Email Address</label>
                   <input
                     type="email"
                     value={editData.email}
@@ -1196,7 +1197,7 @@ const OrganizerProfileContent = ({ user }) => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-white/80">Contact</label>
+                  <label className="block text-sm font-medium text-white/80 light:text-muted-foreground">Contact</label>
                   <input
                     {...PHONE_INPUT_PROPS}
                     value={editData.contact}
@@ -1206,7 +1207,7 @@ const OrganizerProfileContent = ({ user }) => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-white/80">GST Number</label>
+                  <label className="block text-sm font-medium text-white/80 light:text-muted-foreground">GST Number</label>
                   <input
                     type="text"
                     value={editData.gstNumber}
@@ -1216,7 +1217,7 @@ const OrganizerProfileContent = ({ user }) => {
                   />
                 </div>
                 <div className="md:col-span-2 space-y-2">
-                  <label className="block text-sm font-medium text-white/80">Description</label>
+                  <label className="block text-sm font-medium text-white/80 light:text-muted-foreground">Description</label>
                   <textarea
                     value={editData.description}
                     onChange={(e) => handleInputChange("description", e.target.value)}
@@ -1230,7 +1231,7 @@ const OrganizerProfileContent = ({ user }) => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold">Social Handles</h3>
-                  <span className="text-xs text-white/50">Share reachable links</span>
+                  <span className="text-xs text-white/50 light:text-muted-foreground">Share reachable links</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
@@ -1242,7 +1243,7 @@ const OrganizerProfileContent = ({ user }) => {
                     { key: "snapchat", label: "Snapchat handle" },
                   ].map((social) => (
                     <div className="space-y-2" key={social.key}>
-                      <label className="block text-sm font-medium text-white/80">{social.label}</label>
+                      <label className="block text-sm font-medium text-white/80 light:text-muted-foreground">{social.label}</label>
                       <input
                         type="text"
                         value={editData[social.key]}
@@ -1259,14 +1260,14 @@ const OrganizerProfileContent = ({ user }) => {
                 <button
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed light:bg-primaryCTA light:hover:bg-primaryCTA-hover"
                 >
                   <Save className="w-4 h-4" />
                   {isSaving ? (logoFile ? "Saving Logo..." : "Saving...") : "Save Changes"}
                 </button>
                 <button
                   onClick={handleCancel}
-                  className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+                  className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition light:bg-muted light:border-border light:text-foreground light:hover:bg-muted"
                 >
                   Cancel
                 </button>
@@ -1283,13 +1284,13 @@ const OrganizerProfileContent = ({ user }) => {
           <div className="relative ml-auto h-full w-full max-w-lg bg-card border-l border-border/60 shadow-[var(--shadow-elegant)] flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-border/60 bg-card/80">
               <div className="space-y-1">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">Payouts</p>
-                <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-accent" />
+                <p className="text-[11px] uppercase tracking-[0.2em] text-white/50 light:text-muted-foreground">Payouts</p>
+                <h2 className="text-xl font-semibold text-white flex items-center gap-2 light:text-foreground">
+                  <CreditCard className="w-5 h-5 text-accent light:text-accent-foreground" />
                   {bankExists ? "Bank Details" : "Add Bank Details"}
                 </h2>
               </div>
-              <button onClick={handleCancelBank} className="text-white/60 hover:text-white">
+              <button onClick={handleCancelBank} className="text-white/60 hover:text-white light:text-muted-foreground light:hover:text-foreground">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1298,17 +1299,17 @@ const OrganizerProfileContent = ({ user }) => {
               {/* Provider / Status — only shown when bank details exist */}
               {bankExists && (
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                    <p className="text-xs uppercase tracking-wide text-white/50">Provider</p>
-                    <p className="text-lg font-semibold text-white flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-accent" />
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3 light:border-border light:bg-muted">
+                    <p className="text-xs uppercase tracking-wide text-white/50 light:text-muted-foreground">Provider</p>
+                    <p className="text-lg font-semibold text-white flex items-center gap-2 light:text-foreground">
+                      <Building2 className="w-4 h-4 text-accent light:text-accent-foreground" />
                       {bankDraft.providerName}
                     </p>
                   </div>
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                    <p className="text-xs uppercase tracking-wide text-white/50">Status</p>
-                    <p className="text-lg font-semibold text-white flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-accent" />
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3 light:border-border light:bg-muted">
+                    <p className="text-xs uppercase tracking-wide text-white/50 light:text-muted-foreground">Status</p>
+                    <p className="text-lg font-semibold text-white flex items-center gap-2 light:text-foreground">
+                      <CheckCircle2 className="w-4 h-4 text-accent light:text-accent-foreground" />
                       {bankDraft.verificationStatus}
                     </p>
                   </div>
@@ -1318,12 +1319,12 @@ const OrganizerProfileContent = ({ user }) => {
               {bankExists && bankDraft.verificationStatus !== "VERIFIED" && (
                 <div className="rounded-xl border border-amber-400/25 bg-amber-500/10 px-4 py-3 space-y-3 animate-in fade-in-0 slide-in-from-right-2 duration-300">
                   <div>
-                    <p className="text-sm font-medium text-amber-200">Bank verification required</p>
-                    <p className="text-xs text-white/55 mt-0.5">
+                    <p className="text-sm font-medium text-amber-200 light:text-warning">Bank verification required</p>
+                    <p className="text-xs text-white/55 mt-0.5 light:text-muted-foreground">
                       Payouts stay locked until this account is verified.
                     </p>
                     {bankDraft.verificationFailureReason && (
-                      <p className="text-xs text-red-300 mt-2">{bankDraft.verificationFailureReason}</p>
+                      <p className="text-xs text-red-300 mt-2 light:text-destructive">{bankDraft.verificationFailureReason}</p>
                     )}
                   </div>
                   <button
@@ -1342,7 +1343,7 @@ const OrganizerProfileContent = ({ user }) => {
                         : "Verify Now"}
                   </button>
                   <button type="button" onClick={handleRefreshBankVerificationStatus} disabled={isBankEditing}
-                    className="ml-2 inline-flex items-center justify-center px-3 py-2 rounded-lg border border-white/20 text-white text-sm disabled:opacity-60">
+                    className="ml-2 inline-flex items-center justify-center px-3 py-2 rounded-lg border border-white/20 text-white text-sm disabled:opacity-60 light:border-border light:text-foreground">
                     Refresh status
                   </button>
                 </div>
@@ -1350,8 +1351,8 @@ const OrganizerProfileContent = ({ user }) => {
 
               {bankExists && bankDraft.verificationStatus === "VERIFIED" && bankDraft.payoutEnabled && (
                 <div className="rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 animate-in fade-in-0 slide-in-from-right-2 duration-300">
-                  <p className="text-sm font-medium text-emerald-200">Bank account verified</p>
-                  <p className="text-xs text-white/55 mt-0.5">
+                  <p className="text-sm font-medium text-emerald-200 light:text-success">Bank account verified</p>
+                  <p className="text-xs text-white/55 mt-0.5 light:text-muted-foreground">
                     {bankDraft.verifiedAt ? `Verified on ${formatDate(bankDraft.verifiedAt)} and ready for payout` : "Ready for payout operations"}
                   </p>
                 </div>
@@ -1359,8 +1360,8 @@ const OrganizerProfileContent = ({ user }) => {
 
               {bankExists && bankDraft.verificationStatus === "VERIFIED" && !bankDraft.payoutEnabled && (
                 <div className="rounded-xl border border-amber-400/25 bg-amber-500/10 px-4 py-3">
-                  <p className="text-sm font-medium text-amber-200">Bank verified; payouts still on hold</p>
-                  <p className="text-xs text-white/55 mt-0.5">
+                  <p className="text-sm font-medium text-amber-200 light:text-warning">Bank verified; payouts still on hold</p>
+                  <p className="text-xs text-white/55 mt-0.5 light:text-muted-foreground">
                     {bankDraft.payoutCoolingOffUntil && new Date(bankDraft.payoutCoolingOffUntil) > new Date()
                         ? `Payouts are held until ${formatDate(bankDraft.payoutCoolingOffUntil)}.`
                         : `Cashfree beneficiary status: ${bankDraft.beneficiaryStatus || "Pending"}`}
@@ -1371,19 +1372,19 @@ const OrganizerProfileContent = ({ user }) => {
               {/* Prompt when no bank details */}
               {!bankExists && (
                 <div className="rounded-xl border border-accent/20 bg-accent/10 px-4 py-3 flex items-start gap-3">
-                  <CreditCard className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
+                  <CreditCard className="w-5 h-5 text-accent mt-0.5 flex-shrink-0 light:text-accent-foreground" />
                   <div>
-                    <p className="text-sm font-medium text-accent">No bank details added</p>
-                    <p className="text-xs text-white/50 mt-0.5">Fill in the form below to set up your payout account.</p>
+                    <p className="text-sm font-medium text-accent light:text-accent-foreground">No bank details added</p>
+                    <p className="text-xs text-white/50 mt-0.5 light:text-muted-foreground">Fill in the form below to set up your payout account.</p>
                   </div>
                 </div>
               )}
 
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3 light:border-border light:bg-muted">
                 {bankExists && (
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold text-white">Account</h4>
-                    <span className="text-xs text-white/60">{bankDraft.accountNumberMasked || "New account"}</span>
+                    <h4 className="text-sm font-semibold text-white light:text-foreground">Account</h4>
+                    <span className="text-xs text-white/60 light:text-muted-foreground">{bankDraft.accountNumberMasked || "New account"}</span>
                   </div>
                 )}
                 <div className="grid grid-cols-1 gap-3">
@@ -1393,7 +1394,7 @@ const OrganizerProfileContent = ({ user }) => {
                     { key: "ifscCode", label: "IFSC Code" },
                   ].map((field) => (
                     <div key={field.key}>
-                      <p className="text-xs uppercase tracking-wide text-white/50">{field.label}</p>
+                      <p className="text-xs uppercase tracking-wide text-white/50 light:text-muted-foreground">{field.label}</p>
                       {isBankEditing ? (
                         <input
                           type="text"
@@ -1405,21 +1406,21 @@ const OrganizerProfileContent = ({ user }) => {
                           className="mt-1 w-full px-4 py-2 rounded-lg bg-background/60 border border-border/60 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/50 focus:outline-none"
                         />
                       ) : (
-                        <p className="text-base font-semibold text-white mt-1">
+                        <p className="text-base font-semibold text-white mt-1 light:text-foreground">
                           {field.key === "accountNumber" ? bankDraft.accountNumberMasked : bankDraft[field.key]}
                         </p>
                       )}
-                      {isBankEditing && bankInput.errors[field.key] && <p id={`bank-${field.key}-error`} role="alert" className="text-sm text-destructive">{bankInput.errors[field.key]}</p>}
+                      {isBankEditing && bankInput.errors[field.key] && <p id={`bank-${field.key}-error`} role="alert" className="text-sm text-destructive light:text-muted-foreground">{bankInput.errors[field.key]}</p>}
                     </div>
                   ))}
                 </div>
                 {isBankEditing && bankExists && (
                   <div>
-                    <label htmlFor="bank-current-password" className="text-xs uppercase tracking-wide text-white/50">Current password</label>
+                    <label htmlFor="bank-current-password" className="text-xs uppercase tracking-wide text-white/50 light:text-muted-foreground">Current password</label>
                     <input id="bank-current-password" type="password" autoComplete="current-password" value={bankPassword}
                       onChange={(e) => setBankPassword(e.target.value)}
                       className="mt-1 w-full px-4 py-2 rounded-lg bg-background/60 border border-border/60 text-foreground focus:ring-2 focus:ring-ring/50 focus:outline-none" />
-                    <p className="mt-1 text-xs text-white/50">Changing the payout destination requires your password. The new account must be verified before payouts can resume.</p>
+                    <p className="mt-1 text-xs text-white/50 light:text-muted-foreground">Changing the payout destination requires your password. The new account must be verified before payouts can resume.</p>
                   </div>
                 )}
               </div>
@@ -1427,32 +1428,32 @@ const OrganizerProfileContent = ({ user }) => {
               {/* Created / Updated — only shown when bank details exist */}
               {bankExists && (
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                    <p className="text-xs uppercase tracking-wide text-white/50">Created</p>
-                    <p className="text-base font-semibold text-white">{formatDate(bankDraft.createdAt)}</p>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3 light:border-border light:bg-muted">
+                    <p className="text-xs uppercase tracking-wide text-white/50 light:text-muted-foreground">Created</p>
+                    <p className="text-base font-semibold text-white light:text-foreground">{formatDate(bankDraft.createdAt)}</p>
                   </div>
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                    <p className="text-xs uppercase tracking-wide text-white/50">Updated</p>
-                    <p className="text-base font-semibold text-white">{formatDate(bankDraft.updatedAt)}</p>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3 light:border-border light:bg-muted">
+                    <p className="text-xs uppercase tracking-wide text-white/50 light:text-muted-foreground">Updated</p>
+                    <p className="text-base font-semibold text-white light:text-foreground">{formatDate(bankDraft.updatedAt)}</p>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="p-6 border-t border-white/10 bg-white/5 flex items-center gap-3">
+            <div className="p-6 border-t border-white/10 bg-white/5 flex items-center gap-3 light:border-border light:bg-muted">
               {isBankEditing ? (
                 <>
                   <button
                     onClick={handleSaveBank}
                     disabled={isBankSaving}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed light:bg-primaryCTA light:hover:bg-primaryCTA-hover"
                   >
                     <Save className="w-4 h-4" />
                     {isBankSaving ? "Saving…" : bankExists ? "Save Bank Details" : "Add Bank Details"}
                   </button>
                   <button
                     onClick={handleCancelBank}
-                    className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+                    className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition light:bg-muted light:border-border light:text-foreground light:hover:bg-muted"
                   >
                     Cancel
                   </button>
@@ -1461,14 +1462,14 @@ const OrganizerProfileContent = ({ user }) => {
                 <>
                   <button
                     onClick={() => { setBankDraft({ ...profileData.bankDetails, accountNumber: "" }); setIsBankEditing(true); }}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-primary/15 border border-primary/30 text-foreground hover:bg-primary/25 transition"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-primary/15 border border-primary/30 text-foreground hover:bg-primary/25 transition light:hover:bg-primaryCTA-hover"
                   >
                     <Edit2 className="w-4 h-4" />
                     Edit Bank Details
                   </button>
                   <button
                     onClick={handleCancelBank}
-                    className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+                    className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition light:bg-muted light:border-border light:text-foreground light:hover:bg-muted"
                   >
                     Close
                   </button>
@@ -1575,17 +1576,17 @@ const OrganizerDashboard = () => {
       <aside
         className={`${sidebarOpen ? "w-64" : "w-24"} bg-sidebar border-r border-sidebar-border/60 flex flex-col transition-all duration-300`}
       >
-        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+        <div className="p-4 border-b border-white/10 flex items-center justify-between light:border-border">
           <button
             onClick={() => navigate("/")}
             className={`${sidebarOpen ? "block" : "hidden"} hover:opacity-80 transition flex items-center gap-3`}
           >
             <img src={Logo} alt="MapMyParty" className="h-10 w-auto" />
-            <span className="font-sans text-xl font-bold text-white tracking-[0.02em] leading-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">MapMyParty</span>
+            <span className="font-sans text-xl font-bold text-white tracking-[0.02em] leading-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent light:text-foreground light:bg-none">MapMyParty</span>
           </button>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-lg hover:bg-white/5 text-white/80"
+            className="p-2 rounded-lg hover:bg-white/5 text-white/80 light:hover:bg-muted light:text-muted-foreground"
           >
             {sidebarOpen ? <ChevronLeft className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -1599,38 +1600,39 @@ const OrganizerDashboard = () => {
                 onClick={() => handleNav(item.id)}
                 className={`flex items-center w-full px-3 py-3 text-sm font-medium rounded-xl transition ${
                   activeTab === item.id
-                    ? "text-white bg-white/10 border border-white/10 shadow-lg shadow-black/20"
-                    : "text-white/70 hover:bg-white/5"
+                    ? "text-white bg-white/10 border border-white/10 shadow-lg shadow-black/20 light:text-foreground light:bg-muted light:border-border light:shadow-black/5"
+                    : "text-white/70 hover:bg-white/5 light:text-muted-foreground light:hover:bg-muted"
                 }`}
               >
-                <span className="mr-3 text-white/80">{item.icon}</span>
+                <span className="mr-3 text-white/80 light:text-muted-foreground">{item.icon}</span>
                 {sidebarOpen && item.name}
               </button>
             ))}
           </div>
         </nav>
 
+        <div className="px-4 pb-3"><ThemeToggle compact={!sidebarOpen} className={sidebarOpen ? "w-full" : ""} /></div>
         {/* Sidebar Footer with profile + logout */}
-        <div className="mt-auto p-4 border-t border-white/10">
+        <div className="mt-auto p-4 border-t border-white/10 light:border-border">
           <div
             ref={footerMenuRef}
-            className="relative bg-gradient-to-br from-white/5 via-white/0 to-blue-500/5 border border-white/10 rounded-xl p-3 shadow-lg shadow-black/20"
+            className="relative bg-gradient-to-br from-white/5 via-white/0 to-blue-500/5 border border-white/10 rounded-xl p-3 shadow-lg shadow-black/20 light:border-border light:shadow-black/5"
           >
             <button
               onClick={() => setFooterMenuOpen((v) => !v)}
-              className="flex items-center gap-3 w-full text-left hover:bg-white/5 transition rounded-lg px-2 py-1"
+              className="flex items-center gap-3 w-full text-left hover:bg-white/5 transition rounded-lg px-2 py-1 light:hover:bg-muted"
             >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500/30 via-blue-500/30 to-red-500/30 flex items-center justify-center text-red-100 font-semibold border border-white/10">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500/30 via-blue-500/30 to-red-500/30 flex items-center justify-center text-red-100 font-semibold border border-white/10 light:border-border light:text-secondary-foreground light:from-secondary light:via-secondary light:to-secondary">
                 {(user.name || "U").charAt(0).toUpperCase()}
               </div>
               {sidebarOpen && (
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">{user.name || "Organizer"}</p>
+                  <p className="text-sm font-semibold text-white truncate light:text-foreground">{user.name || "Organizer"}</p>
                 </div>
               )}
               {sidebarOpen && (
                 <ChevronDown
-                  className={`w-4 h-4 text-white/70 transition-transform ${
+                  className={`w-4 h-4 text-white/70 transition-transform  light:text-muted-foreground ${
                     footerMenuOpen ? "rotate-180" : ""
                   }`}
                 />
@@ -1645,7 +1647,7 @@ const OrganizerDashboard = () => {
                       setFooterMenuOpen(false);
                       handleNav("profile");
                     }}
-                    className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+                    className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition light:bg-muted light:border-border light:text-foreground light:hover:bg-muted"
                   >
                     <User className="w-4 h-4" />
                     {sidebarOpen && <span>My Profile</span>}
@@ -1653,7 +1655,7 @@ const OrganizerDashboard = () => {
                   <button
                     onClick={handleLogout}
                     disabled={isLoggingOut}
-                    className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-red-500/15 border border-red-500/30 text-red-200 hover:bg-red-500/20 transition disabled:opacity-60"
+                    className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-red-500/15 border border-red-500/30 text-red-200 hover:bg-red-500/20 transition disabled:opacity-60 light:text-destructive"
                   >
                     {isLoggingOut ? (
                       <span className="h-4 w-4 border-2 border-red-300 border-t-transparent rounded-full animate-spin" />

@@ -1,3 +1,4 @@
+import ThemeToggle from "@/components/ThemeToggle";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -631,6 +632,7 @@ const PromoterDashboard = () => {
           </div>
         </div>
 
+        <div className="w-full shrink-0 px-3 pb-2"><ThemeToggle compact={!expanded} className={expanded ? "w-full" : ""} /></div>
         <nav className={`min-h-0 flex-1 overflow-y-auto py-4 [scrollbar-width:thin] [scrollbar-color:hsl(var(--sidebar-border))_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-sidebar-border/70 [&::-webkit-scrollbar-track]:bg-transparent ${
           expanded ? "w-full px-2 pr-3" : "w-full px-1 pr-2"
         }`}>
@@ -655,7 +657,7 @@ const PromoterDashboard = () => {
                   <>
                     {expanded && (
                       <span
-                        className={`absolute left-1 top-1/2 h-6 w-1 -translate-y-1/2 rounded-full bg-primary transition-all duration-200 ease-out ${
+                        className={`absolute left-1 top-1/2 h-6 w-1 -translate-y-1/2 rounded-full bg-primary transition-all duration-200 ease-out  light:bg-primaryCTA ${
                           isActive ? "opacity-100 scale-y-100" : "opacity-0 scale-y-50"
                         }`}
                       />
@@ -663,7 +665,7 @@ const PromoterDashboard = () => {
                     <span
                       className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all duration-200 ease-out ${
                         isActive
-                          ? "bg-primary/16 text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.12)]"
+                          ? "bg-primary/16 text-primary-foreground light:text-accent-foreground shadow-[0_0_18px_hsl(var(--primary)/0.12)]"
                           : "text-sidebar-foreground/75 group-hover:bg-sidebar-accent/42 group-hover:text-sidebar-foreground group-hover:scale-105"
                       }`}
                     >
@@ -685,7 +687,7 @@ const PromoterDashboard = () => {
               }`}
               title={!expanded ? user.name || "Promoter" : undefined}
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/30 bg-primary/20 font-semibold text-primary-foreground">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/30 bg-primary/20 font-semibold text-primary-foreground light:text-accent-foreground">
                 {(user.name || "P").charAt(0).toUpperCase()}
               </div>
               {expanded && (

@@ -112,10 +112,10 @@ const PromoterTopPerformers = () => {
 
       {/* Top Performing Organizers */}
       <Card className="hover:shadow-xl transition-all duration-300 animate-in fade-in-0 slide-in-from-left-4 border-2 border-black/20 dark:border-neutral-700/50">
-        <CardHeader className="bg-black text-white border-b">
+        <CardHeader className="bg-black text-white border-b light:bg-secondary light:text-secondary-foreground">
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-white">
-              <TrendingUp className="w-5 h-5 text-white animate-pulse" />
+            <CardTitle className="flex items-center gap-2 text-white light:text-foreground">
+              <TrendingUp className="w-5 h-5 text-white animate-pulse light:text-foreground" />
               Top Performing Organizers
             </CardTitle>
           </div>
@@ -133,7 +133,7 @@ const PromoterTopPerformers = () => {
               <div className="flex-1">
                 <h4 className="font-semibold mb-2 text-foreground">{organizer.name}</h4>
                 <div className="flex flex-wrap gap-3 text-sm">
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-black text-white dark:bg-neutral-800">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-black text-white dark:bg-neutral-800 light:bg-secondary light:text-secondary-foreground">
                     <Calendar className="w-3 h-3" />
                     <span>{organizer.totalEvents} events</span>
                   </div>

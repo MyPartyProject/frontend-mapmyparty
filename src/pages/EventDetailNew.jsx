@@ -424,7 +424,7 @@ const EventDetailNew = () => {
     ) {
       return (
         <div
-          className="prose prose-invert max-w-none text-[10px] leading-3 text-gray-400 prose-p:my-0.5 prose-p:text-[10px] prose-p:leading-3 prose-li:my-0 prose-li:text-[10px] prose-li:leading-3 prose-ol:list-decimal prose-ul:list-disc prose-headings:text-xs prose-headings:text-white"
+          className="prose prose-invert max-w-none text-[10px] leading-3 text-gray-400 prose-p:my-0.5 prose-p:text-[10px] prose-p:leading-3 prose-li:my-0 prose-li:text-[10px] prose-li:leading-3 prose-ol:list-decimal prose-ul:list-disc prose-headings:text-xs prose-headings:text-white light:text-muted-foreground light:prose-headings:text-foreground"
           dangerouslySetInnerHTML={{ __html: decodedTermsHtml }}
         />
       );
@@ -434,7 +434,7 @@ const EventDetailNew = () => {
     if (hasHtmlTag(decodedTerms) || hasEscapedHtmlTag(event?.terms)) {
       return (
         <div
-          className="prose prose-invert max-w-none text-[10px] leading-3 text-gray-400 prose-p:my-0.5 prose-p:text-[10px] prose-p:leading-3 prose-li:my-0 prose-li:text-[10px] prose-li:leading-3 prose-ol:list-decimal prose-ul:list-disc prose-headings:text-xs prose-headings:text-white"
+          className="prose prose-invert max-w-none text-[10px] leading-3 text-gray-400 prose-p:my-0.5 prose-p:text-[10px] prose-p:leading-3 prose-li:my-0 prose-li:text-[10px] prose-li:leading-3 prose-ol:list-decimal prose-ul:list-disc prose-headings:text-xs prose-headings:text-white light:text-muted-foreground light:prose-headings:text-foreground"
           dangerouslySetInnerHTML={{ __html: decodedTerms }}
         />
       );
@@ -447,7 +447,7 @@ const EventDetailNew = () => {
 
     if (termsLines?.length) {
       return (
-        <ul className="space-y-0.5 pl-4 list-disc text-[10px] leading-3 text-gray-400">
+        <ul className="space-y-0.5 pl-4 list-disc text-[10px] leading-3 text-gray-400 light:text-muted-foreground">
           {termsLines.map((line, idx) => (
             <li key={`term-line-${idx}`}>{line}</li>
           ))}
@@ -456,42 +456,42 @@ const EventDetailNew = () => {
     }
 
     return (
-      <p className="text-[10px] leading-3 text-gray-500">No terms provided.</p>
+      <p className="text-[10px] leading-3 text-gray-500 light:text-muted-foreground">No terms provided.</p>
     );
   };
 
   const renderFaqTc = () => (
     <div className="space-y-4">
       {normalizedFaqs.length > 0 && (
-        <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+        <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden light:bg-surface light:border-border">
           <button
-            className="w-full flex items-center justify-between gap-2 text-left px-5 py-4 hover:bg-gray-800 transition"
+            className="w-full flex items-center justify-between gap-2 text-left px-5 py-4 hover:bg-gray-800 transition light:hover:bg-surface"
             onClick={() => setFaqOpen((prev) => !prev)}
           >
-            <span className="flex items-center gap-2 text-white font-medium text-base">
+            <span className="flex items-center gap-2 text-white font-medium text-base light:text-foreground">
               <Megaphone className="h-5 w-5 text-red-600" />
               Frequently Asked Questions
             </span>
             <ChevronDown
-              className={`h-5 w-5 text-gray-400 transition-transform ${faqOpen ? "rotate-180" : ""}`}
+              className={`h-5 w-5 text-gray-400 transition-transform  light:text-muted-foreground ${faqOpen ? "rotate-180" : ""}`}
             />
           </button>
           {faqOpen && (
-            <div className="space-y-3 border-t border-gray-800 p-4">
+            <div className="space-y-3 border-t border-gray-800 p-4 light:border-border">
               {normalizedFaqs.map((qa, idx) => (
                 <section
                   key={`faq-${idx}`}
-                  className="rounded-lg border border-gray-800 bg-gray-950/40 px-4 py-3"
+                  className="rounded-lg border border-gray-800 bg-gray-950/40 px-4 py-3 light:border-border light:bg-surface"
                 >
-                  <p className="text-white font-medium text-sm mb-1">
+                  <p className="text-white font-medium text-sm mb-1 light:text-foreground">
                     {qa.question}
                   </p>
                   {qa.answer ? (
-                    <p className="text-gray-300 text-sm leading-relaxed">
+                    <p className="text-gray-300 text-sm leading-relaxed light:text-muted-foreground">
                       {qa.answer}
                     </p>
                   ) : (
-                    <p className="text-gray-500 text-xs">No answer provided.</p>
+                    <p className="text-gray-500 text-xs light:text-muted-foreground">No answer provided.</p>
                   )}
                 </section>
               ))}
@@ -500,17 +500,17 @@ const EventDetailNew = () => {
         </div>
       )}
 
-      <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+      <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden light:bg-surface light:border-border">
         <button
-          className="w-full flex items-center justify-between gap-2 text-left px-5 py-4 hover:bg-gray-800 transition"
+          className="w-full flex items-center justify-between gap-2 text-left px-5 py-4 hover:bg-gray-800 transition light:hover:bg-surface"
           onClick={() => setTcOpen((prev) => !prev)}
         >
-          <span className="flex items-center gap-2 text-xs font-medium text-white">
+          <span className="flex items-center gap-2 text-xs font-medium text-white light:text-foreground">
             <ShieldCheck className="h-5 w-5 text-green-600" />
             Terms & Conditions
           </span>
           <ChevronDown
-            className={`h-5 w-5 text-gray-400 transition-transform ${tcOpen ? "rotate-180" : ""}`}
+            className={`h-5 w-5 text-gray-400 transition-transform  light:text-muted-foreground ${tcOpen ? "rotate-180" : ""}`}
           />
         </button>
         {tcOpen && (
@@ -520,14 +520,14 @@ const EventDetailNew = () => {
                   <div key={`term-${idx}`} className="mb-3 last:mb-0">
                     {getTermHtml(t) ? (
                       <div
-                        className="space-y-1 text-[10px] leading-3 text-gray-300 [&_*]:text-[10px] [&_*]:leading-3"
+                        className="space-y-1 text-[10px] leading-3 text-gray-300 [&_*]:text-[10px] [&_*]:leading-3 light:text-muted-foreground"
                         dangerouslySetInnerHTML={{ __html: getTermHtml(t) }}
                       />
                     ) : (
                       renderTermsContent()
                     )}
                     {t.lastUpdated && (
-                      <p className="mt-2 text-[10px] leading-3 text-gray-500">
+                      <p className="mt-2 text-[10px] leading-3 text-gray-500 light:text-muted-foreground">
                         Last updated:{" "}
                         {new Date(t.lastUpdated).toLocaleDateString()}
                       </p>
@@ -546,8 +546,8 @@ const EventDetailNew = () => {
       {showFaqTc ? (
         renderFaqTc()
       ) : (
-        <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
-          <p className="text-sm text-gray-500">
+        <div className="bg-gray-900 rounded-xl border border-gray-800 p-5 light:bg-surface light:border-border">
+          <p className="text-sm text-gray-500 light:text-muted-foreground">
             No FAQs or terms provided for this event.
           </p>
         </div>
@@ -1048,10 +1048,10 @@ const EventDetailNew = () => {
 
   if (loading) {
     return (
-      <div className="event-detail-theme min-h-screen bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] flex items-center justify-center">
+      <div className="event-detail-theme min-h-screen bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] flex items-center justify-center light:from-background light:via-background light:to-background">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#D60024] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white">Loading event details...</p>
+          <div className="w-16 h-16 border-4 border-[#D60024] border-t-transparent rounded-full animate-spin mx-auto mb-4 light:border-primary"></div>
+          <p className="text-white light:text-foreground">Loading event details...</p>
         </div>
       </div>
     );
@@ -1059,9 +1059,9 @@ const EventDetailNew = () => {
 
   if (!event) {
     return (
-      <div className="event-detail-theme min-h-screen bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] flex items-center justify-center">
+      <div className="event-detail-theme min-h-screen bg-gradient-to-br from-[#000000] via-[#0a0a0a] to-[#050510] flex items-center justify-center light:from-background light:via-background light:to-background">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">
+          <h2 className="text-2xl font-bold text-white mb-4 light:text-foreground">
             Event Not Found
           </h2>
           <Button
@@ -1077,23 +1077,23 @@ const EventDetailNew = () => {
   }
 
   return (
-    <div className="event-detail-theme min-h-screen text-white bg-gray-950">
+    <div className="event-detail-theme min-h-screen text-white bg-gray-950 light:text-foreground light:bg-surface">
       <style>{pageCss}</style>
 
-      <header className="sticky top-0 z-40 bg-black/35 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 bg-black/35 backdrop-blur-xl light:bg-background">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-12">
           <Link to="/" className="flex items-center gap-3">
             <img src={logoSvg} alt="Map My Party" className="h-9 w-auto" />
-            <span className="text-sm font-semibold tracking-[0.06em] text-white">
+            <span className="text-sm font-semibold tracking-[0.06em] text-white light:text-foreground">
               MapMyParty
             </span>
           </Link>
 
-          <nav className="flex items-center gap-6 text-sm font-medium text-white/75">
-            <Link to="/" className="transition hover:text-white">
+          <nav className="flex items-center gap-6 text-sm font-medium text-white/75 light:text-muted-foreground">
+            <Link to="/" className="transition hover:text-white light:hover:text-foreground">
               Home
             </Link>
-            <Link to="/browse-events" className="transition hover:text-white">
+            <Link to="/browse-events" className="transition hover:text-white light:hover:text-foreground">
               Events
             </Link>
           </nav>
@@ -1102,12 +1102,12 @@ const EventDetailNew = () => {
 
       {isPreviewMode && (
         <div className="sticky top-[4.5rem] z-30 border-y border-primaryCTA/25 bg-primaryCTA/15 backdrop-blur-xl">
-          <div className="mx-auto flex max-w-7xl flex-col gap-2 px-6 py-2 text-xs font-semibold text-white sm:flex-row sm:items-center sm:justify-between lg:px-12">
+          <div className="mx-auto flex max-w-7xl flex-col gap-2 px-6 py-2 text-xs font-semibold text-white sm:flex-row sm:items-center sm:justify-between lg:px-12 light:text-foreground">
             <span>Organizer preview</span>
             <button
               type="button"
               onClick={() => navigate("/organizer/myevents")}
-              className="inline-flex w-fit items-center rounded-md border border-white/15 px-2.5 py-1 text-[11px] text-white/85 transition hover:border-white/30 hover:text-white"
+              className="inline-flex w-fit items-center rounded-md border border-white/15 px-2.5 py-1 text-[11px] text-white/85 transition hover:border-white/30 hover:text-white light:border-border light:text-muted-foreground light:hover:border-border light:hover:text-foreground"
             >
               Back to My Events
             </button>
@@ -1133,7 +1133,7 @@ const EventDetailNew = () => {
                 <Button
                   variant="ghost"
                   onClick={handleShare}
-                  className="h-11 w-11 rounded-full border border-white/55 bg-background/80 p-0 text-white shadow-[0_18px_48px_-28px_hsl(var(--background)/0.95)] ring-1 ring-white/20 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-background/90 hover:text-white"
+                  className="h-11 w-11 rounded-full border border-white/55 bg-background/80 p-0 text-white shadow-[0_18px_48px_-28px_hsl(var(--background)/0.95)] ring-1 ring-white/20 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-background/90 hover:text-white light:border-border light:text-foreground light:ring-border light:hover:text-foreground"
                   title="Share event"
                 >
                   <Share2 className="h-5 w-5" />
@@ -1171,7 +1171,7 @@ const EventDetailNew = () => {
                 <div className="mt-5 space-y-3">
                   {/* Date & Time */}
                   <div className="event-info-block flex items-start gap-3 rounded-lg p-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border/30 bg-primaryCTA/15 text-accent shadow-inner">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border/30 bg-primaryCTA/15 text-accent shadow-inner light:text-accent-foreground">
                       <Calendar className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -1183,7 +1183,7 @@ const EventDetailNew = () => {
 
                   {/* Location */}
                   <div className="event-info-block flex items-start gap-3 rounded-lg p-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border/30 bg-primaryCTA/15 text-accent shadow-inner">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border/30 bg-primaryCTA/15 text-accent shadow-inner light:text-accent-foreground">
                       <MapPin className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -1227,7 +1227,7 @@ const EventDetailNew = () => {
               <Button
                 variant="ghost"
                 onClick={handleShare}
-                className="h-9 w-9 shrink-0 rounded-full border border-white/45 bg-background/65 p-0 text-white shadow-[0_14px_36px_-26px_hsl(var(--background)/0.95)] ring-1 ring-white/15 backdrop-blur-md transition hover:bg-background/80 hover:text-white"
+                className="h-9 w-9 shrink-0 rounded-full border border-white/45 bg-background/65 p-0 text-white shadow-[0_14px_36px_-26px_hsl(var(--background)/0.95)] ring-1 ring-white/15 backdrop-blur-md transition hover:bg-background/80 hover:text-white light:border-border light:text-foreground light:ring-border light:hover:text-foreground"
                 title="Share event"
               >
                 <Share2 className="h-4 w-4" />
@@ -1236,7 +1236,7 @@ const EventDetailNew = () => {
 
             <div className="mt-4 space-y-2.5">
               <div className="event-info-block flex items-start gap-2.5 rounded-lg p-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border/30 bg-primaryCTA/15 text-accent shadow-inner">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border/30 bg-primaryCTA/15 text-accent shadow-inner light:text-accent-foreground">
                   <Calendar className="h-3.5 w-3.5" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -1253,7 +1253,7 @@ const EventDetailNew = () => {
               </div>
 
               <div className="event-info-block flex items-start gap-2.5 rounded-lg p-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border/30 bg-primaryCTA/15 text-accent shadow-inner">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border/30 bg-primaryCTA/15 text-accent shadow-inner light:text-accent-foreground">
                   <MapPin className="h-3.5 w-3.5" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -1304,7 +1304,7 @@ const EventDetailNew = () => {
               <div className="absolute right-0 top-0 bottom-0 w-16 lg:w-24 bg-gradient-to-l from-gray-950 to-transparent z-10 pointer-events-none" />
             )}
 
-            <div className="relative overflow-hidden border-y border-gray-800/50 bg-gray-900/30 backdrop-blur-sm">
+            <div className="relative overflow-hidden border-y border-gray-800/50 bg-gray-900/30 backdrop-blur-sm light:border-border light:bg-surface">
               <div
                 className={`flex ${sponsorStripMoves ? "w-max animate-[sponsorMarquee_25s_linear_infinite] hover:[animation-play-state:paused]" : "w-full"}`}
               >
@@ -1319,12 +1319,12 @@ const EventDetailNew = () => {
                         href={s.website || "#"}
                         target={s.website ? "_blank" : undefined}
                         rel={s.website ? "noopener noreferrer" : undefined}
-                        className="group flex items-center gap-4 rounded-xl px-4 py-2 transition-all duration-300 hover:bg-white/5"
+                        className="group flex items-center gap-4 rounded-xl px-4 py-2 transition-all duration-300 hover:bg-white/5 light:hover:bg-muted"
                       >
                         {/* Logo Container */}
                         <div className="relative">
                           <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-red-600/20 to-transparent opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-100" />
-                          <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border border-gray-700/50 bg-gray-800/80 shadow-lg transition-all duration-300 group-hover:border-gray-600/50 group-hover:shadow-xl group-hover:shadow-red-600/10">
+                          <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border border-gray-700/50 bg-gray-800/80 shadow-lg transition-all duration-300 group-hover:border-gray-600/50 group-hover:shadow-xl group-hover:shadow-red-600/10 light:border-border light:bg-surface light:group-hover:border-border">
                             <img
                               src={s.logo || SPONSOR_PLACEHOLDER}
                               alt={s.name || "Sponsor"}
@@ -1335,7 +1335,7 @@ const EventDetailNew = () => {
 
                         {/* Sponsor Info */}
                         <div className="flex flex-col">
-                          <span className="whitespace-nowrap text-sm font-semibold text-gray-300 transition-colors duration-300 group-hover:text-white">
+                          <span className="whitespace-nowrap text-sm font-semibold text-gray-300 transition-colors duration-300 group-hover:text-white light:text-muted-foreground light:group-hover:text-foreground">
                             {s.name || "Sponsor"}
                           </span>
                           {s.isPrimary && (
@@ -1362,12 +1362,12 @@ const EventDetailNew = () => {
             {/* About Section */}
             <div className="order-[10] space-y-3 lg:order-none">
               <div className="space-y-2">
-                <h2 className="text-xl font-bold text-white lg:text-2xl">
+                <h2 className="text-xl font-bold text-white lg:text-2xl light:text-foreground">
                   About This Event
                 </h2>
                 <div
                   ref={aboutRef}
-                  className="text-gray-300 text-sm leading-relaxed whitespace-pre-line transition-all duration-300"
+                  className="text-gray-300 text-sm leading-relaxed whitespace-pre-line transition-all duration-300 light:text-muted-foreground"
                   style={
                     aboutExpanded
                       ? {}
@@ -1398,7 +1398,7 @@ const EventDetailNew = () => {
             {/* Event Guide Section */}
             <div className="order-[60] space-y-3 lg:order-none">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white lg:text-2xl">Event Guide</h2>
+                <h2 className="text-xl font-bold text-white lg:text-2xl light:text-foreground">Event Guide</h2>
                 {event.advisoryItems?.length > 4 && (
                   <button
                     type="button"
@@ -1607,18 +1607,18 @@ const EventDetailNew = () => {
                     return (
                       <div
                         key={`advisory-preview-${idx}`}
-                        className="flex items-center gap-2.5 p-3 rounded-lg bg-gray-800/30 border border-gray-700/50 hover:bg-gray-800/50 transition-colors"
+                        className="flex items-center gap-2.5 p-3 rounded-lg bg-gray-800/30 border border-gray-700/50 hover:bg-gray-800/50 transition-colors light:bg-surface light:border-border light:hover:bg-surface"
                       >
                         <span className="text-lg flex-shrink-0">
                           {getIcon(item)}
                         </span>
-                        <span className="text-sm text-gray-300">{item}</span>
+                        <span className="text-sm text-gray-300 light:text-muted-foreground">{item}</span>
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">No advisories provided.</p>
+                <p className="text-sm text-gray-500 light:text-muted-foreground">No advisories provided.</p>
               )}
             </div>
 
@@ -1628,7 +1628,7 @@ const EventDetailNew = () => {
             {event.artists?.length > 0 && (
               <div className="order-[20] space-y-3 lg:order-none">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-bold text-white lg:text-2xl">Artists</h2>
+                  <h2 className="text-xl font-bold text-white lg:text-2xl light:text-foreground">Artists</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {event.artists.map((artist) => (
@@ -1642,7 +1642,7 @@ const EventDetailNew = () => {
                         className="w-16 h-16 rounded-lg object-cover"
                       />
                       <div className="space-y-2">
-                        <p className="text-white font-medium text-base">
+                        <p className="text-white font-medium text-base light:text-foreground">
                           {artist.name}
                         </p>
                         <div className="flex gap-3 text-xs font-medium">
@@ -1679,16 +1679,16 @@ const EventDetailNew = () => {
             {/* Gallery Section */}
             <div className="order-[30] space-y-3 lg:order-none">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="text-xl font-bold text-white lg:text-2xl">Event Gallery</h2>
+                <h2 className="text-xl font-bold text-white lg:text-2xl light:text-foreground">Event Gallery</h2>
                 {galleryImages.length > 1 && (
-                  <div className="flex items-center gap-1 rounded-full border border-gray-700/80 bg-gray-900/80 p-1 shadow-lg shadow-black/20 backdrop-blur">
+                  <div className="flex items-center gap-1 rounded-full border border-gray-700/80 bg-gray-900/80 p-1 shadow-lg shadow-black/20 backdrop-blur light:border-border light:bg-surface light:shadow-black/5">
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
                       onClick={() => slideGallery(-1)}
                       disabled={!galleryScrollState.canScrollLeft}
-                      className="h-8 w-8 rounded-full text-gray-300 hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-35"
+                      className="h-8 w-8 rounded-full text-gray-300 hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-35 light:text-muted-foreground light:hover:bg-muted light:hover:text-foreground"
                       aria-label="Scroll gallery left"
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -1699,7 +1699,7 @@ const EventDetailNew = () => {
                       size="icon"
                       onClick={() => slideGallery(1)}
                       disabled={!galleryScrollState.canScrollRight}
-                      className="h-8 w-8 rounded-full text-gray-300 hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-35"
+                      className="h-8 w-8 rounded-full text-gray-300 hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-35 light:text-muted-foreground light:hover:bg-muted light:hover:text-foreground"
                       aria-label="Scroll gallery right"
                     >
                       <ChevronRight className="h-4 w-4" />
@@ -1710,7 +1710,7 @@ const EventDetailNew = () => {
               <div className="relative">
                 <div
                   ref={galleryScrollerRef}
-                  className="event-gallery-mosaic rounded-xl bg-gray-950 p-1"
+                  className="event-gallery-mosaic rounded-xl bg-gray-950 p-1 light:bg-surface"
                 >
                   {galleryImages.map((image, index) => {
                     const tile = getGalleryMosaicTile(
@@ -1723,7 +1723,7 @@ const EventDetailNew = () => {
                         key={`${image}-${index}`}
                         type="button"
                         onClick={() => setSelectedImage(image)}
-                        className="event-gallery-mosaic__tile relative block min-w-0 overflow-hidden rounded-md bg-gray-900 p-0 text-left group"
+                        className="event-gallery-mosaic__tile relative block min-w-0 overflow-hidden rounded-md bg-gray-900 p-0 text-left group light:bg-surface"
                         style={{
                           "--tile-col": tile.mobile[0],
                           "--tile-row": tile.mobile[1],
@@ -1798,21 +1798,21 @@ const EventDetailNew = () => {
             {/* Location Section */}
             <div className="order-[40] space-y-3 lg:order-none">
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-white lg:text-2xl">Venue</h2>
+                <h2 className="text-xl font-bold text-white lg:text-2xl light:text-foreground">Venue</h2>
               </div>
 
-              <div className="flex flex-col items-start gap-3 rounded-xl border border-gray-700/50 bg-transparent p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col items-start gap-3 rounded-xl border border-gray-700/50 bg-transparent p-4 sm:flex-row sm:items-center sm:justify-between light:border-border">
                 <div className="flex-1">
-                  <p className="text-white font-semibold text-base lg:text-lg">
+                  <p className="text-white font-semibold text-base lg:text-lg light:text-foreground">
                     {event.venue}
                   </p>
-                  <p className="text-gray-400 text-sm mt-0.5">
+                  <p className="text-gray-400 text-sm mt-0.5 light:text-muted-foreground">
                     {event.address}
                   </p>
                 </div>
                 <Button
                   variant="outline"
-                  className="flex w-full items-center justify-center gap-2 border-gray-700 text-white hover:bg-gray-800 hover:text-white sm:w-auto"
+                  className="flex w-full items-center justify-center gap-2 border-gray-700 text-white hover:bg-gray-800 hover:text-white sm:w-auto light:border-border light:text-foreground light:hover:bg-surface light:hover:text-foreground"
                   onClick={() =>
                     window.open(
                       `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address)}`,
@@ -1826,7 +1826,7 @@ const EventDetailNew = () => {
               </div>
 
               {/* Map */}
-              {/* <div className="relative h-64 md:h-80 rounded-xl overflow-hidden bg-gray-800 mt-4">
+              {/* <div className="relative h-64 md:h-80 rounded-xl overflow-hidden bg-gray-800 mt-4 light:bg-surface">
                 <iframe
                   width="100%"
                   height="100%"
@@ -1845,48 +1845,48 @@ const EventDetailNew = () => {
             {/* Organizer Section */}
             {/* <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-bold text-white">Organized By</h2>
+                <h2 className="text-2xl font-bold text-white light:text-foreground">Organized By</h2>
               </div>
 
               <div className="flex items-start gap-4 mb-6">
                 <img
                   src={event.organizer.logo}
                   alt={event.organizer.name}
-                  className="w-20 h-20 rounded-lg object-cover border border-gray-700"
+                  className="w-20 h-20 rounded-lg object-cover border border-gray-700 light:border-border"
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-xl font-semibold text-white">{event.organizer.name}</h3>
+                    <h3 className="text-xl font-semibold text-white light:text-foreground">{event.organizer.name}</h3>
                     {event.organizer.verified && (
-                      <Badge className="bg-green-600/20 text-green-400 border border-green-600/30 text-xs">
+                      <Badge className="bg-green-600/20 text-green-400 border border-green-600/30 text-xs light:text-success">
                         <Check className="h-3 w-3 mr-1" />
                         Verified
                       </Badge>
                     )}
                   </div>
-                  <p className="text-gray-400 text-sm mb-3">{event.organizer.bio}</p>
+                  <p className="text-gray-400 text-sm mb-3 light:text-muted-foreground">{event.organizer.bio}</p>
                   <div className="flex gap-4 text-sm">
-                    <span className="text-gray-500">
-                      <strong className="text-white">{event.organizer.eventsOrganized}</strong> Events
+                    <span className="text-gray-500 light:text-muted-foreground">
+                      <strong className="text-white light:text-foreground">{event.organizer.eventsOrganized}</strong> Events
                     </span>
-                    <span className="text-gray-500">
-                      <strong className="text-white">{event.organizer.followers.toLocaleString()}</strong> Followers
+                    <span className="text-gray-500 light:text-muted-foreground">
+                      <strong className="text-white light:text-foreground">{event.organizer.followers.toLocaleString()}</strong> Followers
                     </span>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-3 mb-6">
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-800 border border-gray-700">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                  <span className="text-white">{event.organizer.email}</span>
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-800 border border-gray-700 light:bg-surface light:border-border">
+                  <Mail className="h-5 w-5 text-gray-400 light:text-muted-foreground" />
+                  <span className="text-white light:text-foreground">{event.organizer.email}</span>
                 </div>
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-800 border border-gray-700">
-                  <Phone className="h-5 w-5 text-gray-400" />
-                  <span className="text-white">{event.organizer.phone}</span>
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-800 border border-gray-700 light:bg-surface light:border-border">
+                  <Phone className="h-5 w-5 text-gray-400 light:text-muted-foreground" />
+                  <span className="text-white light:text-foreground">{event.organizer.phone}</span>
                 </div>
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-800 border border-gray-700">
-                  <Globe className="h-5 w-5 text-gray-400" />
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-800 border border-gray-700 light:bg-surface light:border-border">
+                  <Globe className="h-5 w-5 text-gray-400 light:text-muted-foreground" />
                   <a href={event.organizer.website} target="_blank" rel="noopener noreferrer" className="text-red-600 hover:text-red-500">
                     {event.organizer.website}
                   </a>
@@ -1894,15 +1894,15 @@ const EventDetailNew = () => {
               </div>
 
               <div className="flex gap-3">
-                <Button variant="outline" className="flex-1 border-gray-700 text-white hover:bg-gray-800">
+                <Button variant="outline" className="flex-1 border-gray-700 text-white hover:bg-gray-800 light:border-border light:text-foreground light:hover:bg-surface">
                   <Facebook className="h-4 w-4 mr-2" />
                   Facebook
                 </Button>
-                <Button variant="outline" className="flex-1 border-gray-700 text-white hover:bg-gray-800">
+                <Button variant="outline" className="flex-1 border-gray-700 text-white hover:bg-gray-800 light:border-border light:text-foreground light:hover:bg-surface">
                   <Twitter className="h-4 w-4 mr-2" />
                   Twitter
                 </Button>
-                <Button variant="outline" className="flex-1 border-gray-700 text-white hover:bg-gray-800">
+                <Button variant="outline" className="flex-1 border-gray-700 text-white hover:bg-gray-800 light:border-border light:text-foreground light:hover:bg-surface">
                   <Instagram className="h-4 w-4 mr-2" />
                   Instagram
                 </Button>
@@ -1914,14 +1914,14 @@ const EventDetailNew = () => {
             {/* Organizer Note Section */}
             {event.organizerNote?.trim?.() && (
               <div className="order-[70] space-y-3 lg:order-none">
-                <div className="rounded-xl bg-transparent border border-gray-700/50 p-4">
+                <div className="rounded-xl bg-transparent border border-gray-700/50 p-4 light:border-border">
                   <div className="flex items-start gap-3">
                     <div className="flex-1">
-                      <h2 className="text-xl font-bold text-white mb-2 lg:text-2xl">
+                      <h2 className="text-xl font-bold text-white mb-2 lg:text-2xl light:text-foreground">
                         Organizer Note
                       </h2>
                       <div
-                        className="text-sm text-gray-300 leading-relaxed whitespace-pre-line transition-all duration-300"
+                        className="text-sm text-gray-300 leading-relaxed whitespace-pre-line transition-all duration-300 light:text-muted-foreground"
                         style={
                           organizerNoteExpanded
                             ? {}
@@ -1957,34 +1957,34 @@ const EventDetailNew = () => {
             {/* FAQ Section */}
             {normalizedFaqs.length > 0 && (
               <div className="order-[50] space-y-3 lg:order-none">
-                <div className="rounded-xl border border-gray-700/50 overflow-hidden bg-transparent">
+                <div className="rounded-xl border border-gray-700/50 overflow-hidden bg-transparent light:border-border">
                   <button
                     className="w-full flex items-center justify-between gap-2 text-left px-5 py-4 transition"
                     onClick={() => setFaqOpen((prev) => !prev)}
                   >
-                    <span className="text-white font-semibold text-base lg:text-lg">
+                    <span className="text-white font-semibold text-base lg:text-lg light:text-foreground">
                       Frequently Asked Questions
                     </span>
                     <ChevronDown
-                      className={`h-5 w-5 text-gray-400 transition-transform ${faqOpen ? "rotate-180" : ""}`}
+                      className={`h-5 w-5 text-gray-400 transition-transform  light:text-muted-foreground ${faqOpen ? "rotate-180" : ""}`}
                     />
                   </button>
                   {faqOpen && (
-                    <div className="space-y-3 border-t border-gray-800 p-4">
+                    <div className="space-y-3 border-t border-gray-800 p-4 light:border-border">
                       {normalizedFaqs.map((qa, idx) => (
                         <section
                           key={`faq-${idx}`}
-                          className="rounded-lg border border-gray-700/50 bg-gray-900/40 px-4 py-3"
+                          className="rounded-lg border border-gray-700/50 bg-gray-900/40 px-4 py-3 light:border-border light:bg-surface"
                         >
-                          <p className="text-white font-semibold text-base mb-1">
+                          <p className="text-white font-semibold text-base mb-1 light:text-foreground">
                             {qa.question}
                           </p>
                           {qa.answer ? (
-                            <p className="text-gray-400 text-sm leading-relaxed">
+                            <p className="text-gray-400 text-sm leading-relaxed light:text-muted-foreground">
                               {qa.answer}
                             </p>
                           ) : (
-                            <p className="text-gray-500 text-xs">
+                            <p className="text-gray-500 text-xs light:text-muted-foreground">
                               No answer provided.
                             </p>
                           )}
@@ -1998,16 +1998,16 @@ const EventDetailNew = () => {
 
             {/* Terms & Conditions Section */}
             <div className={`order-[80] space-y-3 lg:order-none ${normalizedFaqs.length > 0 ? "lg:-mt-1" : ""}`}>
-              <div className="rounded-xl border border-gray-700/50 overflow-hidden bg-transparent">
+              <div className="rounded-xl border border-gray-700/50 overflow-hidden bg-transparent light:border-border">
                 <button
                   className="w-full flex items-center justify-between gap-2 text-left px-5 py-4 transition"
                   onClick={() => setTcOpen((prev) => !prev)}
                 >
-                  <span className="text-xs font-semibold text-white">
+                  <span className="text-xs font-semibold text-white light:text-foreground">
                     Terms & Conditions
                   </span>
                   <ChevronDown
-                    className={`h-5 w-5 text-gray-400 transition-transform ${tcOpen ? "rotate-180" : ""}`}
+                    className={`h-5 w-5 text-gray-400 transition-transform  light:text-muted-foreground ${tcOpen ? "rotate-180" : ""}`}
                   />
                 </button>
                 {tcOpen && (
@@ -2017,7 +2017,7 @@ const EventDetailNew = () => {
                           <div key={`term-${idx}`} className="mb-2 last:mb-0">
                             {getTermHtml(t) ? (
                               <div
-                                className="space-y-1 text-[10px] leading-3 text-gray-400 [&_*]:text-[10px] [&_*]:leading-3"
+                                className="space-y-1 text-[10px] leading-3 text-gray-400 [&_*]:text-[10px] [&_*]:leading-3 light:text-muted-foreground"
                                 dangerouslySetInnerHTML={{
                                   __html: getTermHtml(t),
                                 }}
@@ -2026,7 +2026,7 @@ const EventDetailNew = () => {
                               renderTermsContent()
                             )}
                             {t.lastUpdated && (
-                              <p className="mt-2 text-[10px] leading-3 text-gray-500">
+                              <p className="mt-2 text-[10px] leading-3 text-gray-500 light:text-muted-foreground">
                                 Last updated:{" "}
                                 {new Date(t.lastUpdated).toLocaleDateString()}
                               </p>
@@ -2044,12 +2044,12 @@ const EventDetailNew = () => {
               open={advisoryModalOpen}
               onOpenChange={setAdvisoryModalOpen}
             >
-              <DialogContent className="max-w-lg border-gray-800 bg-gray-900 text-white">
+              <DialogContent className="max-w-lg border-gray-800 bg-gray-900 text-white light:border-border light:bg-surface light:text-foreground">
                 <DialogHeader>
                   <DialogTitle className="text-xl font-bold">
                     Event Guide
                   </DialogTitle>
-                  <DialogDescription className="text-gray-400 text-sm">
+                  <DialogDescription className="text-gray-400 text-sm light:text-muted-foreground">
                     All advisories and notes for this event
                   </DialogDescription>
                 </DialogHeader>
@@ -2251,17 +2251,17 @@ const EventDetailNew = () => {
                       return (
                         <div
                           key={`advisory-modal-${idx}`}
-                          className="flex items-center gap-3 p-3 rounded-lg bg-gray-800/30 border border-gray-700/50 hover:bg-gray-800/50 transition-colors"
+                          className="flex items-center gap-3 p-3 rounded-lg bg-gray-800/30 border border-gray-700/50 hover:bg-gray-800/50 transition-colors light:bg-surface light:border-border light:hover:bg-surface"
                         >
                           <span className="text-xl flex-shrink-0">
                             {getIcon(item)}
                           </span>
-                          <p className="text-white text-sm">{item}</p>
+                          <p className="text-white text-sm light:text-foreground">{item}</p>
                         </div>
                       );
                     })
                   ) : (
-                    <p className="text-sm text-gray-500 text-center py-8">
+                    <p className="text-sm text-gray-500 text-center py-8 light:text-muted-foreground">
                       No advisories provided.
                     </p>
                   )}
@@ -2273,8 +2273,8 @@ const EventDetailNew = () => {
           {/* Right Column - Booking Section */}
           <div className="order-1 lg:order-none lg:col-span-1" id="ticket-section">
             <div className="space-y-3">
-              <div className="rounded-xl border border-gray-700/50 p-3 space-y-3 bg-transparent lg:p-4">
-                <h1 className="text-xl font-bold text-white mb-3 flex items-center gap-2 lg:text-2xl">
+              <div className="rounded-xl border border-gray-700/50 p-3 space-y-3 bg-transparent lg:p-4 light:border-border">
+                <h1 className="text-xl font-bold text-white mb-3 flex items-center gap-2 lg:text-2xl light:text-foreground">
                   <Ticket className="h-5 w-5 text-red-600" />
                   Select Tickets
                 </h1>
@@ -2291,23 +2291,23 @@ const EventDetailNew = () => {
                     return (
                       <div
                         key={ticket.id}
-                        className={`p-3 rounded-xl border border-gray-700/50 bg-transparent lg:p-4 ${!selectable ? "opacity-60" : ""}`}
+                        className={`p-3 rounded-xl border border-gray-700/50 bg-transparent lg:p-4  light:border-border ${!selectable ? "opacity-60" : ""}`}
                       >
                         <div className="flex justify-between items-start mb-1">
-                          <h4 className="font-bold text-white text-base lg:text-xl">
+                          <h4 className="font-bold text-white text-base lg:text-xl light:text-foreground">
                             {ticket.name}
                           </h4>
                           <div className="flex flex-col items-end gap-1">
                             {isComingSoon ? (
-                              <span className="rounded-full border border-yellow-500/40 bg-yellow-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-yellow-300">
+                              <span className="rounded-full border border-yellow-500/40 bg-yellow-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-yellow-300 light:text-warning">
                                 Coming Soon
                               </span>
                             ) : isPurchaseClosed ? (
-                              <span className="rounded-full border border-gray-600 bg-gray-800/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-400">
+                              <span className="rounded-full border border-gray-600 bg-gray-800/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-400 light:border-border light:bg-surface light:text-muted-foreground">
                                 Sales Closed
                               </span>
                             ) : isTicketSoldOut ? (
-                              <span className="rounded-full border border-gray-600 bg-gray-800/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-400">
+                              <span className="rounded-full border border-gray-600 bg-gray-800/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-400 light:border-border light:bg-surface light:text-muted-foreground">
                                 Sold Out
                               </span>
                             ) : null}
@@ -2316,14 +2316,14 @@ const EventDetailNew = () => {
                             </span>
                           </div>
                         </div>
-                        <p className="text-[11px] text-gray-500 mb-3">
+                        <p className="text-[11px] text-gray-500 mb-3 light:text-muted-foreground">
                           {ticket.description}
                         </p>
 
                         <div className="flex items-center justify-between">
-                          <div className="text-[10px] text-gray-500">
+                          <div className="text-[10px] text-gray-500 light:text-muted-foreground">
                             {isComingSoon ? (
-                              <p className="text-yellow-300">Coming soon</p>
+                              <p className="text-yellow-300 light:text-warning">Coming soon</p>
                             ) : isPurchaseClosed ? (
                               <p>Sales closed</p>
                             ) : (
@@ -2346,11 +2346,11 @@ const EventDetailNew = () => {
                                 isSalesClosed ||
                                 !selectable
                               }
-                              className="h-7 w-7 rounded-full border border-gray-600 flex items-center justify-center text-white hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                              className="h-7 w-7 rounded-full border border-gray-600 flex items-center justify-center text-white hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition light:border-border light:text-foreground light:hover:bg-surface"
                             >
                               <Minus className="h-3 w-3" />
                             </button>
-                            <span className="w-6 text-center text-base font-bold text-white lg:text-lg">
+                            <span className="w-6 text-center text-base font-bold text-white lg:text-lg light:text-foreground">
                               {qty}
                             </span>
                             <button
@@ -2361,7 +2361,7 @@ const EventDetailNew = () => {
                                 !selectable ||
                                 qty >= cap
                               }
-                              className="h-7 w-7 rounded-full border border-gray-600 flex items-center justify-center text-white hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                              className="h-7 w-7 rounded-full border border-gray-600 flex items-center justify-center text-white hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition light:border-border light:text-foreground light:hover:bg-surface"
                             >
                               <Plus className="h-3 w-3" />
                             </button>
@@ -2369,21 +2369,21 @@ const EventDetailNew = () => {
                         </div>
 
                         {isComingSoon ? (
-                          <p className="text-yellow-300 text-xs mt-2">
+                          <p className="text-yellow-300 text-xs mt-2 light:text-warning">
                             Coming soon
                           </p>
                         ) : isPurchaseClosed ? (
-                          <p className="text-gray-500 text-xs mt-2">
+                          <p className="text-gray-500 text-xs mt-2 light:text-muted-foreground">
                             Sales closed
                           </p>
                         ) : isTicketSoldOut ? (
-                          <p className="text-gray-500 text-xs mt-2">Sold out</p>
+                          <p className="text-gray-500 text-xs mt-2 light:text-muted-foreground">Sold out</p>
                         ) : null}
                         {selectable &&
                           Number.isFinite(cap) &&
                           cap < Infinity &&
                           qty >= cap && (
-                            <p className="text-gray-500 text-xs mt-2">
+                            <p className="text-gray-500 text-xs mt-2 light:text-muted-foreground">
                               Max per user limit reached
                             </p>
                           )}
@@ -2392,9 +2392,9 @@ const EventDetailNew = () => {
                   })}
                 </div>
 
-                <div className="pt-3 border-t border-gray-800 flex justify-between items-center text-sm">
-                  <span className="text-gray-400">Tickets</span>
-                  <span className="font-semibold text-white text-base">
+                <div className="pt-3 border-t border-gray-800 flex justify-between items-center text-sm light:border-border">
+                  <span className="text-gray-400 light:text-muted-foreground">Tickets</span>
+                  <span className="font-semibold text-white text-base light:text-foreground">
                     {totalTickets}
                   </span>
                 </div>
@@ -2411,7 +2411,7 @@ const EventDetailNew = () => {
                   {bookingDisabledReason || "Book Now"}
                 </Button>
 
-                <p className="text-[11px] text-center text-gray-500">
+                <p className="text-[11px] text-center text-gray-500 light:text-muted-foreground">
                   {bookingDisabledReason
                     ? "Booking unavailable"
                     : "Secure payment • Instant confirmation"}
@@ -2423,14 +2423,14 @@ const EventDetailNew = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <Star className="h-5 w-5 text-[#fbbf24]" />
-                      <span className="text-2xl font-bold text-white">{event.rating}</span>
+                      <Star className="h-5 w-5 text-[#fbbf24] light:text-warning" />
+                      <span className="text-2xl font-bold text-white light:text-foreground">{event.rating}</span>
                     </div>
                     <span className="text-sm text-[rgba(255,255,255,0.65)]">{event.reviews} reviews</span>
                   </div>
                   <div className="space-y-2 text-sm text-[rgba(255,255,255,0.8)]">
                     <div className="flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-[#22c55e]" />
+                      <TrendingUp className="h-4 w-4 text-[#22c55e] light:text-success" />
                       <span>Trending in {event.category}</span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -2462,7 +2462,7 @@ const EventDetailNew = () => {
           <Button
             variant="ghost"
             onClick={() => setSelectedImage(null)}
-            className="absolute top-4 right-4 text-white hover:bg-white/10"
+            className="absolute top-4 right-4 text-white hover:bg-white/10 light:text-foreground light:hover:bg-muted"
           >
             <X className="h-6 w-6" />
           </Button>
@@ -2474,7 +2474,7 @@ const EventDetailNew = () => {
                   e.stopPropagation();
                   showPreviousImage();
                 }}
-                className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 text-white hover:bg-white/10 rounded-full h-12 w-12 p-0"
+                className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 text-white hover:bg-white/10 rounded-full h-12 w-12 p-0 light:text-foreground light:hover:bg-muted"
                 aria-label="Previous image"
               >
                 <ChevronLeft className="h-7 w-7" />
@@ -2485,7 +2485,7 @@ const EventDetailNew = () => {
                   e.stopPropagation();
                   showNextImage();
                 }}
-                className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 text-white hover:bg-white/10 rounded-full h-12 w-12 p-0"
+                className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 text-white hover:bg-white/10 rounded-full h-12 w-12 p-0 light:text-foreground light:hover:bg-muted"
                 aria-label="Next image"
               >
                 <ChevronRight className="h-7 w-7" />
@@ -2511,20 +2511,20 @@ const EventDetailNew = () => {
 
       {/* Auth Modal */}
       <Dialog open={authModalOpen} onOpenChange={setAuthModalOpen}>
-        <DialogContent className="border-gray-800 bg-gray-900 text-white max-w-2xl">
+        <DialogContent className="border-gray-800 bg-gray-900 text-white max-w-2xl light:border-border light:bg-surface light:text-foreground">
           <DialogHeader className="space-y-2">
             <DialogTitle className="text-2xl flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-green-600" />
               Sign in to book instantly
             </DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogDescription className="text-gray-400 light:text-muted-foreground">
               Secure checkout with email or Google. We'll auto-apply your
               details to the ticket.
             </DialogDescription>
           </DialogHeader>
 
           <Tabs value={authMode} onValueChange={setAuthMode} className="mt-2">
-            <TabsList className="grid grid-cols-2 bg-gray-800">
+            <TabsList className="grid grid-cols-2 bg-gray-800 light:bg-surface">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
@@ -2558,7 +2558,7 @@ const EventDetailNew = () => {
                 <div className="flex justify-end">
                   <Link
                     to={`/auth?type=user&forgot=true${loginForm.email.trim() ? `&email=${encodeURIComponent(loginForm.email.trim())}` : ""}`}
-                    className="text-xs text-red-400 hover:text-red-300"
+                    className="text-xs text-red-400 hover:text-red-300 light:text-destructive light:hover:text-destructive"
                   >
                     Forgot password?
                   </Link>
@@ -2580,10 +2580,10 @@ const EventDetailNew = () => {
               </form>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-700" />
+                  <span className="w-full border-t border-gray-700 light:border-border" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-gray-900 px-2 text-gray-500">
+                  <span className="bg-gray-900 px-2 text-gray-500 light:bg-surface light:text-muted-foreground">
                     or continue with
                   </span>
                 </div>
@@ -2591,7 +2591,7 @@ const EventDetailNew = () => {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full border-gray-700 text-white bg-gray-800 hover:bg-gray-700"
+                className="w-full border-gray-700 text-white bg-gray-800 hover:bg-gray-700 light:border-border light:text-foreground light:bg-surface"
                 onClick={handleGoogleLogin}
               >
                 <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">

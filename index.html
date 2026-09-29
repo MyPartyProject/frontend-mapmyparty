@@ -1,7 +1,20 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="light">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Apply the saved palette before the app paints; storage may be blocked.
+      (() => {
+        let theme = "light";
+        try {
+          const saved = localStorage.getItem("mapmyparty-theme");
+          if (saved === "dark") theme = "dark";
+          else if (saved && saved !== "light") localStorage.removeItem("mapmyparty-theme");
+        } catch { /* Keep the light default when storage is unavailable. */ }
+        document.documentElement.className = theme;
+        document.documentElement.style.colorScheme = theme;
+      })();
+    </script>
     <link rel="icon" type="image/x-icon" href="/src/assets/favicon.ico" />
     <link rel="icon" type="image/png" sizes="16x16" href="/src/assets/favicon-16x16.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/src/assets/favicon-32x32.png" />

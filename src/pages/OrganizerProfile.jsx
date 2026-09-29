@@ -140,7 +140,7 @@ const OrganizerProfile = () => {
                         <Mail className="w-5 h-5 text-red-600" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Email Address</p>
+                        <p className="text-sm text-gray-500 light:text-muted-foreground">Email Address</p>
                         <p className="text-base font-medium text-gray-900 mt-1">
                           {user.email || "organizer@example.com"}
                         </p>
@@ -151,7 +151,7 @@ const OrganizerProfile = () => {
                         <Phone className="w-5 h-5 text-red-600" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Phone Number</p>
+                        <p className="text-sm text-gray-500 light:text-muted-foreground">Phone Number</p>
                         <p className="text-base font-medium text-gray-900 mt-1">{user.phone}</p>
                       </div>
                     </div>
@@ -167,7 +167,7 @@ const OrganizerProfile = () => {
                         <MapPin className="w-5 h-5 text-blue-600" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Location</p>
+                        <p className="text-sm text-gray-500 light:text-muted-foreground">Location</p>
                         <p className="text-base font-medium text-gray-900 mt-1">{user.location}</p>
                       </div>
                     </div>
@@ -176,7 +176,7 @@ const OrganizerProfile = () => {
                         <MapPin className="w-5 h-5 text-purple-600" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">State</p>
+                        <p className="text-sm text-gray-500 light:text-muted-foreground">State</p>
                         <p className="text-base font-medium text-gray-900 mt-1">{user.state}</p>
                       </div>
                     </div>
@@ -185,7 +185,7 @@ const OrganizerProfile = () => {
                         <Calendar className="w-5 h-5 text-green-600" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Member Since</p>
+                        <p className="text-sm text-gray-500 light:text-muted-foreground">Member Since</p>
                         <p className="text-base font-medium text-gray-900 mt-1">{user.joinDate}</p>
                       </div>
                     </div>
@@ -265,23 +265,23 @@ const OrganizerProfile = () => {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-medium">Account Holder Name</p>
+                        <p className="text-xs text-gray-500 uppercase font-medium light:text-muted-foreground">Account Holder Name</p>
                         <p className="text-sm font-medium text-gray-900 mt-1">{user.paymentDetails.bankAccountHolder}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-medium">Bank Name</p>
+                        <p className="text-xs text-gray-500 uppercase font-medium light:text-muted-foreground">Bank Name</p>
                         <p className="text-sm font-medium text-gray-900 mt-1">{user.paymentDetails.bankName}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-medium">Account Number</p>
+                        <p className="text-xs text-gray-500 uppercase font-medium light:text-muted-foreground">Account Number</p>
                         <p className="text-sm font-medium text-gray-900 mt-1">{user.paymentDetails.accountNumber}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-medium">IFSC Code</p>
+                        <p className="text-xs text-gray-500 uppercase font-medium light:text-muted-foreground">IFSC Code</p>
                         <p className="text-sm font-medium text-gray-900 mt-1">{user.paymentDetails.ifscCode}</p>
                       </div>
                       <div className="md:col-span-2">
-                        <p className="text-xs text-gray-500 uppercase font-medium">UPI ID</p>
+                        <p className="text-xs text-gray-500 uppercase font-medium light:text-muted-foreground">UPI ID</p>
                         <p className="text-sm font-medium text-gray-900 mt-1">{user.paymentDetails.upiId}</p>
                       </div>
                     </div>
@@ -461,7 +461,7 @@ const OrganizerProfile = () => {
               </h2>
               <button
                 onClick={handleCancelPayment}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 light:text-muted-foreground"
               >
                 <X className="w-5 h-5" />
               </button>

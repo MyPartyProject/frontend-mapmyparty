@@ -109,10 +109,10 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-b from-[#0b1220] to-[#0a0f1a] border-white/10 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-gradient-to-b from-[#0b1220] to-[#0a0f1a] border-white/10 text-white max-w-2xl max-h-[90vh] overflow-y-auto light:from-background light:to-background light:border-border light:text-foreground">
         <DialogHeader>
           <DialogTitle className="text-2xl">Billing Details</DialogTitle>
-          <DialogDescription className="text-white/70">
+          <DialogDescription className="text-white/70 light:text-muted-foreground">
             Please provide your billing information for the booking
           </DialogDescription>
         </DialogHeader>
@@ -120,13 +120,13 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           {/* Personal Information */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-white/90 border-b border-white/10 pb-2">
+            <h3 className="text-sm font-semibold text-white/90 border-b border-white/10 pb-2 light:text-muted-foreground light:border-border">
               Personal Information
             </h3>
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="fullName" className="text-white/80">
+                <Label htmlFor="fullName" className="text-white/80 light:text-muted-foreground">
                   Full Name *
                 </Label>
                 <Input
@@ -135,13 +135,13 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                   value={formData.fullName}
                   onChange={handleChange}
                   placeholder="John Doe"
-                  className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/20 light:bg-muted light:border-border light:text-foreground light:placeholder:text-muted-foreground"
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="email" className="text-white/80">
+                <Label htmlFor="email" className="text-white/80 light:text-muted-foreground">
                   Email Address *
                 </Label>
                 <Input
@@ -151,14 +151,14 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="john@example.com"
-                  className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/20 light:bg-muted light:border-border light:text-foreground light:placeholder:text-muted-foreground"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="phone" className="text-white/80">
+              <Label htmlFor="phone" className="text-white/80 light:text-muted-foreground">
                 Phone Number *
               </Label>
               <Input
@@ -168,7 +168,7 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="9876543210"
-                className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/20 light:bg-muted light:border-border light:text-foreground light:placeholder:text-muted-foreground"
                 required
               />
             </div>
@@ -176,12 +176,12 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
 
           {/* Billing Address */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-white/90 border-b border-white/10 pb-2">
+            <h3 className="text-sm font-semibold text-white/90 border-b border-white/10 pb-2 light:text-muted-foreground light:border-border">
               Billing Address
             </h3>
 
             <div>
-              <Label htmlFor="addressLine1" className="text-white/80">
+              <Label htmlFor="addressLine1" className="text-white/80 light:text-muted-foreground">
                 Address Line 1 *
               </Label>
               <Input
@@ -190,13 +190,13 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                 value={formData.addressLine1}
                 onChange={handleChange}
                 placeholder="Street address, P.O. box"
-                className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/20 light:bg-muted light:border-border light:text-foreground light:placeholder:text-muted-foreground"
                 required
               />
             </div>
 
             <div>
-              <Label htmlFor="addressLine2" className="text-white/80">
+              <Label htmlFor="addressLine2" className="text-white/80 light:text-muted-foreground">
                 Address Line 2 (Optional)
               </Label>
               <Input
@@ -205,17 +205,17 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                 value={formData.addressLine2}
                 onChange={handleChange}
                 placeholder="Apartment, suite, unit, building, floor, etc."
-                className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/20 light:bg-muted light:border-border light:text-foreground light:placeholder:text-muted-foreground"
               />
             </div>
 
             <div className="grid md:grid-cols-3 gap-4">
               <IndiaLocationFields idPrefix="billing" state={formData.state} city={formData.city}
                 onChange={(location) => setFormData((current) => ({ ...current, ...location }))}
-                required disabled={isLoading} className="bg-white/5 border-white/20 text-white" />
+                required disabled={isLoading} className="bg-white/5 border-white/20 text-white light:bg-muted light:border-border light:text-foreground" />
 
               <div>
-                <Label htmlFor="pincode" className="text-white/80">
+                <Label htmlFor="pincode" className="text-white/80 light:text-muted-foreground">
                   Pincode *
                 </Label>
                 <Input
@@ -227,7 +227,7 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
                   value={formData.pincode}
                   onChange={handleChange}
                   placeholder="400001"
-                className="bg-white/5 border-white/20 text-white placeholder:text-white/20"
+                className="bg-white/5 border-white/20 text-white placeholder:text-white/20 light:bg-muted light:border-border light:text-foreground light:placeholder:text-muted-foreground"
                   required
                 />
               </div>
@@ -241,7 +241,7 @@ const BillingDetailsModal = ({ isOpen, onClose, onSubmit, isLoading, user }) => 
               variant="outline"
               onClick={onClose}
               disabled={isLoading}
-              className="flex-1 border-white/20 text-white hover:bg-white/10"
+              className="flex-1 border-white/20 text-white hover:bg-white/10 light:border-border light:text-foreground light:hover:bg-muted"
             >
               Cancel
             </Button>

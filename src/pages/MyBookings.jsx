@@ -192,19 +192,19 @@ const MyBookings = ({
       case "confirmed":
         return {
           label: "Confirmed",
-          className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+          className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 light:text-success",
         };
       case "cancelled":
       case "failed":
       case "expired":
         return {
           label: status.charAt(0).toUpperCase() + status.slice(1),
-          className: "bg-red-500/10 text-red-300 border-red-500/20",
+          className: "bg-red-500/10 text-red-300 border-red-500/20 light:text-destructive",
         };
       default:
         return {
           label: "Pending",
-          className: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+          className: "bg-amber-500/10 text-amber-400 border-amber-500/20 light:text-warning",
         };
     }
   };
@@ -213,20 +213,20 @@ const MyBookings = ({
     if (status === "success") {
       return {
         label: "Success",
-        className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+        className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 light:text-success",
       };
     }
 
     if (status === "failed" || status === "refunded") {
       return {
         label: status.charAt(0).toUpperCase() + status.slice(1),
-        className: "bg-red-500/10 text-red-300 border-red-500/20",
+        className: "bg-red-500/10 text-red-300 border-red-500/20 light:text-destructive",
       };
     }
 
     return {
       label: status ? status.charAt(0).toUpperCase() + status.slice(1) : "Payment",
-      className: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+      className: "bg-amber-500/10 text-amber-400 border-amber-500/20 light:text-warning",
     };
   };
 
@@ -353,59 +353,59 @@ const MyBookings = ({
 
   const renderUpcomingBooking = (booking) => (
     <button key={booking.id} type="button" onClick={() => fetchBookingTickets(booking)}
-      className="flex w-full min-w-0 items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3 text-left transition-colors hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaryCTA">
-      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-white/5">
-        {booking.image ? <img src={booking.image} alt="" className="h-full w-full object-cover" /> : <Calendar aria-hidden="true" className="m-5 h-6 w-6 text-white/30" />}
+      className="flex w-full min-w-0 items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3 text-left transition-colors hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaryCTA light:border-border light:bg-muted light:hover:bg-muted">
+      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-white/5 light:bg-muted">
+        {booking.image ? <img src={booking.image} alt="" className="h-full w-full object-cover" /> : <Calendar aria-hidden="true" className="m-5 h-6 w-6 text-white/30 light:text-muted-foreground" />}
       </div>
       <div className="min-w-0 flex-1 space-y-1">
         <h3 className="line-clamp-2 break-words text-sm font-semibold">{booking.eventTitle}</h3>
-        <p className="text-xs text-white/60">{formatDate(booking.eventDate)} · {booking.eventTime}</p>
-        <p className="truncate text-xs text-white/50">{booking.location || "Venue TBA"}</p>
-        <span className="inline-flex items-center gap-1 text-xs font-medium text-rose-400">View tickets <ChevronRight aria-hidden="true" className="h-3 w-3" /></span>
+        <p className="text-xs text-white/60 light:text-muted-foreground">{formatDate(booking.eventDate)} · {booking.eventTime}</p>
+        <p className="truncate text-xs text-white/50 light:text-muted-foreground">{booking.location || "Venue TBA"}</p>
+        <span className="inline-flex items-center gap-1 text-xs font-medium text-rose-400 light:text-accent-foreground">View tickets <ChevronRight aria-hidden="true" className="h-3 w-3" /></span>
       </div>
     </button>
   );
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 text-white space-y-4">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 text-white space-y-4 light:text-foreground">
       <div className="flex flex-wrap items-center justify-between gap-3">
         {showSummarySections && (
           <dl className="flex min-w-0 w-full sm:w-auto sm:flex-1 flex-wrap items-center gap-x-5 gap-y-3">
             {[
-              { label: "Total bookings", value: bookingAnalyticsLoaded ? bookingAnalytics.totalBookings : "—", icon: Receipt, color: "text-rose-400" },
-              { label: "Upcoming", value: loading || error ? "—" : upcomingBookings.length, icon: Calendar, color: "text-blue-400" },
-              { label: "Total spent", value: bookingAnalyticsLoaded ? formatIndianRupee(bookingAnalytics.totalSpent) : "—", icon: CreditCard, color: "text-emerald-400" },
+              { label: "Total bookings", value: bookingAnalyticsLoaded ? bookingAnalytics.totalBookings : "—", icon: Receipt, color: "text-rose-400 light:text-accent-foreground" },
+              { label: "Upcoming", value: loading || error ? "—" : upcomingBookings.length, icon: Calendar, color: "text-blue-400 light:text-accent-foreground" },
+              { label: "Total spent", value: bookingAnalyticsLoaded ? formatIndianRupee(bookingAnalytics.totalSpent) : "—", icon: CreditCard, color: "text-emerald-400 light:text-success" },
             ].map(({ label, value, icon: Icon, color }) => (
               <div key={label} className="flex min-w-0 items-center gap-2 py-1">
                 <Icon aria-hidden="true" className={`h-4 w-4 shrink-0 ${color}`} />
                 <div className="min-w-0">
-                  <dt className="text-[10px] sm:text-xs text-white/50">{label}</dt>
-                  <dd className="text-sm font-semibold text-white break-words">{value}</dd>
+                  <dt className="text-[10px] sm:text-xs text-white/50 light:text-muted-foreground">{label}</dt>
+                  <dd className="text-sm font-semibold text-white break-words light:text-foreground">{value}</dd>
                 </div>
               </div>
             ))}
           </dl>
         )}
-        <Button asChild variant="outline" className="h-11 shrink-0 border-white/10 text-xs">
+        <Button asChild variant="outline" className="h-11 shrink-0 border-white/10 text-xs light:border-border">
           <Link to="/dashboard/support?sourceSurface=ATTENDEE_BOOKINGS&category=BOOKING_PAYMENT">
             <LifeBuoy aria-hidden="true" /> Contact support
           </Link>
         </Button>
       </div>
       {(error || analyticsError) && (
-        <p role="alert" className="text-sm text-red-300">{[error, analyticsError].filter(Boolean).join(" ")} Reload the page to try again.</p>
+        <p role="alert" className="text-sm text-red-300 light:text-destructive">{[error, analyticsError].filter(Boolean).join(" ")} Reload the page to try again.</p>
       )}
 
       {/* Search & Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 light:text-muted-foreground" />
           <Input
             type="search"
             placeholder="Search by event name or booking ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 h-10 bg-white/[0.05] border-white/[0.08] text-white text-sm placeholder:text-white/30 rounded-lg focus:ring-1 focus:ring-[#D60024]/50"
+            className="w-full pl-9 pr-4 h-10 bg-white/[0.05] border-white/[0.08] text-white text-sm placeholder:text-white/30 rounded-lg focus:ring-1 focus:ring-[#D60024]/50 light:bg-muted light:border-border light:text-foreground light:placeholder:text-muted-foreground light:focus:ring-ring/50"
           />
         </div>
         <div className="flex gap-2">
@@ -415,8 +415,8 @@ const MyBookings = ({
               onClick={() => setFilterStatus(status)}
               className={`text-xs h-10 px-4 ${
                 filterStatus === status
-                  ? "bg-[#D60024] text-white hover:bg-[#b8001f]"
-                  : "bg-white/[0.05] text-white/60 hover:bg-white/[0.08] border border-white/[0.06]"
+                  ? "bg-[#D60024] text-white hover:bg-[#b8001f] light:bg-primaryCTA light:text-inverse light:hover:bg-primaryCTA"
+                  : "bg-white/[0.05] text-white/60 hover:bg-white/[0.08] border border-white/[0.06] light:bg-muted light:text-muted-foreground light:hover:bg-muted light:border-border"
               }`}
             >
               {status === "all" ? "All" : "Confirmed"}
@@ -429,7 +429,7 @@ const MyBookings = ({
         <section className="space-y-3" aria-label="Upcoming events">
           {upcomingBookings.length > 0 ? (
             <>
-              <Button variant="outline" className="h-11 w-full justify-between border-white/10 sm:hidden"
+              <Button variant="outline" className="h-11 w-full justify-between border-white/10 sm:hidden light:border-border"
                 onClick={(event) => { upcomingTrigger.current = event.currentTarget; setUpcomingModalOpen(true); }}>
                 <span className="flex items-center gap-2"><Calendar aria-hidden="true" /> Upcoming events ({upcomingBookings.length})</span>
                 <ChevronRight aria-hidden="true" />
@@ -448,14 +448,14 @@ const MyBookings = ({
               </div>
             </>
           ) : (
-            <p className="flex items-center gap-2 text-xs text-white/50"><Calendar className="h-4 w-4" aria-hidden="true" /> No upcoming events yet.</p>
+            <p className="flex items-center gap-2 text-xs text-white/50 light:text-muted-foreground"><Calendar className="h-4 w-4" aria-hidden="true" /> No upcoming events yet.</p>
           )}
         </section>
       )}
 
       <Dialog open={upcomingModalOpen} onOpenChange={setUpcomingModalOpen}>
         <DialogContent
-          className="w-[calc(100%-2rem)] max-w-2xl max-h-[85dvh] flex flex-col overflow-hidden bg-[#0e0e18] text-white border-white/10 rounded-xl p-4 sm:p-5 motion-reduce:!animate-none"
+          className="w-[calc(100%-2rem)] max-w-2xl max-h-[85dvh] flex flex-col overflow-hidden bg-[#0e0e18] text-white border-white/10 rounded-xl p-4 sm:p-5 motion-reduce:!animate-none light:bg-card light:text-foreground light:border-border"
           onCloseAutoFocus={(event) => { event.preventDefault(); if (!ticketsModalOpen) upcomingTrigger.current?.focus(); }}
         >
           <DialogHeader className="pr-6 text-left">
@@ -470,18 +470,18 @@ const MyBookings = ({
 
       {/* All Bookings */}
       <section className="space-y-4">
-        <h2 className="text-base font-bold text-white">All Bookings</h2>
+        <h2 className="text-base font-bold text-white light:text-foreground">All Bookings</h2>
 
         {loading && !hasBookings ? (
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-12 text-center">
-            <Loader2 className="w-8 h-8 mx-auto animate-spin text-white/20 mb-3" />
-            <p className="text-sm text-white/40">Loading bookings...</p>
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-12 text-center light:border-border light:bg-muted">
+            <Loader2 className="w-8 h-8 mx-auto animate-spin text-white/20 mb-3 light:text-muted-foreground" />
+            <p className="text-sm text-white/40 light:text-muted-foreground">Loading bookings...</p>
           </div>
         ) : error && !hasBookings ? null : showEmptyState ? (
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-12 text-center">
-            <Ticket className="w-10 h-10 text-white/15 mx-auto mb-3" />
-            <h3 className="text-sm font-semibold text-white mb-1">No bookings yet</h3>
-            <p className="text-xs text-white/40 mb-4">Start exploring and book your first event.</p>
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-12 text-center light:border-border light:bg-muted">
+            <Ticket className="w-10 h-10 text-white/15 mx-auto mb-3 light:text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-white mb-1 light:text-foreground">No bookings yet</h3>
+            <p className="text-xs text-white/40 mb-4 light:text-muted-foreground">Start exploring and book your first event.</p>
             <Link to={browseEventsPath}>
               <Button className="text-sm h-9 px-4">
                 Browse Events <ChevronRight className="ml-1 h-3.5 w-3.5" />
@@ -489,20 +489,20 @@ const MyBookings = ({
             </Link>
           </div>
         ) : !hasFilteredBookings ? (
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-12 text-center">
-            <Search className="w-10 h-10 text-white/15 mx-auto mb-3" />
-            <h3 className="text-sm font-semibold text-white mb-1">No matching bookings</h3>
-            <p className="text-xs text-white/40">Try adjusting your search or filters.</p>
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-12 text-center light:border-border light:bg-muted">
+            <Search className="w-10 h-10 text-white/15 mx-auto mb-3 light:text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-white mb-1 light:text-foreground">No matching bookings</h3>
+            <p className="text-xs text-white/40 light:text-muted-foreground">Try adjusting your search or filters.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {filteredBookings.map((booking) => (
-              <div key={booking.id} className="rounded-xl border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.04] hover:border-white/[0.1] transition-all overflow-hidden">
+              <div key={booking.id} className="rounded-xl border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.04] hover:border-white/[0.1] transition-all overflow-hidden light:border-border light:bg-muted light:hover:bg-muted light:hover:border-border">
                 {/* Header bar */}
-                <div className="px-4 py-2.5 border-b border-white/[0.04] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <div className="flex flex-wrap items-center gap-2 min-w-0 text-xs text-white/40">
-                    <span className="text-white/70 break-all">{getBookingDisplayId(booking)}</span>
-                    <span className="text-white/15">|</span>
+                <div className="px-4 py-2.5 border-b border-white/[0.04] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 light:border-border">
+                  <div className="flex flex-wrap items-center gap-2 min-w-0 text-xs text-white/40 light:text-muted-foreground">
+                    <span className="text-white/70 break-all light:text-muted-foreground">{getBookingDisplayId(booking)}</span>
+                    <span className="text-white/15 light:text-muted-foreground">|</span>
                     <span>{formatBookingDate(booking.bookingDate)}</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -520,25 +520,25 @@ const MyBookings = ({
                   <div className="flex flex-col lg:flex-row gap-4">
                     {/* Event info */}
                     <div className="flex gap-3 flex-1 min-w-0">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0 border border-white/[0.06]">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0 border border-white/[0.06] light:border-border">
                         {booking.image ? (
                           <img src={booking.image} alt={booking.eventTitle} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-[#1b1b2d] via-[#141422] to-[#0e0e18] flex items-center justify-center px-2 text-center text-[10px] font-semibold text-white/60">
+                          <div className="w-full h-full bg-gradient-to-br from-[#1b1b2d] via-[#141422] to-[#0e0e18] flex items-center justify-center px-2 text-center text-[10px] font-semibold text-white/60 light:from-surface light:via-surface light:to-background light:text-muted-foreground">
                             {booking.eventTitle}
                           </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
                         {booking.category && (
-                          <Badge className="bg-white/[0.06] text-white/50 border-0 text-[10px] mb-1.5">{booking.category}</Badge>
+                          <Badge className="bg-white/[0.06] text-white/50 border-0 text-[10px] mb-1.5 light:bg-muted light:text-muted-foreground">{booking.category}</Badge>
                         )}
-                        <h3 className="text-sm font-semibold text-white line-clamp-1 mb-1.5">{booking.eventTitle}</h3>
-                        <div className="space-y-1 text-xs text-white/40">
+                        <h3 className="text-sm font-semibold text-white line-clamp-1 mb-1.5 light:text-foreground">{booking.eventTitle}</h3>
+                        <div className="space-y-1 text-xs text-white/40 light:text-muted-foreground">
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                             <Calendar className="h-3 w-3 flex-shrink-0" />
                             <span>{formatDate(booking.eventDate)}</span>
-                            <span className="text-white/15">|</span>
+                            <span className="text-white/15 light:text-muted-foreground">|</span>
                             <span>{booking.eventTime}</span>
                           </div>
                           <div className="flex items-center gap-2">
@@ -550,11 +550,11 @@ const MyBookings = ({
                     </div>
 
                     {/* Amount summary */}
-                    <div className="px-4 py-3 rounded-lg bg-white/[0.03] border border-white/[0.04] flex-shrink-0 min-w-[110px]">
-                      <p className="text-[10px] text-white/30 mb-0.5 uppercase tracking-wide">Total</p>
-                      <p className="text-sm font-bold text-[#D60024] break-all">{formatIndianRupee(booking.totalPrice || 0)}</p>
+                    <div className="px-4 py-3 rounded-lg bg-white/[0.03] border border-white/[0.04] flex-shrink-0 min-w-[110px] light:bg-muted light:border-border">
+                      <p className="text-[10px] text-white/30 mb-0.5 uppercase tracking-wide light:text-muted-foreground">Total</p>
+                      <p className="text-sm font-bold text-[#D60024] break-all light:text-accent-foreground">{formatIndianRupee(booking.totalPrice || 0)}</p>
                       {booking.payment?.paymentMethod && (
-                        <p className="text-[10px] text-white/40 mt-1 uppercase tracking-wide">{booking.payment.paymentMethod}</p>
+                        <p className="text-[10px] text-white/40 mt-1 uppercase tracking-wide light:text-muted-foreground">{booking.payment.paymentMethod}</p>
                       )}
                     </div>
 
@@ -566,7 +566,7 @@ const MyBookings = ({
                       <Button
                         size="sm"
                         variant="outline"
-                        className="w-full min-h-11 h-auto gap-2 py-2 border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.06] text-xs px-3 disabled:opacity-50"
+                        className="w-full min-h-11 h-auto gap-2 py-2 border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.06] text-xs px-3 disabled:opacity-50 light:border-border light:text-muted-foreground light:hover:text-foreground light:hover:bg-muted"
                         onClick={() => handleDownloadInvoice(booking)}
                         disabled={downloadingInvoiceId === booking.id || !canDownloadInvoice(booking)}
                       >
@@ -578,7 +578,7 @@ const MyBookings = ({
                         Invoice
                       </Button>
                       {isEventPast(booking) && (
-                        <Button size="sm" variant="ghost" className="w-full min-h-11 h-auto gap-2 py-2 text-white/40 hover:text-white hover:bg-white/[0.06] text-xs px-3 border border-dashed border-white/[0.08]" onClick={() => handleOpenReview(booking)}>
+                        <Button size="sm" variant="ghost" className="w-full min-h-11 h-auto gap-2 py-2 text-white/40 hover:text-white hover:bg-white/[0.06] text-xs px-3 border border-dashed border-white/[0.08] light:text-muted-foreground light:hover:text-foreground light:hover:bg-muted light:border-border" onClick={() => handleOpenReview(booking)}>
                           <Star className="h-3 w-3" />
                           {booking.review ? "Edit Feedback" : "Feedback"}
                         </Button>
@@ -589,7 +589,7 @@ const MyBookings = ({
                         <Button
                           size="sm"
                           variant="outline"
-                          className="w-full min-h-11 h-auto gap-2 py-2 border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.06] text-xs px-3"
+                          className="w-full min-h-11 h-auto gap-2 py-2 border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.06] text-xs px-3 light:border-border light:text-muted-foreground light:hover:text-foreground light:hover:bg-muted"
                         >
                           <LifeBuoy className="h-3 w-3" />
                           Support
@@ -606,21 +606,21 @@ const MyBookings = ({
 
       {/* Tickets Modal */}
       <Dialog open={ticketsModalOpen} onOpenChange={closeTicketsModal}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-3xl max-h-[85vh] overflow-hidden bg-[#0e0e18] text-white border border-white/[0.08] rounded-2xl p-0"
+        <DialogContent className="w-[calc(100%-2rem)] max-w-3xl max-h-[85vh] overflow-hidden bg-[#0e0e18] text-white border border-white/[0.08] rounded-2xl p-0 light:bg-card light:text-foreground light:border-border"
           onCloseAutoFocus={(event) => {
             event.preventDefault();
             const target = ticketTrigger.current?.isConnected ? ticketTrigger.current : upcomingTrigger.current;
             target?.focus();
           }}>
-          <DialogHeader className="p-5 pb-4 border-b border-white/[0.06]">
+          <DialogHeader className="p-5 pb-4 border-b border-white/[0.06] light:border-border">
             <DialogTitle className="flex items-center gap-3 text-base">
-              <div className="h-8 w-8 rounded-lg bg-[#D60024]/10 flex items-center justify-center">
-                <Ticket className="h-4 w-4 text-[#D60024]" />
+              <div className="h-8 w-8 rounded-lg bg-[#D60024]/10 flex items-center justify-center light:bg-primaryCTA/10">
+                <Ticket className="h-4 w-4 text-[#D60024] light:text-accent-foreground" />
               </div>
               <div>
-                <span className="text-white">Your Tickets</span>
+                <span className="text-white light:text-foreground">Your Tickets</span>
                 {selectedBookingForTickets && (
-                  <p className="text-xs font-normal text-white/40 mt-0.5">{selectedBookingForTickets.eventTitle}</p>
+                  <p className="text-xs font-normal text-white/40 mt-0.5 light:text-muted-foreground">{selectedBookingForTickets.eventTitle}</p>
                 )}
               </div>
             </DialogTitle>
@@ -628,13 +628,13 @@ const MyBookings = ({
           <div className="p-5 overflow-y-auto max-h-[calc(85vh-80px)]">
             {ticketsLoading ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-white/20 mb-3" />
-                <p className="text-sm text-white/40">Loading tickets...</p>
+                <Loader2 className="w-8 h-8 animate-spin text-white/20 mb-3 light:text-muted-foreground" />
+                <p className="text-sm text-white/40 light:text-muted-foreground">Loading tickets...</p>
               </div>
             ) : selectedBookingTickets.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <Ticket className="w-10 h-10 text-white/15 mb-3" />
-                <p className="text-sm text-white/40">No tickets found.</p>
+                <Ticket className="w-10 h-10 text-white/15 mb-3 light:text-muted-foreground" />
+                <p className="text-sm text-white/40 light:text-muted-foreground">No tickets found.</p>
               </div>
             ) : (
               <div className="space-y-5">
@@ -642,7 +642,7 @@ const MyBookings = ({
                   <div key={ticket.id}>
                     <VintageTicket ticket={ticket} index={index} onClick={() => {}} />
                     <div className="flex justify-end mt-3">
-                      <Button size="sm" variant="outline" className="border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.06] text-xs" onClick={() => handleDownloadTicket(ticket)}>
+                      <Button size="sm" variant="outline" className="border-white/[0.08] text-white/60 hover:text-white hover:bg-white/[0.06] text-xs light:border-border light:text-muted-foreground light:hover:text-foreground light:hover:bg-muted" onClick={() => handleDownloadTicket(ticket)}>
                         <Download className="h-3.5 w-3.5 mr-1.5" /> Download PDF
                       </Button>
                     </div>
@@ -656,38 +656,38 @@ const MyBookings = ({
 
       {/* Review Dialog */}
       <Dialog open={reviewDialogOpen} onOpenChange={handleReviewDialogChange}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto bg-[#0e0e18] text-white border border-white/[0.08] rounded-xl">
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto bg-[#0e0e18] text-white border border-white/[0.08] rounded-xl light:bg-background light:text-foreground light:border-border">
           <DialogHeader>
-            <DialogTitle className="text-base text-white">
+            <DialogTitle className="text-base text-white light:text-foreground">
               {selectedBookingForReview?.review ? "Edit your feedback" : "Share your experience"}
             </DialogTitle>
-            <p className="text-xs text-white/40 mt-1">Rate the event and help others discover great experiences.</p>
+            <p className="text-xs text-white/40 mt-1 light:text-muted-foreground">Rate the event and help others discover great experiences.</p>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
-              <Label className="text-white/60 text-xs">Rating *</Label>
+              <Label className="text-white/60 text-xs light:text-muted-foreground">Rating *</Label>
               <StarRating rating={reviewRating} onRatingChange={setReviewRating} readonly={false} size="lg" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="review-comment" className="text-white/60 text-xs">Feedback (optional)</Label>
+              <Label htmlFor="review-comment" className="text-white/60 text-xs light:text-muted-foreground">Feedback (optional)</Label>
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {feedbackSuggestions.map((tip) => (
                   <button key={tip} type="button" onClick={() => setReviewComment(tip.slice(0, 1000))}
-                    className="text-[10px] px-2.5 py-1 rounded-full border border-white/[0.06] bg-white/[0.03] text-white/50 hover:text-white hover:border-white/[0.15] transition-colors"
+                    className="text-[10px] px-2.5 py-1 rounded-full border border-white/[0.06] bg-white/[0.03] text-white/50 hover:text-white hover:border-white/[0.15] transition-colors light:border-border light:bg-muted light:text-muted-foreground light:hover:text-foreground light:hover:border-border"
                   >{tip}</button>
                 ))}
               </div>
               <Textarea id="review-comment" placeholder="Share your thoughts..." value={reviewComment}
                 onChange={(e) => setReviewComment(e.target.value.slice(0, 1000))} rows={4}
-                className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/25 text-sm" />
-              <div className="flex justify-between text-[10px] text-white/30">
+                className="bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/25 text-sm light:bg-muted light:border-border light:text-foreground light:placeholder:text-muted-foreground" />
+              <div className="flex justify-between text-[10px] text-white/30 light:text-muted-foreground">
                 <span>Minimally 1-2 lines</span>
                 <span>{reviewComment.length}/1000</span>
               </div>
             </div>
           </div>
           <DialogFooter className="pt-2 gap-2">
-            <Button variant="outline" className="border-white/[0.08] text-white/60 hover:bg-white/[0.05] text-xs" onClick={handleCloseReview} disabled={isSubmittingReview}>Cancel</Button>
+            <Button variant="outline" className="border-white/[0.08] text-white/60 hover:bg-white/[0.05] text-xs light:border-border light:text-muted-foreground light:hover:bg-muted" onClick={handleCloseReview} disabled={isSubmittingReview}>Cancel</Button>
             <Button className="text-xs" onClick={handleSubmitReview} disabled={isSubmittingReview || reviewRating === 0}>
               {isSubmittingReview ? "Submitting..." : selectedBookingForReview?.review ? "Update" : "Submit"}
             </Button>

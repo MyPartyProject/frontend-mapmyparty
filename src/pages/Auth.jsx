@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import ThemeToggle from "@/components/ThemeToggle";
 import {
   ArrowLeft,
   Building2,
@@ -318,6 +319,7 @@ const Auth = () => {
   if (!userType) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background via-background to-card text-foreground flex items-center justify-center p-3 sm:p-4">
+        <ThemeToggle compact className="absolute right-4 top-4" />
         <Button
           variant="ghost"
           className="absolute top-4 left-4 h-9 rounded-xl border border-border/60 bg-card/70 px-3 text-sm text-muted-foreground hover:bg-card hover:text-foreground"
@@ -336,7 +338,7 @@ const Auth = () => {
             </div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2.5">
               Welcome to{" "}
-              <span className="bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent light:from-primaryCTA light:to-primary">
                 MapMyParty
               </span>
             </h1>
@@ -353,7 +355,7 @@ const Auth = () => {
             >
               <CardContent className="p-6 text-center">
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/25 via-secondary/20 to-accent/20 border border-border/60 flex items-center justify-center mx-auto mb-4 group-hover:border-accent/40 transition-colors">
-                  <User className="w-7 h-7 text-accent" />
+                  <User className="w-7 h-7 text-accent light:text-accent-foreground" />
                 </div>
                 <h2 className="text-lg font-semibold text-foreground mb-2">
                   I&apos;m an Attendee
@@ -361,7 +363,7 @@ const Auth = () => {
                 <p className="text-muted-foreground text-sm mb-3.5">
                   Discover and book tickets to amazing events near you
                 </p>
-                <div className="flex items-center justify-center gap-2 text-accent font-medium text-sm">
+                <div className="flex items-center justify-center gap-2 text-accent font-medium text-sm light:text-accent-foreground">
                   <span>Explore Events</span>
                   <ArrowLeft className="w-4 h-4 rotate-180" />
                 </div>
@@ -374,7 +376,7 @@ const Auth = () => {
             >
               <CardContent className="p-6 text-center">
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/25 via-secondary/20 to-accent/20 border border-border/60 flex items-center justify-center mx-auto mb-4 group-hover:border-accent/40 transition-colors">
-                  <Building2 className="w-7 h-7 text-accent" />
+                  <Building2 className="w-7 h-7 text-accent light:text-accent-foreground" />
                 </div>
                 <h2 className="text-lg font-semibold text-foreground mb-2">
                   I&apos;m an Organizer
@@ -382,7 +384,7 @@ const Auth = () => {
                 <p className="text-muted-foreground text-sm mb-3.5">
                   Create and manage your own events with ease
                 </p>
-                <div className="flex items-center justify-center gap-2 text-accent font-medium text-sm">
+                <div className="flex items-center justify-center gap-2 text-accent font-medium text-sm light:text-accent-foreground">
                   <span>Start Creating</span>
                   <ArrowLeft className="w-4 h-4 rotate-180" />
                 </div>
@@ -396,6 +398,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-card text-foreground flex items-center justify-center p-3 sm:p-4">
+      <ThemeToggle compact className="absolute right-4 top-4" />
       <Button
         variant="ghost"
         className="absolute top-4 left-4 h-9 rounded-xl border border-border/60 bg-card/70 px-3 text-sm text-muted-foreground hover:bg-card hover:text-foreground"
@@ -448,7 +451,7 @@ const Auth = () => {
                   <div className="space-y-3.5">
                     <div className="rounded-xl border border-border/60 bg-background/70 p-3.5">
                       <div className="flex items-center gap-2 text-sm text-foreground font-medium">
-                        <Mail className="h-4 w-4 text-accent" />
+                        <Mail className="h-4 w-4 text-accent light:text-accent-foreground" />
                         Password recovery
                       </div>
                       <p className="mt-2 text-xs sm:text-sm text-muted-foreground">
@@ -458,7 +461,7 @@ const Auth = () => {
 
                     {forgotPasswordSent ? (
                       <div className="space-y-3.5">
-                        <div className="rounded-xl border border-accent/35 bg-accent/10 p-3.5 text-xs sm:text-sm text-accent">
+                        <div className="rounded-xl border border-accent/35 bg-accent/10 p-3.5 text-xs sm:text-sm text-accent light:text-accent-foreground">
                           If this email is registered, a reset link is on its
                           way. Use the newest link within 10 minutes.
                         </div>
@@ -604,7 +607,7 @@ const Auth = () => {
                         <Button
                           type="button"
                           variant="link"
-                          className="h-auto p-0 text-xs sm:text-sm text-accent hover:text-accent/80"
+                          className="h-auto p-0 text-xs sm:text-sm text-accent hover:text-accent/80 light:text-accent-foreground light:hover:text-accent-foreground/80"
                           onClick={() => {
                             setForgotPasswordEmail(loginForm.email.trim());
                             setShowForgotPassword(true);

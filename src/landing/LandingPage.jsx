@@ -591,7 +591,7 @@ const LandingEventCard = ({
             className="landing-event-card__image h-full w-full object-cover"
             onError={handleImageError}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-background/5" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-background/5 light:to-transparent" />
           <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-background/55 to-transparent" />
           <div className="theme-gradient-primary absolute inset-0 opacity-10 transition-opacity duration-500 group-hover:opacity-20" />
         </div>
@@ -604,23 +604,23 @@ const LandingEventCard = ({
               </div>
             )}
             {price && (
-              <div className="inline-flex min-w-[4.75rem] shrink-0 items-center justify-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-[0.68rem] font-bold leading-none tabular-nums text-accent shadow-[var(--shadow-card)] backdrop-blur-md">
+              <div className="inline-flex min-w-[4.75rem] shrink-0 items-center justify-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-[0.68rem] font-bold leading-none tabular-nums text-accent shadow-[var(--shadow-card)] backdrop-blur-md light:border-border light:bg-secondary light:text-secondary-foreground">
                 {price}
               </div>
             )}
           </div>
 
           <div className="mt-auto">
-            <h3 className="line-clamp-2 text-sm font-black leading-tight text-foreground drop-shadow-xl transition-colors group-hover:text-accent sm:text-base">
+            <h3 className="line-clamp-2 text-sm font-black leading-tight text-foreground drop-shadow-xl transition-colors group-hover:text-accent sm:text-base light:group-hover:text-accent-foreground light:drop-shadow-none">
               {title}
             </h3>
             <div className="mt-2 grid gap-1 text-[0.7rem] text-muted-foreground">
               <div className="flex items-center gap-1.5">
-                <CalendarRange className="h-3 w-3 shrink-0 text-accent" />
+                <CalendarRange className="h-3 w-3 shrink-0 text-accent light:text-accent-foreground" />
                 <span className="line-clamp-1">{date}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <MapPin className="h-3 w-3 shrink-0 text-accent" />
+                <MapPin className="h-3 w-3 shrink-0 text-accent light:text-accent-foreground" />
                 <span className="line-clamp-1">{location}</span>
               </div>
             </div>
@@ -1059,7 +1059,7 @@ const LandingPage = () => {
             <div className="relative">
               <div className="landing-reveal flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.18em] text-accent">
+                  <p className="text-sm uppercase tracking-[0.18em] text-accent light:text-accent-foreground">
                     Discover
                   </p>
                   <h2 className="mt-3 text-3xl font-black text-foreground sm:text-4xl">
@@ -1092,7 +1092,7 @@ const LandingPage = () => {
                       className="group landing-reveal block h-full w-[calc(78vw-5px)] max-w-[calc(20rem-5px)] shrink-0 snap-start text-left sm:w-[calc(100%-5px)] sm:max-w-none sm:shrink sm:snap-none"
                       style={{ "--landing-delay": `${index * 70}ms` }}
                     >
-                      <div className="relative flex h-full min-h-[16.75rem] flex-col overflow-hidden rounded-[1.5rem] border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-2 hover:border-border hover:shadow-[var(--shadow-elegant)]">
+                      <div className="relative flex h-full min-h-[16.75rem] flex-col overflow-hidden rounded-[1.5rem] border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-2 hover:border-border hover:shadow-[var(--shadow-elegant)] light:hover:border-primary">
                         <div className="relative h-[10.25rem] shrink-0 overflow-hidden">
                           <img
                             src={section.image}
@@ -1102,8 +1102,8 @@ const LandingPage = () => {
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-transparent" />
                           <div className="theme-gradient-primary absolute inset-0 opacity-10" />
-                          <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full border border-border/40 bg-card/75 px-3 py-1.5 text-xs font-medium text-foreground shadow-[var(--shadow-card)] backdrop-blur-md">
-                            <Icon className="h-3.5 w-3.5 text-accent" />
+                          <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full border border-border/40 bg-card/75 px-3 py-1.5 text-xs font-medium text-foreground shadow-[var(--shadow-card)] backdrop-blur-md light:border-border light:bg-secondary">
+                            <Icon className="h-3.5 w-3.5 text-accent light:text-accent-foreground" />
                             {section.eyebrow}
                           </div>
                         </div>
@@ -1149,12 +1149,12 @@ const LandingPage = () => {
         ))}
 
         {/* How it works */}
-        <section className="relative bg-background py-10 sm:py-12">
+        <section className="relative bg-background py-10 sm:py-12 light:bg-surface">
           <div className="container relative px-4 sm:px-6 lg:px-8">
-            <div className="relative overflow-hidden rounded-[2rem] border border-border/50 bg-card/60 p-5 shadow-[var(--shadow-elegant)] backdrop-blur-xl sm:p-8">
+            <div className="relative overflow-hidden rounded-[2rem] border border-border/50 bg-card/60 p-5 shadow-[var(--shadow-elegant)] backdrop-blur-xl sm:p-8 light:bg-card">
               <div className="theme-gradient-primary absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full opacity-10 blur-3xl" />
               <div className="landing-reveal relative mx-auto mb-12 max-w-3xl text-center">
-                <p className="text-sm uppercase tracking-[0.18em] text-accent">
+                <p className="text-sm uppercase tracking-[0.18em] text-accent light:text-accent-foreground">
                   Seamless
                 </p>
                 <h2 className="mt-3 text-3xl font-black text-foreground sm:text-4xl">
@@ -1173,12 +1173,12 @@ const LandingPage = () => {
                 {steps.map(({ title, desc, icon: Icon }, index) => (
                   <div
                     key={title}
-                    className="landing-reveal relative overflow-hidden rounded-[1.5rem] border border-border/50 bg-card/70 p-6 shadow-[var(--shadow-card)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:border-border hover:shadow-[var(--shadow-elegant)]"
+                    className="landing-reveal relative overflow-hidden rounded-[1.5rem] border border-border/50 bg-card/70 p-6 shadow-[var(--shadow-card)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:border-border hover:shadow-[var(--shadow-elegant)] light:hover:border-primary"
                     style={{ "--landing-delay": `${index * 100}ms` }}
                   >
                     <div className="theme-gradient-primary absolute inset-0 opacity-10" />
                     <div className="relative flex items-center justify-between">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/40 bg-accent/10 text-accent shadow-[var(--shadow-card)]">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/40 bg-accent/10 text-accent shadow-[var(--shadow-card)] light:text-accent-foreground">
                         <Icon className="h-6 w-6" />
                       </div>
                       <span className="text-xs font-semibold text-muted-foreground">
@@ -1199,13 +1199,13 @@ const LandingPage = () => {
         </section>
 
         {/* Platform trust */}
-        <section className="relative bg-background py-10 sm:py-12">
+        <section className="relative bg-background py-10 sm:py-12 light:bg-surface">
           <div className="container relative px-4 sm:px-6 lg:px-8">
-            <div className="relative overflow-hidden rounded-[2rem] border border-border/50 bg-card/60 p-5 shadow-[var(--shadow-elegant)] backdrop-blur-xl sm:p-8">
+            <div className="relative overflow-hidden rounded-[2rem] border border-border/50 bg-card/60 p-5 shadow-[var(--shadow-elegant)] backdrop-blur-xl sm:p-8 light:bg-card">
               <div className="theme-gradient-primary absolute right-0 top-8 h-80 w-80 rounded-full opacity-10 blur-3xl" />
               <div className="relative grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
                 <div className="landing-reveal space-y-5">
-                  <p className="text-sm uppercase tracking-[0.18em] text-accent">
+                  <p className="text-sm uppercase tracking-[0.18em] text-accent light:text-accent-foreground">
                     Platform
                   </p>
                   <h2 className="text-3xl font-black text-foreground sm:text-4xl">
@@ -1218,15 +1218,15 @@ const LandingPage = () => {
                   </p>
                   <div className="flex flex-wrap gap-3 text-foreground">
                     <div className="flex items-center gap-2 rounded-full border border-border/40 bg-card/70 px-4 py-2 text-sm shadow-[var(--shadow-card)] backdrop-blur">
-                      <Search className="h-4 w-4 text-accent" />
+                      <Search className="h-4 w-4 text-accent light:text-accent-foreground" />
                       Event, artist, and venue search
                     </div>
                     <div className="flex items-center gap-2 rounded-full border border-border/40 bg-card/70 px-4 py-2 text-sm shadow-[var(--shadow-card)] backdrop-blur">
-                      <ShieldCheck className="h-4 w-4 text-accent" />
+                      <ShieldCheck className="h-4 w-4 text-accent light:text-accent-foreground" />
                       Secure booking flow
                     </div>
                     <div className="flex items-center gap-2 rounded-full border border-border/40 bg-card/70 px-4 py-2 text-sm shadow-[var(--shadow-card)] backdrop-blur">
-                      <Clock3 className="h-4 w-4 text-accent" />
+                      <Clock3 className="h-4 w-4 text-accent light:text-accent-foreground" />
                       Event updates and entry tools
                     </div>
                   </div>
@@ -1241,7 +1241,7 @@ const LandingPage = () => {
                     <div className="grid gap-4">
                       <div className="rounded-2xl border border-border/40 bg-background/45 p-5">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/40 bg-accent/10 text-accent">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/40 bg-accent/10 text-accent light:text-accent-foreground">
                             <Sparkles className="h-5 w-5" />
                           </div>
                           <div>
@@ -1258,7 +1258,7 @@ const LandingPage = () => {
 
                       <div className="rounded-2xl border border-border/40 bg-background/45 p-5">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/40 bg-accent/10 text-accent">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/40 bg-accent/10 text-accent light:text-accent-foreground">
                             <ShieldCheck className="h-5 w-5" />
                           </div>
                           <div>
@@ -1275,7 +1275,7 @@ const LandingPage = () => {
 
                       <div className="rounded-2xl border border-border/40 bg-background/45 p-5">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/40 bg-accent/10 text-accent">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/40 bg-accent/10 text-accent light:text-accent-foreground">
                             <Clock3 className="h-5 w-5" />
                           </div>
                           <div>
@@ -1298,7 +1298,7 @@ const LandingPage = () => {
         </section>
 
         {/* Final CTA */}
-        <section className="relative bg-background py-10 sm:py-12">
+        <section className="relative bg-background py-10 sm:py-12 light:bg-surface">
           <div className="container relative px-4 text-center sm:px-6 lg:px-8">
             <div className="relative mx-auto max-w-4xl overflow-hidden rounded-[2rem] border border-border/50 bg-card/75 p-7 shadow-[var(--shadow-elegant)] backdrop-blur-xl sm:p-10">
               <div className="landing-glow pointer-events-none absolute left-1/2 top-8 h-52 w-52 -translate-x-1/2 rounded-full bg-secondary/20 blur-3xl" />

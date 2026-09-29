@@ -39,8 +39,8 @@ const StarRating = ({ rating, onRatingChange, readonly = false, size = "default"
             className={cn(
               sizeClasses[size],
               star <= rating
-                ? "fill-yellow-400 text-yellow-400"
-                : "fill-transparent text-gray-300"
+                ? "fill-yellow-400 text-yellow-400 light:text-warning"
+                : "fill-transparent text-gray-300 light:text-muted-foreground"
             )}
           />
         </button>

@@ -45,19 +45,19 @@ const TicketModal = ({ isOpen, onClose, ticket, onDownload }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border-2 border-[rgba(100,200,255,0.3)] text-white p-0">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border-2 border-[rgba(100,200,255,0.3)] text-white p-0 light:bg-background light:text-foreground">
         <div className="space-y-4 p-6">
           {/* Ticket Card */}
-          <Card className="overflow-hidden border-none bg-gradient-to-br from-[#D60024] via-[#b8001f] to-[#8b0017] rounded-xl">
+          <Card className="overflow-hidden border-none bg-gradient-to-br from-[#D60024] via-[#b8001f] to-[#8b0017] rounded-xl light:from-secondary light:via-surface light:to-background">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <Badge className="bg-white/20 text-white border-white/30 text-xs px-3 py-1">
+                <Badge className="bg-white/20 text-white border-white/30 text-xs px-3 py-1 light:bg-muted light:text-foreground light:border-border">
                   E-Ticket
                 </Badge>
-                <Ticket className="w-8 h-8 text-white" />
+                <Ticket className="w-8 h-8 text-white light:text-foreground" />
               </div>
-              <h3 className="text-2xl font-bold mb-2 text-white">{ticket.eventTitle}</h3>
-              <p className="text-sm text-white/90">{ticket.ticketType}</p>
+              <h3 className="text-2xl font-bold mb-2 text-white light:text-foreground">{ticket.eventTitle}</h3>
+              <p className="text-sm text-white/90 light:text-muted-foreground">{ticket.ticketType}</p>
             </div>
           </Card>
 
@@ -71,7 +71,7 @@ const TicketModal = ({ isOpen, onClose, ticket, onDownload }) => {
             ) : (
               <div className="w-48 h-48 bg-gradient-to-br from-[rgba(214,0,36,0.1)] to-[rgba(59,130,246,0.1)] rounded-lg flex items-center justify-center">
                 <div className="text-center">
-                  <Ticket className="w-12 h-12 mx-auto mb-2 text-[#D60024]" />
+                  <Ticket className="w-12 h-12 mx-auto mb-2 text-[#D60024] light:text-accent-foreground" />
                   <p className="text-xs text-gray-600">QR Code</p>
                 </div>
               </div>
@@ -81,9 +81,9 @@ const TicketModal = ({ isOpen, onClose, ticket, onDownload }) => {
           {/* Ticket Details */}
           <div className="space-y-3 bg-[rgba(255,255,255,0.05)] rounded-xl p-5 border border-[rgba(100,200,255,0.2)]">
             <div className="flex items-start gap-3">
-              <Calendar className="w-5 h-5 text-[#D60024] mt-0.5 flex-shrink-0" />
+              <Calendar className="w-5 h-5 text-[#D60024] mt-0.5 flex-shrink-0 light:text-accent-foreground" />
               <div className="flex-1">
-                <p className="font-semibold text-white text-sm mb-1">Date & Time</p>
+                <p className="font-semibold text-white text-sm mb-1 light:text-foreground">Date & Time</p>
                 <p className="text-[rgba(255,255,255,0.75)] text-sm">
                   {typeof ticket.eventDate === 'string' && ticket.eventDate.includes('T') 
                     ? new Date(ticket.eventDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
@@ -93,17 +93,17 @@ const TicketModal = ({ isOpen, onClose, ticket, onDownload }) => {
             </div>
 
             <div className="flex items-start gap-3">
-              <MapPin className="w-5 h-5 text-[#D60024] mt-0.5 flex-shrink-0" />
+              <MapPin className="w-5 h-5 text-[#D60024] mt-0.5 flex-shrink-0 light:text-accent-foreground" />
               <div className="flex-1">
-                <p className="font-semibold text-white text-sm mb-1">Location</p>
+                <p className="font-semibold text-white text-sm mb-1 light:text-foreground">Location</p>
                 <p className="text-[rgba(255,255,255,0.75)] text-sm">{ticket.location}</p>
               </div>
             </div>
 
             <div className="flex items-start gap-3">
-              <User className="w-5 h-5 text-[#D60024] mt-0.5 flex-shrink-0" />
+              <User className="w-5 h-5 text-[#D60024] mt-0.5 flex-shrink-0 light:text-accent-foreground" />
               <div className="flex-1">
-                <p className="font-semibold text-white text-sm mb-1">Quantity</p>
+                <p className="font-semibold text-white text-sm mb-1 light:text-foreground">Quantity</p>
                 <p className="text-[rgba(255,255,255,0.75)] text-sm">
                   {ticket.quantity} ticket{ticket.quantity > 1 ? "s" : ""}
                 </p>
@@ -111,9 +111,9 @@ const TicketModal = ({ isOpen, onClose, ticket, onDownload }) => {
             </div>
 
             <div className="flex items-start gap-3">
-              <Hash className="w-5 h-5 text-[#D60024] mt-0.5 flex-shrink-0" />
+              <Hash className="w-5 h-5 text-[#D60024] mt-0.5 flex-shrink-0 light:text-accent-foreground" />
               <div className="flex-1">
-                <p className="font-semibold text-white text-sm mb-1">Ticket ID</p>
+                <p className="font-semibold text-white text-sm mb-1 light:text-foreground">Ticket ID</p>
                 <p className="text-[rgba(255,255,255,0.75)] text-sm">
                   {ticket.id || ticket.orderId}
                 </p>
@@ -124,8 +124,8 @@ const TicketModal = ({ isOpen, onClose, ticket, onDownload }) => {
           {/* Total */}
           <div className="bg-gradient-to-r from-[rgba(214,0,36,0.15)] to-[rgba(214,0,36,0.05)] rounded-xl p-5 border border-[rgba(214,0,36,0.3)]">
             <div className="flex justify-between items-center">
-              <span className="font-semibold text-white text-lg">Total Paid</span>
-              <span className="text-3xl font-bold text-[#D60024]">₹{ticket.totalPrice?.toLocaleString()}</span>
+              <span className="font-semibold text-white text-lg light:text-foreground">Total Paid</span>
+              <span className="text-3xl font-bold text-[#D60024] light:text-accent-foreground">₹{ticket.totalPrice?.toLocaleString()}</span>
             </div>
           </div>
 
@@ -141,7 +141,7 @@ const TicketModal = ({ isOpen, onClose, ticket, onDownload }) => {
             </Button>
             <Button 
               variant="outline"
-              className="border-[rgba(100,200,255,0.3)] text-white hover:bg-[rgba(59,130,246,0.15)]"
+              className="border-[rgba(100,200,255,0.3)] text-white hover:bg-[rgba(59,130,246,0.15)] light:text-foreground"
               onClick={handleShare}
             >
               <Share2 className="w-4 h-4 mr-2" />

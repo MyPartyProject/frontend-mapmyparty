@@ -25,8 +25,8 @@ import { useAuth } from "@/contexts/AuthContext";
 
 // Beautiful color palette
 const COLORS = {
-  primary: "#3b82f6",      // Blue
-  secondary: "#8b5cf6",    // Purple
+  primary: "var(--chart-blue)",      // Blue
+  secondary: "var(--chart-comparison-purple)",    // Purple
   success: "#10b981",      // Green
   warning: "#f59e0b",       // Amber
   danger: "#ef4444",        // Red
@@ -97,7 +97,7 @@ const PromoterAnalytics = () => {
       <text
         x={x}
         y={y}
-        fill="white"
+        fill="var(--chart-inverse-label)"
         textAnchor={x > cx ? "start" : "end"}
         dominantBaseline="central"
         className="text-sm font-semibold"

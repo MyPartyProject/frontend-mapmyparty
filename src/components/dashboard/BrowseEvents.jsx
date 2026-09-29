@@ -699,7 +699,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
             alt={event.title || event.eventTitle || "Event"}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-background/5" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-background/5 light:from-background/92 light:via-background/42" />
           <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-background/55 to-transparent" />
           <div className="theme-gradient-primary absolute inset-0 opacity-10 transition-opacity duration-500 group-hover:opacity-20" />
         </div>
@@ -711,22 +711,22 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                 {event.subCategory || event.subcategory || event.category}
               </div>
             )}
-            <div className="inline-flex min-w-[4.75rem] shrink-0 items-center justify-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-[0.68rem] font-bold leading-none tabular-nums text-accent shadow-[var(--shadow-card)] backdrop-blur-md">
+            <div className="inline-flex min-w-[4.75rem] shrink-0 items-center justify-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-[0.68rem] font-bold leading-none tabular-nums text-accent shadow-[var(--shadow-card)] backdrop-blur-md light:text-accent-foreground">
               {getEventPriceDisplay(event)}
             </div>
           </div>
 
           <div className="mt-auto">
-            <h3 className="line-clamp-2 text-sm font-black leading-tight text-foreground drop-shadow-xl transition-colors group-hover:text-accent sm:text-base">
+            <h3 className="line-clamp-2 text-sm font-black leading-tight text-foreground drop-shadow-xl transition-colors group-hover:text-accent sm:text-base light:group-hover:text-accent-foreground">
               {event.title || event.eventTitle}
             </h3>
             <div className="mt-2 grid gap-1 text-[0.7rem] text-muted-foreground">
               <div className="flex items-center gap-1.5">
-                <Calendar className="h-3 w-3 shrink-0 text-accent" />
+                <Calendar className="h-3 w-3 shrink-0 text-accent light:text-accent-foreground" />
                 <span className="line-clamp-1">{formatDate(event.startDate || event.date)}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <MapPin className="h-3 w-3 shrink-0 text-accent" />
+                <MapPin className="h-3 w-3 shrink-0 text-accent light:text-accent-foreground" />
                 <span className="line-clamp-1">{getEventLocation(event)}</span>
               </div>
               {Number.isFinite(Number(event.distanceKm)) && formatDistanceKm(event.distanceKm) && (
@@ -800,7 +800,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                         <div className="theme-gradient-primary absolute inset-0 opacity-10 transition-opacity duration-700 group-hover:opacity-15" />
 
                         <div className="absolute right-3 top-3 z-10 sm:right-4 sm:top-4">
-                          <span className="inline-flex items-center justify-center rounded-full border border-accent/30 bg-card/70 px-2.5 py-1 text-[10px] font-bold leading-none text-accent shadow-[var(--shadow-card)] backdrop-blur-md sm:px-3 sm:py-1.5 sm:text-[11px]">
+                          <span className="inline-flex items-center justify-center rounded-full border border-accent/30 bg-card/70 px-2.5 py-1 text-[10px] font-bold leading-none text-accent shadow-[var(--shadow-card)] backdrop-blur-md sm:px-3 sm:py-1.5 sm:text-[11px] light:text-accent-foreground">
                             {getEventPriceDisplay(event)}
                           </span>
                         </div>
@@ -826,15 +826,15 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                             }`}
                           >
                             <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-border/35 bg-card/65 px-2 py-1 text-[10px] text-foreground/90 shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs">
-                              <Calendar className="h-3.5 w-3.5 shrink-0 text-accent" />
+                              <Calendar className="h-3.5 w-3.5 shrink-0 text-accent light:text-accent-foreground" />
                               <span className="truncate">{formatDate(event.startDate || event.date)}</span>
                             </span>
                             <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-border/35 bg-card/65 px-2 py-1 text-[10px] text-foreground/90 shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs">
-                              <MapPin className="h-3.5 w-3.5 shrink-0 text-accent" />
+                              <MapPin className="h-3.5 w-3.5 shrink-0 text-accent light:text-accent-foreground" />
                               <span className="truncate">{getEventLocation(event)}</span>
                             </span>
                             {formatDistanceKm(event.distanceKm) && (
-                              <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2 py-1 text-[10px] font-medium text-accent shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs">
+                              <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2 py-1 text-[10px] font-medium text-accent shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs light:text-accent-foreground">
                                 {formatDistanceKm(event.distanceKm)}
                               </span>
                             )}
@@ -930,7 +930,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
               >
                 <div className="grid gap-4 lg:grid-cols-[1fr_0.45fr]">
                   <div>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent light:text-accent-foreground">
                       Category
                     </p>
                     <div className={MOBILE_CHIP_ROW_CLASS}>
@@ -1029,7 +1029,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                   </div>
 
                   <div>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent light:text-accent-foreground">
                       Location
                     </p>
                     <div className={MOBILE_CHIP_ROW_CLASS}>
@@ -1081,7 +1081,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                         </Badge>
                       )}
                       {urlState.nearby && (
-                        <Badge className={`${MOBILE_CHIP_ITEM_CLASS} border-0 bg-accent/10 px-2 py-0.5 text-[11px] text-accent`}>
+                        <Badge className={`${MOBILE_CHIP_ITEM_CLASS} border-0 bg-accent/10 px-2 py-0.5 text-[11px] text-accent light:text-accent-foreground`}>
                           Nearby
                         </Badge>
                       )}
@@ -1117,7 +1117,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
               <section className="space-y-3 border-t border-border/20 pt-4 sm:pt-5">
                 <div className="flex items-end justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/40 bg-card/70 text-accent shadow-[var(--shadow-card)] sm:h-10 sm:w-10">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/40 bg-card/70 text-accent shadow-[var(--shadow-card)] sm:h-10 sm:w-10 light:text-accent-foreground">
                       <MapPin className="h-4.5 w-4.5" />
                     </div>
                     <div className="min-w-0">
@@ -1146,7 +1146,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                 <section key={category.key} className="space-y-3 border-t border-border/20 pt-4 sm:pt-5">
                   <div className="flex items-end justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/40 bg-card/70 text-accent shadow-[var(--shadow-card)] sm:h-10 sm:w-10">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/40 bg-card/70 text-accent shadow-[var(--shadow-card)] sm:h-10 sm:w-10 light:text-accent-foreground">
                         <Icon className="h-4.5 w-4.5" />
                       </div>
                       <div className="min-w-0">

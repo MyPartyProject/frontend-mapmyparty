@@ -35,8 +35,8 @@ import {
 
 // Different color theme - Teal/Emerald/Indigo palette
 const ANALYTICS_COLORS = {
-  primary: "#14b8a6",      // Teal
-  secondary: "#10b981",    // Emerald
+  primary: "var(--chart-teal)",      // Teal
+  secondary: "var(--chart-comparison-green)",    // Emerald
   accent: "#6366f1",       // Indigo
   warning: "#f59e0b",      // Amber
   info: "#06b6d4",         // Cyan
@@ -122,7 +122,7 @@ const EventDetailModal = ({ isOpen, onClose, event }) => {
       <text
         x={x}
         y={y}
-        fill="white"
+        fill="var(--chart-inverse-label)"
         textAnchor={x > cx ? "start" : "end"}
         dominantBaseline="central"
         className="text-sm font-semibold"

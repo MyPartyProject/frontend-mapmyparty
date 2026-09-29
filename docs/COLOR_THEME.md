@@ -1,6 +1,45 @@
 # MapMyParty Color Theme Guide
 
-Use this file before starting any new UI implementation. The current product theme is a dark premium party theme built around Midnight Plum, Royal Mulberry, and Antique Gold.
+The app supports Light and Dark themes. Light is the default, regardless of OS preference. The light palette comes from the `light` branch; the dark palette and application structure come from `main`.
+
+## Theme Selection
+
+- The existing `next-themes` provider applies `light` or `dark` to the HTML element and sets the browser color scheme.
+- `mapmyparty-theme` stores the selection in local storage and synchronizes open tabs. Visitors and signed-in users share the same browser preference; login/logout does not reset it. There is no account or cross-device synchronization.
+- Missing or invalid values use light. When storage is blocked, switching still works for the current session.
+- The HTML bootstrap restores the palette before React renders. The provider sits above routes and toasts so switching does not remount page content.
+- Use the shared `ThemeToggle` in public, attendee, organizer, and promoter navigation. Auth, reset, checkout, onboarding, and event analytics also expose it directly; public pages have a footer control.
+
+## Light Palette
+
+| Role | Color | Utility |
+| --- | --- | --- |
+| Canvas, card, popover | #FFFFFF | bg-background, bg-card, bg-popover |
+| Subtle surface | #F8F9FC | bg-surface, bg-muted |
+| Brand highlight | #A259C9 | text-primary, border-primary |
+| Primary action / link | #8438B0 | bg-primaryCTA, text-accent-foreground |
+| Action hover / active | #732F9B / #622783 | bg-primaryCTA-hover / active |
+| Soft purple | #F3E8FF | bg-secondary, bg-accent |
+| Primary text | #111827 | text-foreground |
+| Secondary text | #4B5563 | text-muted-foreground |
+| Metadata | #6B7280 | text-subtle |
+| Decorative border | #E5E7EB | border-border |
+| Input boundary | #6B7280 | border-input |
+| Success / warning / error / info | #166534 / #92400E / #B91C1C / #1E40AF | Semantic status utilities |
+
+Use the deeper CTA color for normal-size white button labels. The footer uses the reference inverse palette; media overlays and QR surfaces retain their required contrast.
+
+## Applying Colors
+
+Prefer shared tokens, which switch automatically. Existing hardcoded dark utilities have narrowly scoped `light:` variants carrying the reference colors. Preserve state modifiers, for example `light:data-[state=checked]:bg-primaryCTA`. Legacy dark compatibility rules apply only under `html.dark`; do not add global overrides for white text or black backgrounds.
+
+Keep layout, typography, behavior, and media independent of theme. Charts use CSS variables for changing series, labels, grids, and tracks while retaining distinct comparison colors.
+
+## Verification
+
+Run `npm run lint`, `npm run build`, and, with Vite running on port 8080, `node scripts/theme-smoke.mjs` and `node scripts/landing-navbar-smoke.mjs`. Theme smoke checks use isolated Chrome and local API fixtures for role screens; those checks do not verify a live authenticated backend or payment flow.
+
+Source snapshots for this migration: main `9e0184097c04a2efdada2d31d7b033e8b4d07d97`, light `a83bb016782e238b16f543d0d833849958a3fa59`.
 
 ## Source Of Truth
 
@@ -10,7 +49,7 @@ Use this file before starting any new UI implementation. The current product the
 
 When possible, use tokens and shared components instead of hardcoded hex classes.
 
-## Theme Identity
+## Dark Theme Identity
 
 - Base mood: dark, premium, event-night UI
 - Main brand color: Midnight Plum
@@ -19,7 +58,7 @@ When possible, use tokens and shared components instead of hardcoded hex classes
 - Surfaces: dark plum cards and glassy panels
 - Red usage: only for destructive, error, or urgent status states
 
-## Core Palette
+## Dark Core Palette
 
 | Role | Token / class | HSL | Hex | Use |
 | --- | --- | --- | --- | --- |

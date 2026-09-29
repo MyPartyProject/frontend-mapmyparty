@@ -87,8 +87,8 @@ const PromoterDashboardHeader = ({ isHeaderVisible = true }) => {
                     {/* Left Side - Logo and Navigation */}
                     <div className="flex items-center gap-6">
                         {/* Logo */}
-                        <Link to="/dashboard" className="flex items-center gap-2 font-bold text-lg text-white hover:opacity-80 transition-opacity">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg p-1 transition-all duration-300 hover:scale-105 bg-gradient-to-br from-[#1a1a2e] to-[#16213e] border border-[rgba(255,255,255,0.1)]">
+                        <Link to="/dashboard" className="flex items-center gap-2 font-bold text-lg text-white hover:opacity-80 transition-opacity light:text-foreground">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg p-1 transition-all duration-300 hover:scale-105 bg-gradient-to-br from-[#1a1a2e] to-[#16213e] border border-[rgba(255,255,255,0.1)] light:from-surface light:to-surface">
                                 <img src={logoSvg} alt="MMP Logo" className="w-8 h-8 object-contain opacity-90 hover:opacity-100 transition-opacity duration-300" />
                             </div>
                             <span className="hidden text-sm font-semibold tracking-[0.04em] sm:inline">MapMyParty</span>
@@ -101,8 +101,8 @@ const PromoterDashboardHeader = ({ isHeaderVisible = true }) => {
                                     key={item.path}
                                     to={item.path}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300 ${location.pathname === item.path
-                                            ? 'bg-gradient-to-r from-[#D60024] to-[#ff4d67] text-white shadow-[0_8px_20px_-8px_rgba(214,0,36,0.5)]'
-                                            : 'text-[rgba(255,255,255,0.75)] hover:text-white hover:bg-[rgba(255,255,255,0.08)] border border-transparent hover:border-[rgba(255,255,255,0.1)]'
+                                            ? 'bg-gradient-to-r from-[#D60024] to-[#ff4d67] text-white shadow-[0_8px_20px_-8px_rgba(214,0,36,0.5)] light:from-primaryCTA light:to-primaryCTA-hover light:text-inverse light:shadow-[var(--shadow-accent)]'
+                                            : 'text-[rgba(255,255,255,0.75)] hover:text-white hover:bg-[rgba(255,255,255,0.08)] border border-transparent hover:border-[rgba(255,255,255,0.1)] light:hover:text-foreground'
                                         }`}
                                 >
                                     <span className="flex-shrink-0">{item.icon}</span>
@@ -120,7 +120,7 @@ const PromoterDashboardHeader = ({ isHeaderVisible = true }) => {
                             <Input
                                 type="search"
                                 placeholder="Search events..."
-                                className="w-full pl-10 pr-4 py-2 bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.15)] text-white placeholder:text-[rgba(255,255,255,0.5)] focus:ring-2 focus:ring-[#D60024] focus:border-[#D60024] rounded-full transition-all duration-300 hover:bg-[rgba(255,255,255,0.12)]"
+                                className="w-full pl-10 pr-4 py-2 bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.15)] text-white placeholder:text-[rgba(255,255,255,0.5)] focus:ring-2 focus:ring-[#D60024] focus:border-[#D60024] rounded-full transition-all duration-300 hover:bg-[rgba(255,255,255,0.12)] light:text-foreground light:focus:ring-ring light:focus:border-primary"
                             />
                         </div>
 
@@ -128,10 +128,10 @@ const PromoterDashboardHeader = ({ isHeaderVisible = true }) => {
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="relative text-white hover:bg-[rgba(255,255,255,0.08)] border border-transparent hover:border-[rgba(255,255,255,0.1)] rounded-full transition-all duration-300"
+                            className="relative text-white hover:bg-[rgba(255,255,255,0.08)] border border-transparent hover:border-[rgba(255,255,255,0.1)] rounded-full transition-all duration-300 light:text-foreground"
                         >
                             <Bell className="h-5 w-5" />
-                            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-[#D60024] animate-pulse"></span>
+                            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-[#D60024] animate-pulse light:bg-primaryCTA"></span>
                         </Button>
 
                         {/* Profile Dropdown */}
@@ -139,35 +139,35 @@ const PromoterDashboardHeader = ({ isHeaderVisible = true }) => {
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     variant="ghost"
-                                    className="relative h-10 px-2 rounded-full border border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] text-white transition-all duration-300"
+                                    className="relative h-10 px-2 rounded-full border border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] text-white transition-all duration-300 light:text-foreground"
                                 >
-                                    <Avatar className="h-8 w-8 bg-[#000000] ring-2 ring-[rgba(255,255,255,0.2)]">
+                                    <Avatar className="h-8 w-8 bg-[#000000] ring-2 ring-[rgba(255,255,255,0.2)] light:bg-background">
                                         <AvatarImage src={userInfo.avatar} />
-                                        <AvatarFallback className="bg-gradient-to-br from-[#D60024] to-[#ff4d67] text-white font-bold text-sm">
+                                        <AvatarFallback className="bg-gradient-to-br from-[#D60024] to-[#ff4d67] text-white font-bold text-sm light:from-primaryCTA light:to-primaryCTA-hover light:text-inverse">
                                             {getInitials(userInfo.name, userInfo.email)}
                                         </AvatarFallback>
                                     </Avatar>
-                                    <span className="hidden xl:inline-flex items-center text-sm font-medium text-white ml-2">
+                                    <span className="hidden xl:inline-flex items-center text-sm font-medium text-white ml-2 light:text-foreground">
                                         {userInfo.name || "User"}
                                         <ChevronDown className="ml-1 h-4 w-4 text-[rgba(255,255,255,0.65)]" />
                                     </span>
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
-                                className="w-64 rounded-xl border border-[rgba(255,255,255,0.15)] bg-[rgba(10,15,30,0.98)] text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] backdrop-blur-xl"
+                                className="w-64 rounded-xl border border-[rgba(255,255,255,0.15)] bg-[rgba(10,15,30,0.98)] text-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] backdrop-blur-xl light:text-foreground"
                                 align="end"
                                 forceMount
                             >
                                 <DropdownMenuLabel className="font-normal">
                                     <div className="flex items-center gap-3 rounded-lg bg-[rgba(255,255,255,0.05)] p-3 hover:bg-[rgba(255,255,255,0.08)] transition-all duration-300">
-                                        <Avatar className="h-10 w-10 bg-[#000000] ring-2 ring-[rgba(255,255,255,0.2)]">
+                                        <Avatar className="h-10 w-10 bg-[#000000] ring-2 ring-[rgba(255,255,255,0.2)] light:bg-background">
                                             <AvatarImage src={userInfo.avatar} />
-                                            <AvatarFallback className="bg-gradient-to-br from-[#D60024] to-[#ff4d67] text-white font-bold">
+                                            <AvatarFallback className="bg-gradient-to-br from-[#D60024] to-[#ff4d67] text-white font-bold light:from-primaryCTA light:to-primaryCTA-hover light:text-inverse">
                                                 {getInitials(userInfo.name, userInfo.email)}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="flex flex-col space-y-0.5">
-                                            <p className="text-sm font-bold leading-none text-white">
+                                            <p className="text-sm font-bold leading-none text-white light:text-foreground">
                                                 {userInfo.name || "Your name"}
                                             </p>
                                             <p className="text-xs leading-none text-[rgba(255,255,255,0.6)]">
@@ -181,7 +181,7 @@ const PromoterDashboardHeader = ({ isHeaderVisible = true }) => {
                                     onClick={() => navigate("/dashboard/profile")}
                                     className="cursor-pointer hover:bg-[rgba(255,255,255,0.08)] transition-all duration-300"
                                 >
-                                    <UserIcon className="mr-2 h-4 w-4 text-[#D60024]" />
+                                    <UserIcon className="mr-2 h-4 w-4 text-[#D60024] light:text-accent-foreground" />
                                     Profile
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator className="bg-[rgba(255,255,255,0.1)]" />
@@ -189,14 +189,14 @@ const PromoterDashboardHeader = ({ isHeaderVisible = true }) => {
                                     onClick={() => navigate("/dashboard/bookings")}
                                     className="cursor-pointer hover:bg-[rgba(255,255,255,0.08)] transition-all duration-300"
                                 >
-                                    <Ticket className="mr-2 h-4 w-4 text-[#D60024]" />
+                                    <Ticket className="mr-2 h-4 w-4 text-[#D60024] light:text-accent-foreground" />
                                     My Bookings
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator className="bg-[rgba(255,255,255,0.1)]" />
                                 <DropdownMenuItem
                                     onClick={handleLogout}
                                     disabled={isLoggingOut}
-                                    className="text-[#FF5555] focus:text-[#FF5555] hover:bg-[rgba(255,0,0,0.1)] transition-all duration-300 cursor-pointer disabled:opacity-60"
+                                    className="text-[#FF5555] focus:text-[#FF5555] hover:bg-[rgba(255,0,0,0.1)] transition-all duration-300 cursor-pointer disabled:opacity-60 light:text-destructive light:focus:text-destructive"
                                 >
                                     {isLoggingOut ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
                                     <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>

@@ -203,7 +203,7 @@ const PromoterPlatformConfig = () => {
                 <Input id="platform-logo" type="file" accept="image/png,image/jpeg" onChange={handleLogoUpload} />
                 <p className="text-xs text-muted-foreground" role="status">{uploading ? "Uploading logo?" : "PNG or JPEG, maximum 2 MB. Save changes to apply your uploaded logo."}</p>
                 <Button type="button" variant="outline" onClick={() => setForm((current) => ({ ...current, logoStorageKey: null, logoUrl: defaultLogoUrl }))}>Use default logo</Button>
-                {fieldErrors.logoStorageKey && <p role="alert" className="text-sm text-destructive">{fieldErrors.logoStorageKey}</p>}
+                {fieldErrors.logoStorageKey && <p role="alert" className="text-sm text-destructive light:text-muted-foreground">{fieldErrors.logoStorageKey}</p>}
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
@@ -216,7 +216,7 @@ const PromoterPlatformConfig = () => {
                     onChange={(event) => handleChange("name", event.target.value)}
                     placeholder="MapMyParty"
                   />
-                  {fieldErrors.name && <p role="alert" className="text-sm text-destructive">{fieldErrors.name}</p>}
+                  {fieldErrors.name && <p role="alert" className="text-sm text-destructive light:text-muted-foreground">{fieldErrors.name}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="platform-fee-percent">Platform fee percent</Label>
@@ -232,7 +232,7 @@ const PromoterPlatformConfig = () => {
                     onChange={(event) => handleChange("platformFeeConfig", event.target.value)}
                     placeholder="8"
                   />
-                  {fieldErrors.platformFeeConfig && <p role="alert" className="text-sm text-destructive">{fieldErrors.platformFeeConfig}</p>}
+                  {fieldErrors.platformFeeConfig && <p role="alert" className="text-sm text-destructive light:text-muted-foreground">{fieldErrors.platformFeeConfig}</p>}
                   <p className="text-xs text-muted-foreground">
                     Applied to buyer platform charges during booking checkout.
                   </p>
@@ -250,7 +250,7 @@ const PromoterPlatformConfig = () => {
                   placeholder="Registered business address"
                   rows={4}
                 />
-                  {fieldErrors.registeredAddress && <p role="alert" className="text-sm text-destructive">{fieldErrors.registeredAddress}</p>}
+                  {fieldErrors.registeredAddress && <p role="alert" className="text-sm text-destructive light:text-muted-foreground">{fieldErrors.registeredAddress}</p>}
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
@@ -267,7 +267,7 @@ const PromoterPlatformConfig = () => {
                     onChange={(event) => handleChange("pincode", event.target.value)}
                     placeholder="110001"
                   />
-                  {fieldErrors.pincode && <p role="alert" className="text-sm text-destructive">{fieldErrors.pincode}</p>}
+                  {fieldErrors.pincode && <p role="alert" className="text-sm text-destructive light:text-muted-foreground">{fieldErrors.pincode}</p>}
                 </div>
               </div>
 
@@ -281,7 +281,7 @@ const PromoterPlatformConfig = () => {
                     onChange={(event) => handleChange("gstNumber", event.target.value.toUpperCase())}
                     placeholder="22AAAAA0000A1Z5"
                   />
-                  {fieldErrors.gstNumber && <p role="alert" className="text-sm text-destructive">{fieldErrors.gstNumber}</p>}
+                  {fieldErrors.gstNumber && <p role="alert" className="text-sm text-destructive light:text-muted-foreground">{fieldErrors.gstNumber}</p>}
                 </div>
               </div>
 

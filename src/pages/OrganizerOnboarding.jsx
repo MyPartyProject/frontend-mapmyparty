@@ -6,6 +6,7 @@ import { BadgeCheck, Building2, CreditCard, ImagePlus, Loader2, Upload, X } from
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/config/api";
+import ThemeToggle from "@/components/ThemeToggle";
 import {
   clearOrganizerOnboardingCache,
   fetchOrganizerOnboardingStatus,
@@ -414,22 +415,23 @@ const OrganizerOnboarding = () => {
 
   if (loadingStatus) {
     return (
-      <div className="min-h-screen bg-[#040712] flex items-center justify-center text-white">
+      <div className="min-h-screen bg-[#040712] flex items-center justify-center text-white light:bg-background light:text-foreground">
         <div className="flex items-center gap-3">
-          <Loader2 className="w-5 h-5 animate-spin text-red-400" />
-          <span className="text-sm text-white/80">Preparing organizer onboarding...</span>
+          <Loader2 className="w-5 h-5 animate-spin text-red-400 light:text-destructive" />
+          <span className="text-sm text-white/80 light:text-muted-foreground">Preparing organizer onboarding...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#040712] text-white p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-[#040712] text-white p-4 sm:p-6 lg:p-8 light:bg-background light:text-foreground">
       <div className="max-w-2xl mx-auto space-y-6">
+        <div className="flex justify-end"><ThemeToggle /></div>
         <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/50">Organizer Onboarding</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-white/50 light:text-muted-foreground">Organizer Onboarding</p>
           <h1 className="text-2xl sm:text-3xl font-bold">Complete setup to continue</h1>
-          <p className="text-sm text-white/70">
+          <p className="text-sm text-white/70 light:text-muted-foreground">
             Step 1: Create organizer profile. Step 2: Add bank details.
           </p>
         </div>
@@ -437,14 +439,14 @@ const OrganizerOnboarding = () => {
         <div className="grid grid-cols-2 gap-3">
           <div
             className={`rounded-xl border p-3 ${
-              status?.hasOrganizerProfile ? "border-emerald-400/40 bg-emerald-500/10" : "border-white/10 bg-white/5"
+              status?.hasOrganizerProfile ? "border-emerald-400/40 bg-emerald-500/10" : "border-white/10 bg-white/5 light:border-border light:bg-muted"
             }`}
           >
             <div className="flex items-center gap-2 text-sm font-medium">
               <Building2 className="w-4 h-4" />
               Organizer Profile
             </div>
-            <p className="text-xs text-white/60 mt-1">
+            <p className="text-xs text-white/60 mt-1 light:text-muted-foreground">
               {status?.hasOrganizerProfile ? "Completed" : "Required"}
             </p>
           </div>
@@ -454,24 +456,24 @@ const OrganizerOnboarding = () => {
                 ? "border-emerald-400/40 bg-emerald-500/10"
                 : status?.hasBankDetails
                   ? "border-amber-400/40 bg-amber-500/10"
-                  : "border-white/10 bg-white/5"
+                  : "border-white/10 bg-white/5 light:border-border light:bg-muted"
             }`}
           >
             <div className="flex items-center gap-2 text-sm font-medium">
               <CreditCard className="w-4 h-4" />
               Bank Details
             </div>
-            <p className="text-xs text-white/60 mt-1">
+            <p className="text-xs text-white/60 mt-1 light:text-muted-foreground">
               {status?.isBankVerified ? "Verified" : status?.hasBankDetails ? "Verification required" : "Required"}
             </p>
           </div>
         </div>
 
         {currentStep === "profile" && (
-          <Card className="bg-[#0b101d] border-white/10 text-white">
+          <Card className="bg-[#0b101d] border-white/10 text-white light:bg-card light:border-border light:text-foreground">
             <CardHeader>
               <CardTitle>Create Organizer Profile</CardTitle>
-              <CardDescription className="text-white/60">
+              <CardDescription className="text-white/60 light:text-muted-foreground">
                 This must be completed before accessing organizer features.
               </CardDescription>
             </CardHeader>
@@ -483,14 +485,14 @@ const OrganizerOnboarding = () => {
                     id="org-name"
                     value={profileForm.name}
                     onChange={(e) => onProfileInputChange("name", e.target.value)}
-                    className="bg-[#070b14] border-white/15 text-white"
+                    className="bg-[#070b14] border-white/15 text-white light:bg-card light:border-border light:text-foreground"
                     required
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="org-logo">Logo</Label>
-                  <div className="flex flex-col sm:flex-row gap-4 rounded-lg border border-white/10 bg-[#070b14] p-4">
-                    <div className="h-24 w-24 rounded-lg border border-white/15 bg-white/5 flex items-center justify-center overflow-hidden shrink-0">
+                  <div className="flex flex-col sm:flex-row gap-4 rounded-lg border border-white/10 bg-[#070b14] p-4 light:border-border light:bg-card">
+                    <div className="h-24 w-24 rounded-lg border border-white/15 bg-white/5 flex items-center justify-center overflow-hidden shrink-0 light:border-border light:bg-muted">
                       {selectedLogoPreview ? (
                         <img
                           src={selectedLogoPreview}
@@ -498,7 +500,7 @@ const OrganizerOnboarding = () => {
                           className="h-full w-full object-contain p-2"
                         />
                       ) : (
-                        <ImagePlus className="h-8 w-8 text-white/35" />
+                        <ImagePlus className="h-8 w-8 text-white/35 light:text-muted-foreground" />
                       )}
                     </div>
                     <div className="flex-1 space-y-3">
@@ -525,14 +527,14 @@ const OrganizerOnboarding = () => {
                             type="button"
                             variant="outline"
                             onClick={clearLogoSelection}
-                            className="gap-2 border-white/15 bg-transparent text-white hover:bg-white/10"
+                            className="gap-2 border-white/15 bg-transparent text-white hover:bg-white/10 light:border-border light:text-foreground light:hover:bg-muted"
                           >
                             <X className="h-4 w-4" />
                             Remove
                           </Button>
                         )}
                       </div>
-                      <p className="text-xs text-white/55">{ORGANIZER_LOGO_HELP_TEXT}</p>
+                      <p className="text-xs text-white/55 light:text-muted-foreground">{ORGANIZER_LOGO_HELP_TEXT}</p>
                     </div>
                   </div>
                 </div>
@@ -542,7 +544,7 @@ const OrganizerOnboarding = () => {
                     id="org-description"
                     value={profileForm.description}
                     onChange={(e) => onProfileInputChange("description", e.target.value)}
-                    className="bg-[#070b14] border-white/15 text-white min-h-[90px]"
+                    className="bg-[#070b14] border-white/15 text-white min-h-[90px] light:bg-card light:border-border light:text-foreground"
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -553,7 +555,7 @@ const OrganizerOnboarding = () => {
                       {...PHONE_INPUT_PROPS}
                       value={profileForm.contact}
                       onChange={(e) => onProfileInputChange("contact", sanitizeTenDigitPhoneInput(e.target.value))}
-                      className="bg-[#070b14] border-white/15 text-white"
+                      className="bg-[#070b14] border-white/15 text-white light:bg-card light:border-border light:text-foreground"
                     />
                   </div>
                   <div className="space-y-2">
@@ -563,21 +565,21 @@ const OrganizerOnboarding = () => {
                       type="email"
                       value={profileForm.email}
                       onChange={(e) => onProfileInputChange("email", e.target.value)}
-                      className="bg-[#070b14] border-white/15 text-white"
+                      className="bg-[#070b14] border-white/15 text-white light:bg-card light:border-border light:text-foreground"
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <IndiaLocationFields idPrefix="org" state={profileForm.state}
                     onChange={({ state }) => onProfileInputChange("state", state)} disabled={savingProfile}
-                    className="bg-[#070b14] border-white/15 text-white" />
+                    className="bg-[#070b14] border-white/15 text-white light:bg-card light:border-border light:text-foreground" />
                   <div className="space-y-2">
                     <Label htmlFor="org-gst">GST Number</Label>
                     <Input
                       id="org-gst"
                       value={profileForm.gstNumber}
                       onChange={(e) => onProfileInputChange("gstNumber", e.target.value.toUpperCase())}
-                      className="bg-[#070b14] border-white/15 text-white"
+                      className="bg-[#070b14] border-white/15 text-white light:bg-card light:border-border light:text-foreground"
                     />
                   </div>
                 </div>
@@ -587,7 +589,7 @@ const OrganizerOnboarding = () => {
                     id="org-address"
                     value={profileForm.address}
                     onChange={(e) => onProfileInputChange("address", e.target.value)}
-                    className="bg-[#070b14] border-white/15 text-white min-h-[70px]"
+                    className="bg-[#070b14] border-white/15 text-white min-h-[70px] light:bg-card light:border-border light:text-foreground"
                   />
                 </div>
                 <Button type="submit" disabled={savingProfile} className="w-full">
@@ -606,10 +608,10 @@ const OrganizerOnboarding = () => {
         )}
 
         {(currentStep === "bank" || isEditingBank) && (
-          <Card className="bg-[#0b101d] border-white/10 text-white">
+          <Card className="bg-[#0b101d] border-white/10 text-white light:bg-card light:border-border light:text-foreground">
             <CardHeader>
               <CardTitle>{status?.hasBankDetails ? "Edit Bank Details" : "Add Bank Details"}</CardTitle>
-              <CardDescription className="text-white/60">
+              <CardDescription className="text-white/60 light:text-muted-foreground">
                 Add payout details to finish organizer onboarding.
               </CardDescription>
             </CardHeader>
@@ -620,11 +622,11 @@ const OrganizerOnboarding = () => {
                   <Input
                     id="bank-account-holder"
                     value={bankForm.accountHolder}
-                    className="bg-[#070b14] border-white/15 text-white"
+                    className="bg-[#070b14] border-white/15 text-white light:bg-card light:border-border light:text-foreground"
                     required
                   {...bankInput.props("accountHolder", bankForm.accountHolder, (value) => onBankInputChange("accountHolder", value), { optional: false, unchanged: Boolean(status?.hasBankDetails) && bankForm.accountHolder === status?.bankDetails?.accountHolder })}
                     />
-                    {bankInput.errors.accountHolder && <p id="bank-accountHolder-error" role="alert" className="text-sm text-destructive">{bankInput.errors.accountHolder}</p>}
+                    {bankInput.errors.accountHolder && <p id="bank-accountHolder-error" role="alert" className="text-sm text-destructive light:text-muted-foreground">{bankInput.errors.accountHolder}</p>}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -634,22 +636,22 @@ const OrganizerOnboarding = () => {
                       value={bankForm.accountNumber}
                       placeholder={status?.hasBankDetails ? `Leave blank to keep ${bankForm.accountNumberMasked}` : ""}
                       autoComplete="off"
-                      className="bg-[#070b14] border-white/15 text-white"
+                      className="bg-[#070b14] border-white/15 text-white light:bg-card light:border-border light:text-foreground"
                       required={!status?.hasBankDetails}
                     {...bankInput.props("accountNumber", bankForm.accountNumber, (value) => onBankInputChange("accountNumber", value), { optional: Boolean(status?.hasBankDetails), unchanged: Boolean(status?.hasBankDetails) && bankForm.accountNumber === status?.bankDetails?.accountNumber })}
                     />
-                    {bankInput.errors.accountNumber && <p id="bank-accountNumber-error" role="alert" className="text-sm text-destructive">{bankInput.errors.accountNumber}</p>}
+                    {bankInput.errors.accountNumber && <p id="bank-accountNumber-error" role="alert" className="text-sm text-destructive light:text-muted-foreground">{bankInput.errors.accountNumber}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="bank-ifsc">IFSC Code</Label>
                     <Input
                       id="bank-ifsc"
                       value={bankForm.ifscCode}
-                      className="bg-[#070b14] border-white/15 text-white"
+                      className="bg-[#070b14] border-white/15 text-white light:bg-card light:border-border light:text-foreground"
                       required
                     {...bankInput.props("ifscCode", bankForm.ifscCode, (value) => onBankInputChange("ifscCode", value), { optional: false, unchanged: Boolean(status?.hasBankDetails) && bankForm.ifscCode === status?.bankDetails?.ifscCode })}
                     />
-                    {bankInput.errors.ifscCode && <p id="bank-ifscCode-error" role="alert" className="text-sm text-destructive">{bankInput.errors.ifscCode}</p>}
+                    {bankInput.errors.ifscCode && <p id="bank-ifscCode-error" role="alert" className="text-sm text-destructive light:text-muted-foreground">{bankInput.errors.ifscCode}</p>}
                   </div>
                 </div>
                 {status?.hasBankDetails && (
@@ -658,7 +660,7 @@ const OrganizerOnboarding = () => {
                     <Input id="bank-current-password" type="password" autoComplete="current-password"
                       value={bankForm.currentPassword}
                       onChange={(e) => onBankInputChange("currentPassword", e.target.value)}
-                      className="bg-[#070b14] border-white/15 text-white" required />
+                      className="bg-[#070b14] border-white/15 text-white light:bg-card light:border-border light:text-foreground" required />
                   </div>
                 )}
                 <Button type="submit" disabled={savingBank} className="w-full">
@@ -672,7 +674,7 @@ const OrganizerOnboarding = () => {
                   )}
                 </Button>
                 {status?.hasBankDetails && (
-                  <Button type="button" variant="outline" onClick={() => { setBankForm(buildBankDefaults(status.bankDetails)); setIsEditingBank(false); }} className="w-full border-white/15 bg-transparent text-white">Cancel edit</Button>
+                  <Button type="button" variant="outline" onClick={() => { setBankForm(buildBankDefaults(status.bankDetails)); setIsEditingBank(false); }} className="w-full border-white/15 bg-transparent text-white light:border-border light:text-foreground">Cancel edit</Button>
                 )}
               </form>
             </CardContent>
@@ -680,27 +682,27 @@ const OrganizerOnboarding = () => {
         )}
 
         {currentStep === "verify" && !isEditingBank && (
-          <Card className="bg-[#0b101d] border-white/10 text-white animate-in fade-in-0 slide-in-from-bottom-3 duration-500">
+          <Card className="bg-[#0b101d] border-white/10 text-white animate-in fade-in-0 slide-in-from-bottom-3 duration-500 light:bg-card light:border-border light:text-foreground">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <BadgeCheck className="h-5 w-5 text-amber-300" />
+                <BadgeCheck className="h-5 w-5 text-amber-300 light:text-warning" />
                 Verify Bank Account
               </CardTitle>
-              <CardDescription className="text-white/60">
+              <CardDescription className="text-white/60 light:text-muted-foreground">
                 Your bank details are saved. Verification keeps payout releases protected.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <p className="text-sm text-white/70">{status?.bankDetails?.accountHolder} · {status?.bankDetails?.accountNumberMasked} · {status?.bankDetails?.ifscCode}</p>
-                <p className="text-xs uppercase tracking-[0.2em] text-white/45">Current status</p>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4 light:border-border light:bg-muted">
+                <p className="text-sm text-white/70 light:text-muted-foreground">{status?.bankDetails?.accountHolder} · {status?.bankDetails?.accountNumberMasked} · {status?.bankDetails?.ifscCode}</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-white/45 light:text-muted-foreground">Current status</p>
                 <p className="mt-2 text-lg font-semibold">{status?.bankVerificationStatus || "UNVERIFIED"}</p>
                 {status?.bankDetails?.verificationFailureReason && (
-                  <p className="mt-2 text-sm text-red-300">{status.bankDetails.verificationFailureReason}</p>
+                  <p className="mt-2 text-sm text-red-300 light:text-destructive">{status.bankDetails.verificationFailureReason}</p>
                 )}
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button type="button" variant="outline" onClick={() => { setBankForm(buildBankDefaults(status.bankDetails)); setIsEditingBank(true); }} className="border-white/15 bg-transparent text-white hover:bg-white/10">Edit details</Button>
+                <Button type="button" variant="outline" onClick={() => { setBankForm(buildBankDefaults(status.bankDetails)); setIsEditingBank(true); }} className="border-white/15 bg-transparent text-white hover:bg-white/10 light:border-border light:text-foreground light:hover:bg-muted">Edit details</Button>
                 <Button
                   type="button"
                   onClick={handleRequestBankVerification}
@@ -718,12 +720,12 @@ const OrganizerOnboarding = () => {
                     "Verify Bank Account"
                   )}
                 </Button>
-                <Button type="button" variant="outline" onClick={handleRefreshBankVerificationStatus} className="border-white/15 bg-transparent text-white hover:bg-white/10">Refresh status</Button>
+                <Button type="button" variant="outline" onClick={handleRefreshBankVerificationStatus} className="border-white/15 bg-transparent text-white hover:bg-white/10 light:border-border light:text-foreground light:hover:bg-muted">Refresh status</Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={finishOnboarding}
-                  className="border-white/15 bg-transparent text-white hover:bg-white/10"
+                  className="border-white/15 bg-transparent text-white hover:bg-white/10 light:border-border light:text-foreground light:hover:bg-muted"
                 >
                   Continue to Dashboard
                 </Button>

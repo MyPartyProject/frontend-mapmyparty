@@ -33,7 +33,7 @@ const EventDescription = ({
 
             <div className="space-y-4">
               <div className="flex items-start gap-3 group p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-900/30 transition-all duration-300">
-                <div className="p-2 rounded-xl bg-black text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-md">
+                <div className="p-2 rounded-xl bg-black text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-md light:bg-secondary light:text-secondary-foreground">
                   <Calendar className="w-5 h-5" />
                 </div>
                 <div>
@@ -44,7 +44,7 @@ const EventDescription = ({
               </div>
 
               <div className="flex items-start gap-3 group p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-900/30 transition-all duration-300">
-                <div className="p-2 rounded-xl bg-red-600 text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-md">
+                <div className="p-2 rounded-xl bg-red-600 text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-md light:bg-secondary light:text-secondary-foreground">
                   <MapPin className="w-5 h-5" />
                 </div>
                 <div>
@@ -56,7 +56,7 @@ const EventDescription = ({
 
               {email && (
                 <div className="flex items-start gap-3 group p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-900/30 transition-all duration-300">
-                  <div className="p-2 rounded-xl bg-red-600 text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-md">
+                  <div className="p-2 rounded-xl bg-red-600 text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-md light:bg-secondary light:text-secondary-foreground">
                     <Mail className="w-5 h-5" />
                   </div>
                   <div>
@@ -73,7 +73,7 @@ const EventDescription = ({
 
               {website && (
                 <div className="flex items-start gap-3 group p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-900/30 transition-all duration-300">
-                  <div className="p-2 rounded-xl bg-black text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-md">
+                  <div className="p-2 rounded-xl bg-black text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-md light:bg-secondary light:text-secondary-foreground">
                     <Globe className="w-5 h-5" />
                   </div>
                   <div>
@@ -91,7 +91,7 @@ const EventDescription = ({
               )}
 
               <div className="flex items-start gap-3 group p-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-300">
-                <div className="p-2 rounded-xl bg-red-600 text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-md">
+                <div className="p-2 rounded-xl bg-red-600 text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-md light:bg-secondary light:text-secondary-foreground">
                   <DollarSign className="w-5 h-5" />
                 </div>
                 <div>

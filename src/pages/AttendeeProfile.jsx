@@ -85,9 +85,9 @@ export default function AttendeeProfile() {
   if (loading) {
     return (
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-10 text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-white/30 mx-auto mb-3" />
-          <p className="text-sm text-white/50">Loading profile...</p>
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-10 text-center light:border-border light:bg-muted">
+          <Loader2 className="h-8 w-8 animate-spin text-white/30 mx-auto mb-3 light:text-muted-foreground" />
+          <p className="text-sm text-white/50 light:text-muted-foreground">Loading profile...</p>
         </div>
       </div>
     );
@@ -97,8 +97,8 @@ export default function AttendeeProfile() {
     return (
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-8 text-center">
-          <AlertCircle className="h-8 w-8 text-red-300 mx-auto mb-3" />
-          <p className="text-sm text-red-200 mb-4">{error || "Profile not found"}</p>
+          <AlertCircle className="h-8 w-8 text-red-300 mx-auto mb-3 light:text-destructive" />
+          <p className="text-sm text-red-200 mb-4 light:text-destructive">{error || "Profile not found"}</p>
           <Button onClick={fetchProfile}>
             Retry
           </Button>
@@ -114,16 +114,16 @@ export default function AttendeeProfile() {
   const attendeeRole = roleLabel(profile.user_roles);
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 text-white">
+    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 text-white light:text-foreground">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold">My Profile</h1>
-        <p className="text-sm text-white/45 mt-1">Attendee profile information</p>
+        <p className="text-sm text-white/45 mt-1 light:text-muted-foreground">Attendee profile information</p>
       </div>
 
-      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 sm:p-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 sm:p-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between light:border-border light:bg-muted">
         <div>
-          <p className="text-sm font-semibold text-white">Account issue or profile access problem?</p>
-          <p className="text-xs text-white/40 mt-1">
+          <p className="text-sm font-semibold text-white light:text-foreground">Account issue or profile access problem?</p>
+          <p className="text-xs text-white/40 mt-1 light:text-muted-foreground">
             Open a support ticket for login, profile, technical, or account access issues.
           </p>
         </div>
@@ -135,11 +135,11 @@ export default function AttendeeProfile() {
         </Link>
       </div>
 
-      <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 sm:p-6">
+      <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 sm:p-6 light:border-border light:bg-muted">
         <div className="flex flex-col sm:flex-row sm:items-start gap-5">
-          <Avatar className="h-20 w-20 border border-white/20">
+          <Avatar className="h-20 w-20 border border-white/20 light:border-border">
             <AvatarImage src={profile.avatar || undefined} alt={fullName} />
-            <AvatarFallback className="bg-white/10 text-white text-lg">
+            <AvatarFallback className="bg-white/10 text-white text-lg light:bg-muted light:text-foreground">
               {getInitials(fullName, email)}
             </AvatarFallback>
           </Avatar>
@@ -147,9 +147,9 @@ export default function AttendeeProfile() {
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <h2 className="text-xl font-semibold truncate">{fullName}</h2>
-              <Badge className="bg-white/10 text-white border border-white/15">{attendeeRole}</Badge>
+              <Badge className="bg-white/10 text-white border border-white/15 light:bg-muted light:text-foreground light:border-border">{attendeeRole}</Badge>
               {isVerified && (
-                <Badge className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/20">
+                <Badge className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/20 light:text-success">
                   <ShieldCheck className="h-3 w-3 mr-1" />
                   Verified
                 </Badge>
@@ -157,22 +157,22 @@ export default function AttendeeProfile() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 text-sm">
-              <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 flex items-center gap-2">
-                <Mail className="h-4 w-4 text-white/50" />
-                <span className="text-white/80 truncate">{email}</span>
+              <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 flex items-center gap-2 light:border-border light:bg-muted">
+                <Mail className="h-4 w-4 text-white/50 light:text-muted-foreground" />
+                <span className="text-white/80 truncate light:text-muted-foreground">{email}</span>
               </div>
-              <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 flex items-center gap-2">
-                <Phone className="h-4 w-4 text-white/50" />
-                <span className="text-white/80">{phone}</span>
+              <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 flex items-center gap-2 light:border-border light:bg-muted">
+                <Phone className="h-4 w-4 text-white/50 light:text-muted-foreground" />
+                <span className="text-white/80 light:text-muted-foreground">{phone}</span>
               </div>
-              <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-white/50" />
-                <span className="text-white/80">Joined {formatDate(profile.createdAt)}</span>
+              <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 flex items-center gap-2 light:border-border light:bg-muted">
+                <Calendar className="h-4 w-4 text-white/50 light:text-muted-foreground" />
+                <span className="text-white/80 light:text-muted-foreground">Joined {formatDate(profile.createdAt)}</span>
               </div>
-              <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 flex items-center gap-2">
-                <User className="h-4 w-4 text-white/50" />
-                <label className="flex flex-1 items-start justify-between gap-3 text-white/80">
-                  <span>WhatsApp alerts<span className="block text-xs text-white/50 mt-1">Booking details, event updates, reminders and refunds. Turn off anytime.</span></span>
+              <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 flex items-center gap-2 light:border-border light:bg-muted">
+                <User className="h-4 w-4 text-white/50 light:text-muted-foreground" />
+                <label className="flex flex-1 items-start justify-between gap-3 text-white/80 light:text-muted-foreground">
+                  <span>WhatsApp alerts<span className="block text-xs text-white/50 mt-1 light:text-muted-foreground">Booking details, event updates, reminders and refunds. Turn off anytime.</span></span>
                   <input type="checkbox" className="mt-1 h-4 w-4 accent-purple-500" checked={Boolean(profile.whatsAppNotification)} disabled={savingWhatsApp || !profile.phone} onChange={(event) => saveWhatsAppPreference(event.target.checked)} />
                 </label>
               </div>
@@ -181,27 +181,27 @@ export default function AttendeeProfile() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 sm:p-6">
+      <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 sm:p-6 light:border-border light:bg-muted">
         <div className="flex items-center gap-2 mb-4">
-          <Building2 className="h-4 w-4 text-white/60" />
+          <Building2 className="h-4 w-4 text-white/60 light:text-muted-foreground" />
           <h3 className="text-base font-semibold">Organizer Associations</h3>
         </div>
         {organizers.length === 0 ? (
-          <p className="text-sm text-white/50">No organizer association found.</p>
+          <p className="text-sm text-white/50 light:text-muted-foreground">No organizer association found.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {organizers.map((org) => (
-              <div key={org.id} className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4">
-                <p className="font-medium text-white">{org.name || "Unnamed Organizer"}</p>
-                <p className="text-xs text-white/50 mt-1">
+              <div key={org.id} className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4 light:border-border light:bg-muted">
+                <p className="font-medium text-white light:text-foreground">{org.name || "Unnamed Organizer"}</p>
+                <p className="text-xs text-white/50 mt-1 light:text-muted-foreground">
                   {[org.address, org.state].filter(Boolean).join(", ") || "Location not available"}
                 </p>
                 <div className="mt-2">
                   <Badge
                     className={
                       org.isVerified
-                        ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/20"
-                        : "bg-amber-500/15 text-amber-300 border border-amber-500/20"
+                        ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/20 light:text-success"
+                        : "bg-amber-500/15 text-amber-300 border border-amber-500/20 light:text-warning"
                     }
                   >
                     {org.isVerified ? "Verified" : "Unverified"}

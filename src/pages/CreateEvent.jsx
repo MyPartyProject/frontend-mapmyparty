@@ -3547,7 +3547,7 @@ const CreateEvent = () => {
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/25 bg-primary/15">
-              <Icon className="h-5 w-5 text-accent" />
+              <Icon className="h-5 w-5 text-accent light:text-accent-foreground" />
             </span>
             <div className="min-w-0">
               <h3 className="text-base font-semibold text-foreground">{title}</h3>
@@ -3680,13 +3680,13 @@ const CreateEvent = () => {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className={`${nestedPanel} transition-all duration-200 hover:-translate-y-0.5 hover:border-border/70 hover:bg-background/55`}>
                   <div className="flex items-start gap-3">
-                    <CalendarIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                    <CalendarIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent light:text-accent-foreground" />
                     <ValueItem label="Start" value={scheduleStart} />
                   </div>
                 </div>
                 <div className={`${nestedPanel} transition-all duration-200 hover:-translate-y-0.5 hover:border-border/70 hover:bg-background/55`}>
                   <div className="flex items-start gap-3">
-                    <Clock className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                    <Clock className="mt-0.5 h-4 w-4 shrink-0 text-accent light:text-accent-foreground" />
                     <ValueItem label="End" value={scheduleEnd} />
                   </div>
                 </div>
@@ -3704,7 +3704,7 @@ const CreateEvent = () => {
 
               <div className={`${nestedPanel} transition-all duration-200 hover:-translate-y-0.5 hover:border-border/70 hover:bg-background/55`}>
                 <div className="flex items-start gap-3">
-                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-accent light:text-accent-foreground" />
                   <ValueItem label="Location" value={locationLine || "Location pending"} valueClassName="font-medium" />
                 </div>
               </div>
@@ -3825,7 +3825,7 @@ const CreateEvent = () => {
                               href={sponsor.websiteUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="mt-1 inline-flex max-w-full items-center gap-1 truncate text-xs text-accent hover:text-foreground"
+                              className="mt-1 inline-flex max-w-full items-center gap-1 truncate text-xs text-accent hover:text-foreground light:text-accent-foreground"
                             >
                               <ExternalLink className="h-3 w-3 shrink-0" />
                               <span className="truncate">{sponsor.websiteUrl}</span>
@@ -3965,7 +3965,7 @@ const CreateEvent = () => {
           {isEditMode && isEditHydrating && (
             <Card className={`${cardBase} p-8`}>
               <div className="flex items-center gap-3 text-foreground">
-                <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                <Loader2 className="h-5 w-5 animate-spin text-accent light:text-accent-foreground" />
                 <div>
                   <p className="text-sm font-medium">Loading event for editing...</p>
                   <p className="text-xs text-muted-foreground">Fetching the latest event data from the server.</p>
@@ -3977,8 +3977,8 @@ const CreateEvent = () => {
           {isEditMode && editHydrationError && (
             <Card className={`${cardBase} border-red-500/30 bg-red-950/20 p-6`}>
               <div className="space-y-2">
-                <p className="text-sm font-semibold text-red-300">Could not load this event</p>
-                <p className="text-sm text-red-200/80">{editHydrationError}</p>
+                <p className="text-sm font-semibold text-red-300 light:text-destructive">Could not load this event</p>
+                <p className="text-sm text-red-200/80 light:text-destructive">{editHydrationError}</p>
               </div>
             </Card>
           )}
@@ -4142,7 +4142,7 @@ const CreateEvent = () => {
                 <div className="space-y-8">
                   <div className="space-y-5">
                     <div className="space-y-2.5">
-                      <Label htmlFor="eventTitle" className="text-[13px] font-medium text-[#d4d4d4]">Event Title *</Label>
+                      <Label htmlFor="eventTitle" className="text-[13px] font-medium text-[#d4d4d4] light:text-foreground">Event Title *</Label>
                       <Input
                         id="eventTitle"
                         placeholder="Enter event title"
@@ -4156,7 +4156,7 @@ const CreateEvent = () => {
                     </div>
 
                     <div className="space-y-2.5">
-                      <Label className="text-[13px] font-medium text-[#d4d4d4]">Main Category *</Label>
+                      <Label className="text-[13px] font-medium text-[#d4d4d4] light:text-foreground">Main Category *</Label>
                       <Select value={mainCategory} onValueChange={(value) => {
                         setMainCategory(value);
                         setSelectedCategories([]);
@@ -4177,7 +4177,7 @@ const CreateEvent = () => {
 
                     {mainCategory && (
                       <div className="space-y-2.5">
-                        <Label className="text-[13px] font-medium text-[#d4d4d4]">Subcategory *</Label>
+                        <Label className="text-[13px] font-medium text-[#d4d4d4] light:text-foreground">Subcategory *</Label>
                         <Select value={selectedCategories[0] || ""} onValueChange={(value) => {
                           setSelectedCategories([value]);
                           if (backendEventId) setTextFieldsChanged(true);
@@ -4196,7 +4196,7 @@ const CreateEvent = () => {
                       </div>
                     )}
                     <div className="space-y-2.5">
-                      <Label htmlFor="description" className="text-[13px] font-medium text-[#d4d4d4]">Event Description</Label>
+                      <Label htmlFor="description" className="text-[13px] font-medium text-[#d4d4d4] light:text-foreground">Event Description</Label>
                       <Textarea
                         id="description"
                         placeholder="Describe your event..."
@@ -4217,7 +4217,7 @@ const CreateEvent = () => {
                     </div>
 
                     <div className="space-y-3">
-                      <Label htmlFor="cover-image" className="text-[13px] font-medium text-[#d4d4d4]">Cover Image *</Label>
+                      <Label htmlFor="cover-image" className="text-[13px] font-medium text-[#d4d4d4] light:text-foreground">Cover Image *</Label>
                       <div className="space-y-4">
                         <div className={`relative rounded-xl border border-dashed border-border/50 bg-background/40 p-6 text-center transition-all duration-200 ${!basicDetailsFilled ? "opacity-70" : "hover:border-ring/60"}`}>
                         <input
@@ -4239,14 +4239,14 @@ const CreateEvent = () => {
                           </div>
                         </div>
                         {!basicDetailsFilled && (
-                          <p className="text-xs text-amber-400">
+                          <p className="text-xs text-amber-400 light:text-warning">
                             Fill title, category, and subcategory to enable image uploads.
                           </p>
                         )}
                         
                         {/* Loading indicator for cover upload */}
                         {uploadingCover && (
-                          <div className="flex items-center gap-2 text-sm text-primary">
+                          <div className="flex items-center gap-2 text-sm text-primary light:text-accent-foreground">
                             <Loader2 className="w-4 h-4 animate-spin" />
                             <span>Uploading cover image to cloud...</span>
                           </div>
@@ -4284,7 +4284,7 @@ const CreateEvent = () => {
                     </div>
 
                     <div className="space-y-3">
-                      <Label htmlFor="gallery" className="text-[13px] font-medium text-[#d4d4d4]">Gallery Images (optional)</Label>
+                      <Label htmlFor="gallery" className="text-[13px] font-medium text-[#d4d4d4] light:text-foreground">Gallery Images (optional)</Label>
                       <div className="space-y-4">
                         <div className={`relative rounded-xl border border-dashed border-border/50 bg-background/40 p-6 text-center transition-all duration-200 ${!basicDetailsFilled ? "opacity-70" : "hover:border-ring/60"}`}>
                         <input 
@@ -4309,7 +4309,7 @@ const CreateEvent = () => {
                         
                         {/* Loading indicator for gallery upload */}
                         {uploadingGallery && (
-                          <div className="flex items-center gap-2 text-sm text-primary">
+                          <div className="flex items-center gap-2 text-sm text-primary light:text-accent-foreground">
                             <Loader2 className="w-4 h-4 animate-spin" />
                             <span>Uploading gallery images to cloud...</span>
                           </div>
@@ -4475,11 +4475,11 @@ const CreateEvent = () => {
 
                                       <div className="mt-3 space-y-2 text-xs text-muted-foreground">
                                         <div className="flex min-w-0 items-center gap-2">
-                                          <Globe className="h-3.5 w-3.5 shrink-0 text-accent" />
+                                          <Globe className="h-3.5 w-3.5 shrink-0 text-accent light:text-accent-foreground" />
                                           <span className="truncate">{sponsorWebsite || "Website optional"}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                          <Check className="h-3.5 w-3.5 shrink-0 text-accent" />
+                                          <Check className="h-3.5 w-3.5 shrink-0 text-accent light:text-accent-foreground" />
                                           <span className="truncate">{isPrimarySponsor ? "Primary sponsor" : "Supporting sponsor"}</span>
                                         </div>
                                       </div>
@@ -4693,7 +4693,7 @@ const CreateEvent = () => {
                   </div>
                   <div className="grid md:grid-cols-2 gap-5">
                     <div className="flex flex-col gap-2">
-                      <Label className="text-[13px] font-medium text-[#d4d4d4]">Starting Date *</Label>
+                      <Label className="text-[13px] font-medium text-[#d4d4d4] light:text-foreground">Starting Date *</Label>
                       <Popover open={startCalendarOpen} onOpenChange={setStartCalendarOpen}>
                         <PopoverTrigger asChild>
                           <Button
@@ -4730,7 +4730,7 @@ const CreateEvent = () => {
                       </Popover>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Label className="text-[13px] font-medium text-[#d4d4d4]">Starting Time *</Label>
+                      <Label className="text-[13px] font-medium text-[#d4d4d4] light:text-foreground">Starting Time *</Label>
                       <Popover open={startTimeOpen} onOpenChange={setStartTimeOpen}>
                         <PopoverTrigger asChild>
                           <Button
@@ -4760,7 +4760,7 @@ const CreateEvent = () => {
 
                   <div className="grid md:grid-cols-2 gap-5">
                     <div className="flex flex-col gap-2">
-                      <Label className="text-[13px] font-medium text-[#d4d4d4]">Ending Date *</Label>
+                      <Label className="text-[13px] font-medium text-[#d4d4d4] light:text-foreground">Ending Date *</Label>
                       <Popover open={endCalendarOpen} onOpenChange={setEndCalendarOpen}>
                         <PopoverTrigger asChild>
                           <Button
@@ -4795,7 +4795,7 @@ const CreateEvent = () => {
                       </Popover>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Label className="text-[13px] font-medium text-[#d4d4d4]">Ending Time *</Label>
+                      <Label className="text-[13px] font-medium text-[#d4d4d4] light:text-foreground">Ending Time *</Label>
                       <Popover open={endTimeOpen} onOpenChange={setEndTimeOpen}>
                         <PopoverTrigger asChild>
                           <Button
@@ -4933,7 +4933,7 @@ const CreateEvent = () => {
                                     </p>
                                   )}
                                   {ticket.price !== "0" && (
-                                    <p className="text-sm font-semibold mt-1 text-accent">₹{ticket.price}</p>
+                                    <p className="text-sm font-semibold mt-1 text-accent light:text-accent-foreground">₹{ticket.price}</p>
                                   )}
                                 </div>
                                 
@@ -5167,11 +5167,11 @@ const CreateEvent = () => {
 
                                   <div className="mt-3 space-y-2 text-xs text-muted-foreground">
                                     <div className="flex min-w-0 items-center gap-2">
-                                      <AtSign className="h-3.5 w-3.5 shrink-0 text-accent" />
+                                      <AtSign className="h-3.5 w-3.5 shrink-0 text-accent light:text-accent-foreground" />
                                       <span className="truncate">{instagram || "Instagram required"}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                      <Music2 className="h-3.5 w-3.5 shrink-0 text-accent" />
+                                      <Music2 className="h-3.5 w-3.5 shrink-0 text-accent light:text-accent-foreground" />
                                       <span className="truncate">{spotify ? "Spotify linked" : "Spotify not added"}</span>
                                     </div>
                                   </div>

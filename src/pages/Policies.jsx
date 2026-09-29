@@ -37,18 +37,18 @@ const sections = {
 
 const Policies = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#05060b] via-[#0a0f1f] to-[#0b0f18] text-white">
+    <div className="min-h-screen bg-gradient-to-b from-[#05060b] via-[#0a0f1f] to-[#0b0f18] text-white light:from-surface light:via-surface light:to-surface light:text-foreground">
       <div className="max-w-5xl mx-auto px-6 py-16 md:py-20">
         <div className="space-y-3 mb-8 text-center">
-          <p className="text-sm uppercase tracking-[0.35em] text-white/60">Policies</p>
+          <p className="text-sm uppercase tracking-[0.35em] text-white/60 light:text-muted-foreground">Policies</p>
           <h1 className="text-4xl md:text-5xl font-bold">Your trust, protected.</h1>
-          <p className="text-white/75 max-w-2xl mx-auto">
+          <p className="text-white/75 max-w-2xl mx-auto light:text-muted-foreground">
             Transparent terms for stress-free bookings. Explore refunds, terms, and privacy in one place.
           </p>
         </div>
 
         <Tabs defaultValue="terms" className="w-full">
-          <TabsList className="grid grid-cols-3 bg-white/5 border border-white/10">
+          <TabsList className="grid grid-cols-3 bg-white/5 border border-white/10 light:bg-muted light:border-border">
             <TabsTrigger value="terms">Terms &amp; Conditions</TabsTrigger>
             <TabsTrigger value="privacy">Privacy Policy</TabsTrigger>
             <TabsTrigger value="refund">Refund Policy</TabsTrigger>
@@ -58,18 +58,18 @@ const Policies = () => {
             const Icon = section.icon;
             return (
               <TabsContent key={key} value={key} className="mt-6">
-                <Card className="bg-white/5 border-white/10">
+                <Card className="bg-white/5 border-white/10 light:bg-muted light:border-border">
                   <CardContent className="p-6 md:p-8 space-y-5">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-[#D60024]/15 border border-[#D60024]/30 flex items-center justify-center">
-                        <Icon className="h-5 w-5 text-[#D60024]" />
+                      <div className="w-11 h-11 rounded-xl bg-[#D60024]/15 border border-[#D60024]/30 flex items-center justify-center light:bg-primaryCTA/15 light:border-primary/30">
+                        <Icon className="h-5 w-5 text-[#D60024] light:text-accent-foreground" />
                       </div>
                       <h2 className="text-2xl font-semibold">{section.title}</h2>
                     </div>
-                    <ul className="space-y-3 text-white/80 leading-relaxed">
+                    <ul className="space-y-3 text-white/80 leading-relaxed light:text-muted-foreground">
                       {section.items.map((item, idx) => (
                         <li key={idx} className="flex gap-3">
-                          <span className="text-[#22c55e] mt-1">●</span>
+                          <span className="text-[#22c55e] mt-1 light:text-success">●</span>
                           <span>{item}</span>
                         </li>
                       ))}

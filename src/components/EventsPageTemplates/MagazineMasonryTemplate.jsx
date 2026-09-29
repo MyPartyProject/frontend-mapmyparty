@@ -145,7 +145,7 @@ const MagazineMasonryTemplate = ({
           <div className="container">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20">
-                <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+                <Loader2 className="w-12 h-12 animate-spin text-primary mb-4 light:text-accent-foreground" />
                 <p className="text-muted-foreground">Loading events...</p>
               </div>
             ) : (
@@ -194,7 +194,7 @@ const MagazineMasonryTemplate = ({
                               </div>
                               
                               <div className="absolute bottom-0 left-0 right-0 p-4">
-                                <h3 className="font-bold text-xl mb-2 line-clamp-2 group-hover:text-primary transition-colors text-foreground">
+                                <h3 className="font-bold text-xl mb-2 line-clamp-2 group-hover:text-primary transition-colors text-foreground light:group-hover:text-accent-foreground">
                                   {getEventTitle(event)}
                                 </h3>
                                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -221,7 +221,7 @@ const MagazineMasonryTemplate = ({
                                   ) : null}
                                 </div>
                                 {getEventPriceDisplay(event) && (
-                                  <span className="text-lg font-bold text-primary">
+                                  <span className="text-lg font-bold text-primary light:text-accent-foreground">
                                     {getEventPriceDisplay(event)}
                                   </span>
                                 )}
