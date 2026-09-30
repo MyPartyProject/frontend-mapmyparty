@@ -25,10 +25,10 @@ const Footer = () => {
       <div className="relative mx-auto max-w-7xl px-5 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[1fr_1.45fr] lg:items-start">
           <div className="flex max-w-sm items-start gap-4">
-            <div className="rounded-[8px] border border-border/40 bg-card/70 p-2 shadow-[var(--shadow-card)]">
-              <img src={logo} alt="MapMyParty" className="h-11 w-auto" />
+            <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-[8px] border border-border/40 bg-card/70 p-2 shadow-[var(--shadow-card)]">
+              <img src={logo} alt="MapMyParty" width="2048" height="2025" className="block h-auto w-full object-contain" />
             </div>
-            <div className="space-y-2">
+            <div className="min-w-0 flex-1 space-y-2">
               <p className="text-base font-semibold text-foreground">Map MyParty</p>
               <ThemeToggle />
               <p className="text-sm leading-relaxed text-muted-foreground">

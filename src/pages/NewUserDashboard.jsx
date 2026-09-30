@@ -574,7 +574,7 @@ const NewUserDashboard = () => {
             )}
           </form>
 
-          <ThemeToggle compact />
+          <ThemeToggle presentation="navbar" />
           <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.06] light:text-muted-foreground light:hover:text-foreground light:hover:bg-muted">
             <Bell className="h-4 w-4" />
             <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-[#D60024] light:bg-primaryCTA"></span>
@@ -647,7 +647,7 @@ const NewUserDashboard = () => {
         </Link>
 
         <div className="flex items-center gap-2">
-          <ThemeToggle compact />
+          <ThemeToggle presentation="navbar" />
           <Button variant="ghost" size="icon" className="relative h-8 w-8 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.06] light:text-muted-foreground light:hover:text-foreground light:hover:bg-muted">
             <Bell className="h-4 w-4" />
             <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-[#D60024] light:bg-primaryCTA"></span>

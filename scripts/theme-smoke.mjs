@@ -147,6 +147,11 @@ try {
       for (const selected of ['light','dark']) {
         await page.evaluate(`localStorage.setItem('mapmyparty-theme', '${selected}'); window.dispatchEvent(new StorageEvent('storage', {key:'mapmyparty-theme',newValue:'${selected}'}));`);
         await page.until(theme(selected));
+        const navbarSizes = await page.evaluate(`Array.from(document.querySelectorAll('[data-theme-navbar]')).filter(el => el.getBoundingClientRect().width > 0).map(el => {
+          const button = getComputedStyle(el), icon = getComputedStyle(el.querySelector('svg'));
+          return [button.width, button.height, icon.width, icon.height];
+        })`);
+        assert.deepEqual(navbarSizes, navbarSizes.map(() => ['32px', '32px', '14px', '14px']), `${path} ${width} ${selected}: compact navbar theme sizing`);
         assert.equal(await page.evaluate('document.documentElement.scrollWidth <= innerWidth'), true, `${path} ${width}: no horizontal overflow`);
         await page.screenshot(`${testRole || 'visitor'}-${width}-${selected}`);
       }

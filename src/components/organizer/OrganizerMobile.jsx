@@ -118,7 +118,7 @@ export default function OrganizerMobile({ setupRequired = false }) {
   return <div className="organizer-dashboard-theme dashboard-theme min-h-[100dvh] min-w-0 bg-background text-foreground [overflow-wrap:anywhere]">
     <header className="border-b border-border bg-card px-4 pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex min-h-16 max-w-2xl items-center justify-between gap-3">
-        <Link to="/" className="inline-flex min-h-11 items-center text-base font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">MapMyParty</Link><div className="flex items-center gap-2"><span className="text-xs text-muted-foreground">Organizer</span><ThemeToggle compact /></div>
+        <Link to="/" className="inline-flex min-h-11 items-center text-base font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">MapMyParty</Link><div className="flex items-center gap-2"><span className="text-xs text-muted-foreground">Organizer</span><ThemeToggle presentation="navbar" /></div>
       </div>
     </header>
     <main className="mx-auto max-w-2xl space-y-3 px-4 pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">

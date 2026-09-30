@@ -465,7 +465,7 @@ const PaymentCheckout = () => {
             <ArrowLeft className="h-5 w-5 mr-1" /> Back
           </Button>
           <Badge className="bg-white/10 border-white/20 text-xs light:bg-muted light:border-border">Secure Checkout</Badge>
-          <ThemeToggle compact className="ml-auto" />
+          <ThemeToggle presentation="navbar" className="ml-auto" />
         </div>
 
         {summary && (

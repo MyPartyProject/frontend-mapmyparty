@@ -348,7 +348,7 @@ const EventAnalyticsPage = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <ThemeToggle compact />
+            <ThemeToggle presentation="navbar" />
             <button
               onClick={refetch}
               className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.06] transition-colors light:text-muted-foreground light:hover:text-foreground light:hover:bg-muted"

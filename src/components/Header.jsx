@@ -862,7 +862,7 @@ const Header = ({
               Login / Sign Up
             </Button>
           )}
-          <ThemeToggle compact className="hidden md:inline-flex" />
+          <ThemeToggle presentation="navbar" className="hidden md:inline-flex" />
         </div>
 
         {/* Mobile Menu Toggle */}
