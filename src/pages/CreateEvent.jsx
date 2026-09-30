@@ -4331,7 +4331,7 @@ const CreateEvent = () => {
                                   type="button"
                                   variant="destructive"
                                   size="icon"
-                                  className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 [@media(pointer:coarse)]:opacity-100 transition-opacity"
                                   onClick={() => removeGalleryImage(index)}
                                   title="Delete from cloud"
                                   disabled={uploadingGallery}

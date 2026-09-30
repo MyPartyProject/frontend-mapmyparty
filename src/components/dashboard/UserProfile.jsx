@@ -396,7 +396,7 @@ export default function UserProfile() {
                       </AvatarFallback>
                     )}
                   </Avatar>
-                  <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100 [@media(pointer:coarse)]:opacity-100 transition-opacity flex items-center justify-center">
                     <Camera className="h-5 w-5 text-white light:text-foreground" />
                   </div>
                 </button>

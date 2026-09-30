@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -236,8 +236,8 @@ export default function BrowseEvents({ showPublicHeader = false }) {
   const [nearbyLoading, setNearbyLoading] = useState(false);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [activeTrendingIndex, setActiveTrendingIndex] = useState(0);
-  const [touchStartX, setTouchStartX] = useState(null);
-  const [touchEndX, setTouchEndX] = useState(null);
+  const touchGesture = useRef(null);
+  const suppressGestureClick = useRef(false);
   const [isAutoplayPaused, setIsAutoplayPaused] = useState(false);
 
   const updateBrowseState = useCallback((updates, options = {}) => {
@@ -495,35 +495,51 @@ export default function BrowseEvents({ showPublicHeader = false }) {
   };
 
   const handleTouchStart = (e) => {
+    suppressGestureClick.current = false;
+    const touch = e.touches[0];
+    touchGesture.current = e.touches.length === 1
+      ? { x: touch.clientX, y: touch.clientY, endX: touch.clientX, endY: touch.clientY }
+      : null;
     setIsAutoplayPaused(true);
-    setTouchStartX(e.targetTouches[0].clientX);
   };
 
   const handleTouchMove = (e) => {
-    setTouchEndX(e.targetTouches[0].clientX);
+    if (e.touches.length !== 1) {
+      touchGesture.current = null;
+      return;
+    }
+    if (touchGesture.current) {
+      touchGesture.current.endX = e.touches[0].clientX;
+      touchGesture.current.endY = e.touches[0].clientY;
+    }
   };
 
   const handleTouchEnd = () => {
-    if (!touchStartX || !touchEndX) return;
-    const distance = touchStartX - touchEndX;
-    const minSwipeDistance = 50;
-
-    if (distance > minSwipeDistance) {
-      goToNextTrending();
-    } else if (distance < -minSwipeDistance) {
-      goToPreviousTrending();
+    const gesture = touchGesture.current;
+    if (gesture) {
+      const distance = gesture.x - gesture.endX;
+      const verticalDistance = Math.abs(gesture.y - gesture.endY);
+      if (Math.abs(distance) > 50 && Math.abs(distance) > verticalDistance) {
+        suppressGestureClick.current = true;
+        if (distance > 0) goToNextTrending();
+        else goToPreviousTrending();
+      }
     }
-    setTouchStartX(null);
-    setTouchEndX(null);
+    touchGesture.current = null;
     setIsAutoplayPaused(false);
   };
 
-  const handleMouseEnter = () => {
-    setIsAutoplayPaused(true);
+  const handleTouchCancel = () => {
+    touchGesture.current = null;
+    suppressGestureClick.current = true;
+    setIsAutoplayPaused(false);
   };
 
-  const handleMouseLeave = () => {
-    setIsAutoplayPaused(false);
+  const handleGestureClick = (event) => {
+    if (suppressGestureClick.current && event.detail !== 0) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
   };
 
   const groupedByCategory = useMemo(() => {
@@ -756,14 +772,23 @@ export default function BrowseEvents({ showPublicHeader = false }) {
           <div className="mb-6 sm:mb-8">
             <section
               className="relative mx-auto w-[calc(100vw-32px)] max-w-[420px] sm:w-auto sm:max-w-none"
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
+              onPointerEnter={(event) => {
+                if (event.pointerType === "mouse") setIsAutoplayPaused(true);
+              }}
+              onPointerLeave={(event) => {
+                if (event.pointerType === "mouse") setIsAutoplayPaused(false);
+              }}
+              onPointerDown={() => {
+                suppressGestureClick.current = false;
+              }}
+              onClickCapture={handleGestureClick}
             >
               <div
                 className="relative h-[18.75rem] sm:h-[22rem] lg:h-[24rem] xl:h-[25rem]"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
+                onTouchCancel={handleTouchCancel}
               >
                 {trendingEvents.map((event, index) => {
                   const visualRole = getTrendingVisualRole(index);
@@ -787,7 +812,17 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                       aria-hidden={!isActive && !isSideCard}
                       className={`${cardPositionClass} group overflow-hidden rounded-[16px] border border-border/45 bg-card shadow-[var(--shadow-card)] transition-all duration-700 ease-out sm:rounded-[1.35rem] sm:shadow-[var(--shadow-elegant)] light:border-border light:shadow-none light:duration-300 light:hover:border-[#C99774] light:focus-within:border-[#C99774]`}
                     >
-                      <div className="relative h-full w-full overflow-hidden">
+                      <Link
+                        to={eventHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        tabIndex={isActive ? 0 : -1}
+                        aria-hidden={!isActive}
+                        aria-label={`View ${event.title || event.eventTitle || "event"}`}
+                        className="relative block h-full w-full overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+                        data-trending-event-link
+                        data-active={isActive}
+                      >
                         <img
                           src={getEventImage(event)}
                           alt={event.title || event.eventTitle || "Event"}
@@ -841,19 +876,17 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                           </div>
 
                           <div className={`mt-3 ${isSideCard ? "hidden" : ""}`}>
-                            <Button
-                              asChild
-                              variant="accent"
+                            <Button asChild variant="accent"
                               className="h-9 w-fit rounded-[10px] px-4 text-[13px] font-semibold shadow-[var(--shadow-accent)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-elegant)] active:scale-[0.97] sm:h-10 sm:rounded-full sm:px-5 sm:text-sm light:group-hover:bg-[#C99774] light:group-hover:text-foreground light:group-hover:shadow-none light:group-focus-within:bg-[#C99774] light:group-focus-within:text-foreground light:group-focus-within:shadow-none light:focus-visible:ring-[#C99774]"
                             >
-                              <Link to={eventHref} target="_blank" rel="noopener noreferrer">
+                              <span>
                                 View Details
                                 <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                              </Link>
+                              </span>
                             </Button>
                           </div>
                         </div>
-                      </div>
+                      </Link>
                     </article>
                   );
                 })}

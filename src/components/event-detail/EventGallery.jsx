@@ -39,7 +39,8 @@ const EventGallery = ({ images }) => {
               variant="secondary"
               size="icon"
               onClick={prevImage}
-              className="absolute left-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm bg-white/20 hover:bg-white/30 text-white border-white/30 hover-scale"
+              aria-label="Previous image"
+              className="absolute left-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 [@media(pointer:coarse)]:opacity-100 transition-all backdrop-blur-sm bg-white/20 hover:bg-white/30 text-white border-white/30 hover-scale"
             >
               <ChevronLeft className="w-6 h-6" />
             </Button>
@@ -47,7 +48,8 @@ const EventGallery = ({ images }) => {
               variant="secondary"
               size="icon"
               onClick={nextImage}
-              className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm bg-white/20 hover:bg-white/30 text-white border-white/30 hover-scale"
+              aria-label="Next image"
+              className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 [@media(pointer:coarse)]:opacity-100 transition-all backdrop-blur-sm bg-white/20 hover:bg-white/30 text-white border-white/30 hover-scale"
             >
               <ChevronRight className="w-6 h-6" />
             </Button>

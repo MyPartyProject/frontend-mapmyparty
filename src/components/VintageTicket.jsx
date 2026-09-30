@@ -6,7 +6,6 @@ import { buildCanonicalQrPayload } from "@/utils/qrPayload";
 
 const VintageTicket = ({ ticket, index = 0, onClick, compact = false }) => {
   const [qrCodeUrl, setQrCodeUrl] = useState("");
-  const [isHovered, setIsHovered] = useState(false);
 
   // Determine if QR should be visible (event is ongoing or started today)
   const isQRVisible = useMemo(() => {
@@ -96,18 +95,16 @@ const VintageTicket = ({ ticket, index = 0, onClick, compact = false }) => {
 
   return (
     <div
-      className="vintage-ticket-wrapper perspective-1000"
+      className="vintage-ticket-wrapper group perspective-1000"
       style={{
         animationDelay,
         '--entrance-delay': animationDelay
       }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
     >
       <div
         className={`vintage-ticket relative cursor-pointer transition-all duration-500
-          ${isHovered ? 'scale-[1.02] shadow-2xl' : 'shadow-lg'}
+          shadow-lg group-hover:scale-[1.02] group-hover:shadow-2xl
           animate-ticket-entrance`}
       >
         {/* Main ticket body */}

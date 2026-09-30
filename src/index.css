@@ -319,10 +319,12 @@
       box-shadow 300ms ease;
   }
 
-  .host-events__card:hover {
-    transform: translateY(-6px);
-    border-color: hsl(var(--border) / 0.8);
-    box-shadow: var(--shadow-elegant);
+  @media (hover: hover) and (pointer: fine) {
+    .host-events__card:hover {
+      transform: translateY(-6px);
+      border-color: hsl(var(--border) / 0.8);
+      box-shadow: var(--shadow-elegant);
+    }
   }
 
   .host-events__hero::before {
@@ -645,14 +647,18 @@
     background-color: hsl(var(--card)) !important;
   }
 
-  html.dark .app-theme .bg-\[\#D60024\],
-  html.dark .app-theme .hover\:bg-\[\#D60024\]:hover {
+  html.dark .app-theme .bg-\[\#D60024\] {
     background-color: hsl(var(--secondary)) !important;
   }
 
-  html.dark .app-theme .hover\:bg-\[\#b8001f\]:hover,
-  html.dark .app-theme .hover\:bg-\[\#b5001e\]:hover {
-    background-color: hsl(var(--secondary) / 0.82) !important;
+  @media (hover: hover) and (pointer: fine) {
+    html.dark .app-theme .hover\:bg-\[\#D60024\]:hover {
+      background-color: hsl(var(--secondary)) !important;
+    }
+    html.dark .app-theme .hover\:bg-\[\#b8001f\]:hover,
+    html.dark .app-theme .hover\:bg-\[\#b5001e\]:hover {
+      background-color: hsl(var(--secondary) / 0.82) !important;
+    }
   }
 
   html.dark .app-theme .text-\[\#D60024\] {
@@ -711,9 +717,13 @@
     color: hsl(var(--muted-foreground)) !important;
   }
 
-  html.dark .event-detail-theme .bg-red-600,
-  html.dark .event-detail-theme .hover\:bg-red-700:hover {
+  html.dark .event-detail-theme .bg-red-600 {
     background-color: hsl(var(--secondary)) !important;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    html.dark .event-detail-theme .hover\:bg-red-700:hover {
+      background-color: hsl(var(--secondary)) !important;
+    }
   }
 
   html.dark .event-detail-theme .text-red-600,
@@ -769,8 +779,10 @@
     border-radius: 4px;
   }
 
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.5);
+  @media (hover: hover) and (pointer: fine) {
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
   }
 
   /* Firefox */
@@ -779,8 +791,10 @@
     scrollbar-width: thin;
   }
 
-  *:hover {
-    scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
+  @media (hover: hover) and (pointer: fine) {
+    *:hover {
+      scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
+    }
   }
 
   /* Hide vertical scrollbar UI without changing scrollable overflow. */
@@ -830,9 +844,11 @@
   }
 
   /* Prevent layout shift during animations */
-  .group:hover img {
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
+  @media (hover: hover) and (pointer: fine) {
+    .group:hover img {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
   }
 
   /* Invisible horizontal scrollbar */
@@ -917,7 +933,7 @@
   }
 
   /* Optimize hover states */
-  @media (hover: hover) {
+  @media (hover: hover) and (pointer: fine) {
     button:hover,
     a:hover {
       transition-duration: 200ms;
@@ -1019,7 +1035,13 @@
 html.light .theme-card { background-color: hsl(var(--card)); border-color: hsl(var(--border)); }
 html.light .dashboard-theme { background-color: hsl(var(--surface)); }
 html.light ::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.3); }
-html.light ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
+@media (hover: hover) and (pointer: fine) {
+  html.light ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
+}
+
+@media (hover: none), (pointer: coarse) {
+  [toast-close] { opacity: 1; }
+}
 
 :root {
   --chart-violet: #8438B0;

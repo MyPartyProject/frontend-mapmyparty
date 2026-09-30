@@ -362,8 +362,10 @@ const heroCarouselStyles = `
     box-shadow: var(--shadow-accent);
   }
 
-  .landing-hero-cta:hover {
-    background-color: hsl(var(--primary-cta-hover)) !important;
+  @media (hover: hover) and (pointer: fine) {
+    .landing-hero-cta:hover {
+      background-color: hsl(var(--primary-cta-hover)) !important;
+    }
   }
 
   .landing-hero-cta:active {
@@ -382,14 +384,16 @@ const heroCarouselStyles = `
     transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1), filter 700ms ease;
   }
 
-  .landing-event-card:hover .landing-event-card__image {
-    transform: scale(1.08);
-    filter: saturate(1.12) contrast(1.05);
-  }
+  @media (hover: hover) and (pointer: fine) {
+    .landing-event-card:hover .landing-event-card__image {
+      transform: scale(1.08);
+      filter: saturate(1.12) contrast(1.05);
+    }
 
-  .light .landing-event-card:hover .landing-event-card__image {
-    transform: scale(1.03);
-    filter: none;
+    .light .landing-event-card:hover .landing-event-card__image {
+      transform: scale(1.03);
+      filter: none;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
