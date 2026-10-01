@@ -1,4 +1,3 @@
-import FinanceSecurityPanel from './FinanceSecurityPanel';
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -321,7 +320,7 @@ const PayoutDetailModal = ({
                 <div className="rounded-xl border border-border/60 bg-card/70 p-4">
                   <h3 className="text-sm font-semibold">Structured payout revisions</h3>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Every debit or credit is recorded and must be approved by a different staff member.
+                    Every debit or credit is recorded and requires approval before release.
                   </p>
                   {canRevise && (
                     <form className="mt-4 grid gap-3" onSubmit={submitRevision}>
@@ -397,7 +396,7 @@ const PayoutDetailModal = ({
                             onClick={() => onApproveRevision(payout.id, revision.id)}
                           >
                             <ShieldCheck className="h-4 w-4" />
-                            Approve as second staff member
+                            Approve adjustment
                           </Button>
                         )}
                       </div>
@@ -835,7 +834,7 @@ const PromoterPayouts = () => {
       await createPayoutRevision(payoutId, payload);
       await reloadDetail(payoutId);
       refresh();
-      toast.success("Payout revision proposed for second-person approval.");
+      toast.success("Payout revision saved for approval.");
     } catch (revisionError) {
       toast.error(revisionError.message || "Failed to propose payout revision.");
     } finally {
@@ -950,7 +949,6 @@ const PromoterPayouts = () => {
 
   return (
     <div className="space-y-6">
-      <FinanceSecurityPanel />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold">Payouts</h2>
