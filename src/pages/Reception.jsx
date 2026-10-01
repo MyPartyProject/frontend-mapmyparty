@@ -1,3 +1,4 @@
+import { useEventMetadataRefresh } from '@/hooks/useEventMetadataRefresh';
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Shield, Sparkles, Clock, MapPin, Radio, Users, Ticket, Loader2, AlertCircle, RefreshCw } from "lucide-react";
@@ -47,13 +48,12 @@ const ReceptionLanding = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const isFetchingRef = useRef(false);
+  const requestRef = useRef(0);
   const isMountedRef = useRef(true);
   const hasFetchedRef = useRef(false);
 
   const fetchLiveEvents = useCallback(async (isManualRefresh = false) => {
-    if (isFetchingRef.current) return;
-    isFetchingRef.current = true;
+    const request = ++requestRef.current;
 
     if (!hasFetchedRef.current || isManualRefresh) {
       setLoading(true);
@@ -62,35 +62,28 @@ const ReceptionLanding = () => {
 
     try {
       const response = await apiFetch("event/my-events/live?status=ongoing");
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current || request !== requestRef.current) return;
       const data = response.data || response;
       const events = data.events || [];
       setLiveEvents(transformEvents(events));
       hasFetchedRef.current = true;
     } catch (err) {
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current || request !== requestRef.current) return;
       console.error("Error fetching live events:", err);
       setError(err.message || "Failed to load live events");
     } finally {
-      if (isMountedRef.current) {
+      if (isMountedRef.current && request === requestRef.current) {
         setLoading(false);
       }
-      isFetchingRef.current = false;
     }
   }, []);
 
   useEffect(() => {
     isMountedRef.current = true;
-    fetchLiveEvents();
-    const interval = setInterval(() => {
-      fetchLiveEvents(false);
-    }, 30000);
-
-    return () => {
-      isMountedRef.current = false;
-      clearInterval(interval);
-    };
-  }, [fetchLiveEvents]);
+    return () => { isMountedRef.current = false; };
+  }, []);
+  useEventMetadataRefresh(() => fetchLiveEvents(false), null,
+    liveEvents.flatMap(event => [event.startDate, event.endDate]));
 
   const handleManualRefresh = useCallback(() => {
     fetchLiveEvents(true);

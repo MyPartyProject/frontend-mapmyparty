@@ -31,7 +31,7 @@ export const fetchSocketToken = async () => {
  */
 export const connectTicketAnalytics = (authToken) => {
   // If socket exists and is connected, reuse it
-  if (ticketAnalyticsSocket?.connected) {
+  if (ticketAnalyticsSocket?.connected || ticketAnalyticsSocket?.active) {
     console.log("[ticket-analytics] Already connected, reusing socket");
     return ticketAnalyticsSocket;
   }

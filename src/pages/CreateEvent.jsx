@@ -1,3 +1,4 @@
+import { getLocalDateTimeInputs } from '@/lib/eventDateTime';
 import IndiaLocationFields from "@/components/IndiaLocationFields";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
@@ -293,6 +294,11 @@ const CreateEvent = () => {
 
     return date;
   };
+  const isOngoingScheduleEdit = () => {
+    const saved = eventCacheRef.current;
+    return Boolean(isEditMode && saved?.eventStatus !== 'CANCELLED' && saved?.startDate && saved?.endDate &&
+      new Date(saved.startDate).getTime() <= Date.now() && new Date(saved.endDate).getTime() > Date.now());
+  };
   const validateEventDateTime = () => {
     const start = buildEventDateTime(startDate, startTime);
     const end = buildEventDateTime(endDate, endTime);
@@ -301,10 +307,14 @@ const CreateEvent = () => {
       return { error: "Please select a valid start and end date/time" };
     }
 
-    if (start.getTime() < Date.now()) {
+    const ongoingEdit = isOngoingScheduleEdit();
+    if (start.getTime() < Date.now() && !ongoingEdit) {
       return { error: "Starting date and time must be in the future" };
     }
 
+    if (ongoingEdit && end.getTime() <= Date.now()) {
+      return { error: "Ending date and time must be in the future" };
+    }
     if (end.getTime() <= start.getTime()) {
       return { error: "Ending date and time must be after starting date and time" };
     }
@@ -929,12 +939,8 @@ const CreateEvent = () => {
 
       const start = parseSafeDate(eventToEdit.startDate);
       const end = parseSafeDate(eventToEdit.endDate);
-      const toDateStr = (d) => (isValidDateObject(d) ? d.toISOString().slice(0, 10) : "");
-      const toTimeStr = (d) => {
-        if (!isValidDateObject(d)) return "";
-        const iso = d.toISOString();
-        return iso.slice(11, 16);
-      };
+      const toDateStr = d => getLocalDateTimeInputs(d).date;
+      const toTimeStr = d => getLocalDateTimeInputs(d).time;
 
       setBackendEventId(eventToEdit.id || eventToEdit._id || backendEventId);
       setEventTitle(eventToEdit.title || "");
@@ -1874,11 +1880,6 @@ const CreateEvent = () => {
         toast.error("Ending time is required");
         return;
       }
-      const dateTimeValidation = validateEventDateTime();
-      if (dateTimeValidation.error) {
-        toast.error(dateTimeValidation.error);
-        return;
-      }
 
       const hasInputChanges =
         startDate !== originalDateInputs.startDate ||
@@ -1889,6 +1890,12 @@ const CreateEvent = () => {
       if (isEditMode && backendEventId && !hasInputChanges) {
         toast.info("No changes to update");
         moveToNextStep();
+        return;
+      }
+
+      const dateTimeValidation = validateEventDateTime();
+      if (dateTimeValidation.error) {
+        toast.error(dateTimeValidation.error);
         return;
       }
 
@@ -1917,6 +1924,7 @@ const CreateEvent = () => {
         
         toast.success("Date & time updated successfully!");
         console.log("Step 3 API Response:", response);
+        eventCacheRef.current = { ...eventCacheRef.current, ...response.data, startDate: startDateTime, endDate: endDateTime };
         setOriginalDateTime({ start: startDateTime, end: endDateTime });
         setOriginalDateInputs({ startDate, startTime, endDate, endTime });
         
@@ -4723,7 +4731,7 @@ const CreateEvent = () => {
                               }
                               setStartCalendarOpen(false);
                             }}
-                            disabled={{ before: today }}
+                            disabled={isOngoingScheduleEdit() ? undefined : { before: today }}
                             defaultMonth={parseSafeDateOnly(startDate) || today}
                           />
                         </PopoverContent>

@@ -1,3 +1,4 @@
+import { useEventMetadataRefresh } from '@/hooks/useEventMetadataRefresh';
 import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -160,47 +161,55 @@ const ReceptionDetail = () => {
   const [error, setError] = useState("");
   const [loadingTicket, setLoadingTicket] = useState(false);
 
-  const isFetchingRef = useRef(false);
+  const requestRef = useRef(0);
+  const statsLoadedRef = useRef(false);
+  const currentIdRef = useRef(id);
+  currentIdRef.current = id;
   const isMountedRef = useRef(true);
-  const hasFetchedRef = useRef(false);
 
-  const fetchEventData = useCallback(async () => {
-    if (!id || isFetchingRef.current || hasFetchedRef.current) return;
-    isFetchingRef.current = true;
-    setLoading(true);
+  const fetchEventData = useCallback(async (background = false) => {
+    if (!id) return;
+    const request = ++requestRef.current;
+    if (!background) setLoading(true);
     setError("");
 
     try {
       const [eventResponse, checkInsResponse] = await Promise.allSettled([
-        apiFetch(`event/${id}`),
-        apiFetch(`booking/event/${id}/check-ins?checkedIn=true&limit=1`),
+        apiFetch(`event/manage/${id}`, { cache: "no-store" }),
+        ...(!background || !statsLoadedRef.current ? [apiFetch(`booking/event/${id}/check-ins?checkedIn=true&limit=1`)] : []),
       ]);
 
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current || currentIdRef.current !== id || request !== requestRef.current) return;
 
       if (eventResponse.status === "fulfilled") {
         const eventData = eventResponse.value.data || eventResponse.value;
+        // Preserve public visibility while allowing a stale stored lifecycle status.
+        if (eventData.publishStatus !== 'PUBLISHED' || eventData.eventStatus === 'CANCELLED' ||
+          !eventData.startDate || !eventData.endDate || new Date(eventData.endDate).getTime() <= Date.now()) {
+          setEvent(null);
+          throw new Error('This event is no longer available in Live Events or Reception.');
+        }
+        eventData.eventStatus = new Date(eventData.startDate).getTime() > Date.now() ? 'UPCOMING' : 'ONGOING';
         setEvent(transformEvent(eventData));
       } else {
         throw new Error(eventResponse.reason?.message || "Failed to load event");
       }
 
-      if (checkInsResponse.status === "fulfilled") {
+      if (checkInsResponse?.status === "fulfilled") {
         const checkInsData = checkInsResponse.value.data || checkInsResponse.value;
         const totalCheckedIn = checkInsData.pagination?.total || 0;
         setAccepted(totalCheckedIn);
+        statsLoadedRef.current = true;
       }
 
-      hasFetchedRef.current = true;
     } catch (err) {
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current || currentIdRef.current !== id || request !== requestRef.current) return;
       console.error("Error fetching reception data:", err);
       setError(err.message || "Failed to load reception data");
     } finally {
-      if (isMountedRef.current) {
+      if (isMountedRef.current && currentIdRef.current === id && request === requestRef.current) {
         setLoading(false);
       }
-      isFetchingRef.current = false;
     }
   }, [id]);
 
@@ -250,22 +259,26 @@ const ReceptionDetail = () => {
 
   useEffect(() => {
     isMountedRef.current = true;
-    hasFetchedRef.current = false;
-    fetchEventData();
+    statsLoadedRef.current = false;
+    setEvent(null);
 
     return () => {
       isMountedRef.current = false;
     };
   }, [fetchEventData]);
+  useEventMetadataRefresh(initial => fetchEventData(!initial), id, [event?.startDate, event?.endDate]);
 
   useEffect(() => {
+    setAccepted(0);
+    setShowScanner(false);
+    setCheckInResult(null);
     setRejected(0);
     setTicket(null);
     setDecision(null);
     setMessage("");
     setTicketInput("");
     setReason("");
-  }, [ticketTotals, id]);
+  }, [id]);
 
   if (loading && !event) {
     return (
@@ -286,7 +299,6 @@ const ReceptionDetail = () => {
           <p className="text-sm text-white/60 light:text-muted-foreground">{error}</p>
           <button
             onClick={() => {
-              hasFetchedRef.current = false;
               fetchEventData();
             }}
             className="px-4 py-2 rounded-lg bg-white/10 border border-white/15 hover:bg-white/15 transition light:bg-muted light:border-border light:hover:bg-muted"

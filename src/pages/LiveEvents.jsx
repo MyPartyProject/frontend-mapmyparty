@@ -1,3 +1,4 @@
+import { useEventMetadataRefresh } from '@/hooks/useEventMetadataRefresh';
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -82,20 +83,14 @@ const LiveEvents = () => {
   const [error, setError] = useState(null);
   const [socketConnected, setSocketConnected] = useState(false);
 
-  // Refs to prevent duplicate calls and track mounted state
-  const isFetchingRef = useRef(false);
+  // Ignore outdated responses and track mounted state
+  const requestRef = useRef(0);
   const isMountedRef = useRef(true);
   const hasFetchedRef = useRef(false);
   const joinedRoomsRef = useRef(new Set());
 
   const fetchEvents = useCallback(async (isManualRefresh = false) => {
-    // Prevent duplicate simultaneous calls
-    if (isFetchingRef.current) {
-      console.log("[LiveEvents] Fetch already in progress, skipping...");
-      return;
-    }
-
-    isFetchingRef.current = true;
+    const request = ++requestRef.current;
 
     // Only show loading spinner on initial load or manual refresh
     if (!hasFetchedRef.current || isManualRefresh) {
@@ -111,7 +106,7 @@ const LiveEvents = () => {
       ]);
 
       // Only update state if component is still mounted
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current || request !== requestRef.current) return;
 
       const liveData = liveResponse.data || liveResponse;
       const upcomingData = upcomingResponse.data || upcomingResponse;
@@ -129,33 +124,22 @@ const LiveEvents = () => {
       setUpcomingEvents(transformEvents(filteredUpcoming));
       hasFetchedRef.current = true;
     } catch (err) {
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current || request !== requestRef.current) return;
       console.error("Error fetching events:", err);
       setError(err.message || "Failed to load events");
     } finally {
-      if (isMountedRef.current) {
+      if (isMountedRef.current && request === requestRef.current) {
         setLoading(false);
       }
-      isFetchingRef.current = false;
     }
   }, []);
 
   useEffect(() => {
     isMountedRef.current = true;
-
-    // Initial fetch
-    fetchEvents();
-
-    // Refresh every 30 seconds (background refresh, no loading spinner)
-    const interval = setInterval(() => {
-      fetchEvents(false);
-    }, 30000);
-
-    return () => {
-      isMountedRef.current = false;
-      clearInterval(interval);
-    };
-  }, [fetchEvents]);
+    return () => { isMountedRef.current = false; };
+  }, []);
+  useEventMetadataRefresh(() => fetchEvents(false), null,
+    [...liveEvents, ...upcomingEvents].flatMap(event => [event.startDate, event.endDate]));
 
   // Socket connection and real-time updates
   useEffect(() => {

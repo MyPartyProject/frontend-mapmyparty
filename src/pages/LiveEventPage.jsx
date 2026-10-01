@@ -1,3 +1,4 @@
+import { useEventMetadataRefresh } from '@/hooks/useEventMetadataRefresh';
 import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
@@ -89,9 +90,11 @@ const LiveEventPage = ({ embedded = false }) => {
     notes: "",
   });
 
-  // Refs to prevent duplicate API calls
-  const isFetchingRef = useRef(false);
-  const lastFetchedIdRef = useRef(null);
+  // Ignore outdated responses after another refresh or a route change.
+  const requestRef = useRef(0);
+  const statsLoadedRef = useRef(false);
+  const currentIdRef = useRef(id);
+  currentIdRef.current = id;
   const isMountedRef = useRef(true);
 
   // Real-time ticket, check-in, and food/beverage analytics via Socket.IO
@@ -104,38 +107,40 @@ const LiveEventPage = ({ embedded = false }) => {
     error: socketError,
   } = useTicketAnalytics(id);
 
-  // Fetch event data from API - CALLED ONLY ONCE per event ID
-  const fetchEventData = useCallback(async () => {
-    // Skip if no id, already fetching, or already fetched this specific id
-    if (!id || isFetchingRef.current || lastFetchedIdRef.current === id) {
-      return;
-    }
-
-    isFetchingRef.current = true;
-    lastFetchedIdRef.current = id;
-    setLoading(true);
+  // Fetch metadata in the background; load booking totals on entry only.
+  const fetchEventData = useCallback(async (background = false) => {
+    if (!id) return;
+    const request = ++requestRef.current;
+    if (!background) setLoading(true);
     setError(null);
 
     try {
       // Fetch event details, bookings, and check-ins in parallel
       const [eventResponse, bookingsResponse, checkInsResponse] = await Promise.allSettled([
-        apiFetch(`event/${id}`),
-        apiFetch(`booking/event/${id}`),
-        apiFetch(`booking/event/${id}/check-ins`),
+        apiFetch(`event/manage/${id}`, { cache: "no-store" }),
+        ...(!background || !statsLoadedRef.current ? [apiFetch(`booking/event/${id}`),
+          apiFetch(`booking/event/${id}/check-ins`)] : []),
       ]);
 
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current || currentIdRef.current !== id || request !== requestRef.current) return;
 
       // Handle event data
       if (eventResponse.status === "fulfilled") {
         const eventData = eventResponse.value.data || eventResponse.value;
+        // Preserve public visibility while allowing a stale stored lifecycle status.
+        if (eventData.publishStatus !== 'PUBLISHED' || eventData.eventStatus === 'CANCELLED' ||
+          !eventData.startDate || !eventData.endDate || new Date(eventData.endDate).getTime() <= Date.now()) {
+          setEvent(null);
+          throw new Error('This event is no longer available in Live Events or Reception.');
+        }
+        eventData.eventStatus = new Date(eventData.startDate).getTime() > Date.now() ? 'UPCOMING' : 'ONGOING';
         setEvent(eventData);
       } else {
         throw new Error(eventResponse.reason?.message || "Failed to load event");
       }
 
       // Handle bookings data
-      if (bookingsResponse.status === "fulfilled") {
+      if (bookingsResponse?.status === "fulfilled") {
         const bookingsData = bookingsResponse.value.data || bookingsResponse.value.bookings || [];
         // Ensure bookingsData is an array before calling reduce
         const safeBookingsData = Array.isArray(bookingsData) ? bookingsData : [];
@@ -152,7 +157,7 @@ const LiveEventPage = ({ embedded = false }) => {
       }
 
       // Handle check-ins data
-      if (checkInsResponse.status === "fulfilled") {
+      if (checkInsResponse?.status === "fulfilled") {
         const checkInsData = checkInsResponse.value.data?.items || checkInsResponse.value.items || [];
         const now = new Date();
         const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
@@ -166,31 +171,30 @@ const LiveEventPage = ({ embedded = false }) => {
           total: checkedInItems.length,
           last15m: recentCheckIns.length,
         });
+        statsLoadedRef.current = true;
       }
     } catch (err) {
-      // Reset lastFetchedIdRef on error so retry can work
-      lastFetchedIdRef.current = null;
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current || currentIdRef.current !== id || request !== requestRef.current) return;
       console.error("Error fetching event:", err);
       setError(err.message || "Failed to load event data");
     } finally {
-      if (isMountedRef.current) {
+      if (isMountedRef.current && currentIdRef.current === id && request === requestRef.current) {
         setLoading(false);
       }
-      isFetchingRef.current = false;
     }
   }, [id]);
 
-  // Fetch data on mount - ONCE only per event ID
+  // Track mount state without remounting the scanner on refresh.
   useEffect(() => {
     isMountedRef.current = true;
-
-    fetchEventData();
+    statsLoadedRef.current = false;
+    setEvent(null);
 
     return () => {
       isMountedRef.current = false;
     };
   }, [fetchEventData]);
+  useEventMetadataRefresh(initial => fetchEventData(!initial), id, [event?.startDate, event?.endDate]);
 
   // Ticket types - Uses REAL-TIME socket data when available, fallback to event.tickets
   const ticketTypes = useMemo(() => {
