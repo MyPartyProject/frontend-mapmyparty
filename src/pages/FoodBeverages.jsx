@@ -1,3 +1,4 @@
+import { progressPercent } from "@/lib/progress";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
@@ -328,7 +329,7 @@ const FoodBeverages = () => {
                         const remaining = Math.max((item.totalQty || 0) - (item.receivedQty || 0), 0);
                         const totalQty = item.totalQty || 0;
                         const soldQty = item.receivedQty || 0;
-                        const soldProgress = totalQty > 0 ? Math.min((soldQty / totalQty) * 100, 100) : 0;
+                        const soldProgress = progressPercent(soldQty, totalQty);
                         return (
                           <div key={item.id} className="relative rounded-2xl border border-white/10 bg-black/30 p-4 light:border-border light:bg-surface">
                             {/* Error popup */}
@@ -382,7 +383,7 @@ const FoodBeverages = () => {
                                 ) : (
                                   <div
                                     className="h-full rounded-full bg-emerald-400/60 transition-all"
-                                    style={{ width: `${soldProgress}%` }}
+                                    style={{ width: `${soldProgress}%`, minWidth: soldProgress > 0 ? "1px" : 0, backgroundColor: "hsl(var(--success))" }}
                                   />
                                 )}
                               </div>

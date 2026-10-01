@@ -1,3 +1,4 @@
+import { nonNegativeNumber, progressPercent } from '@/lib/progress';
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Users,
@@ -51,7 +52,7 @@ const toTitleCase = (text = "") =>
     .replace(/[_-]+/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase());
 
-const sumValues = (items = []) => items.reduce((acc, item) => acc + Number(item.value || 0), 0);
+const sumValues = (items = []) => items.reduce((acc, item) => acc + nonNegativeNumber(item.value), 0);
 
 const normalizeTrend = (arr = []) =>
   Array.isArray(arr)
@@ -64,10 +65,10 @@ const normalizeTrend = (arr = []) =>
 const normalizeBreakdown = (raw) => {
   const source = unwrap(raw);
   const breakdown = source?.breakdown || source?.data || source || {};
-  if (Array.isArray(breakdown)) return breakdown;
+  if (Array.isArray(breakdown)) return breakdown.map(item => ({ ...item, label: item.label || item.name || item.status, value: item.events ?? item.count ?? item.value ?? item.percentage ?? 0 }));
   return Object.entries(breakdown || {}).map(([label, val]) => ({
     label: toTitleCase(label),
-    value: typeof val === "object" ? val.value ?? val.count ?? val.ticketsSold ?? 0 : val ?? 0,
+    value: val !== null && typeof val === "object" ? val.value ?? val.percentage ?? val.count ?? val.ticketsSold ?? 0 : val ?? 0,
   }));
 };
 
@@ -478,21 +479,21 @@ const AudienceAnalytics = () => {
       {};
     const female = genderData.female ?? genderData.FEMALE ?? genderData?.["female"];
     const male = genderData.male ?? genderData.MALE ?? genderData?.["male"];
-    const total = (female || 0) + (male || 0);
-    const femalePct = total ? Math.round((female / total) * 100) : null;
+    const total = nonNegativeNumber(female) + nonNegativeNumber(male);
+    const femalePct = total ? Math.round(progressPercent(female, total)) : null;
     return { female: femalePct, male: total ? 100 - femalePct : null };
   }, [analytics, statistics]);
 
   const renderBarList = (
     items,
-    colorClass = "bg-gradient-to-r from-secondary via-primary to-accent",
+    colorClass = "bg-primaryCTA",
     { showValues = true } = {}
   ) => {
     const total = sumValues(items);
     return (
       <div className="space-y-3">
         {items.map((item) => {
-          const share = total ? Math.max(4, Math.min(100, (Number(item.value || 0) / total) * 100)) : 0;
+          const share = showValues ? progressPercent(item.value, total) : progressPercent(item.value);
           return (
             <div key={item.label} className="space-y-1">
               <div className="flex justify-between text-sm">
@@ -502,10 +503,9 @@ const AudienceAnalytics = () => {
                 </span>
               </div>
               <AnalyticsProgressBar
-                value={share || 0}
+                value={item.value == null ? null : share}
                 trackStyle={{ backgroundColor: "var(--chart-progress-track)" }}
                 fillClassName={colorClass}
-                minVisiblePercent={4}
               />
             </div>
           );
@@ -527,11 +527,9 @@ const AudienceAnalytics = () => {
       map.set(item.label, existing);
     });
     const data = Array.from(map.values());
-    const maxValue = Math.max(
-      ...data.map((d) => Math.max(Number(d.revenue || 0), Number(d.bookings || 0))),
-      0
-    );
-    return { data, maxValue: maxValue || 1 };
+    const maxRevenue = Math.max(0, ...data.map(d => nonNegativeNumber(d.revenue)));
+    const maxBookings = Math.max(0, ...data.map(d => nonNegativeNumber(d.bookings)));
+    return { data, maxRevenue, maxBookings };
   }, [trendSeries]);
 
   const safeBreakdowns = useMemo(
@@ -680,8 +678,8 @@ const AudienceAnalytics = () => {
               {timelinePoints.data.map((point, idx) => {
                 const revenueVal = point.revenue ?? point.value ?? 0;
                 const bookingVal = point.bookings ?? 0;
-                const revPct = Math.max(4, Math.min(100, (revenueVal / timelinePoints.maxValue) * 100));
-                const bookPct = Math.max(4, Math.min(100, (bookingVal / timelinePoints.maxValue) * 100));
+                const revPct = progressPercent(revenueVal, timelinePoints.maxRevenue);
+                const bookPct = progressPercent(bookingVal, timelinePoints.maxBookings);
                 const title = `Revenue: ₹${formatNumber(revenueVal, "0")}, Bookings: ${formatNumber(bookingVal, "0")}`;
                 return (
                   <div key={idx} className="space-y-2" title={title}>
@@ -696,14 +694,12 @@ const AudienceAnalytics = () => {
                       <AnalyticsProgressBar
                         value={revPct}
                         trackStyle={{ backgroundColor: "var(--chart-progress-track)" }}
-                        fillStyle={{ backgroundColor: "var(--organizer-revenue-bar, #34d399)" }}
-                        minVisiblePercent={4}
+                        fillStyle={{ backgroundColor: "var(--organizer-revenue-bar, hsl(var(--success)))" }}
                       />
                       <AnalyticsProgressBar
                         value={bookPct}
                         trackStyle={{ backgroundColor: "var(--chart-progress-track)" }}
-                        fillStyle={{ backgroundColor: "var(--organizer-bookings-bar, #38bdf8)" }}
-                        minVisiblePercent={4}
+                        fillStyle={{ backgroundColor: "var(--organizer-bookings-bar, hsl(var(--info)))" }}
                       />
                     </div>
                   </div>
@@ -774,7 +770,7 @@ const AudienceAnalytics = () => {
                       label: b.label || b.status || b.name,
                       value: b.value ?? b.percentage ?? 0,
                     })),
-                    "bg-gradient-to-r from-primary via-secondary to-accent",
+                    "bg-primaryCTA",
                     { showValues: true }
                   )
                 )}
@@ -792,7 +788,7 @@ const AudienceAnalytics = () => {
                       label: b.label || b.category || b.name,
                       value: b.value ?? b.percentage ?? 0,
                     })),
-                    "bg-gradient-to-r from-secondary via-primary to-accent",
+                    "bg-primaryCTA",
                     { showValues: true }
                   )
                 )}
@@ -810,7 +806,7 @@ const AudienceAnalytics = () => {
                       label: b.label || b.name,
                       value: b.ticketsSold ?? b.count ?? b.value ?? 0,
                     })),
-                    "bg-gradient-to-r from-accent via-secondary to-primary",
+                    "bg-primaryCTA",
                     { showValues: true }
                   )
                 )}
@@ -828,7 +824,7 @@ const AudienceAnalytics = () => {
                       label: b.label || b.status || b.name,
                       value: b.value ?? b.count ?? 0,
                     })),
-                    "bg-gradient-to-r from-primary via-accent to-secondary",
+                    "bg-primaryCTA",
                     { showValues: true }
                   )
                 )}
@@ -932,7 +928,7 @@ const AudienceAnalytics = () => {
                       const revenueVal = row.revenue ?? row.amount ?? row.sales ?? 0;
                       const tickets = row.ticketsSold ?? row.count ?? 0;
                       const maxRevenue = eventTimeline.reduce((m, r) => Math.max(m, r.revenue ?? r.amount ?? r.sales ?? 0), 1);
-                      const width = Math.max(6, Math.min(100, (revenueVal / maxRevenue) * 100));
+                      const width = progressPercent(revenueVal, maxRevenue);
                       return (
                         <div key={idx} className="space-y-2" title={`₹${formatNumber(revenueVal, "0")}, ${formatNumber(tickets, "0")} tickets`}>
                           <div className="flex justify-between text-xs text-white/60 light:text-muted-foreground">
@@ -945,8 +941,7 @@ const AudienceAnalytics = () => {
                           <AnalyticsProgressBar
                             value={width}
                             trackStyle={{ backgroundColor: "var(--chart-progress-track)" }}
-                            fillStyle={{ background: "var(--organizer-sales-fill, linear-gradient(90deg, #34d399 0%, #3b82f6 55%, #22d3ee 100%))" }}
-                            minVisiblePercent={6}
+                            fillStyle={{ background: "hsl(var(--primary-cta))" }}
                           />
                         </div>
                       );

@@ -1,3 +1,5 @@
+import AnalyticsProgressBar from "@/components/analytics/AnalyticsProgressBar";
+import { nonNegativeNumber, progressPercent } from "@/lib/progress";
 import { useEventMetadataRefresh } from '@/hooks/useEventMetadataRefresh';
 import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
@@ -74,7 +76,7 @@ const LiveEventPage = ({ embedded = false }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [bookings, setBookings] = useState({ confirmed: 0, pending: 0, cancelled: 0 });
-  const [checkIns, setCheckIns] = useState({ total: 0, last15m: 0 });
+  const [checkIns, setCheckIns] = useState({ total: null, last15m: null });
   const [offPlatformRecords, setOffPlatformRecords] = useState([]);
   const [offPlatformLoading, setOffPlatformLoading] = useState(false);
   const [offPlatformError, setOffPlatformError] = useState("");
@@ -131,6 +133,7 @@ const LiveEventPage = ({ embedded = false }) => {
         if (eventData.publishStatus !== 'PUBLISHED' || eventData.eventStatus === 'CANCELLED' ||
           !eventData.startDate || !eventData.endDate || new Date(eventData.endDate).getTime() <= Date.now()) {
           setEvent(null);
+    setCheckIns({ total: null, last15m: null });
           throw new Error('This event is no longer available in Live Events or Reception.');
         }
         eventData.eventStatus = new Date(eventData.startDate).getTime() > Date.now() ? 'UPCOMING' : 'ONGOING';
@@ -158,20 +161,11 @@ const LiveEventPage = ({ embedded = false }) => {
 
       // Handle check-ins data
       if (checkInsResponse?.status === "fulfilled") {
-        const checkInsData = checkInsResponse.value.data?.items || checkInsResponse.value.items || [];
-        const now = new Date();
-        const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
-
-        const checkedInItems = checkInsData.filter((item) => item.checkedIn);
-        const recentCheckIns = checkedInItems.filter(
-          (item) => item.checkedInAt && new Date(item.checkedInAt) >= fifteenMinutesAgo
-        );
-
-        setCheckIns({
-          total: checkedInItems.length,
-          last15m: recentCheckIns.length,
-        });
-        statsLoadedRef.current = true;
+        const summary = checkInsResponse.value.data?.summary || checkInsResponse.value.summary;
+        if (summary) {
+          setCheckIns(summary);
+          statsLoadedRef.current = true;
+        }
       }
     } catch (err) {
       if (!isMountedRef.current || currentIdRef.current !== id || request !== requestRef.current) return;
@@ -233,8 +227,8 @@ const LiveEventPage = ({ embedded = false }) => {
     }
     return ticketTypes.reduce(
       (acc, t) => {
-        acc.total += t.totalQty || 0;
-        acc.sold += t.soldQty || 0;
+        acc.total += nonNegativeNumber(t.totalQty);
+        acc.sold += nonNegativeNumber(t.soldQty);
         acc.types += 1;
         return acc;
       },
@@ -256,19 +250,16 @@ const LiveEventPage = ({ embedded = false }) => {
   const checkInData = useMemo(() => {
     // Prefer real-time socket data (updates automatically when someone checks in)
     if (realtimeCheckIns && realtimeCheckIns.total !== undefined) {
-      return {
-        total: realtimeCheckIns.total,
-        last15m: realtimeCheckIns.last15m,
-      };
+      return realtimeCheckIns;
     }
     // Fallback to static API data
     return checkIns;
   }, [realtimeCheckIns, checkIns]);
 
   const checkInRate =
-    ticketTotals.sold > 0 ? Math.round((checkInData.total / ticketTotals.sold) * 100) : 0;
+    checkInData.bookedQuantity == null ? null : progressPercent(checkInData.checkedInQuantity, checkInData.bookedQuantity);
   const occupancy =
-    ticketTotals.total > 0 ? Math.round((ticketTotals.sold / ticketTotals.total) * 100) : 0;
+    ticketTotals.total > 0 ? progressPercent(ticketTotals.sold, ticketTotals.total) : 0;
   const openCapacity = Math.max(ticketTotals.total - ticketTotals.sold, 0);
   const avgTicketPrice =
     ticketTotals.types > 0
@@ -841,12 +832,7 @@ const LiveEventPage = ({ embedded = false }) => {
                 <p className="text-sm text-white/60 light:text-muted-foreground">
                   {ticketTotals.types} types • {occupancy}% booked
                 </p>
-                <div className="mt-3 h-2 rounded-full bg-white/10 overflow-hidden light:bg-muted">
-                  <div
-                    className="h-full bg-gradient-to-r from-red-500 to-blue-500"
-                    style={{ width: `${occupancy}%` }}
-                  />
-                </div>
+                <AnalyticsProgressBar label="Tickets sold" value={occupancy} heightClassName="h-2" className="mt-3" />
               </div>
               <div className="bg-white/5 border border-white/10 rounded-2xl p-5 shadow-lg shadow-black/30 light:bg-muted light:border-border light:shadow-black/5">
                 <p className="text-xs uppercase tracking-wide text-white/60 flex items-center gap-2 light:text-muted-foreground">
@@ -859,8 +845,8 @@ const LiveEventPage = ({ embedded = false }) => {
                 <p className="text-xs uppercase tracking-wide text-white/60 flex items-center gap-2 light:text-muted-foreground">
                   <Activity className="w-4 h-4 text-emerald-300 light:text-success" /> Checked-in
                 </p>
-                <p className="text-3xl font-bold mt-2 text-emerald-100 light:text-success">{checkInData.total}</p>
-                <p className="text-sm text-white/60 light:text-muted-foreground">{checkInRate}% of booked</p>
+                <p className="text-3xl font-bold mt-2 text-emerald-100 light:text-success">{checkInData.total ?? "Unavailable"}</p>
+                <p className="text-sm text-white/60 light:text-muted-foreground">{checkInRate == null ? "Unavailable" : `${Number(checkInRate.toFixed(1))}%`} of booked</p>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-2xl p-5 shadow-lg shadow-black/30 light:bg-muted light:border-border light:shadow-black/5">
                 <p className="text-xs uppercase tracking-wide text-white/60 flex items-center gap-2 light:text-muted-foreground">
@@ -881,7 +867,7 @@ const LiveEventPage = ({ embedded = false }) => {
                 </div>
                 <div className="flex-1">
                   <p className="text-xs uppercase tracking-wide text-white/50 light:text-muted-foreground">Check-in rate</p>
-                  <p className="text-lg font-semibold text-white light:text-foreground">{checkInRate}%</p>
+                  <p className="text-lg font-semibold text-white light:text-foreground">{checkInRate == null ? "Unavailable" : `${Number(checkInRate.toFixed(1))}%`}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-4 shadow-lg shadow-black/30 light:bg-muted light:border-border light:shadow-black/5">
@@ -939,7 +925,7 @@ const LiveEventPage = ({ embedded = false }) => {
                     </thead>
                     <tbody className="divide-y divide-white/5">
                       {ticketTypes.map((t) => {
-                        const bookedPct = t.totalQty ? Math.round((t.soldQty / t.totalQty) * 100) : 0;
+                        const bookedPct = t.totalQty ? progressPercent(t.soldQty, t.totalQty) : 0;
                         return (
                           <tr key={t.id} className="hover:bg-white/5 transition light:hover:bg-muted">
                             <td className="py-3 pr-4 font-semibold text-white light:text-foreground">{t.name}</td>
@@ -949,12 +935,7 @@ const LiveEventPage = ({ embedded = false }) => {
                             <td className="py-3 pr-4">
                               <div className="flex items-center gap-2">
                                 <span className="text-white/80 light:text-muted-foreground">{t.soldQty}</span>
-                                <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden w-24 light:bg-muted">
-                                  <div
-                                    className="h-full bg-gradient-to-r from-red-500 to-blue-500 transition-all duration-500"
-                                    style={{ width: `${bookedPct}%` }}
-                                  />
-                                </div>
+                                <AnalyticsProgressBar label="Tickets sold" value={bookedPct} heightClassName="h-1.5" className="flex-1 w-24" />
                                 <span className="text-xs text-white/60 light:text-muted-foreground">{bookedPct}%</span>
                               </div>
                             </td>
@@ -996,35 +977,17 @@ const LiveEventPage = ({ embedded = false }) => {
                       <span>Booked</span>
                       <span>{ticketTotals.sold}</span>
                     </div>
-                    <div className="h-2 rounded-full bg-white/5 overflow-hidden border border-white/5 light:bg-muted light:border-border">
-                      <div
-                        className="h-full bg-gradient-to-r from-red-500 to-blue-500 transition-all duration-500"
-                        style={{
-                          width: ticketTotals.total
-                            ? `${Math.round((ticketTotals.sold / ticketTotals.total) * 100)}%`
-                            : "0%",
-                        }}
-                      />
-                    </div>
+                    <AnalyticsProgressBar label="Tickets sold" value={occupancy} heightClassName="h-2" />
                   </div>
                   <div>
                     <div className="flex items-center justify-between text-xs text-white/60 light:text-muted-foreground">
                       <span>Checked-in</span>
-                      <span>{checkInData.total}</span>
+                      <span>{checkInData.total ?? "Unavailable"}</span>
                     </div>
-                    <div className="h-2 rounded-full bg-white/5 overflow-hidden border border-white/5 light:bg-muted light:border-border">
-                      <div
-                        className="h-full bg-gradient-to-r from-emerald-400 to-cyan-500 transition-all duration-500"
-                        style={{
-                          width: ticketTotals.sold
-                            ? `${Math.round((checkInData.total / ticketTotals.sold) * 100)}%`
-                            : "0%",
-                        }}
-                      />
-                    </div>
+                    <AnalyticsProgressBar label="Checked-in" value={checkInRate} heightClassName="h-2" fillStyle={{ backgroundColor: "hsl(var(--success))" }} />
                   </div>
                   <div className="text-xs text-white/60 light:text-muted-foreground">
-                    Last 15 min check-ins: <span className="text-white light:text-foreground">{checkInData.last15m}</span>
+                    Last 15 min check-ins: <span className="text-white light:text-foreground">{checkInData.last15m ?? "Unavailable"}</span>
                   </div>
                 </div>
               </div>
@@ -1285,12 +1248,7 @@ const LiveEventPage = ({ embedded = false }) => {
                 <p className="text-sm text-white/60 light:text-muted-foreground">
                   {ticketTotals.types} types • {occupancy}% booked
                 </p>
-                <div className="mt-3 h-2 rounded-full bg-white/10 overflow-hidden light:bg-muted">
-                  <div
-                    className="h-full bg-gradient-to-r from-red-500 to-blue-500"
-                    style={{ width: `${occupancy}%` }}
-                  />
-                </div>
+                <AnalyticsProgressBar label="Tickets sold" value={occupancy} heightClassName="h-2" className="mt-3" />
               </div>
               <div className="bg-white/5 border border-white/10 rounded-2xl p-5 shadow-lg shadow-black/30 light:bg-muted light:border-border light:shadow-black/5">
                 <p className="text-xs uppercase tracking-wide text-white/60 flex items-center gap-2 light:text-muted-foreground">
@@ -1303,8 +1261,8 @@ const LiveEventPage = ({ embedded = false }) => {
                 <p className="text-xs uppercase tracking-wide text-white/60 flex items-center gap-2 light:text-muted-foreground">
                   <Activity className="w-4 h-4 text-emerald-300 light:text-success" /> Checked-in
                 </p>
-                <p className="text-3xl font-bold mt-2 text-emerald-100 light:text-success">{checkInData.total}</p>
-                <p className="text-sm text-white/60 light:text-muted-foreground">{checkInRate}% of booked</p>
+                <p className="text-3xl font-bold mt-2 text-emerald-100 light:text-success">{checkInData.total ?? "Unavailable"}</p>
+                <p className="text-sm text-white/60 light:text-muted-foreground">{checkInRate == null ? "Unavailable" : `${Number(checkInRate.toFixed(1))}%`} of booked</p>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-2xl p-5 shadow-lg shadow-black/30 light:bg-muted light:border-border light:shadow-black/5">
                 <p className="text-xs uppercase tracking-wide text-white/60 flex items-center gap-2 light:text-muted-foreground">
@@ -1325,7 +1283,7 @@ const LiveEventPage = ({ embedded = false }) => {
                 </div>
                 <div className="flex-1">
                   <p className="text-xs uppercase tracking-wide text-white/50 light:text-muted-foreground">Check-in rate</p>
-                  <p className="text-lg font-semibold text-white light:text-foreground">{checkInRate}%</p>
+                  <p className="text-lg font-semibold text-white light:text-foreground">{checkInRate == null ? "Unavailable" : `${Number(checkInRate.toFixed(1))}%`}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-4 shadow-lg shadow-black/30 light:bg-muted light:border-border light:shadow-black/5">
@@ -1383,7 +1341,7 @@ const LiveEventPage = ({ embedded = false }) => {
                     </thead>
                     <tbody className="divide-y divide-white/5">
                       {ticketTypes.map((t) => {
-                        const bookedPct = t.totalQty ? Math.round((t.soldQty / t.totalQty) * 100) : 0;
+                        const bookedPct = t.totalQty ? progressPercent(t.soldQty, t.totalQty) : 0;
                         return (
                           <tr key={t.id} className="hover:bg-white/5 transition light:hover:bg-muted">
                             <td className="py-3 pr-4 font-semibold text-white light:text-foreground">{t.name}</td>
@@ -1393,12 +1351,7 @@ const LiveEventPage = ({ embedded = false }) => {
                             <td className="py-3 pr-4">
                               <div className="flex items-center gap-2">
                                 <span className="text-white/80 light:text-muted-foreground">{t.soldQty}</span>
-                                <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden w-24 light:bg-muted">
-                                  <div
-                                    className="h-full bg-gradient-to-r from-red-500 to-blue-500 transition-all duration-500"
-                                    style={{ width: `${bookedPct}%` }}
-                                  />
-                                </div>
+                                <AnalyticsProgressBar label="Tickets sold" value={bookedPct} heightClassName="h-1.5" className="flex-1 w-24" />
                                 <span className="text-xs text-white/60 light:text-muted-foreground">{bookedPct}%</span>
                               </div>
                             </td>
@@ -1440,35 +1393,17 @@ const LiveEventPage = ({ embedded = false }) => {
                       <span>Booked</span>
                       <span>{ticketTotals.sold}</span>
                     </div>
-                    <div className="h-2 rounded-full bg-white/5 overflow-hidden border border-white/5 light:bg-muted light:border-border">
-                      <div
-                        className="h-full bg-gradient-to-r from-red-500 to-blue-500 transition-all duration-500"
-                        style={{
-                          width: ticketTotals.total
-                            ? `${Math.round((ticketTotals.sold / ticketTotals.total) * 100)}%`
-                            : "0%",
-                        }}
-                      />
-                    </div>
+                    <AnalyticsProgressBar label="Tickets sold" value={occupancy} heightClassName="h-2" />
                   </div>
                   <div>
                     <div className="flex items-center justify-between text-xs text-white/60 light:text-muted-foreground">
                       <span>Checked-in</span>
-                      <span>{checkInData.total}</span>
+                      <span>{checkInData.total ?? "Unavailable"}</span>
                     </div>
-                    <div className="h-2 rounded-full bg-white/5 overflow-hidden border border-white/5 light:bg-muted light:border-border">
-                      <div
-                        className="h-full bg-gradient-to-r from-emerald-400 to-cyan-500 transition-all duration-500"
-                        style={{
-                          width: ticketTotals.sold
-                            ? `${Math.round((checkInData.total / ticketTotals.sold) * 100)}%`
-                            : "0%",
-                        }}
-                      />
-                    </div>
+                    <AnalyticsProgressBar label="Checked-in" value={checkInRate} heightClassName="h-2" fillStyle={{ backgroundColor: "hsl(var(--success))" }} />
                   </div>
                   <div className="text-xs text-white/60 light:text-muted-foreground">
-                    Last 15 min check-ins: <span className="text-white light:text-foreground">{checkInData.last15m}</span>
+                    Last 15 min check-ins: <span className="text-white light:text-foreground">{checkInData.last15m ?? "Unavailable"}</span>
                   </div>
                 </div>
               </div>

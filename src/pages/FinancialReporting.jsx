@@ -1,3 +1,4 @@
+import { progressPercent } from "@/lib/progress";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
@@ -632,8 +633,8 @@ const FinancialReporting = () => {
                     <span>{formatINR(row.value)}</span>
                   </div>
                   <AnalyticsProgressBar
-                    value={((row.value || 0) / (summary.gstCollected || 1)) * 100}
-                    trackStyle={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+                    value={progressPercent(row.value, summary.gstCollected)}
+                    trackStyle={{ backgroundColor: "var(--chart-progress-track)" }}
                     fillStyle={{ backgroundColor: row.color || palette[idx % palette.length] }}
                   />
                 </div>

@@ -22,6 +22,7 @@ const eventId='metadata-fixture';
 let current={ id:eventId, organizerId:'org', title:'Metadata fixture', eventStatus:'ONGOING', publishStatus:'PUBLISHED',
 startDate:new Date(Date.now()-3600000).toISOString(),endDate:new Date(Date.now()+3600000).toISOString(),
 category:'Music', subCategory:'Live Concerts', venues:[{name:'Original venue',city:'Delhi',state:'Delhi'}],
+checkIns:{total:1,totalBooked:3,bookedQuantity:10,checkedInQuantity:4},
 tickets:[{id:'ticket',name:'Standard',type:'STANDARD_TICKET',price:100,totalQty:100,soldQty:5}],organizer:{id:'org',name:'Fixture Organizer'} };
 let metadataRequests=0, statsRequests=0, delayedMetadata=false, failMetadata=false, heldRequest;
 const fakeSocketModule = `const listeners=new Map();
@@ -69,6 +70,8 @@ try {
       if(isModule){await send('Fetch.fulfillRequest',{requestId,responseCode:200,responseHeaders:[{name:'Content-Type',value:'application/javascript'}],body:Buffer.from(path.endsWith('/socketService.js')?fakeSocketModule:fakeScannerModule).toString('base64')});return;}
       let payload={success:true,data:{items:[],events:[],pagination:{total:0,totalPages:1}}};
       if(path.endsWith('/auth/me'))payload={data:{user:{id:'fixture-user',name:'Fixture Organizer',role:'ORGANIZER'},organizer:{id:'org',name:'Fixture Organizer'},hasOrganizerProfile:true,hasBankDetails:true,isBankVerified:true}};
+      if(path.endsWith('/organizer/me/analytics'))payload.data={trends:{revenue:[{label:'First',amount:10000},{label:'Second',amount:5000},{label:'Empty',amount:0}],bookings:[{label:'First',count:10},{label:'Second',count:5},{label:'Empty',count:0}]}};
+      if(path.endsWith('/organizer/me/analytics/breakdown'))payload.data={breakdown:{}};
       if(path.includes('/event/manage/')){
         metadataRequests++;payload.data=structuredClone(current);
         if(failMetadata){await send('Fetch.fulfillRequest',{requestId,responseCode:500,responseHeaders:[{name:'Content-Type',value:'application/json'},{name:'Access-Control-Allow-Origin',value:base},{name:'Access-Control-Allow-Credentials',value:'true'}],body:Buffer.from(JSON.stringify({success:false,errorMessage:'Fixture metadata failure'})).toString('base64')});return;}
@@ -78,7 +81,7 @@ try {
         const upcoming=new Date(current.startDate)>new Date();const requested=new URL(request.url).searchParams.get('status');
         payload.data={events:(requested==='ongoing'?ongoing:upcoming)?[structuredClone(current)]:[]};
       }
-      if(path.includes('/booking/event/')){statsRequests++;payload.data=path.endsWith('check-ins')?{items:[],pagination:{total:3}}:[];}
+      if(path.includes('/booking/event/')){statsRequests++;payload.data=path.endsWith('check-ins')?{items:[],pagination:{total:3},summary:{total:1,last15m:1,totalBooked:3,bookedQuantity:10,checkedInQuantity:4}}:[];}
       if(path.endsWith('/verify-ticket'))payload.data={bookingItemId:'item',checkedIn:false,userName:'Fixture Guest',ticketName:'Standard',event:{id:eventId},members:1};
       if(path.includes('/event/manage/')&&delayedMetadata){delayedMetadata=false;heldRequest={requestId,payload};return;}
       await send('Fetch.fulfillRequest', { requestId, responseCode: 200, responseHeaders: [
@@ -109,6 +112,17 @@ try {
   const navigate=async path=>{await send('Page.navigate',{url:base+path});await until('window.__metadataListeners?.() > 0');};
   await navigate('/organizer/live');
   await until("(document.body?.innerText || '').includes('Original venue')");
+  await until(`document.querySelector('[aria-label="Checked-in"]')?.getAttribute('aria-valuenow') === '40'`);
+  assert.deepEqual(await evaluate(`[...document.querySelectorAll('[aria-label="Checked-in"]')].map(b=>Number(b.getAttribute('aria-valuenow')))`),[40,40]);
+  for (const theme of ['light','dark']) {
+    await evaluate(`document.documentElement.classList.remove('light','dark');document.documentElement.classList.add('${theme}')`);
+    await delay(600);
+    const bar=await evaluate(`(()=>{const t=document.querySelector('[aria-label="Checked-in"]');const f=t.firstElementChild;return {ratio:f.getBoundingClientRect().width/t.getBoundingClientRect().width,fill:getComputedStyle(f).backgroundColor,track:getComputedStyle(t).backgroundColor,image:getComputedStyle(f).backgroundImage}})()`);
+    assert.ok(Math.abs(bar.ratio-0.4)<0.02,theme+' rendered width');
+    assert.notEqual(bar.fill,bar.track);
+    assert.equal(bar.image,'none');
+  }
+  console.log('PASS Initial live check-in quantity progress and solid colors in both themes');
   current.venues[0].name='Updated live venue';await changed();
   await until("(document.body?.innerText || '').includes('Updated live venue')");
   current.startDate=new Date(Date.now()+3600000).toISOString();current.endDate=new Date(Date.now()+7200000).toISOString();await changed();
@@ -121,9 +135,15 @@ try {
   console.log('PASS Reception discovers an event absent from its original list');
   await navigate('/organizer/live/'+eventId);
   await until("(document.body?.innerText || '').includes('Updated live venue')");
+  await until(`document.querySelector('[aria-label="Checked-in"]')?.getAttribute('aria-valuenow') === '40'`);
+  await evaluate("window.__emitMetadata('checkin_stats',{eventId:'metadata-fixture',checkIns:{total:0,last15m:0,bookedQuantity:10,checkedInQuantity:0}})");
+  await until(`document.querySelector('[aria-label="Checked-in"]')?.getAttribute('aria-valuenow') === '0'`);
+  await evaluate("window.__emitMetadata('checkin_update',{eventId:'metadata-fixture',checkIns:{total:2,last15m:2,bookedQuantity:10,checkedInQuantity:8}})");
+  await until(`document.querySelector('[aria-label="Checked-in"]')?.getAttribute('aria-valuenow') === '80'`);
   current.venues[0].name='Live detail updated';await changed();
   await until("(document.body?.innerText || '').includes('Live detail updated')");
-  console.log('PASS Live Event detail metadata refresh');
+  assert.equal(await evaluate(`document.querySelector('[aria-label="Checked-in"]').getAttribute('aria-valuenow')`),'80');
+  console.log('PASS API fallback, zero socket snapshot and metadata refresh preserve correct progress');
   await navigate('/organizer/reception/'+eventId);
   await until("(document.body?.innerText || '').includes('Live detail updated')");
   await evaluate(`const input=document.querySelector('input[placeholder*=manual]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'KEEP-TICKET');input.dispatchEvent(new Event('input',{bubbles:true}));`);
@@ -169,6 +189,17 @@ try {
   await evaluate("[...document.querySelectorAll('button')].find(b=>b.innerText.includes('Retry')).click()");
   await until("(document.body?.innerText || '').includes('Verify Ticket')");
   console.log('PASS Reception retries an initial metadata failure without stale fetch guards');
+  await send('Page.navigate',{url:base+'/organizer/analytics'});
+  await until(`document.querySelectorAll('[data-analytics-progress]').length === 6`);
+  assert.deepEqual(await evaluate(`[...document.querySelectorAll('[data-analytics-progress]')].map(b=>Number(b.getAttribute('aria-valuenow')))`),[100,100,50,50,0,0]);
+  for (const theme of ['light','dark']) {
+    await evaluate(`document.documentElement.classList.remove('light','dark');document.documentElement.classList.add('${theme}')`);
+    await delay(600);
+    const widths=await evaluate(`[...document.querySelectorAll('[data-analytics-progress]')].map(b=>b.firstElementChild.getBoundingClientRect().width/b.getBoundingClientRect().width)`);
+    assert.ok(Math.abs(widths[2]-0.5)<0.02 && Math.abs(widths[3]-0.5)<0.02,theme+' independent trend scales');
+    assert.equal(widths[4],0);assert.equal(widths[5],0);
+  }
+  console.log('PASS Audience revenue and booking scales, fractional widths and empty bars in both themes');
   assert.deepEqual(errors,[],'No browser runtime errors');
   console.log('PASS '+metadataRequests+' authenticated metadata reads');
 } finally { socket?.close(); chrome.kill(); }

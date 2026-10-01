@@ -1,3 +1,5 @@
+import AnalyticsProgressBar from "@/components/analytics/AnalyticsProgressBar";
+import { nonNegativeNumber, progressPercent } from "@/lib/progress";
 import { useEventMetadataRefresh } from '@/hooks/useEventMetadataRefresh';
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
@@ -50,9 +52,8 @@ const transformEvents = (events) =>
       name: t.name,
       type: t.type,
       price: t.price,
-      totalQty: t.totalQty || 0,
-      soldQty: t.soldQty || 0,
-      checkedIn: 0,
+      totalQty: nonNegativeNumber(t.totalQty),
+      soldQty: nonNegativeNumber(t.soldQty),
     }));
 
     return {
@@ -71,7 +72,7 @@ const transformEvents = (events) =>
       ticketTypes,
       organizer: event.organizer,
       bookingsCount: event._count?.bookings || 0,
-      checkIns: { total: 0, last15m: 0 },
+      checkIns: event.checkIns ?? null,
     };
   });
 
@@ -196,7 +197,7 @@ const LiveEvents = () => {
               const updatedTickets = event.ticketTypes.map((t) => {
                 const updated = data.tickets.find((u) => u.ticketId === t.id);
                 if (updated) {
-                  return { ...t, soldQty: updated.soldQty, totalQty: updated.totalQty };
+                  return { ...t, soldQty: nonNegativeNumber(updated.soldQty), totalQty: nonNegativeNumber(updated.totalQty) };
                 }
                 return t;
               });
@@ -213,7 +214,7 @@ const LiveEvents = () => {
               const updatedTickets = event.ticketTypes.map((t) => {
                 const updated = data.tickets.find((u) => u.ticketId === t.id);
                 if (updated) {
-                  return { ...t, soldQty: updated.soldQty, totalQty: updated.totalQty };
+                  return { ...t, soldQty: nonNegativeNumber(updated.soldQty), totalQty: nonNegativeNumber(updated.totalQty) };
                 }
                 return t;
               });
@@ -309,7 +310,6 @@ const LiveEvents = () => {
           (tAcc, t) => {
             tAcc.total += t.totalQty;
             tAcc.sold += t.soldQty;
-            tAcc.checkedIn += t.checkedIn;
             return tAcc;
           },
           { total: 0, sold: 0, checkedIn: 0 }
@@ -318,17 +318,18 @@ const LiveEvents = () => {
           liveCount: acc.liveCount + 1,
           totalCapacity: acc.totalCapacity + ticketTotals.total,
           sold: acc.sold + ticketTotals.sold,
-          checkedIn: acc.checkedIn + ticketTotals.checkedIn,
+          checkedIn: acc.checkedIn + nonNegativeNumber(event.checkIns?.checkedInQuantity),
+          bookedQuantity: acc.bookedQuantity + nonNegativeNumber(event.checkIns?.bookedQuantity),
         };
       },
-      { liveCount: 0, totalCapacity: 0, sold: 0, checkedIn: 0 }
+      { liveCount: 0, totalCapacity: 0, sold: 0, checkedIn: 0, bookedQuantity: 0 }
     );
     const occupancy =
       totals.totalCapacity > 0
-        ? Math.round((totals.sold / totals.totalCapacity) * 100)
+        ? progressPercent(totals.sold, totals.totalCapacity)
         : 0;
     const checkInRate =
-      totals.sold > 0 ? Math.round((totals.checkedIn / totals.sold) * 100) : 0;
+      progressPercent(totals.checkedIn, totals.bookedQuantity);
     return { ...totals, occupancy, checkInRate };
   }, [liveEvents]);
 
@@ -338,12 +339,11 @@ const LiveEvents = () => {
       (acc, t) => {
         acc.total += t.totalQty;
         acc.sold += t.soldQty;
-        acc.checkedIn += t.checkedIn;
         return acc;
       },
       { total: 0, sold: 0, checkedIn: 0 }
     );
-    return { ...totals, remaining: Math.max(totals.total - totals.sold, 0) };
+    return { ...totals, checkedIn: nonNegativeNumber(event.checkIns?.checkedInQuantity), bookedQuantity: nonNegativeNumber(event.checkIns?.bookedQuantity), remaining: Math.max(totals.total - totals.sold, 0) };
   }, []);
 
   if (loading && liveEvents.length === 0) {
@@ -427,24 +427,14 @@ const LiveEvents = () => {
                   <span>Tickets Sold</span>
                   <span>{aggregateLive.sold} / {aggregateLive.totalCapacity}</span>
                 </div>
-                <div className="h-2 rounded-full bg-white/5 overflow-hidden border border-white/5 light:bg-muted light:border-border">
-                  <div
-                    className="h-full bg-gradient-to-r from-red-500 to-blue-500"
-                    style={{ width: `${aggregateLive.occupancy}%` }}
-                  />
-                </div>
+                <AnalyticsProgressBar label="Tickets sold" value={aggregateLive.occupancy} heightClassName="h-2" />
               </div>
               <div>
                 <div className="flex items-center justify-between text-xs text-white/70 light:text-muted-foreground">
                   <span>Checked-in</span>
                   <span>{aggregateLive.checkInRate}%</span>
                 </div>
-                <div className="h-2 rounded-full bg-white/5 overflow-hidden border border-white/5 light:bg-muted light:border-border">
-                  <div
-                    className="h-full bg-gradient-to-r from-emerald-400 to-cyan-500"
-                    style={{ width: `${aggregateLive.checkInRate}%` }}
-                  />
-                </div>
+                <AnalyticsProgressBar label="Checked-in" value={aggregateLive.checkInRate} heightClassName="h-2" fillStyle={{ backgroundColor: "hsl(var(--success))" }} />
               </div>
             </div>
           </div>
@@ -502,9 +492,9 @@ const LiveEvents = () => {
             {liveEvents.map((event) => {
               const totals = getEventTicketTotals(event);
               const occupancy =
-                totals.total > 0 ? Math.round((totals.sold / totals.total) * 100) : 0;
+                totals.total > 0 ? progressPercent(totals.sold, totals.total) : 0;
               const checkInRate =
-                totals.sold > 0 ? Math.round((totals.checkedIn / totals.sold) * 100) : 0;
+                progressPercent(totals.checkedIn, totals.bookedQuantity);
               return (
                 <button
                   key={event.id}
@@ -546,26 +536,16 @@ const LiveEvents = () => {
                         {totals.sold} / {totals.total}
                       </span>
                     </div>
-                    <div className="h-2 rounded-full bg-white/5 overflow-hidden border border-white/5 light:bg-muted light:border-border">
-                      <div
-                        className="h-full bg-gradient-to-r from-red-500 to-blue-500"
-                        style={{ width: `${occupancy}%` }}
-                      />
-                    </div>
+                    <AnalyticsProgressBar label="Tickets sold" value={occupancy} heightClassName="h-2" />
                     <div className="flex items-center justify-between text-xs text-white/70 light:text-muted-foreground">
                       <span>Checked-in</span>
                       <span>{checkInRate}%</span>
                     </div>
-                    <div className="h-2 rounded-full bg-white/5 overflow-hidden border border-white/5 light:bg-muted light:border-border">
-                      <div
-                        className="h-full bg-gradient-to-r from-emerald-400 to-cyan-500"
-                        style={{ width: `${checkInRate}%` }}
-                      />
-                    </div>
+                    <AnalyticsProgressBar label="Checked-in" value={checkInRate} heightClassName="h-2" fillStyle={{ backgroundColor: "hsl(var(--success))" }} />
                   </div>
                   <div className="flex items-center justify-between pt-2 border-t border-white/10 light:border-border">
                     <div className="flex items-center gap-2 text-sm text-white/70 light:text-muted-foreground">
-                      <Users className="w-4 h-4 text-cyan-300 light:text-info" /> {event.checkIns.total} checked-in
+                      <Users className="w-4 h-4 text-cyan-300 light:text-info" /> {event.checkIns?.total ?? "Unavailable"} checked-in
                     </div>
                     <div className="text-sm text-red-200 flex items-center gap-1 light:text-destructive">
                       View live board <ArrowRight className="w-4 h-4" />
@@ -594,7 +574,7 @@ const LiveEvents = () => {
             {upcomingEvents.map((event) => {
               const totals = getEventTicketTotals(event);
               const occupancy =
-                totals.total > 0 ? Math.round((totals.sold / totals.total) * 100) : 0;
+                totals.total > 0 ? progressPercent(totals.sold, totals.total) : 0;
               return (
                 <div
                   key={event.id}
@@ -626,12 +606,7 @@ const LiveEvents = () => {
                       {occupancy}% sold
                     </span>
                   </div>
-                  <div className="h-2 rounded-full bg-white/5 overflow-hidden border border-white/5 light:bg-muted light:border-border">
-                    <div
-                      className="h-full bg-gradient-to-r from-red-500 to-blue-500"
-                      style={{ width: `${occupancy}%` }}
-                    />
-                  </div>
+                  <AnalyticsProgressBar label="Tickets sold" value={occupancy} heightClassName="h-2" />
                   <div className="flex flex-wrap gap-2 text-xs text-white/70 light:text-muted-foreground">
                     {event.tags.map((tag) => (
                       <span key={tag} className="px-3 py-1 rounded-full bg-white/5 border border-white/10 light:bg-muted light:border-border">

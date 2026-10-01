@@ -619,7 +619,7 @@ const EventAnalyticsPage = () => {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <div className="w-16">
-                              <ProgressBar value={row.sellThroughRate} tone={row.sellThroughRate > 80 ? "emerald" : row.sellThroughRate > 50 ? "amber" : "muted"} />
+                              <ProgressBar value={row.sellThroughRate} tone="violet" />
                             </div>
                             <span className="text-white/50 light:text-muted-foreground">{row.sellThroughRate}%</span>
                           </div>

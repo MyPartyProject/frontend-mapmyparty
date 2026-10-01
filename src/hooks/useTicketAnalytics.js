@@ -16,7 +16,7 @@ import {
  */
 export const useTicketAnalytics = (eventId, authToken = null) => {
   const [tickets, setTickets] = useState([]);
-  const [checkIns, setCheckIns] = useState({ total: 0, totalBooked: 0, last15m: 0, checkInRate: 0 });
+  const [checkIns, setCheckIns] = useState(null);
   const [addOns, setAddOns] = useState([]);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState(null);
@@ -42,6 +42,8 @@ export const useTicketAnalytics = (eventId, authToken = null) => {
 
   useEffect(() => {
     eventIdRef.current = eventId;
+    setCheckIns(null);
+    setTickets([]);
 
     if (!eventId) {
       return;
@@ -122,7 +124,7 @@ export const useTicketAnalytics = (eventId, authToken = null) => {
       const handleCheckInStats = (data) => {
         console.log("[useTicketAnalytics] Received checkin_stats:", data);
         if (data.eventId === eventId) {
-          setCheckIns(data.checkIns || { total: 0, totalBooked: 0, last15m: 0, checkInRate: 0 });
+          setCheckIns(data.checkIns ?? null);
         }
       };
 
@@ -130,7 +132,7 @@ export const useTicketAnalytics = (eventId, authToken = null) => {
       const handleCheckInUpdate = (data) => {
         console.log("[useTicketAnalytics] Received checkin_update:", data);
         if (data.eventId === eventId) {
-          setCheckIns(data.checkIns || { total: 0, totalBooked: 0, last15m: 0, checkInRate: 0 });
+          setCheckIns(data.checkIns ?? null);
         }
       };
 
