@@ -575,6 +575,7 @@ const OrganizerOnboarding = () => {
                     className="bg-[#070b14] border-white/15 text-white light:bg-card light:border-border light:text-foreground" />
                   <div className="space-y-2">
                     <Label htmlFor="org-gst">GST Number</Label>
+                    <p className="text-xs text-muted-foreground">You can finish signup without GST details, but verified GST and a verified bank account are required before event payouts can be released.</p>
                     <Input
                       id="org-gst"
                       value={profileForm.gstNumber}

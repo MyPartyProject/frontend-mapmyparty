@@ -1,3 +1,5 @@
+import UpcomingSettlements from '@/components/organizer/UpcomingSettlements';
+import { apiFetch } from '@/config/api';
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,11 +61,12 @@ const payoutStatusOptions = [
   "RETRY_PENDING",
   "RECONCILED",
   "CANCELLED",
+  "REVERSED",
   "PENDING",
 ];
 
 const reviewableStatuses = new Set(["REVIEW_REQUIRED", "PENDING", "FAILED", "RETRY_PENDING"]);
-const terminalStatuses = new Set(["COMPLETED", "RECONCILED", "CANCELLED"]);
+const terminalStatuses = new Set(["COMPLETED", "RECONCILED", "CANCELLED", "REVERSED"]);
 
 const formatMoney = (value, maximumFractionDigits = 0) =>
   Number(value || 0).toLocaleString("en-IN", {
@@ -952,7 +955,7 @@ const PromoterPayouts = () => {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold">Payouts</h2>
-          <p className="text-muted-foreground">Calculate event settlement, review deductions, and release payout drafts.</p>
+          <p className="text-muted-foreground">Automatic settlement after seven days. Review blocked payouts and resolve exceptions.</p>
         </div>
         <Button variant="outline" size="sm" onClick={refresh} disabled={isFetching}>
           <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
@@ -1252,13 +1255,14 @@ const PromoterPayouts = () => {
                         }
                       />
                       <div className="flex flex-wrap justify-end gap-2">
+                        {isEventPayout && !payout.initiatedAt && !payout.automaticAttemptCount && reviewableStatuses.has(payout.status) && <Button variant="outline" onClick={async () => { try { const reason = statusForm[payout.id]?.remarks || statusForm[payout.id]?.blockedReason || ""; if (reason.trim().length < 10) { toast.error("Enter a recalculation reason of at least 10 characters in the remarks field"); return; } await apiFetch(`admin/payouts/${payout.id}/recalculate`, { method: "POST", body: JSON.stringify({ reason }) }); toast.success("Payout recalculated for review"); refresh(); } catch (error) { toast.error(error.message); } }}>Recalculate</Button>}
                         {isEventPayout && reviewableStatuses.has(payout.status) && (
                           <Button variant="outline" onClick={() => handleApprove(payout.id)} disabled={updatingId === payout.id}>
                             <ShieldCheck className="h-4 w-4" />
                             Approve
                           </Button>
                         )}
-                        {["APPROVED", "AUTO_APPROVED"].includes(payout.status) && !payout.manualInterventionRequired && (
+                        {payout.status === "APPROVED" && !payout.manualInterventionRequired && (
                           <Button onClick={() => handleDisburse(payout.id)} disabled={updatingId === payout.id}>
                             <Banknote className="h-4 w-4" />
                             Disburse
@@ -1286,6 +1290,7 @@ const PromoterPayouts = () => {
         </div>
       )}
 
+      <UpcomingSettlements admin />
       <PayoutDetailModal
         payout={detailPayout}
         loading={detailLoading}

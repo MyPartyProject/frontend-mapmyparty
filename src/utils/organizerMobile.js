@@ -5,11 +5,13 @@ const mobilePages = {
   "/organizer/dashboard-v2": "overview",
   "/organizer/myevents": "events",
   "/organizer/profile": "profile",
+  "/organizer/payouts": "payouts",
 };
 
 export function organizerMobilePage(pathname) {
   const path = pathname.replace(/\/+$/, "").toLowerCase();
   if (/^\/organizer\/events\/[^/]+\/preview$/.test(path)) return "eventDetail";
+  if (/^\/organizer\/payouts\/[^/]+$/.test(path)) return "payoutDetail";
   return mobilePages[path] || "desktop";
 }
 

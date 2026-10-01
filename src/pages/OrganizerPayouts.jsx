@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from 'react-router-dom';
 import { apiFetch } from "@/config/api";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,6 +12,7 @@ import {
   Wallet2,
 } from "lucide-react";
 import PayoutDetail from "@/components/organizer/PayoutDetail";
+import UpcomingSettlements from '@/components/organizer/UpcomingSettlements';
 
 const statusColors = {
   AUTO_APPROVED: "bg-blue-500/20 text-blue-300 border-blue-500/30 light:text-info",
@@ -23,10 +25,11 @@ const statusColors = {
   RETRY_PENDING: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30 light:text-warning",
   RECONCILED: "bg-green-500/20 text-green-400 border-green-500/30 light:text-success",
   CANCELLED: "bg-red-500/20 text-red-400 border-red-500/30 light:text-destructive",
+  REVERSED: "bg-red-500/20 text-red-400 border-red-500/30 light:text-destructive",
 };
 
 const formatStatus = (value) =>
-  String(value || "UNKNOWN")
+  String(['COMPLETED', 'RECONCILED'].includes(value) ? 'PAID' : value || "UNKNOWN")
     .toLowerCase()
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
@@ -35,7 +38,7 @@ const formatStatus = (value) =>
 const getPayoutAmount = (payout) => {
   const isEventPayout = Boolean(payout?.eventId || payout?.event);
   const snapshotAmount = Number(payout?.netPayoutAmount);
-  if (isEventPayout && Number.isFinite(snapshotAmount) && snapshotAmount > 0) {
+  if (isEventPayout && payout.netPayoutAmount != null && Number.isFinite(snapshotAmount)) {
     return snapshotAmount;
   }
   return Number(payout?.amount || 0);
@@ -44,17 +47,22 @@ const getPayoutAmount = (payout) => {
 const OrganizerPayouts = () => {
   const [payouts, setPayouts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [statusFilter, setStatusFilter] = useState("");
-  const [selectedPayoutId, setSelectedPayoutId] = useState(null);
+  const { id: selectedPayoutId } = useParams();
+  const navigate = useNavigate();
+  const setSelectedPayoutId = id => navigate(id ? `/organizer/payouts/${id}` : '/organizer/payouts');
   const [balanceAdjustments, setBalanceAdjustments] = useState({ items: [], summary: null });
+  const [balanceError, setBalanceError] = useState("");
   const [balanceLoading, setBalanceLoading] = useState(true);
   const limit = 20;
 
   const fetchPayouts = async () => {
     setLoading(true);
+    setError('');
     try {
       const params = new URLSearchParams({ page, limit });
       if (statusFilter) params.append("status", statusFilter);
@@ -65,6 +73,7 @@ const OrganizerPayouts = () => {
         setTotal(res.data.pagination.total);
       }
     } catch (err) {
+      setError(err.message || 'Unable to load payout history');
       console.error("Failed to fetch payouts:", err);
     } finally {
       setLoading(false);
@@ -73,6 +82,7 @@ const OrganizerPayouts = () => {
 
   const fetchBalanceAdjustments = async () => {
     setBalanceLoading(true);
+    setBalanceError("");
     try {
       const res = await apiFetch("organizer/me/balance-adjustments?limit=5");
       if (res.success) {
@@ -82,7 +92,7 @@ const OrganizerPayouts = () => {
         });
       }
     } catch (err) {
-      console.error("Failed to fetch balance adjustments:", err);
+      setBalanceError(err.message || "Unable to load balance adjustments");
     } finally {
       setBalanceLoading(false);
     }
@@ -107,6 +117,9 @@ const OrganizerPayouts = () => {
 
   return (
     <div className="space-y-6">
+      <UpcomingSettlements />
+      {error && <p role="alert" className="text-destructive">{error}</p>}
+      <button type="button" className="min-h-11 text-primary" disabled={loading} onClick={fetchPayouts}>Refresh payout history</button>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -135,10 +148,13 @@ const OrganizerPayouts = () => {
             <option value="RETRY_PENDING">Retry Pending</option>
             <option value="RECONCILED">Reconciled</option>
             <option value="CANCELLED">Cancelled</option>
+            <option value="REVERSED">Reversed</option>
+            <option value="AUTO_APPROVED">Scheduled automatically</option>
           </select>
         </div>
       </div>
 
+      {balanceError && <p role="alert" className="text-destructive">{balanceError} <button onClick={fetchBalanceAdjustments}>Retry</button></p>}
       <div className="bg-white/5 border border-white/10 rounded-xl p-5 light:bg-muted light:border-border">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
@@ -153,7 +169,7 @@ const OrganizerPayouts = () => {
           <div className="text-left lg:text-right">
             <p className="text-xs text-white/40 light:text-muted-foreground">Open balance</p>
             <p className={`text-2xl font-bold ${balanceAdjustments.summary?.openRemainingAmountCents > 0 ? "text-yellow-300 light:text-warning" : "text-green-300 light:text-success"}`}>
-              Rs. {((balanceAdjustments.summary?.openRemainingAmountCents || 0) / 100).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              {balanceError || balanceLoading ? "Unavailable" : `Rs. ${((balanceAdjustments.summary?.openRemainingAmountCents || 0) / 100).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}
             </p>
             <p className="text-xs text-white/40 light:text-muted-foreground">
               {balanceAdjustments.summary?.openAdjustmentCount || 0} open adjustment(s)

@@ -1,3 +1,5 @@
+import OrganizerPayouts from '@/pages/OrganizerPayouts';
+import PayoutDetail from './PayoutDetail';
 import ThemeToggle from "@/components/ThemeToggle";
 import { useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
@@ -109,7 +111,7 @@ export default function OrganizerMobile({ setupRequired = false }) {
   const [signingOut, setSigningOut] = useState(false);
   const [logoutError, setLogoutError] = useState(false);
   const page = organizerMobilePage(pathname);
-  const title = setupRequired ? "Organizer setup" : { overview: "Overview", events: "Your events", eventDetail: "Event details", profile: "Your profile", desktop: "Desktop workspace" }[page];
+  const title = setupRequired ? "Organizer setup" : { overview: "Overview", events: "Your events", eventDetail: "Event details", profile: "Your profile", payouts: "Payouts", payoutDetail: "Payout details", desktop: "Desktop workspace" }[page];
   const signOut = async () => {
     setSigningOut(true);
     setLogoutError(false);
@@ -137,6 +139,8 @@ export default function OrganizerMobile({ setupRequired = false }) {
           </div>
         </aside>
         {page === "overview" && <Overview />}
+        {page === "payouts" && <OrganizerPayouts />}
+        {page === "payoutDetail" && <PayoutDetail payoutId={pathname.split("/").filter(Boolean).at(-1)} onBack={() => navigate("/organizer/payouts")} />}
         {page === "events" && <OrganizerMobileEvents />}
         {page === "profile" && <Profile user={user} />}
         {page === "eventDetail" && <OrganizerMobileEventDetail />}
@@ -144,7 +148,7 @@ export default function OrganizerMobile({ setupRequired = false }) {
       {(setupRequired || page === "profile") && <div><button className={`${control} w-full`} disabled={signingOut} onClick={signOut}><LogOut size={16} />{signingOut ? "Signing out…" : "Sign out"}</button>{logoutError && <p role="alert" className="mt-2 text-sm">Unable to sign out. Please try again.</p>}</div>}
     </main>
     {!setupRequired && <nav aria-label="Organizer navigation" className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card pb-[env(safe-area-inset-bottom)]">
-      <div className="mx-auto grid max-w-2xl grid-cols-3">{[["Overview", "/organizer/dashboard", Home], ["Events", "/organizer/myevents", CalendarDays], ["Profile", "/organizer/profile", UserRound]].map(([text, to, Icon]) => <NavLink key={to} to={to} end aria-current={text === "Events" && page === "eventDetail" ? "page" : undefined} className={({ isActive }) => `flex min-h-16 flex-col items-center justify-center gap-1 px-2 py-2 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${(isActive || (text === "Events" && page === "eventDetail")) ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}><Icon size={21} aria-hidden="true" />{text}</NavLink>)}</div>
+      <div className="mx-auto grid max-w-2xl grid-cols-4">{[["Overview", "/organizer/dashboard", Home], ["Events", "/organizer/myevents", CalendarDays], ["Payouts", "/organizer/payouts", CalendarDays], ["Profile", "/organizer/profile", UserRound]].map(([text, to, Icon]) => <NavLink key={to} to={to} end aria-current={text === "Events" && page === "eventDetail" ? "page" : undefined} className={({ isActive }) => `flex min-h-16 flex-col items-center justify-center gap-1 px-2 py-2 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${(isActive || (text === "Events" && page === "eventDetail")) ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}><Icon size={21} aria-hidden="true" />{text}</NavLink>)}</div>
     </nav>}
   </div>;
 }

@@ -21,11 +21,12 @@ const statusColors = {
   FAILED: "bg-red-500/20 text-red-400 border-red-500/30 light:text-destructive",
   RETRY_PENDING: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30 light:text-warning",
   RECONCILED: "bg-green-500/20 text-green-400 border-green-500/30 light:text-success",
+  REVERSED: "bg-red-500/20 text-red-400 border-red-500/30 light:text-destructive",
   CANCELLED: "bg-red-500/20 text-red-400 border-red-500/30 light:text-destructive",
 };
 
 const formatStatus = (value) =>
-  String(value || "UNKNOWN")
+  String(["COMPLETED", "RECONCILED"].includes(value) ? "PAID" : value || "UNKNOWN")
     .toLowerCase()
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
@@ -36,7 +37,7 @@ const formatAmount = (value) => Number(value || 0).toFixed(2);
 const getPayoutAmount = (payout, summary) => {
   const isEventPayout = Boolean(summary || payout?.eventId || payout?.event);
   const snapshotAmount = Number(summary?.netPayoutAmount ?? payout?.netPayoutAmount);
-  if (isEventPayout && Number.isFinite(snapshotAmount) && snapshotAmount > 0) {
+  if (isEventPayout && Number.isFinite(snapshotAmount) && snapshotAmount >= 0) {
     return snapshotAmount;
   }
   return Number(payout?.amount || 0);
@@ -44,35 +45,41 @@ const getPayoutAmount = (payout, summary) => {
 
 const PayoutDetail = ({ payoutId, onBack }) => {
   const [data, setData] = useState(null);
+  const [error, setError] = useState("");
+  const [reload, setReload] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [downloadError, setDownloadError] = useState("");
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     const fetchDetail = async () => {
       setLoading(true);
+      setError("");
       try {
         const res = await apiFetch(`organizer/me/payouts/${payoutId}`);
         if (res.success) {
           setData(res.data);
         }
       } catch (err) {
-        console.error("Failed to fetch payout detail:", err);
+        setData(null);
+        setError(err.message || "Unable to load payout");
       } finally {
         setLoading(false);
       }
     };
     fetchDetail();
-  }, [payoutId]);
+  }, [payoutId, reload]);
 
   const handleDownloadInvoice = async () => {
     setDownloading(true);
+    setDownloadError("");
     try {
       await downloadFile(
         `/api/organizer/me/payouts/${payoutId}/invoice`,
         `payout-invoice-${payoutId.substring(0, 8)}.pdf`
       );
     } catch (err) {
-      console.error("Failed to download invoice:", err);
+      setDownloadError(err.message || "Unable to download statement. Please retry.");
     } finally {
       setDownloading(false);
     }
@@ -89,7 +96,8 @@ const PayoutDetail = ({ payoutId, onBack }) => {
   if (!data) {
     return (
       <div className="text-center py-20 text-white/50 light:text-muted-foreground">
-        <p>Payout not found.</p>
+        <p role="alert">{error || "Payout not found."}</p>
+        <button className="min-h-11 px-3" onClick={() => setReload(value => value + 1)}>Retry</button>
         <button onClick={onBack} className="mt-4 text-primary hover:underline light:text-accent-foreground">
           Go back
         </button>
@@ -112,6 +120,8 @@ const PayoutDetail = ({ payoutId, onBack }) => {
 
   return (
     <div className="space-y-6">
+      {downloadError && <p role="alert" className="text-destructive">{downloadError}</p>}
+      <button className="min-h-11 text-primary" onClick={() => setReload(value => value + 1)}>Refresh payout</button>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">

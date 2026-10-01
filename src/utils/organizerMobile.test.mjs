@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { organizerMobilePage, organizerMobileTotals, mobileEventList } from "./organizerMobile.js";
 
-test("only overview, events, and profile are available on mobile", () => {
+test("read-only overview, events, profile and payouts are available on mobile", () => {
   assert.equal(organizerMobilePage("/organizer/dashboard"), "overview");
   assert.equal(organizerMobilePage("/organizer/dashboard-v2"), "overview");
   assert.equal(organizerMobilePage("/organizer/myevents/"), "events");
@@ -11,10 +11,12 @@ test("only overview, events, and profile are available on mobile", () => {
   // Inventory real routes so new operational routes remain restricted by default.
   const app = readFileSync(new URL("../App.jsx", import.meta.url), "utf8");
   const routes = [...app.matchAll(/path="(\/organizer\/[^\"]+)"/g)].map((match) => match[1]);
-  const allowed = new Set(["/organizer/dashboard", "/organizer/dashboard-v2", "/organizer/myevents", "/organizer/profile", "/organizer/events/:eventId/preview"]);
+  const allowed = new Set(["/organizer/dashboard", "/organizer/dashboard-v2", "/organizer/myevents", "/organizer/profile", "/organizer/events/:eventId/preview", "/organizer/payouts", "/organizer/payouts/:id"]);
   for (const route of routes.filter((route) => !allowed.has(route))) {
     assert.equal(organizerMobilePage(route), "desktop", route);
   }
+  assert.equal(organizerMobilePage("/organizer/payouts"), "payouts");
+  assert.equal(organizerMobilePage("/organizer/payouts/test-id"), "payoutDetail");
   assert.equal(organizerMobilePage("/organizer/profile/edit"), "desktop");
   assert.equal(organizerMobilePage("/organizer/future-operation"), "desktop");
   assert.equal(organizerMobilePage("/organizer/events/draft-id/preview/"), "eventDetail");

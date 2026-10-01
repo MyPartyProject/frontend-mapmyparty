@@ -395,8 +395,8 @@ const EventAnalyticsPage = () => {
             />
             <MetricCard
               icon={Wallet}
-              label="Net Payout"
-              value={fmt(s.netPayout)}
+              label={s.settlement?.isEstimate ? "Estimated Payout" : "Payout"}
+              value={s.netPayout == null ? "Unavailable" : fmt(s.netPayout)}
               accent="bg-teal-500/15 text-teal-400"
             />
             <MetricCard
@@ -513,6 +513,7 @@ const EventAnalyticsPage = () => {
                   ))}
                 </div>
               </div>
+              <p className="mt-3 text-xs text-muted-foreground">Refunds: {fmt(revenue.feeBreakdown?.refunds)} ? Pending refunds: {fmt(revenue.feeBreakdown?.pendingRefunds)} ? Balance deductions: {fmt(revenue.feeBreakdown?.balanceDeductions)}</p>
               {/* Fee breakdown */}
               {revenue.feeBreakdown && (
                 <div className="mt-4 pt-3 border-t border-white/[0.06] grid grid-cols-3 gap-2 text-center text-xs light:border-border">
@@ -525,7 +526,7 @@ const EventAnalyticsPage = () => {
                     <p className="text-red-400 font-medium light:text-destructive">-{fmt(revenue.feeBreakdown.platformFees + revenue.feeBreakdown.gst)}</p>
                   </div>
                   <div>
-                    <p className="text-white/30 light:text-muted-foreground">Net Payout</p>
+                    <p className="text-white/30 light:text-muted-foreground">{s.settlement?.isEstimate ? "Estimated payout" : "Payout"}</p>
                     <p className="text-emerald-400 font-medium light:text-success">{fmt(revenue.feeBreakdown.netPayout)}</p>
                   </div>
                 </div>

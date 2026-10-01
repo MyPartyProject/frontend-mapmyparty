@@ -1,3 +1,4 @@
+import EventSettlementSummary from './EventSettlementSummary';
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, ArrowLeft, CalendarDays } from "lucide-react";
@@ -126,5 +127,5 @@ export function OrganizerMobileEventDetail() {
   const backParams = new URLSearchParams();
   if (params.get("search")) backParams.set("search", params.get("search"));
   if (params.get("page")) backParams.set("page", params.get("page"));
-  return <div className="space-y-3"><Link to={{ pathname: "/organizer/myevents", search: backParams.toString() }} className={button}><ArrowLeft size={16} />Back to events</Link><QueryState query={query}>{query.data && <EventContent event={query.data} />}</QueryState></div>;
+  return <div className="space-y-3"><Link to={{ pathname: "/organizer/myevents", search: backParams.toString() }} className={button}><ArrowLeft size={16} />Back to events</Link><QueryState query={query}>{query.data && <><EventContent event={query.data} /><EventSettlementSummary event={query.data} /></>}</QueryState></div>;
 }
