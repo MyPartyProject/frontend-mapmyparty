@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import ThemeToggle from "@/components/ThemeToggle";
 import {
   ArrowLeft,
   Calendar,
@@ -318,6 +317,11 @@ const PaymentCheckout = () => {
         setPaymentStatusMessage(response.data?.message || paymentStatusMessage);
       } catch (error) {
         console.warn("Automatic payment status check failed", error);
+        if (!cancelled && (error?.status === 429 || error?.status === 503)) {
+          const waitMs = Math.max(1000, Number(error.retryAfter || error?.data?.retryAfter || 5) * 1000);
+          timer = window.setTimeout(poll, waitMs);
+          return;
+        }
       }
 
       if (!cancelled) schedule();
@@ -465,7 +469,6 @@ const PaymentCheckout = () => {
             <ArrowLeft className="h-5 w-5 mr-1" /> Back
           </Button>
           <Badge className="bg-white/10 border-white/20 text-xs light:bg-muted light:border-border">Secure Checkout</Badge>
-          <ThemeToggle presentation="navbar" className="ml-auto" />
         </div>
 
         {summary && (

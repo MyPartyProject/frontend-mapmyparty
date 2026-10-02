@@ -1,4 +1,3 @@
-import ThemeToggle from "@/components/ThemeToggle";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -632,7 +631,6 @@ const PromoterDashboard = () => {
           </div>
         </div>
 
-        <div className="w-full shrink-0 px-3 pb-2"><ThemeToggle compact={!expanded} className={expanded ? "w-full" : ""} /></div>
         <nav className={`min-h-0 flex-1 overflow-y-auto py-4 [scrollbar-width:thin] [scrollbar-color:hsl(var(--sidebar-border))_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-sidebar-border/70 [&::-webkit-scrollbar-track]:bg-transparent ${
           expanded ? "w-full px-2 pr-3" : "w-full px-1 pr-2"
         }`}>

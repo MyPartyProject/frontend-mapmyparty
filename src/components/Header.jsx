@@ -862,7 +862,9 @@ const Header = ({
               Login / Sign Up
             </Button>
           )}
-          <ThemeToggle presentation="navbar" className="hidden md:inline-flex" />
+          {isLandingPage && (
+            <ThemeToggle presentation="navbar" className="hidden md:inline-flex" />
+          )}
         </div>
 
         {/* Mobile Menu Toggle */}
@@ -960,7 +962,7 @@ const Header = ({
         <div className="absolute inset-x-0 top-full z-50 md:hidden">
           <div className="mx-auto max-w-md px-3 pt-2">
             <nav className="animate-in fade-in slide-in-from-top-2 max-h-[calc(100vh-4.5rem)] overflow-y-auto rounded-[1.25rem] border border-border/45 bg-card/95 p-3 shadow-[var(--shadow-elegant)] backdrop-blur-xl duration-200">
-              <ThemeToggle className="mb-3 w-full" />
+              {isLandingPage && <ThemeToggle className="mb-3 w-full" />}
               <div className="flex flex-col gap-3">
                 {(!resolvedIsAuthenticated || forceMainHeader || isAttendee) && (
                   <div className={mobileSectionClass}>

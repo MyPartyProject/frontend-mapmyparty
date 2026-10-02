@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import ThemeToggle from "@/components/ThemeToggle";
 import {
   ArrowLeft,
   Building2,
@@ -22,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { apiFetch, buildUrl } from "@/config/api";
+import { apiFetch, buildUrl, requestBrowserChallenge } from "@/config/api";
 import OTPVerificationModal from "@/components/OTPVerificationModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { requestPasswordReset } from "@/services/authService";
@@ -275,14 +274,19 @@ const Auth = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     if (redirectTarget) {
       sessionStorage.setItem("postAuthRedirect", redirectTarget);
     } else {
       sessionStorage.removeItem("postAuthRedirect");
     }
 
-    window.location.href = buildUrl("/api/auth/google");
+    try {
+      await requestBrowserChallenge();
+      window.location.href = buildUrl("/api/auth/google");
+    } catch (error) {
+      toast.error(error?.message || "Complete the security check before continuing with Google");
+    }
   };
 
   const handleOtpVerificationSuccess = async () => {
@@ -319,7 +323,6 @@ const Auth = () => {
   if (!userType) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background via-background to-card text-foreground flex items-center justify-center p-3 sm:p-4">
-        <ThemeToggle compact className="absolute right-4 top-4" />
         <Button
           variant="ghost"
           className="absolute top-4 left-4 h-9 rounded-xl border border-border/60 bg-card/70 px-3 text-sm text-muted-foreground hover:bg-card hover:text-foreground"
@@ -398,7 +401,6 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-card text-foreground flex items-center justify-center p-3 sm:p-4">
-      <ThemeToggle compact className="absolute right-4 top-4" />
       <Button
         variant="ghost"
         className="absolute top-4 left-4 h-9 rounded-xl border border-border/60 bg-card/70 px-3 text-sm text-muted-foreground hover:bg-card hover:text-foreground"

@@ -6,7 +6,6 @@ import { BadgeCheck, Building2, CreditCard, ImagePlus, Loader2, Upload, X } from
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/config/api";
-import ThemeToggle from "@/components/ThemeToggle";
 import {
   clearOrganizerOnboardingCache,
   fetchOrganizerOnboardingStatus,
@@ -427,7 +426,6 @@ const OrganizerOnboarding = () => {
   return (
     <div className="min-h-screen bg-[#040712] text-white p-4 sm:p-6 lg:p-8 light:bg-background light:text-foreground">
       <div className="max-w-2xl mx-auto space-y-6">
-        <div className="flex justify-end"><ThemeToggle /></div>
         <div className="space-y-2">
           <p className="text-xs uppercase tracking-[0.2em] text-white/50 light:text-muted-foreground">Organizer Onboarding</p>
           <h1 className="text-2xl sm:text-3xl font-bold">Complete setup to continue</h1>

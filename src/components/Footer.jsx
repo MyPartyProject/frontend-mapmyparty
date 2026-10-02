@@ -1,4 +1,3 @@
-import ThemeToggle from "@/components/ThemeToggle";
 import { Facebook, Instagram, Linkedin, Twitter } from "lucide-react";
 import { Link } from "react-router-dom";
 import logo from "@/assets/MMP logo.svg";
@@ -30,7 +29,6 @@ const Footer = () => {
             </div>
             <div className="min-w-0 flex-1 space-y-2">
               <p className="text-base font-semibold text-foreground">Map MyParty</p>
-              <ThemeToggle />
               <p className="text-sm leading-relaxed text-muted-foreground">
                 Discover, manage, and celebrate events with a smooth, modern experience.
               </p>

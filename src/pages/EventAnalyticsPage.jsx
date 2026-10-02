@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import ThemeToggle from "@/components/ThemeToggle";
 import {
   ArrowLeft,
   Download,
@@ -348,7 +347,6 @@ const EventAnalyticsPage = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <ThemeToggle presentation="navbar" />
             <button
               onClick={refetch}
               className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.06] transition-colors light:text-muted-foreground light:hover:text-foreground light:hover:bg-muted"

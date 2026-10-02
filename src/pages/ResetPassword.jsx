@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff, KeyRound, Loader2, ShieldCheck } from "lucide-react";
-import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,7 +72,6 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4 light:bg-surface">
-      <ThemeToggle compact className="absolute right-6 top-6" />
       <Button
         variant="ghost"
         className="absolute top-6 left-6 text-gray-400 hover:text-white hover:bg-gray-900 rounded-lg light:text-muted-foreground light:hover:text-foreground light:hover:bg-surface"

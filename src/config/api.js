@@ -25,6 +25,156 @@ export function buildUrl(path = "") {
 
 let refreshPromise = null;
 let authFailureHandler = null;
+let challengePromise = null;
+
+const CLEARANCE_STORAGE_KEY = "mmp_browser_clearance";
+const CLEARANCE_HEADER = "x-browser-clearance";
+const TURNSTILE_ACTION = "mapmyparty_access";
+
+function readStoredClearance() {
+  if (typeof localStorage === "undefined") return "";
+  try {
+    const parsed = JSON.parse(localStorage.getItem(CLEARANCE_STORAGE_KEY) || "null");
+    if (!parsed?.token || !parsed?.expiresAt || parsed.expiresAt <= Date.now()) {
+      localStorage.removeItem(CLEARANCE_STORAGE_KEY);
+      return "";
+    }
+    return parsed.token;
+  } catch {
+    return "";
+  }
+}
+
+function storeClearance(token, expiresInSeconds) {
+  localStorage.setItem(
+    CLEARANCE_STORAGE_KEY,
+    JSON.stringify({
+      token,
+      expiresAt: Date.now() + Number(expiresInSeconds || 3600) * 1000,
+    }),
+  );
+}
+
+function loadTurnstileScript() {
+  if (typeof window === "undefined") {
+    return Promise.reject(new Error("Security check is only available in the browser"));
+  }
+  if (window.turnstile) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-turnstile="true"]');
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => reject(new Error("Security check failed to load")), { once: true });
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    script.async = true;
+    script.dataset.turnstile = "true";
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Security check failed to load"));
+    document.head.appendChild(script);
+  });
+}
+
+function presentTurnstileChallenge() {
+  const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+  if (!siteKey) {
+    return Promise.reject(new Error("Security check is not configured"));
+  }
+
+  return new Promise((resolve, reject) => {
+    const dialog = document.createElement("div");
+    dialog.setAttribute("role", "dialog");
+    dialog.setAttribute("aria-modal", "true");
+    dialog.setAttribute("aria-labelledby", "mmp-challenge-title");
+    dialog.style.cssText = "position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,.55);padding:16px;";
+    dialog.innerHTML = `
+      <div style="width:min(420px,100%);background:#fff;color:#0f172a;border-radius:16px;padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.25);">
+        <h2 id="mmp-challenge-title" style="margin:0 0 8px;font-size:18px;">Confirm you are using a browser</h2>
+        <p id="mmp-challenge-message" style="margin:0 0 16px;font-size:14px;">Complete the security check to continue. Your form entries stay on this page.</p>
+        <div id="mmp-turnstile-slot"></div>
+        <p id="mmp-challenge-timer" style="min-height:20px;margin:12px 0 0;font-size:13px;"></p>
+        <button type="button" id="mmp-challenge-cancel" style="margin-top:12px;">Cancel</button>
+      </div>
+    `;
+    document.body.appendChild(dialog);
+    const previousFocus = document.activeElement;
+    let settled = false;
+    let widgetId = null;
+    let cooldownTimer = null;
+
+    const finish = (callback) => {
+      if (settled) return;
+      settled = true;
+      if (cooldownTimer) window.clearInterval(cooldownTimer);
+      if (widgetId !== null && window.turnstile) window.turnstile.remove(widgetId);
+      dialog.remove();
+      if (previousFocus && typeof previousFocus.focus === "function") previousFocus.focus();
+      callback();
+    };
+
+    dialog.querySelector("#mmp-challenge-cancel").addEventListener("click", () => {
+      finish(() => reject(new Error("Security check cancelled")));
+    });
+
+    loadTurnstileScript()
+      .then(() => {
+        widgetId = window.turnstile.render(dialog.querySelector("#mmp-turnstile-slot"), {
+          sitekey: siteKey,
+          action: TURNSTILE_ACTION,
+          callback: async (token) => {
+            try {
+              const response = await customFetch(buildUrl("auth/challenge/verify"), {
+                method: "POST",
+                skipChallenge: true,
+                body: JSON.stringify({ token, action: TURNSTILE_ACTION, attemptId: crypto.randomUUID() }),
+              });
+              const payload = await response.json();
+              if (!payload?.clearance) throw new Error("Security check could not be confirmed");
+              storeClearance(payload.clearance, payload.expiresIn);
+              const retryAfter = Number(payload.retryAfter || 0);
+              if (retryAfter > 0) {
+                const timer = dialog.querySelector("#mmp-challenge-timer");
+                let remaining = retryAfter;
+                timer.textContent = `Continuing in ${remaining}s`;
+                cooldownTimer = window.setInterval(() => {
+                  remaining -= 1;
+                  timer.textContent = remaining > 0 ? `Continuing in ${remaining}s` : "";
+                  if (remaining <= 0) finish(() => resolve(payload.clearance));
+                }, 1000);
+                return;
+              }
+              finish(() => resolve(payload.clearance));
+            } catch (error) {
+              const timer = dialog.querySelector("#mmp-challenge-timer");
+              const wait = Number(error?.retryAfter || error?.data?.retryAfter || 0);
+              timer.textContent = error?.message || "Security check failed";
+              if (wait > 0) {
+                let remaining = wait;
+                cooldownTimer = window.setInterval(() => {
+                  remaining -= 1;
+                  timer.textContent = remaining > 0 ? `Retry available in ${remaining}s` : error?.message || "";
+                  if (remaining <= 0 && window.turnstile && widgetId !== null) window.turnstile.reset(widgetId);
+                }, 1000);
+              } else if (window.turnstile && widgetId !== null) {
+                window.turnstile.reset(widgetId);
+              }
+            }
+          },
+        });
+      })
+      .catch((error) => finish(() => reject(error)));
+  });
+}
+
+export function requestBrowserChallenge() {
+  if (challengePromise) return challengePromise;
+  challengePromise = presentTurnstileChallenge().finally(() => {
+    challengePromise = null;
+  });
+  return challengePromise;
+}
 
 function isRefreshRequest(url) {
   return String(url).includes("/auth/refresh");
@@ -88,25 +238,27 @@ export function setAuthFailureHandler(handler) {
   authFailureHandler = typeof handler === "function" ? handler : null;
 }
 
-export async function customFetch(url, options = {}, retrying = false) {
+export async function customFetch(url, options = {}, retrying = false, challengeRetried = false) {
   const {
     headers = {},
     body,
     skipAuthRefresh = false,
     suppressAuthFailure = false,
+    skipChallenge = false,
+    skipClearance = false,
     ...otherOptions
   } = options;
   const isFormData = body instanceof FormData;
+  const clearance = skipClearance ? "" : readStoredClearance();
 
   const response = await fetch(url, {
     ...otherOptions,
     credentials: "include",
-    headers: isFormData
-      ? { ...headers }
-      : {
-          "Content-Type": "application/json",
-          ...headers,
-        },
+    headers: {
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
+      ...(clearance ? { [CLEARANCE_HEADER]: clearance } : {}),
+      ...headers,
+    },
     body,
   });
 
@@ -132,9 +284,21 @@ export async function customFetch(url, options = {}, retrying = false) {
       console.error("API 500:", url, errorData);
     }
 
+    if (
+      response.status === 429
+      && errorData.reason === "challenge_required"
+      && !skipChallenge
+      && !challengeRetried
+    ) {
+      await requestBrowserChallenge();
+      return customFetch(url, options, retrying, true);
+    }
+
     const error = new Error(parseErrorMessage(response.status, errorData));
     error.status = response.status;
     error.data = errorData;
+    error.reason = errorData.reason;
+    error.retryAfter = Number(errorData.retryAfter || response.headers.get("Retry-After") || 0);
     throw error;
   }
 
