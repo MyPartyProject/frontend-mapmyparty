@@ -15,7 +15,7 @@ const getQrBoxSize = () => {
   return 280;
 };
 
-const QRScanner = ({ onScan, onClose, isProcessing, isPaused = false }) => {
+const QRScanner = ({ onScan, onClose, isProcessing, isPaused = false, rearOnly = false }) => {
   const scannerRef = useRef(null);
   const html5QrCodeRef = useRef(null);
   const lastScannedRef = useRef({ text: "", time: 0 });
@@ -104,6 +104,29 @@ const QRScanner = ({ onScan, onClose, isProcessing, isPaused = false }) => {
 
     const init = async () => {
       try {
+        if (rearOnly) {
+          if (!navigator.mediaDevices?.getSupportedConstraints?.().facingMode) {
+            throw new Error('Rear camera selection is unavailable. Please use the manual ticket code.');
+          }
+          await startWithCamera({ facingMode: { exact: 'environment' } });
+          if (!mounted) {
+            await html5QrCodeRef.current?.stop();
+            html5QrCodeRef.current?.clear();
+            return;
+          }
+          const settings = html5QrCodeRef.current.getRunningTrackSettings();
+          if (settings.facingMode && settings.facingMode !== 'environment') {
+            await html5QrCodeRef.current.stop();
+            throw new Error('Rear camera unavailable. Please use the manual ticket code.');
+          }
+          const devices = await Html5Qrcode.getCameras();
+          if (!mounted) return;
+          const rearDevices = devices.filter(camera => camera.id === settings.deviceId || /back|rear|environment/i.test(camera.label));
+          setCameras(rearDevices);
+          setActiveCameraIdx(rearDevices.findIndex(camera => camera.id === settings.deviceId));
+          setIsStarting(false);
+          return;
+        }
         // Enumerate cameras first
         const deviceList = await Html5Qrcode.getCameras();
         if (!mounted) return;
@@ -158,7 +181,7 @@ const QRScanner = ({ onScan, onClose, isProcessing, isPaused = false }) => {
           .catch(() => {});
       }
     };
-  }, [startWithCamera]);
+  }, [startWithCamera, rearOnly]);
 
   const switchCamera = async () => {
     if (cameras.length < 2) return;

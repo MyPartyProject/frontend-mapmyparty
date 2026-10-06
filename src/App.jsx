@@ -47,6 +47,7 @@ import EventAnalyticsPage from "./pages/EventAnalyticsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EventOverviewPage from "./pages/EventOverviewPage";
 import ReceptionDetail from "./pages/ReceptionDetail";
+import EntryAgent, { EntryAgentLogin } from './pages/EntryAgent';
 import About from "./pages/About";
 import HostEvents from "./pages/HostEvents";
 import Contact from "./pages/Contact";
@@ -129,6 +130,11 @@ const App = () => {
             <AuthProvider>
               <ScrollToTop />
               <Routes>
+              <Route path="/entry-agent/login" element={<EntryAgentLogin />} />
+              <Route path="/entry-agent" element={<Navigate to="/entry-agent/events" replace />} />
+              <Route path="/entry-agent/events" element={<EntryAgent />} />
+              <Route path="/entry-agent/events/:eventId" element={<EntryAgent />} />
+              <Route path="/organizer/entry-agents" element={<ProtectedRoute requiredRole="organizer"><OrganizerDashboard /></ProtectedRoute>} />
               <Route
                 element={
                   <PublicShell

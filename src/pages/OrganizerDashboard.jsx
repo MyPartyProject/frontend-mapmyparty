@@ -1,4 +1,5 @@
 import ThemeToggle from "@/components/ThemeToggle";
+import EntryAgentManagement from '@/components/EntryAgentManagement';
 import { useBankInput } from "@/hooks/useBankInput";
 import { buildOrganizerProfile as buildInitialData } from '@/utils/organizerProfile';
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -1533,6 +1534,7 @@ const OrganizerDashboard = () => {
     { id: "analytics", name: "Audience Analytics", icon: <Users className="w-6 h-6 mr-3" /> },
     { id: "live", name: "Live Events", icon: <Radio className="w-6 h-6 mr-3" /> },
     { id: "reception", name: "Reception", icon: <Shield className="w-6 h-6 mr-3" /> },
+    { id: "entry-agents", name: "Entry Agents", icon: <Shield className="w-6 h-6 mr-3" /> },
     { id: "food-beverages", name: "Food & Beverages", icon: <CupSoda className="w-6 h-6 mr-3" /> },
     { id: "payouts", name: "Payouts", icon: <CreditCard className="w-6 h-6 mr-3" /> },
     { id: "support", name: "Support", icon: <LifeBuoy className="w-6 h-6 mr-3" /> },
@@ -1547,6 +1549,7 @@ const OrganizerDashboard = () => {
     else if (path.startsWith("/organizer/analytics")) setActiveTab("analytics");
     else if (path.startsWith("/organizer/live")) setActiveTab("live");
     else if (path.startsWith("/organizer/reception")) setActiveTab("reception");
+    else if (path.startsWith("/organizer/entry-agents")) setActiveTab("entry-agents");
     else if (path.startsWith("/organizer/food-beverages")) setActiveTab("food-beverages");
     else if (path.startsWith("/organizer/payouts")) setActiveTab("payouts");
     else if (path.startsWith("/organizer/support")) setActiveTab("support");
@@ -1693,6 +1696,7 @@ const OrganizerDashboard = () => {
             {activeTab === "live" && !liveEventId && <LiveEvents />}
             {activeTab === "live" && liveEventId && <LiveEventPage embedded />}
             {activeTab === "reception" && <Reception />}
+            {activeTab === "entry-agents" && <EntryAgentManagement />}
             {activeTab === "food-beverages" && <FoodBeverages />}
             {activeTab === "payouts" && <OrganizerPayouts />}
             {activeTab === "attendees" && <EventAttendees />}

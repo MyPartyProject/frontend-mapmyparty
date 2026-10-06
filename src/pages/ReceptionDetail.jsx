@@ -20,6 +20,7 @@ import {
 import { apiFetch } from "@/config/api";
 import QRScanner from "@/components/QRScanner";
 import CheckInResult from "@/components/CheckInResult";
+import { EntryAgentAssignments } from '@/components/EntryAgentManagement';
 import { buildCanonicalQrPayload, extractValidQrToken } from "@/utils/qrPayload";
 
 // Date formatter utility
@@ -516,8 +517,10 @@ const ReceptionDetail = () => {
         throw new Error("Check-in failed. Try again.");
       }
       setDecision("allowed");
-      setAccepted((prev) => prev + 1);
-      setMessage(`Allowed ${ticket.holder}. Check-in completed.`);
+      if (!data.alreadyCheckedIn) setAccepted((prev) => prev + 1);
+      setMessage(data.alreadyCheckedIn
+        ? `${ticket.holder} was already checked in. No additional admission was recorded.`
+        : `Allowed ${ticket.holder}. Check-in completed.`);
       setTicket((prev) => (prev ? { ...prev, alreadyCheckedIn: true, status: "Checked-in" } : prev));
     } catch (err) {
       console.error("Check-in failed:", err);
@@ -579,6 +582,7 @@ const ReceptionDetail = () => {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 lg:px-6 py-6 space-y-5">
+        <EntryAgentAssignments eventId={id} />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Stat label="Checked-in" value={accepted} hint="Includes prior scans" icon={Users} />
           <Stat label="Rejected" value={rejected} hint="Flagged at entry" icon={XCircle} />

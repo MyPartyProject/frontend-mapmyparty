@@ -1,4 +1,5 @@
 import AnalyticsProgressBar from "@/components/analytics/AnalyticsProgressBar";
+import { EntryAgentAssignments } from '@/components/EntryAgentManagement';
 import { nonNegativeNumber, progressPercent } from "@/lib/progress";
 import { useEventMetadataRefresh } from '@/hooks/useEventMetadataRefresh';
 import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
@@ -747,6 +748,7 @@ const LiveEventPage = ({ embedded = false }) => {
         <div className="flex-1 flex flex-col overflow-hidden text-white light:text-foreground">
           <main className="flex-1 overflow-y-auto">
             <div className="p-4 lg:p-6 space-y-6">
+            <EntryAgentAssignments eventId={id} />
             {/* Hero */}
             <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-red-600/25 via-purple-500/15 to-blue-600/25 shadow-lg shadow-black/40 light:border-border light:shadow-black/5">
               <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.2),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(255,255,255,0.15),transparent_30%)]" />
@@ -1164,6 +1166,7 @@ const LiveEventPage = ({ embedded = false }) => {
       <div className="flex-1 flex flex-col overflow-hidden lg:h-screen">
         <main className="flex-1 overflow-y-auto">
           <div className="p-4 lg:p-6 space-y-6">
+            <EntryAgentAssignments eventId={id} />
             {/* Hero */}
             <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-red-600/25 via-purple-500/15 to-blue-600/25 shadow-lg shadow-black/40 light:border-border light:shadow-black/5">
               <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.2),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(255,255,255,0.15),transparent_30%)]" />

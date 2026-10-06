@@ -1,0 +1,14 @@
+.entry-agent-ui { font-size: 13px; line-height: 1.5; }
+.entry-agent-ui :is(p, label, input, textarea, button) { font-size: 13px; line-height: 1.5; }
+.entry-agent-ui :is(h2, h3) { font-size: 14px; line-height: 1.4; }
+.entry-agent-ui h1 { font-size: 20px; line-height: 1.3; }
+.entry-agent-ui .text-xs { font-size: 12px; }
+.entry-agent-ui button:focus-visible, .entry-agent-ui summary:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+.entry-agent-actions { opacity: 0; transition: opacity 120ms; }
+.entry-agent-card:hover .entry-agent-actions, .entry-agent-card:focus-within .entry-agent-actions { opacity: 1; }
+@media (hover: none), (pointer: coarse) {
+  .entry-agent-actions { opacity: 1; }
+  .entry-agent-ui button, .entry-agent-ui input:not([type=checkbox]) { min-height: 44px; }
+  .entry-agent-ui input:not([type=checkbox]), .entry-agent-ui textarea { font-size: 16px; }
+  .entry-agent-actions button { min-width: 44px; }
+}
