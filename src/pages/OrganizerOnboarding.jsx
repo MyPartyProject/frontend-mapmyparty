@@ -399,7 +399,7 @@ const OrganizerOnboarding = () => {
       await applyVerificationStatus(response);
     } catch (error) {
       toast.error(error?.message || "Failed to request bank verification");
-      if ([409, 503].includes(error?.status)) {
+      if ([409, 422, 503].includes(error?.status)) {
         clearOrganizerOnboardingCache();
         await refreshStatus(true);
       }

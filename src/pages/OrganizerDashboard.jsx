@@ -381,7 +381,7 @@ const OrganizerProfileContent = ({ user }) => {
       toast.success(res?.message || "Bank verification requested");
     } catch (error) {
       toast.error(error?.message || "Failed to request bank verification");
-      if ([409, 503].includes(error?.status)) await handleOpenBankPanel();
+      if ([409, 422, 503].includes(error?.status)) await handleOpenBankPanel();
     } finally {
       setIsBankVerifying(false);
     }

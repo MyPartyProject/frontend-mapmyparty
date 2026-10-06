@@ -42,10 +42,10 @@ const PromoterBilling = () => {
       await manuallyVerifyAdminBank(bankId, {
         reviewNotes: reviewDrafts[bankId]?.reviewNotes || "",
       });
-      toast.success("Bank account verified.");
+      toast.success("Review approved. Cashfree verification is required for payouts.");
       refresh();
     } catch (updateError) {
-      toast.error(updateError.message || "Failed to verify bank account.");
+      toast.error(updateError.message || "Failed to approve bank review.");
     } finally {
       setUpdatingId(null);
     }
@@ -211,7 +211,7 @@ const PromoterBilling = () => {
                         className="gap-2"
                       >
                         {updatingId === bank.id ? <Loader className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                        Verify
+                        Approve review
                       </Button>
                       <Button
                         variant="destructive"
