@@ -1,3 +1,4 @@
+import { bankVerificationMessage } from "@/utils/bankInput";
 import ThemeToggle from "@/components/ThemeToggle";
 import EntryAgentManagement from '@/components/EntryAgentManagement';
 import { useBankInput } from "@/hooks/useBankInput";
@@ -94,6 +95,7 @@ const OrganizerProfileContent = ({ user }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [isBankSaving, setIsBankSaving] = useState(false);
   const [isBankVerifying, setIsBankVerifying] = useState(false);
+  const [bankPollingPaused, setBankPollingPaused] = useState(false);
   const [bankPassword, setBankPassword] = useState("");
   const [isBankLoading, setIsBankLoading] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -379,7 +381,7 @@ const OrganizerProfileContent = ({ user }) => {
       toast.success(res?.message || "Bank verification requested");
     } catch (error) {
       toast.error(error?.message || "Failed to request bank verification");
-      if (error?.status === 409) await handleOpenBankPanel();
+      if ([409, 503].includes(error?.status)) await handleOpenBankPanel();
     } finally {
       setIsBankVerifying(false);
     }
@@ -408,6 +410,7 @@ const OrganizerProfileContent = ({ user }) => {
 
     let cancelled = false;
     let checks = 0;
+    setBankPollingPaused(false);
 
     const pollBankVerificationStatus = async () => {
       if (bankVerificationPollRef.current || cancelled) return;
@@ -418,6 +421,7 @@ const OrganizerProfileContent = ({ user }) => {
         const res = await apiFetch("organizer/me/bank-details/verification/status", {
           method: "GET",
         });
+        if (cancelled) return;
         const payload = res?.data || res || {};
         const data = payload.bankDetails || payload;
         const nextStatus = payload.bankVerificationStatus || data.verificationStatus;
@@ -430,7 +434,7 @@ const OrganizerProfileContent = ({ user }) => {
         if (nextStatus === "VERIFIED" && bankDraft.verificationStatus !== "VERIFIED") {
           toast.success("Bank verification completed successfully");
         } else if (nextStatus === "FAILED" && bankDraft.verificationStatus !== "FAILED") {
-          toast.error(data.verificationFailureReason || "Bank verification failed");
+          toast.error(bankVerificationMessage(data.verificationFailureReason));
         }
       } catch (error) {
         if (!cancelled) {
@@ -438,7 +442,10 @@ const OrganizerProfileContent = ({ user }) => {
         }
       } finally {
         bankVerificationPollRef.current = false;
-        if (checks >= 8) window.clearInterval(intervalId);
+        if (checks >= 8) {
+          window.clearInterval(intervalId);
+          if (!cancelled) setBankPollingPaused(true);
+        }
       }
     };
 
@@ -1311,7 +1318,7 @@ const OrganizerProfileContent = ({ user }) => {
                     <p className="text-xs uppercase tracking-wide text-white/50 light:text-muted-foreground">Status</p>
                     <p className="text-lg font-semibold text-white flex items-center gap-2 light:text-foreground">
                       <CheckCircle2 className="w-4 h-4 text-accent light:text-accent-foreground" />
-                      {bankDraft.verificationStatus}
+                      {bankDraft.verificationFailureReason?.startsWith("NAME_REVIEW_REQUIRED:") ? "Needs review" : bankDraft.verificationStatus}
                     </p>
                   </div>
                 </div>
@@ -1325,7 +1332,7 @@ const OrganizerProfileContent = ({ user }) => {
                       Payouts stay locked until this account is verified.
                     </p>
                     {bankDraft.verificationFailureReason && (
-                      <p className="text-xs text-red-300 mt-2 light:text-destructive">{bankDraft.verificationFailureReason}</p>
+                      <p className="text-xs text-red-300 mt-2 light:text-destructive">{bankVerificationMessage(bankDraft.verificationFailureReason)}</p>
                     )}
                   </div>
                   <button
@@ -1368,6 +1375,13 @@ const OrganizerProfileContent = ({ user }) => {
                         : `Cashfree beneficiary status: ${bankDraft.beneficiaryStatus || "Pending"}`}
                   </p>
                 </div>
+              )}
+
+              {bankExists && bankDraft.verificationStatus === "VERIFIED" && !bankDraft.payoutEnabled && (
+                <button type="button" onClick={handleRefreshBankVerificationStatus} disabled={isBankEditing} className="text-sm underline disabled:opacity-60">Refresh status</button>
+              )}
+              {bankPollingPaused && bankDraft.verificationStatus === "VERIFICATION_IN_PROGRESS" && (
+                <p role="status" className="text-sm text-muted-foreground">Automatic checks paused. Verification continues in the background; use Refresh status to check again.</p>
               )}
 
               {/* Prompt when no bank details */}

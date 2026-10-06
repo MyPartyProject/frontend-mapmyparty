@@ -1,4 +1,4 @@
-export const ORGANIZER_COMPACT_QUERY = "(width < 1024px)";
+export const ORGANIZER_COMPACT_QUERY = "(width < 768px)";
 
 const mobilePages = {
   "/organizer/dashboard": "overview",

@@ -1,3 +1,4 @@
+import { bankVerificationMessage } from "@/utils/bankInput";
 import { useBankInput } from "@/hooks/useBankInput";
 import IndiaLocationFields from "@/components/IndiaLocationFields";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -57,6 +58,7 @@ const OrganizerOnboarding = () => {
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingBank, setSavingBank] = useState(false);
   const [requestingVerification, setRequestingVerification] = useState(false);
+  const [bankPollingPaused, setBankPollingPaused] = useState(false);
   const [isEditingBank, setIsEditingBank] = useState(false);
 
   const [profileForm, setProfileForm] = useState(() => buildProfileDefaults(user));
@@ -147,7 +149,7 @@ const OrganizerOnboarding = () => {
         nextVerificationStatus === "FAILED" &&
         status?.bankVerificationStatus !== "FAILED"
       ) {
-        toast.error(nextBankDetails.verificationFailureReason || "Bank verification failed");
+        toast.error(bankVerificationMessage(nextBankDetails.verificationFailureReason));
         clearOrganizerOnboardingCache();
       }
     },
@@ -161,6 +163,7 @@ const OrganizerOnboarding = () => {
 
     let cancelled = false;
     let checks = 0;
+    setBankPollingPaused(false);
 
     const pollVerificationStatus = async () => {
       if (verificationPollRef.current || cancelled) return;
@@ -179,7 +182,10 @@ const OrganizerOnboarding = () => {
         }
       } finally {
         verificationPollRef.current = false;
-        if (checks >= 8) window.clearInterval(intervalId);
+        if (checks >= 8) {
+          window.clearInterval(intervalId);
+          if (!cancelled) setBankPollingPaused(true);
+        }
       }
     };
 
@@ -393,7 +399,7 @@ const OrganizerOnboarding = () => {
       await applyVerificationStatus(response);
     } catch (error) {
       toast.error(error?.message || "Failed to request bank verification");
-      if (error?.status === 409) {
+      if ([409, 503].includes(error?.status)) {
         clearOrganizerOnboardingCache();
         await refreshStatus(true);
       }
@@ -695,9 +701,9 @@ const OrganizerOnboarding = () => {
               <div className="rounded-xl border border-white/10 bg-white/5 p-4 light:border-border light:bg-muted">
                 <p className="text-sm text-white/70 light:text-muted-foreground">{status?.bankDetails?.accountHolder} · {status?.bankDetails?.accountNumberMasked} · {status?.bankDetails?.ifscCode}</p>
                 <p className="text-xs uppercase tracking-[0.2em] text-white/45 light:text-muted-foreground">Current status</p>
-                <p className="mt-2 text-lg font-semibold">{status?.bankVerificationStatus || "UNVERIFIED"}</p>
+                <p className="mt-2 text-lg font-semibold">{status?.bankDetails?.verificationFailureReason?.startsWith("NAME_REVIEW_REQUIRED:") ? "Needs review" : status?.bankVerificationStatus || "UNVERIFIED"}</p>
                 {status?.bankDetails?.verificationFailureReason && (
-                  <p className="mt-2 text-sm text-red-300 light:text-destructive">{status.bankDetails.verificationFailureReason}</p>
+                  <p className="mt-2 text-sm text-red-300 light:text-destructive">{bankVerificationMessage(status.bankDetails.verificationFailureReason)}</p>
                 )}
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
@@ -719,6 +725,9 @@ const OrganizerOnboarding = () => {
                     "Verify Bank Account"
                   )}
                 </Button>
+                {bankPollingPaused && status?.bankVerificationStatus === "VERIFICATION_IN_PROGRESS" && (
+                  <p role="status" className="text-sm text-muted-foreground">Automatic checks paused. Verification continues in the background; use Refresh status to check again.</p>
+                )}
                 <Button type="button" variant="outline" onClick={handleRefreshBankVerificationStatus} className="border-white/15 bg-transparent text-white hover:bg-white/10 light:border-border light:text-foreground light:hover:bg-muted">Refresh status</Button>
                 <Button
                   type="button"

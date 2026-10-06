@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { QrCode, ShieldCheck, LogOut, ArrowLeft, RefreshCw } from 'lucide-react';
+import { QrCode, ShieldCheck, LogOut, ArrowLeft, RefreshCw, Lock } from 'lucide-react';
 import EntryAgentPassword from '@/components/EntryAgentPassword';
 import QRScanner from '@/components/QRScanner';
 import { agentFetch, agentDate } from '@/services/entryAgentService';
@@ -62,10 +62,12 @@ function AgentWorkspace({ eventId }) {
   const [manualCode, setManualCode] = useState('');
   const [page, setPage] = useState(1);
   const [updated, setUpdated] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [ready, setReady] = useState(false);
   const actionRef = useRef(false);
   const mounted = useRef(true);
   const refreshId = useRef(0);
+  const refreshInFlight = useRef(false);
   const lastLookup = useRef(null);
   const manualInput = useRef(null);
   const ticketPanel = useRef(null);
@@ -82,25 +84,35 @@ function AgentWorkspace({ eventId }) {
   }, [navigate]);
 
   const refresh = useCallback(async () => {
+    if (refreshInFlight.current) return;
+    refreshInFlight.current = true;
+    setRefreshing(true);
     const request = ++refreshId.current;
     try {
-      const [profile, next] = await Promise.all([agentFetch('me'), agentFetch(eventId ? `events/${eventId}?page=${page}` : 'events')]);
+      const results = await Promise.allSettled([agentFetch('me'), agentFetch(eventId ? `events/${eventId}?page=${page}` : 'events')]);
+      const failure = results.find(result => result.status === 'rejected');
+      if (failure) throw failure.reason;
+      const [profile, next] = results.map(result => result.value);
       if (!mounted.current || request !== refreshId.current) return;
       setAgent(profile); setData(next); setUpdated(new Date()); setStale(false); setError('');
     } catch (err) { if (request === refreshId.current) handleFailure(err, true); }
+    finally {
+      refreshInFlight.current = false;
+      if (mounted.current) setRefreshing(false);
+    }
   }, [eventId, page, handleFailure]);
 
   useEffect(() => {
     mounted.current = true; refresh();
-    const interval = window.setInterval(() => { if (!document.hidden) refresh(); }, 15000);
-    const resume = () => { if (document.hidden) setScanner(false); else refresh(); };
+    const hideScanner = () => { if (document.hidden) setScanner(false); };
+    const reconnect = () => { if (!document.hidden) refresh(); };
     const offline = () => { setStale(true); setScanner(false); setReady(false); setError('You are offline. Reconnect and verify the ticket before admitting anyone.'); };
-    document.addEventListener('visibilitychange', resume);
-    window.addEventListener('focus', resume); window.addEventListener('online', resume); window.addEventListener('offline', offline);
+    document.addEventListener('visibilitychange', hideScanner);
+    window.addEventListener('online', reconnect); window.addEventListener('offline', offline);
     return () => {
-      mounted.current = false; ++refreshId.current; window.clearInterval(interval);
-      document.removeEventListener('visibilitychange', resume);
-      window.removeEventListener('focus', resume); window.removeEventListener('online', resume); window.removeEventListener('offline', offline);
+      mounted.current = false; ++refreshId.current;
+      document.removeEventListener('visibilitychange', hideScanner);
+      window.removeEventListener('online', reconnect); window.removeEventListener('offline', offline);
     };
   }, [refresh]);
 
@@ -155,17 +167,22 @@ function AgentWorkspace({ eventId }) {
     </header>
     {eventId && <Link className="inline-flex min-h-11 items-center gap-2 text-sm" to="/entry-agent/events"><ArrowLeft className="h-4 w-4" /> Your events</Link>}
     <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-      <span role="status">{stale ? 'Connection interrupted · totals may be outdated' : updated ? `Updated ${updated.toLocaleTimeString()} · refreshes every 15s` : 'Loading your workspace…'}</span>
-      <button className="min-h-11 px-2 inline-flex items-center gap-1" onClick={refresh}><RefreshCw className="h-4 w-4" /> Refresh</button>
+      <span role="status">{stale ? 'Connection interrupted · totals may be outdated' : updated ? `Updated ${updated.toLocaleTimeString()}` : 'Loading your workspace…'}</span>
+      <button className="min-h-11 px-2 inline-flex items-center gap-1 disabled:opacity-50" disabled={refreshing || busy} onClick={refresh}><RefreshCw className="h-4 w-4" /> Refresh</button>
     </div>
     {error && <p role="alert" className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-destructive">{error}</p>}
     {!eventId && data && <>
       <h2 className="text-2xl font-semibold">Your events</h2>
-      <p className="text-sm text-muted-foreground">Assigned events appear on their start date (IST) and remain available until they end.</p>
-      {!data.length && <div className={panel}>No events available right now. Contact your organizer if you expected an assignment.</div>}
-      <div className="grid gap-4 sm:grid-cols-2">{data.map(event => <Link key={event.id} className={`${panel} hover:border-primary`} to={`/entry-agent/events/${event.id}`}>
-        <h3 className="text-lg font-semibold">{event.title}</h3><p className="text-sm">{agentDate(event.startDate)}</p><p className="text-sm text-muted-foreground">{event.venues.map(v => [v.name, v.city].filter(Boolean).join(', ')).join(' · ') || 'Venue to be confirmed'}</p><span className="inline-flex min-h-11 items-center font-medium text-primary">Open entry desk →</span>
-      </Link>)}</div>
+      <p className="text-sm text-muted-foreground">Assigned events appear here after refresh. Entry access unlocks at 00:00 IST on the start date and remains available until the event ends.</p>
+      {!data.length && <div className={panel}>No upcoming or ongoing events assigned. Contact your organizer if you expected an assignment.</div>}
+      <div className="grid gap-4 sm:grid-cols-2">{data.map(event => {
+        const locked = event.locked !== false;
+        const Card = locked ? 'div' : Link;
+        return <Card key={event.id} className={`${panel} ${locked ? 'border-dashed' : 'hover:border-primary'}`} {...(locked ? {} : { to: `/entry-agent/events/${event.id}` })}>
+          <h3 className="text-lg font-semibold">{event.title}</h3><p className="text-sm">{agentDate(event.startDate)}</p><p className="text-sm text-muted-foreground">{event.venues.map(v => [v.name, v.city].filter(Boolean).join(', ')).join(' · ') || 'Venue to be confirmed'}</p>
+          {locked ? <span className="inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground"><Lock className="h-4 w-4 shrink-0" aria-hidden="true" />{event.unlockAt ? `Unlocks on ${agentDate(event.unlockAt)}` : 'Entry access locked'}</span> : <span className="inline-flex min-h-11 items-center font-medium text-primary">Open entry desk →</span>}
+        </Card>;
+      })}</div>
     </>}
     {eventId && data?.event && <>
       <section className={panel}><h2 className="text-2xl font-semibold">{data.event.title}</h2><p className="text-sm">{agentDate(data.event.startDate)} — {agentDate(data.event.endDate)}</p>
@@ -201,7 +218,7 @@ function AgentWorkspace({ eventId }) {
       <section className={panel}><h2 className="text-lg font-semibold">Your admissions ({data.activity.total})</h2>
         {!data.activity.rows.length && <p className="text-sm text-muted-foreground">Your confirmed admissions will appear here.</p>}
         {data.activity.rows.map(row => <div key={row.id} className="border-t border-border pt-3 text-sm"><p className="font-medium">{row.attendeeName} · {row.quantity} attendees</p><p>{row.ticketType}</p><p className="text-xs text-muted-foreground">{agentDate(row.checkedInAt)} · {row.ticketReference}</p></div>)}
-        <div className="flex justify-between"><button className={button} disabled={page === 1} onClick={() => setPage(p => p - 1)}>Previous</button><button className={button} disabled={page * 20 >= data.activity.total} onClick={() => setPage(p => p + 1)}>Next</button></div>
+        <div className="flex justify-between"><button className={button} disabled={refreshing || page === 1} onClick={() => setPage(p => p - 1)}>Previous</button><button className={button} disabled={refreshing || page * 20 >= data.activity.total} onClick={() => setPage(p => p + 1)}>Next</button></div>
       </section>
     </>}
     {scanner && <QRScanner rearOnly onScan={scan} onClose={() => { setScanner(false); window.setTimeout(() => manualInput.current?.focus(), 0); }} isProcessing={busy} />}

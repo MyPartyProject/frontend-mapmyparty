@@ -1,6 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { acceptBankInput, validateBankChanges, validateBankField } from './bankInput.js';
+import { acceptBankInput, validateBankChanges, validateBankField, bankVerificationMessage } from './bankInput.js';
+
+test('name review provides an actionable message without the internal reason prefix', () => {
+  assert.match(bankVerificationMessage('NAME_REVIEW_REQUIRED:NAME_RESULT_MISSING'), /Needs review.*contact support/);
+  assert.doesNotMatch(bankVerificationMessage('NAME_REVIEW_REQUIRED:NAME_RESULT_MISSING'), /NAME_REVIEW_REQUIRED/);
+  assert.equal(bankVerificationMessage('Account is closed'), 'Account is closed');
+});
 
 test('account input keeps zeros and case, rejects invalid pastes and enforces boundaries', () => {
   assert.equal(acceptBankInput('accountNumber', '00aB123').value, '00aB123');

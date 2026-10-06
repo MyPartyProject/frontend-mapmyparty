@@ -17,6 +17,11 @@ const pending = new Map(), errors = [], requests = [];
 const agent = { id: 'agent-one', agentId: 'desk_one', name: 'Riya · Entry Agent', active: true, guidelines: 'Check the entire group before allowing entry.' };
 const event = { id: 'event-one', title: 'Friday Night Live', startDate: new Date(Date.now() - 3600000).toISOString(), endDate: new Date(Date.now() + 3600000).toISOString(), instructions: 'Direct guests to Gate 2.', entryInstructions: 'Direct guests to Gate 2.', venues: [{ name: 'The Courtyard', city: 'Bengaluru', fullAddress: '12 Main Road' }] };
 let admitted = false, blocked = false, sessionExpired = false, admissionLost = false;
+let refreshDelay = 0, refreshFailed = false;
+let paginatedActivity = false;
+let upcomingLocked = true;
+const upcomingEvent = { ...event, id: 'event-upcoming', title: 'Upcoming assigned event', startDate: new Date(Date.now() + 3 * 86400000).toISOString(), endDate: new Date(Date.now() + 4 * 86400000).toISOString() };
+const istMidnight = date => new Date(Math.floor((new Date(date).getTime() + 19800000) / 86400000) * 86400000 - 19800000).toISOString();
 const qrToken = '11111111-1111-4111-8111-111111111111';
 const ticket = () => ({ bookingItemId: 'item-one', ticketReference: 'MMP-TKT-001', attendeeName: 'Aarav Sharma', ticketType: 'Group Pass', ticketCategory: 'GROUP_TICKET', quantity: 4, checkedIn: admitted, alreadyCheckedIn: admitted, checkedInAt: admitted ? new Date().toISOString() : null, event });
 const activity = () => ({ rows: admitted ? [{ id: 'item-one', ticketReference: 'MMP-TKT-001', attendeeName: 'Aarav Sharma', ticketType: 'Group Pass', quantity: 4, checkedInAt: new Date().toISOString(), agentName: agent.name, agentId: agent.agentId }] : [], total: admitted ? 1 : 0, page: 1, pageSize: 20 });
@@ -52,7 +57,7 @@ try {
     if (path.endsWith('/QRScanner.jsx')) {
       await send('Fetch.fulfillRequest', { requestId, responseCode: 200, responseHeaders: [{ name: 'Content-Type', value: 'application/javascript' }], body: Buffer.from(scannerModule).toString('base64') }); return;
     }
-    requests.push({ path, method: request.method });
+    requests.push({ path, search: url.search, method: request.method });
     let responseCode = 200, result = { success: true, data: {} };
     const body = request.postData ? JSON.parse(request.postData) : {};
     if (path.endsWith('/auth/me')) result.data = { user: { id: 'owner', name: 'Owner', role: 'ORGANIZER' }, organizer: { id: 'org', name: 'Organizer' }, hasOrganizerProfile: true, hasBankDetails: true, isBankVerified: true };
@@ -60,8 +65,17 @@ try {
     if (path.endsWith('/entry-agent/login')) { sessionExpired = false; result.data = agent; }
     if (path.endsWith('/entry-agent/logout')) result.data = { loggedOut: true };
     if (path.endsWith('/entry-agent/me')) result.data = agent;
-    if (path.endsWith('/entry-agent/events')) result.data = blocked ? [] : [event];
+    if (path.endsWith('/entry-agent/events')) result.data = blocked ? [] : [{ ...event, locked: false, unlockAt: istMidnight(event.startDate) }, { ...upcomingEvent, locked: upcomingLocked, unlockAt: istMidnight(upcomingEvent.startDate) }];
+    if (path.endsWith('/entry-agent/events/event-upcoming')) {
+      if (upcomingLocked) { responseCode = 403; result = { errorMessage: 'This event is not available for entry. Contact your organizer.' }; }
+      else result.data = { event: upcomingEvent, guidelines: agent.guidelines, totals: { total: 0, totalBooked: 0, bookedQuantity: 0, checkedInQuantity: 0 }, activity: { rows: [], total: 0, page: 1, pageSize: 20 }, serverTime: new Date().toISOString() };
+    }
     if (path.endsWith('/entry-agent/events/event-one')) result.data = { event, guidelines: agent.guidelines, totals: { total: admitted ? 1 : 0, totalBooked: 2, bookedQuantity: 8, checkedInQuantity: admitted ? 4 : 0 }, activity: activity(), serverTime: new Date().toISOString() };
+    if (path.endsWith('/entry-agent/events/event-one') && paginatedActivity) result.data.activity = { ...activity(), total: 21, page: Number(url.searchParams.get('page') || 1) };
+    if (path.endsWith('/entry-agent/me') || path.endsWith('/entry-agent/events')) {
+      if (refreshDelay) await delay(refreshDelay);
+      if (refreshFailed) { responseCode = 503; result = { errorMessage: 'Refresh unavailable.' }; }
+    }
     if (path.endsWith('/verify')) {
       result.data = ticket();
       if (body.manualCheckInCode === 'badbad') { responseCode = 404; result = { errorMessage: 'Ticket not found.' }; }
@@ -96,8 +110,66 @@ try {
   assert.equal(await evaluate('document.querySelector("input[name=password]").type'), 'text');
   await fill('input[name=agentId]', 'desk_one'); await fill('input[name=password]', 'FixturePassword1!'); await click('Sign in');
   await until('document.body.innerText.includes("Friday Night Live")');
+  const refreshReady = '[...document.querySelectorAll("button")].some(b => b.innerText.includes("Refresh") && !b.disabled)';
+  const readCounts = () => ['/api/entry-agent/me', '/api/entry-agent/events'].map(path => requests.filter(r => r.path === path && r.method === 'GET').length);
+  await until(refreshReady);
+  let before = readCounts();
+  refreshDelay = 500;
+  await evaluate(`{ const refresh = [...document.querySelectorAll('button')].find(b => b.innerText.includes('Refresh')); refresh.click(); refresh.click(); window.dispatchEvent(new Event('online')); window.dispatchEvent(new Event('online')); }`);
+  await until('[...document.querySelectorAll("button")].some(b => b.innerText.includes("Refresh") && b.disabled)');
+  await until(refreshReady);
+  assert.deepEqual(readCounts(), before.map(count => count + 1), 'Overlapping manual clicks and reconnect send one request per endpoint');
+  before = readCounts();
+  await evaluate(`window.dispatchEvent(new Event('focus')); document.dispatchEvent(new Event('visibilitychange'));`);
+  await delay(16000);
+  assert.deepEqual(readCounts(), before, 'No polling or focus/tab-return refresh');
+  assert.equal(await evaluate('document.body.innerText.includes("refreshes every 15s")'), false);
+  refreshFailed = true;
+  await click('Refresh'); await until('document.body.innerText.includes("Refresh unavailable")'); await until(refreshReady);
+  refreshFailed = false; before = readCounts();
+  await click('Refresh'); await until(refreshReady);
+  assert.deepEqual(readCounts(), before.map(count => count + 1), 'Manual refresh recovers after failure');
+  assert.equal(await evaluate('!!document.querySelector("[role=alert]")'), false);
+  before = readCounts();
+  await evaluate(`window.dispatchEvent(new Event('online')); window.dispatchEvent(new Event('online'));`);
+  await until('[...document.querySelectorAll("button")].some(b => b.innerText.includes("Refresh") && b.disabled)');
+  await until(refreshReady);
+  assert.deepEqual(readCounts(), before.map(count => count + 1), 'Reconnect still refreshes once');
+  refreshDelay = 0;
+  console.log('PASS single refresh requests, overlap guard, failure recovery, reconnect and no 15-second/focus polling');
+  const lockedCard = `[...document.querySelectorAll('h3')].find(h => h.textContent === 'Upcoming assigned event').parentElement`;
+  assert.equal(await evaluate(`(() => { const card = ${lockedCard}; return card.tagName === 'DIV' && !card.querySelector('a,button,[tabindex]') && card.textContent.includes('Unlocks on'); })()`), true, 'Locked assignment has no link or keyboard action');
+  const detailCount = requests.filter(r => r.path === '/api/entry-agent/events/event-upcoming').length;
+  await evaluate(`(${lockedCard}).click()`);
+  assert.equal(await evaluate('location.pathname'), '/entry-agent/events');
+  assert.equal(requests.filter(r => r.path === '/api/entry-agent/events/event-upcoming').length, detailCount);
+  await screenshot('locked-assignment');
+  await navigate('/entry-agent/events/event-upcoming');
+  await until('document.body.innerText.includes("not available for entry")');
+  assert.equal(await evaluate('!!document.querySelector("input[placeholder]")'), false, 'Direct URL cannot expose entry actions');
+  await navigate('/entry-agent/events'); await until(refreshReady);
+  upcomingLocked = false;
+  await click('Refresh'); await until(`!!document.querySelector('a[href="/entry-agent/events/event-upcoming"]')`); await until(refreshReady);
+  await evaluate(`document.querySelector('a[href="/entry-agent/events/event-upcoming"]').click()`);
+  await until('document.body.innerText.includes("Ticket check-in code")');
+  await navigate('/entry-agent/events'); await until(refreshReady);
+  console.log('PASS locked assignment card, direct URL denial and server unlock reflected after refresh');
   await evaluate('document.querySelector("a[href*=event-one]").click()');
   await until('document.body.innerText.includes("Ticket check-in code")');
+  await until(refreshReady);
+  paginatedActivity = true;
+  await click('Refresh'); await until('document.body.innerText.includes("Your admissions (21)")'); await until(refreshReady);
+  const detailReads = () => requests.filter(r => r.path === '/api/entry-agent/events/event-one' && r.method === 'GET');
+  let detailBefore = detailReads().length;
+  await click('Next'); await until(refreshReady);
+  assert.equal(detailReads().length, detailBefore + 1, 'Pagination refreshes detail once');
+  assert.equal(detailReads().at(-1).search, '?page=2');
+  detailBefore = detailReads().length;
+  await click('Previous'); await until(refreshReady);
+  assert.equal(detailReads().length, detailBefore + 1);
+  assert.equal(detailReads().at(-1).search, '?page=1');
+  paginatedActivity = false;
+  console.log('PASS entry activity pagination');
   await screenshot('mobile-entry-desk');
   await click('Scan ticket QR'); await until('!!document.querySelector("[data-rear-only]")');
   assert.equal(await evaluate('document.querySelector("[data-rear-only]").dataset.rearOnly'), 'true');
@@ -105,7 +177,9 @@ try {
   assert.equal(admitted, false, 'QR review does not admit automatically');
   assert.ok(await evaluate('document.body.innerText.includes("4 attendees")'));
   await screenshot('mobile-review');
-  await click('Allow entry'); await until('document.body.innerText.includes("Entry confirmed")');
+  detailBefore = detailReads().length;
+  await click('Allow entry'); await until('document.body.innerText.includes("Entry confirmed")'); await until(refreshReady);
+  assert.equal(detailReads().length, detailBefore + 1, 'Successful admission refreshes event totals once');
   assert.equal(requests.filter(r => r.path.endsWith('/admit') && r.method === 'POST').length, 1);
   await click('Use another code'); await fill('input[placeholder="e.g. 9sv9begy"]', 'code1234'); await click('Verify ticket');
   await until('document.body.innerText.includes("Already checked in")');

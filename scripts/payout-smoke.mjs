@@ -19,6 +19,7 @@ let socket;
 const errors = [];
 const pending = new Map();
 let role = 'ORGANIZER';
+let setupComplete = true;
 try {
   let port;
   for (let i = 0; i < 100; i++) {
@@ -48,7 +49,7 @@ try {
       const { requestId, request } = message.params;
       const path = new URL(request.url).pathname;
       let payload = { success: true, data: { items: [], payouts: [], events: [], pagination: { total: 0, totalPages: 1 } } };
-      if (path.endsWith('/auth/me')) payload = { data: { user: { id: 'payout-fixture', name: 'Payout Test', role }, organizer: { id: 'org', name: 'Fixture Organizer' }, hasOrganizerProfile: true, hasBankDetails: true, isBankVerified: true } };
+      if (path.endsWith('/auth/me')) payload = { data: { user: { id: 'payout-fixture', name: 'Payout Test', role }, organizer: { id: 'org', name: 'Fixture Organizer' }, hasOrganizerProfile: setupComplete, hasBankDetails: setupComplete, isBankVerified: setupComplete } };
       if (path.endsWith('/settlements')) payload.data = { items: [{ event: { id: 'event', title: 'Seven day settlement' }, isEstimate: true, totals: { grossTicketSales: 100, refundAmount: 0, refundReserveAmount: 0, platformFeeAmount: 6, gstTotal: 1.08, organizerBalanceAdjustmentAmount: 0, netPayoutAmount: 92.92 }, status: 'BLOCKED', eligibleAt: '2026-10-08T12:00:00Z', bankAccountMasked: '****1234', blockers: [{ code: 'GST_NOT_VERIFIED', message: 'Organizer GST details must be verified before payout.' }] }], pagination: { total: 1, totalPages: 1 } };
       if (path === '/api/organizer/me/payouts/paid-fixture') payload.data = { payout: { id: 'paid-fixture', status: 'RECONCILED', amount: 92.92, payoutDate: '2026-10-01T12:00:00Z', providerUtr: 'TESTUTR123', invoiceNumber: 'TEST-STATEMENT' }, summary: { grossTicketSales: 100, platformFeeAmount: 6, gstTotal: 1.08, netPayoutAmount: 92.92 }, bankDetails: { accountHolder: 'Fixture Organizer', accountNumberMasked: '****1234', ifscCode: 'TEST0001234' }, event: { title: 'Paid event' }, organizer: { name: 'Fixture Organizer' }, eventBreakdowns: [], timeline: [] };
       if (path.includes('/event/manage/')) payload.data = { id: 'event', organizerId: 'org', title: 'Fixture Event Finance', startDate: '2026-09-01T10:00:00Z', endDate: '2026-09-01T12:00:00Z', tickets: [], venues: [], category: 'MUSIC' };
@@ -75,14 +76,14 @@ try {
   await send('Fetch.enable', { patterns: [{ urlPattern: '*/api/*' }] });
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
   await send('Emulation.setTouchEmulationEnabled', { enabled: true });
-  for (const width of [390, 1440]) {
-    await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 1024 });
+  for (const width of [390, 767, 768, 820, 1023, 1280]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 768 });
     await send('Page.navigate', { url: base + '/organizer/payouts' });
     await until("document.body.innerText.includes('Seven day settlement')");
     assert.equal(await evaluate("document.body.innerText.includes('92.92')"), true);
     assert.equal(await evaluate("document.body.innerText.includes('Organizer GST details must be verified')"), true);
     assert.equal(await evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), true, 'Payout page must fit viewport');
-    if (width < 1024) assert.equal(await evaluate("document.body.innerText.includes('Mobile is view-only')"), true);
+    assert.equal(await evaluate("document.body.innerText.includes('Mobile is view-only')"), width < 768, 'Limited organizer view only below 768px');
     await send('Page.navigate', { url: base + '/organizer/payouts/paid-fixture' });
     await until("document.body.innerText.includes('TESTUTR123')");
     assert.equal(await evaluate("document.body.innerText.includes('Paid') && document.body.innerText.includes('92.92') && document.body.innerText.includes('****1234')"), true);
@@ -90,10 +91,38 @@ try {
     console.log('PASS paid payout detail viewport ' + width);
     console.log('PASS payout organizer viewport ' + width + ': amount, blocker, mobile access and overflow');
   }
+  await send('Page.navigate', { url: base + '/organizer/dashboard' });
+  for (const width of [767, 768, 767]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false });
+    await until(width < 768
+      ? "!!document.querySelector('nav[aria-label=\"Organizer navigation\"]') && !!document.querySelector('#mobile-view-note')"
+      : "!!document.querySelector('aside nav') && !document.querySelector('nav[aria-label=\"Organizer navigation\"]')");
+  }
+  console.log('PASS organizer dashboard switches both ways at 768px without navigation');
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 900, deviceScaleFactor: 1, mobile: true });
   await send('Page.navigate', { url: base + '/organizer/events/event/preview' });
   await until("document.body.innerText.includes('Event finance') && document.body.innerText.includes('92.92')");
   console.log('PASS mobile event finance');
+  for (const width of [390, 768]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 768 });
+    await send('Page.navigate', { url: base + '/organizer/select-event-type' });
+    await until(width < 768
+      ? "document.body.innerText.includes('Continue on a laptop or PC')"
+      : "document.body.innerText.includes('Choose your event type')");
+    assert.equal(await evaluate("document.body.innerText.includes('Choose your event type')"), width >= 768);
+  }
+  console.log('PASS operational route limited on phones and available on tablets');
+  setupComplete = false;
+  for (const width of [390, 768]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 768 });
+    await send('Page.navigate', { url: base + '/organizer/dashboard' });
+    await until(width < 768
+      ? "document.body.innerText.includes('Complete organizer setup on a laptop or PC')"
+      : "location.pathname === '/organizer/onboarding' && document.body.innerText.includes('Complete setup to continue')");
+    assert.equal(await evaluate("!!document.querySelector('form')"), width >= 768);
+  }
+  console.log('PASS incomplete onboarding notice on phones and setup form on tablets');
+  setupComplete = true;
   role = 'ADMIN';
   await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
   await send('Page.navigate', { url: base + '/promoter/payouts' });

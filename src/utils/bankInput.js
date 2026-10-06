@@ -1,3 +1,7 @@
+export const bankVerificationMessage = (reason) => String(reason || '').startsWith('NAME_REVIEW_REQUIRED:')
+  ? 'Needs review. Check the account holder name matches your bank records, or contact support.'
+  : reason || 'Bank verification failed';
+
 export const bankInputRules = {
   accountHolder: { max: 100, label: 'Account holder name', characters: /^[\p{L}\p{M}0-9 .\u0027\u2019&/()\-]*$/u },
   accountNumber: { max: 25, label: 'Account number', characters: /^[A-Za-z0-9]*$/ },
