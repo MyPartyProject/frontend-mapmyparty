@@ -21,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { apiFetch, buildUrl, requestBrowserChallenge } from "@/config/api";
+import { apiFetch, buildUrl } from "@/config/api";
 import OTPVerificationModal from "@/components/OTPVerificationModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { requestPasswordReset } from "@/services/authService";
@@ -274,19 +274,14 @@ const Auth = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
     if (redirectTarget) {
       sessionStorage.setItem("postAuthRedirect", redirectTarget);
     } else {
       sessionStorage.removeItem("postAuthRedirect");
     }
 
-    try {
-      await requestBrowserChallenge();
-      window.location.href = buildUrl("/api/auth/google");
-    } catch (error) {
-      toast.error(error?.message || "Complete the security check before continuing with Google");
-    }
+    window.location.href = buildUrl("/api/auth/google");
   };
 
   const handleOtpVerificationSuccess = async () => {
