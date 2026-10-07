@@ -602,7 +602,7 @@ const Header = ({
               alt="MapMyParty"
               className="h-8 w-8 object-contain"
             />
-            <span className={`hidden sm:inline font-bold ${isLandingPage ? "text-white light:text-foreground" : "text-foreground"}`}>Map MyParty</span>
+            <span className={`hidden sm:inline font-bold ${isLandingPage ? "text-white light:text-foreground" : "text-foreground"}`}>MapMyParty</span>
           </Link>
 
         </div>

@@ -7,28 +7,24 @@ import { Separator } from "@/components/ui/separator";
 import {
   ArrowLeft,
   Calendar,
+  ClipboardList,
   Clock,
   CreditCard,
-  Gift,
-  Globe,
   Loader2,
   MapPin,
-  ScanLine,
   ShieldCheck,
-  Smartphone,
-  Wallet2,
+  Ticket,
 } from "lucide-react";
 import { apiFetch } from "@/config/api";
 import { toast } from "sonner";
 import { loadCashfreeScript } from "@/utils/loadCashfreeScript";
 
-const paymentMethods = [
-  { label: "UPI", icon: Smartphone, accent: "from-emerald-500/80 to-teal-500/60" },
-  { label: "Cards", icon: CreditCard, accent: "from-sky-500/80 to-blue-500/60" },
-  { label: "Net Banking", icon: Globe, accent: "from-purple-500/80 to-indigo-500/60" },
-  { label: "Wallets", icon: Wallet2, accent: "from-amber-500/80 to-orange-500/60" },
-  { label: "Gift Voucher", icon: Gift, accent: "from-pink-500/80 to-rose-500/60" },
-  { label: "Scan & Pay", icon: ScanLine, accent: "from-red-500/80 to-orange-500/60" },
+// Payment guide text and icons.
+const paymentSteps = [
+  { title: "Review your booking", description: "Check your tickets and total in the order summary.", icon: ClipboardList },
+  { title: "Pay securely", description: "Tap Pay to open Cashfree and choose your payment method.", icon: CreditCard },
+  { title: "Payment confirmation", description: "Your booking is confirmed once your payment is verified.", icon: ShieldCheck },
+  { title: "Access your tickets", description: "Download tickets from the confirmation page or My Bookings.", icon: Ticket },
 ];
 
 const PaymentCheckout = () => {
@@ -504,25 +500,41 @@ const PaymentCheckout = () => {
         )}
 
         <div className="grid lg:grid-cols-[1.4fr,1fr] gap-6">
-          <Card className="bg-white/[0.04] border-white/10 light:bg-muted light:border-border">
+          <Card className="bg-card border-border text-foreground">
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">Accepted payment options</CardTitle>
+              <CardTitle className="text-lg">How payment works</CardTitle>
+              <p className="text-sm text-muted-foreground">Four simple steps to your tickets.</p>
             </CardHeader>
-            <CardContent className="grid md:grid-cols-2 gap-3">
-              {paymentMethods.map(({ label, icon: Icon, accent }) => (
-                <div
-                  key={label}
-                  className="flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 light:border-border light:bg-muted"
-                >
-                  <div className={`h-11 w-11 rounded-xl bg-gradient-to-br ${accent} flex items-center justify-center text-white light:text-foreground`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-white light:text-foreground">{label}</p>
-                    <p className="text-xs text-white/60 light:text-muted-foreground">Available inside Cashfree Checkout</p>
-                  </div>
-                </div>
-              ))}
+            <CardContent>
+              <ol className="space-y-6">
+                {/* Reveal each step 1 second apart. */}
+                {paymentSteps.map(({ title, description, icon: Icon }, index) => (
+                  <li
+                    key={title}
+                    className="group relative flex items-start gap-4 animate-in fade-in-0 motion-safe:slide-in-from-bottom-3"
+                    style={{ animationDelay: `${index}s`, animationDuration: "650ms", animationFillMode: "backwards" }}
+                  >
+                    {/* Light/dark connector glow. */}
+                    {index < paymentSteps.length - 1 && (
+                      <span aria-hidden="true" className="absolute left-[23px] top-12 -bottom-6 w-0.5 rounded-full bg-accent/50 shadow-[0_0_8px_hsl(var(--accent)/0.45)] light:bg-primary/50 light:shadow-[0_0_8px_hsl(var(--primary)/0.3)] motion-safe:animate-pulse" />
+                    )}
+                    <div aria-hidden="true" className="relative flex h-12 w-12 shrink-0 items-center justify-center">
+                      {/* Soft pulse respects reduced motion. */}
+                      <span className="pointer-events-none absolute -inset-1 rounded-full bg-accent/40 blur-lg light:bg-primary/35 motion-safe:animate-pulse" />
+                      <span className="relative flex h-10 w-10 items-center justify-center rounded-full border border-accent/60 bg-secondary text-secondary-foreground light:border-primary/50 motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-110">
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border border-border bg-card text-[10px] font-semibold text-muted-foreground">
+                        {index + 1}
+                      </span>
+                    </div>
+                    <div className="min-w-0 pt-1">
+                      <p className="text-sm font-semibold text-foreground">{title}</p>
+                      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{description}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
             </CardContent>
           </Card>
 

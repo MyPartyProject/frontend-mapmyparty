@@ -28,7 +28,7 @@ const Footer = () => {
               <img src={logo} alt="MapMyParty" width="2048" height="2025" className="block h-auto w-full object-contain" />
             </div>
             <div className="min-w-0 flex-1 space-y-2">
-              <p className="text-base font-semibold text-foreground">Map MyParty</p>
+              <p className="text-base font-semibold text-foreground">MapMyParty</p>
               <p className="text-sm leading-relaxed text-muted-foreground">
                 Discover, manage, and celebrate events with a smooth, modern experience.
               </p>
@@ -89,7 +89,7 @@ const Footer = () => {
         </div>
 
         <div className="mt-8 flex flex-col items-start gap-3 border-t border-border/40 pt-5 text-xs text-muted-foreground md:flex-row md:items-center md:justify-between">
-          <p>&copy; {new Date().getFullYear()} Map MyParty. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} MapMyParty. All rights reserved.</p>
           <p className="text-muted-foreground/80">
             Built for seamless event discovery and management.
           </p>

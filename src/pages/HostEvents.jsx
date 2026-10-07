@@ -149,7 +149,7 @@ const HostEvents = () => {
                   Everything organizers need to launch, manage, and run events in one place.
                 </h1>
                 <p className="host-events__lead max-w-lg text-muted-foreground">
-                  Map MyParty brings together organizer onboarding, event creation, live check-ins, attendee
+                  MapMyParty brings together organizer onboarding, event creation, live check-ins, attendee
                   visibility, analytics, refunds, payouts, and operations tooling so your team can work from one
                   system instead of stitching together multiple tools.
                 </p>

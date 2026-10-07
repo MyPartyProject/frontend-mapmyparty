@@ -1083,7 +1083,7 @@ const EventDetailNew = () => {
       <header className="sticky top-0 z-40 bg-black/35 backdrop-blur-xl light:bg-background">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-12">
           <Link to="/" className="flex items-center gap-3">
-            <img src={logoSvg} alt="Map My Party" className="h-9 w-auto" />
+            <img src={logoSvg} alt="MapMyParty" className="h-9 w-auto" />
             <span className="text-sm font-semibold tracking-[0.06em] text-white light:text-foreground">
               MapMyParty
             </span>
