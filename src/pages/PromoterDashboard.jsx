@@ -58,64 +58,56 @@ const PromoterDashboard = () => {
   const { logout: contextLogout } = useAuth();
 
   // Fetch real dashboard data
-  const { dashboard, loading: dashboardLoading } = usePromoterDashboard();
+  const { dashboard, loading: dashboardLoading, error: dashboardError, refresh: refreshDashboard, filter, applyFilter } = usePromoterDashboard();
 
-  // Format currency
-  const formatCurrency = (amount) => {
-    if (!amount) return "₹0";
-    if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(1)}Cr`;
-    if (amount >= 100000) return `₹${(amount / 100000).toFixed(1)}L`;
-    if (amount >= 1000) return `₹${(amount / 1000).toFixed(1)}K`;
-    return `₹${amount.toLocaleString()}`;
+  const formatCurrency = amount => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 2 }).format(amount || 0);
+  const formatPaise = value => {
+    const paise = BigInt(value);
+    const absolute = paise < 0n ? -paise : paise;
+    return (paise < 0n ? "\u2212" : "") + "\u20b9" + (absolute / 100n).toLocaleString("en-IN") + "." + String(absolute % 100n).padStart(2, "0");
   };
+  const growth = value => value == null ? "No prior revenue" : (value > 0 ? "+" : "") + value.toFixed(2) + "% vs previous period";
 
   // Dummy data inspired by schema entities (organizers, events, bookings, payouts, users)
   const data = useMemo(() => ({
     stats: dashboard ? [
       {
-        title: "Total Events",
+        title: "Events created",
         value: dashboard.events?.total || 0,
-        delta: `+${dashboard.events?.currentMonth || 0} this month`,
+        delta: "Selected period",
         icon: CalendarClock
       },
       {
-        title: "Total Organizers",
+        title: "Organizers added",
         value: dashboard.organizers?.total || 0,
-        delta: `+${dashboard.organizers?.currentMonth || 0} onboarded`,
+        delta: "Selected period",
         icon: Users
       },
       {
         title: "Gross Revenue",
-        value: formatCurrency(dashboard.grossRevenue || 0),
-        delta: `${dashboard.revenue?.incrementPercentage >= 0 ? '+' : ''}${dashboard.revenue?.incrementPercentage?.toFixed(1) || 0}% MoM`,
+        value: dashboard.moneySubunits ? formatPaise(dashboard.moneySubunits.grossRevenue) : formatCurrency(dashboard.grossRevenue),
+        delta: growth(dashboard.comparison?.grossRevenueGrowth),
         icon: Wallet2
       },
       {
         title: "Platform Earnings",
-        value: formatCurrency(dashboard.platformEarnings || 0),
-        delta: dashboard.grossRevenue > 0 ? `${((dashboard.platformEarnings / dashboard.grossRevenue) * 100).toFixed(1)}% of GMV` : "0% of GMV",
+        value: dashboard.moneySubunits ? formatPaise(dashboard.moneySubunits.platformEarnings) : formatCurrency(dashboard.platformEarnings),
+        delta: growth(dashboard.comparison?.platformEarningsGrowth) + " | " + (dashboard.comparison?.platformSharePercentage == null ? "N/A" : dashboard.comparison.platformSharePercentage.toFixed(2) + "%") + " of GMV",
         icon: BarChart3
       },
       {
         title: "Live Events",
         value: dashboard.liveEvents?.count || 0,
-        delta: "Running now",
+        delta: "Current | All dates",
         icon: Activity
       },
       {
         title: "Pending Payouts",
-        value: formatCurrency(dashboard.pendingPayouts?.totalAmount || 0),
-        delta: `Across ${dashboard.pendingPayouts?.count || 0} payouts`,
+        value: dashboard.moneySubunits ? formatPaise(dashboard.moneySubunits.pendingPayouts) : formatCurrency(dashboard.pendingPayouts?.totalAmount),
+        delta: `Current | All dates | ${dashboard.pendingPayouts?.count || 0} payouts`,
         icon: ShieldCheck
       },
-    ] : [
-      { title: "Total Events", value: 0, delta: "+0 this month", icon: CalendarClock },
-      { title: "Total Organizers", value: 0, delta: "+0 onboarded", icon: Users },
-      { title: "Gross Revenue", value: "₹0", delta: "+0% MoM", icon: Wallet2 },
-      { title: "Platform Earnings", value: "₹0", delta: "0% of GMV", icon: BarChart3 },
-      { title: "Live Events", value: 0, delta: "Running now", icon: Activity },
-      { title: "Pending Payouts", value: "₹0", delta: "Across 0 payouts", icon: ShieldCheck },
-    ],
+    ] : [],
     organizers: [
       {
         id: "org-abc",
@@ -824,7 +816,7 @@ const PromoterDashboard = () => {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-          <Outlet context={{ data, currency, statusBadge, dashboardLoading }} />
+          <Outlet context={{ data, currency, statusBadge, dashboardLoading, dashboardError, refreshDashboard, filter, applyFilter, dashboard }} />
         </div>
       </div>
     </div>

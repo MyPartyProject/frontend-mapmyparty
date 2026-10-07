@@ -119,9 +119,14 @@ const QRScanner = ({ onScan, onClose, isProcessing, isPaused = false, rearOnly =
             await html5QrCodeRef.current.stop();
             throw new Error('Rear camera unavailable. Please use the manual ticket code.');
           }
-          const devices = await Html5Qrcode.getCameras();
+          // Camera access is already granted. getCameras() opens another stream,
+          // which can conflict with the running rear camera on mobile.
+          const devices = await navigator.mediaDevices.enumerateDevices().catch(() => []);
           if (!mounted) return;
-          const rearDevices = devices.filter(camera => camera.id === settings.deviceId || /back|rear|environment/i.test(camera.label));
+          const rearDevices = devices
+            .filter(device => device.kind === 'videoinput')
+            .map(device => ({ id: device.deviceId, label: device.label }))
+            .filter(camera => camera.id === settings.deviceId || /back|rear|environment/i.test(camera.label));
           setCameras(rearDevices);
           setActiveCameraIdx(rearDevices.findIndex(camera => camera.id === settings.deviceId));
           setIsStarting(false);
@@ -163,7 +168,7 @@ const QRScanner = ({ onScan, onClose, isProcessing, isPaused = false, rearOnly =
         } else if (msg.includes("NotFoundError") || err?.name === "NotFoundError") {
           setCameraError("No camera found on this device. Please use manual code entry instead.");
         } else if (msg.includes("NotReadableError") || err?.name === "NotReadableError") {
-          setCameraError("Camera is already in use by another app. Close it and try again.");
+          setCameraError("The browser couldn't start the camera. Close the scanner and try again. If it persists, reload the page or use manual entry.");
         } else {
           setCameraError(msg || "Failed to start camera. Please use manual code entry.");
         }
