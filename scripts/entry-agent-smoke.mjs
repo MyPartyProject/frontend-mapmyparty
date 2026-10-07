@@ -87,7 +87,7 @@ try {
     if (path.includes('/entry-agent/events/') && blocked) { responseCode = 403; result = { errorMessage: 'You are not assigned to this event.' }; }
     if (path.includes('/entry-agent/') && !path.endsWith('/login') && sessionExpired) { responseCode = 401; result = { errorMessage: 'Session expired.' }; }
     if (path.endsWith('/organizer/entry-agents')) result.data = request.method === 'POST' ? { ...agent, ...body, id: 'new-agent' } : [agent, ...Array.from({ length: 5 }, (_, i) => ({ ...agent, id: 'extra-' + i, agentId: 'desk_extra_' + i, name: 'A very long entry agent name for layout verification ' + i, active: i % 2 === 0 }))];
-    if (path.endsWith('/organizer/entry-agents/events')) result.data = [event, ...Array.from({ length: 29 }, (_, i) => ({ ...event, id: 'event-extra-' + i, title: 'Another organizer event ' + i }))];
+    if (path.endsWith('/organizer/entry-agents/events')) result.data = [event, ...Array.from({ length: 29 }, (_, i) => ({ ...event, id: 'event-extra-' + i, title: 'Another organizer event ' + i, publishStatus: i === 0 ? 'DRAFT' : 'PUBLISHED', startDate: i === 0 ? null : event.startDate }))];
     if (path.endsWith('/organizer/entry-agents/events/event-one')) result.data = request.method === 'PUT' ? { saved: true } : { event, agentIds: [agent.id], counts: [{ agentId: agent.id, admissions: admitted ? 1 : 0, attendees: admitted ? 4 : 0 }], activity: activity() };
     if (path.endsWith('/password')) result.data = agent;
     await send('Fetch.fulfillRequest', { requestId, responseCode, responseHeaders: [{ name: 'Content-Type', value: 'application/json' }, { name: 'Access-Control-Allow-Origin', value: base }, { name: 'Access-Control-Allow-Credentials', value: 'true' }, { name: 'Access-Control-Allow-Headers', value: 'content-type' }, { name: 'Access-Control-Allow-Methods', value: 'GET,POST,PUT,PATCH,OPTIONS' }], body: Buffer.from(JSON.stringify(result)).toString('base64') });
@@ -236,6 +236,8 @@ try {
   await click('Cancel'); await click('Assign event');
   await until('[...document.querySelectorAll("input")].some(el => el.getAttribute("aria-label") === "Search events")');
   assert.ok(await evaluate('[...document.querySelectorAll("button")].filter(b => b.innerText.startsWith("Another organizer event")).length === 29'));
+  assert.ok(await evaluate('[...document.querySelectorAll("button")].some(b => b.innerText.includes("Another organizer event 0") && b.innerText.includes("Draft") && b.innerText.includes("Date not set"))'));
+  await screenshot('organizer-draft-tag');
   await fill('input[aria-label="Search events"]', 'no-match');
   await until('document.body.innerText.includes("No matching events")');
   await fill('input[aria-label="Search events"]', 'Friday');

@@ -159,7 +159,7 @@ export default function EntryAgentManagement() {
           <PopoverContent align="end" className="entry-agent-ui w-[340px] max-w-[calc(100vw-32px)] p-2">
             <input aria-label="Search events" placeholder="Search events..." className={field} value={query} onChange={e => setQuery(e.target.value)} />
             <div className="mt-2 max-h-[280px] overflow-y-auto space-y-1">
-              {matchingEvents.map(event => <button key={event.id} className="block w-full rounded-lg p-2 text-left hover:bg-accent focus-visible:bg-accent" onClick={() => { setPickerOpen(false); setQuery(''); selectEvent(event.id); }}><span className="block font-medium">{event.title}</span><span className="block text-xs text-muted-foreground">{agentDate(event.startDate)}</span></button>)}
+              {matchingEvents.map(event => <button key={event.id} className="block w-full rounded-lg p-2 text-left hover:bg-accent focus-visible:bg-accent" onClick={() => { setPickerOpen(false); setQuery(''); selectEvent(event.id); }}><span className="block font-medium">{event.title}</span><span className="mt-1 flex items-end justify-between gap-2"><span className="text-xs text-muted-foreground">{event.startDate ? agentDate(event.startDate) : 'Date not set'}</span>{event.publishStatus === 'DRAFT' && <span className="shrink-0 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300">Draft</span>}</span></button>)}
               {!matchingEvents.length && <p className="p-2 text-muted-foreground">{events.length ? 'No matching events.' : 'No events available.'}</p>}
             </div>
           </PopoverContent>
