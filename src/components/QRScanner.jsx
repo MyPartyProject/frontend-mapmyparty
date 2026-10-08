@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import { X, Camera, CameraOff, Loader2, SwitchCamera } from "lucide-react";
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { Button } from '@/components/ui/button';
 
 const SCAN_COOLDOWN_MS = 3000;
 
@@ -15,7 +17,7 @@ const getQrBoxSize = () => {
   return 280;
 };
 
-const QRScanner = ({ onScan, onClose, isProcessing, isPaused = false, rearOnly = false }) => {
+const QRScanner = ({ onScan, onClose, isProcessing, isPaused = false, rearOnly = false, presentation = 'default' }) => {
   const scannerRef = useRef(null);
   const html5QrCodeRef = useRef(null);
   const lastScannedRef = useRef({ text: "", time: 0 });
@@ -179,10 +181,11 @@ const QRScanner = ({ onScan, onClose, isProcessing, isPaused = false, rearOnly =
 
     return () => {
       mounted = false;
-      if (html5QrCodeRef.current) {
-        html5QrCodeRef.current
-          .stop()
-          .then(() => html5QrCodeRef.current?.clear())
+      const camera = html5QrCodeRef.current;
+      if (camera) {
+        Promise.resolve()
+          .then(() => camera.stop())
+          .then(() => camera.clear())
           .catch(() => {});
       }
     };
@@ -203,6 +206,31 @@ const QRScanner = ({ onScan, onClose, isProcessing, isPaused = false, rearOnly =
       setCameraError("Failed to switch camera. Try again.");
     }
   };
+
+  if (presentation === 'agent') return (
+    <DialogPrimitive.Root open onOpenChange={open => { if (!open) onClose(); }}>
+      <DialogPrimitive.Overlay className="fixed inset-0 z-50 !m-0 bg-foreground/50" />
+      <DialogPrimitive.Content aria-describedby="agent-scanner-description" onCloseAutoFocus={event => event.preventDefault()}
+        className="entry-agent-light fixed inset-0 z-50 !m-0 flex h-[100dvh] flex-col overflow-y-auto bg-background text-foreground outline-none pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] md:inset-auto md:left-1/2 md:top-1/2 md:h-auto md:max-h-[90dvh] md:w-[560px] md:max-w-[calc(100vw-32px)] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl md:border md:border-border md:shadow-xl">
+        <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-secondary p-4">
+          <div className="flex items-center gap-2"><Camera className="h-5 w-5 shrink-0 text-accent-foreground" aria-hidden="true" /><DialogPrimitive.Title className="text-lg font-bold">Scan ticket QR</DialogPrimitive.Title></div>
+          <div className="flex gap-2">
+            {cameras.length > 1 && <Button variant="outline" className="h-11 w-11 rounded-xl" disabled={isStarting || isProcessing} onClick={switchCamera} aria-label="Switch camera"><SwitchCamera aria-hidden="true" /></Button>}
+            <Button variant="ghost" className="h-11 w-11 rounded-xl" onClick={onClose} aria-label="Close scanner"><X aria-hidden="true" /></Button>
+          </div>
+        </div>
+        <DialogPrimitive.Description id="agent-scanner-description" className="px-5 py-4 text-sm text-muted-foreground">Point the rear camera at the QR code. You'll review the ticket before allowing entry.</DialogPrimitive.Description>
+        <div className="relative mx-4 min-h-[220px] flex-1 overflow-hidden rounded-xl bg-muted md:min-h-[300px]">
+          <div id="qr-scanner-region" ref={scannerRef} className="h-full w-full" />
+          {(isStarting || cameraError || isProcessing) && <div role={cameraError ? 'alert' : 'status'} className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-background/95 p-5 text-center">
+            {cameraError ? <CameraOff className="h-9 w-9 text-destructive" aria-hidden="true" /> : <Loader2 className="h-9 w-9 animate-spin text-accent-foreground motion-reduce:animate-none" aria-hidden="true" />}
+            <p className={cameraError ? 'text-sm text-destructive' : 'text-sm text-muted-foreground'}>{cameraError || (isProcessing ? 'Verifying ticket…' : 'Starting camera…')}</p>
+          </div>}
+        </div>
+        <div className="space-y-3 p-4"><Button variant="outline" className="h-auto min-h-12 w-full whitespace-normal rounded-xl" onClick={onClose}>Use manual code</Button><p className="text-center text-xs text-muted-foreground">{cameras.length > 1 ? cameras[activeCameraIdx]?.label || 'Rear camera' : 'Keep the whole QR code inside the camera view.'}</p></div>
+      </DialogPrimitive.Content>
+    </DialogPrimitive.Root>
+  );
 
   // On desktop/tablet: centered modal card. On mobile: fullscreen.
   return (

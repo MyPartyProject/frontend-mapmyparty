@@ -31,7 +31,7 @@
 
 /* Dark organizer design tokens */
 @layer base {
-  :root {
+  :root, .entry-agent-light {
     color-scheme: light;
     --badge-hover: hsl(var(--primary-cta-hover));
     --font-sans: "Amiko", sans-serif;

@@ -20,6 +20,8 @@ let admitted = false, blocked = false, sessionExpired = false, admissionLost = f
 let refreshDelay = 0, refreshFailed = false;
 let paginatedActivity = false;
 let upcomingLocked = true;
+let mockScanner = true;
+let emptyEvents = false;
 const upcomingEvent = { ...event, id: 'event-upcoming', title: 'Upcoming assigned event', startDate: new Date(Date.now() + 3 * 86400000).toISOString(), endDate: new Date(Date.now() + 4 * 86400000).toISOString() };
 const istMidnight = date => new Date(Math.floor((new Date(date).getTime() + 19800000) / 86400000) * 86400000 - 19800000).toISOString();
 const qrToken = '11111111-1111-4111-8111-111111111111';
@@ -55,6 +57,7 @@ try {
       return;
     }
     if (path.endsWith('/QRScanner.jsx')) {
+      if (!mockScanner) { await send('Fetch.continueRequest', { requestId }); return; }
       await send('Fetch.fulfillRequest', { requestId, responseCode: 200, responseHeaders: [{ name: 'Content-Type', value: 'application/javascript' }], body: Buffer.from(scannerModule).toString('base64') }); return;
     }
     requests.push({ path, search: url.search, method: request.method });
@@ -65,7 +68,7 @@ try {
     if (path.endsWith('/entry-agent/login')) { sessionExpired = false; result.data = agent; }
     if (path.endsWith('/entry-agent/logout')) result.data = { loggedOut: true };
     if (path.endsWith('/entry-agent/me')) result.data = agent;
-    if (path.endsWith('/entry-agent/events')) result.data = blocked ? [] : [{ ...event, locked: false, unlockAt: istMidnight(event.startDate) }, { ...upcomingEvent, locked: upcomingLocked, unlockAt: istMidnight(upcomingEvent.startDate) }];
+    if (path.endsWith('/entry-agent/events')) result.data = blocked || emptyEvents ? [] : [{ ...event, locked: false, unlockAt: istMidnight(event.startDate) }, { ...upcomingEvent, locked: upcomingLocked, unlockAt: istMidnight(upcomingEvent.startDate) }];
     if (path.endsWith('/entry-agent/events/event-upcoming')) {
       if (upcomingLocked) { responseCode = 403; result = { errorMessage: 'This event is not available for entry. Contact your organizer.' }; }
       else result.data = { event: upcomingEvent, guidelines: agent.guidelines, totals: { total: 0, totalBooked: 0, bookedQuantity: 0, checkedInQuantity: 0 }, activity: { rows: [], total: 0, page: 1, pageSize: 20 }, serverTime: new Date().toISOString() };
@@ -102,10 +105,23 @@ try {
   const fill = (selector, value) => evaluate(`{const el=document.querySelector(${JSON.stringify(selector)}); const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set; setter.call(el,${JSON.stringify(value)}); el.dispatchEvent(new Event('input',{bubbles:true}));}`);
   const navigate = async path => { await send('Page.navigate', { url: base + path }); await until('document.readyState === "complete"'); };
   const screenshot = async name => { const result = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true }); await writeFile(join(artifacts, name + '.png'), Buffer.from(result.data, 'base64')); };
+  const responsiveScreens = async name => {
+    for (const width of [360, 390, 768, 820, 1024, 1440]) {
+      await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 768 });
+      assert.ok(await evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'), `${name} ${width}px: no overflow`);
+      assert.equal(await evaluate('getComputedStyle(document.querySelector(".entry-agent-light")).colorScheme'), 'light');
+      await screenshot(`${name}-${width}`);
+    }
+    await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+  };
   await send('Runtime.enable'); await send('Page.enable');
   await send('Fetch.enable', { patterns: [{ urlPattern: '*/api/*' }, { urlPattern: '*/src/components/QRScanner.jsx*' }] });
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
   await navigate('/entry-agent/login'); await until('!!document.querySelector("input[name=agentId]")');
+  await evaluate("localStorage.setItem('mapmyparty-theme', 'dark')");
+  await navigate('/entry-agent/login'); await until('document.documentElement.classList.contains("dark")');
+  await responsiveScreens('login');
+  assert.equal(await evaluate('getComputedStyle(document.querySelector("input[name=agentId]")).backgroundColor'), 'rgb(255, 255, 255)', 'Agent form stays light under saved dark preference');
   await evaluate('[...document.querySelectorAll("button")].find(b => b.getAttribute("aria-label") === "Show password").click()');
   assert.equal(await evaluate('document.querySelector("input[name=password]").type'), 'text');
   await fill('input[name=agentId]', 'desk_one'); await fill('input[name=password]', 'FixturePassword1!'); await click('Sign in');
@@ -144,6 +160,7 @@ try {
   assert.equal(await evaluate('location.pathname'), '/entry-agent/events');
   assert.equal(requests.filter(r => r.path === '/api/entry-agent/events/event-upcoming').length, detailCount);
   await screenshot('locked-assignment');
+  await responsiveScreens('events');
   await navigate('/entry-agent/events/event-upcoming');
   await until('document.body.innerText.includes("not available for entry")');
   assert.equal(await evaluate('!!document.querySelector("input[placeholder]")'), false, 'Direct URL cannot expose entry actions');
@@ -152,6 +169,7 @@ try {
   await click('Refresh'); await until(`!!document.querySelector('a[href="/entry-agent/events/event-upcoming"]')`); await until(refreshReady);
   await evaluate(`document.querySelector('a[href="/entry-agent/events/event-upcoming"]').click()`);
   await until('document.body.innerText.includes("Ticket check-in code")');
+  assert.equal(await evaluate('document.querySelector("[role=progressbar]").getAttribute("aria-valuenow")'), '0', 'Zero bookings have valid zero progress');
   await navigate('/entry-agent/events'); await until(refreshReady);
   console.log('PASS locked assignment card, direct URL denial and server unlock reflected after refresh');
   await evaluate('document.querySelector("a[href*=event-one]").click()');
@@ -171,30 +189,36 @@ try {
   paginatedActivity = false;
   console.log('PASS entry activity pagination');
   await screenshot('mobile-entry-desk');
+  await responsiveScreens('desk');
   await click('Scan ticket QR'); await until('!!document.querySelector("[data-rear-only]")');
   assert.equal(await evaluate('document.querySelector("[data-rear-only]").dataset.rearOnly'), 'true');
   await click('Fixture scan'); await until('document.body.innerText.includes("Review ticket")');
   assert.equal(admitted, false, 'QR review does not admit automatically');
   assert.ok(await evaluate('document.body.innerText.includes("4 attendees")'));
   await screenshot('mobile-review');
+  await responsiveScreens('review');
+  assert.equal(await evaluate('document.activeElement.textContent'), 'Review ticket', 'Review receives keyboard focus');
   detailBefore = detailReads().length;
   await click('Allow entry'); await until('document.body.innerText.includes("Entry confirmed")'); await until(refreshReady);
   assert.equal(detailReads().length, detailBefore + 1, 'Successful admission refreshes event totals once');
   assert.equal(requests.filter(r => r.path.endsWith('/admit') && r.method === 'POST').length, 1);
+  await responsiveScreens('confirmed');
   await click('Use another code'); await fill('input[placeholder="e.g. 9sv9begy"]', 'code1234'); await click('Verify ticket');
   await until('document.body.innerText.includes("Already checked in")');
+  await screenshot('already-admitted');
   console.log('PASS mobile login, rear-camera option, review-first QR, whole-group admission and duplicate manual code');
   await click('Use another code'); admitted = false; admissionLost = true;
   await fill('input[placeholder="e.g. 9sv9begy"]', 'code1234'); await click('Verify ticket'); await until('document.body.innerText.includes("Review ticket")');
-  await click('Allow entry'); await until('document.body.innerText.includes("Admission not confirmed")'); await click('Verify again'); await until('document.body.innerText.includes("Already checked in")');
+  await click('Allow entry'); await until('document.body.innerText.includes("Admission not confirmed")'); await screenshot('uncertain-admission'); await click('Verify again'); await until('document.body.innerText.includes("Already checked in")');
   console.log('PASS uncertain admission is reverified without a second admission');
   await click('Use another code'); await fill('input[placeholder="e.g. 9sv9begy"]', 'badbad'); await click('Verify ticket'); await until('document.body.innerText.includes("Ticket not found")');
   assert.ok(await evaluate('!!document.querySelector("input[placeholder]")'));
-  for (const width of [360, 390, 768, 1024]) {
+  for (const width of [360, 390, 768, 820, 1024, 1440]) {
     await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: true });
     for (const theme of ['light', 'dark']) {
       await evaluate(`document.documentElement.classList.remove('light','dark');document.documentElement.classList.add('${theme}')`);
       assert.ok(await evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'), `${width}px ${theme}: no overflow`);
+      assert.equal(await evaluate('getComputedStyle(document.querySelector(".entry-agent-light")).backgroundColor'), 'rgb(244, 246, 250)', 'Agent canvas is always light');
       await screenshot(`entry-${width}-${theme}`);
     }
   }
@@ -206,6 +230,8 @@ try {
   console.log('PASS phone/tablet themes, invalid code recovery, revoked access and isolated session expiry');
   await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
   await navigate('/organizer/entry-agents?event=event-one'); await until('document.body.innerText.includes("Save assignments")');
+  assert.equal(await evaluate('localStorage.getItem("mapmyparty-theme")'), 'dark', 'Agent navigation preserves stored app theme');
+  assert.ok(await evaluate('document.documentElement.classList.contains("dark")'), 'Organizer retains dark theme');
   await click('Save assignments'); await until('document.body.innerText.includes("Assignments and instructions saved")');
   await click('Create a new agent'); await until('!!document.querySelector("input[name=agentId]")');
   await fill('input[name=name]', 'Another agent'); await fill('input[name=agentId]', 'desk_new'); await fill('input[name=password]', 'FixturePassword1!'); await click('Save agent');
@@ -246,5 +272,43 @@ try {
   console.log('PASS compact computed sizes, focus actions, creation/reset/login password visibility and event search');
   assert.deepEqual(errors, [], 'No browser runtime errors');
   console.log('PASS organizer assignment save and inline creation');
+  mockScanner = false; sessionExpired = false;
+  emptyEvents = true;
+  await navigate('/entry-agent/events'); await until('document.body.innerText.includes("No events assigned yet")'); await screenshot('no-assignments');
+  emptyEvents = false;
+  event.title = 'A very long event title for a busy evening welcoming guests from across the city';
+  event.venues[0].fullAddress = 'A very long venue address with building, street, neighborhood and detailed arrival information';
+  event.instructions = 'Please welcome the whole group at Gate 2. '.repeat(12);
+  agent.name = 'An agent with a long full name for layout verification';
+  await navigate('/entry-agent/events/event-one'); await until('document.body.innerText.includes("Ticket check-in code")');
+  await responsiveScreens('long-content');
+  await send('Emulation.setDeviceMetricsOverride', { width: 844, height: 390, deviceScaleFactor: 1, mobile: true });
+  await screenshot('landscape-desk');
+  await send('Emulation.setDeviceMetricsOverride', { width: 720, height: 450, deviceScaleFactor: 2, mobile: false });
+  assert.ok(await evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), 'Desktop 200 percent equivalent viewport reflows');
+  await screenshot('zoom-reflow');
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+  await evaluate("window.dispatchEvent(new Event('offline'))");
+  await until('document.body.innerText.includes("You are offline")');
+  assert.ok(await evaluate('[...document.querySelectorAll("button")].find(b => b.innerText.includes("Scan ticket QR")).disabled'), 'Offline scanning is disabled');
+  await screenshot('offline-desk');
+  await evaluate("window.dispatchEvent(new Event('online'))"); await until(refreshReady);
+  await until('!document.querySelector("[role=alert]")');
+  await click('Scan ticket QR'); await until('!!document.querySelector("[role=dialog]")');
+  assert.equal(await evaluate('getComputedStyle(document.querySelector("[role=dialog]")).backgroundColor'), 'rgb(255, 255, 255)', 'Real scanner chrome stays light under dark app theme');
+  for (const width of [390, 820, 1440]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 768 });
+    assert.ok(await evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), 'Scanner has no horizontal overflow');
+    await screenshot('scanner-' + width);
+  }
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 });
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 });
+  assert.ok(await evaluate('document.querySelector("[role=dialog]").contains(document.activeElement)'), 'Scanner contains keyboard focus');
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+  await until('!document.querySelector("[role=dialog]")');
+  assert.deepEqual(errors, [], 'Scanner dismissal must not unmount the app');
+  await until('document.activeElement === document.querySelector("input[placeholder]")');
+  console.log('PASS responsive agent screens, saved theme isolation and real scanner dialog keyboard behavior');
+  assert.deepEqual(errors, [], 'No runtime errors including real scanner');
   console.log('Browser artifacts:', artifacts);
 } finally { socket?.close(); chrome.kill(); }

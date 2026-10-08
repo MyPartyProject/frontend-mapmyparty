@@ -8,6 +8,7 @@ The app supports Light and Dark themes. Light is the default, regardless of OS p
 - `mapmyparty-theme` stores the selection in local storage and synchronizes open tabs. Visitors and signed-in users share the same browser preference; login/logout does not reset it. There is no account or cross-device synchronization.
 - Missing or invalid values use light. When storage is blocked, switching still works for the current session.
 - The HTML bootstrap restores the palette before React renders. The provider sits above routes and toasts so switching does not remount page content.
+- Entry-agent routes and their scanner always use the light palette through the scoped `entry-agent-light` class. This reuses the root light tokens without changing the HTML theme or saved preference; organizer agent-management pages still follow the selected app theme.
 - Use the shared `ThemeToggle` in public, attendee, organizer, and promoter navigation. Auth, reset, checkout, onboarding, and event analytics also expose it directly; public pages have a footer control.
 
 ## Light Palette
