@@ -185,27 +185,27 @@ const ReceptionLanding = () => {
                     <button
                       key={event.id}
                       onClick={() => navigate(`/organizer/reception/${event.id}`)}
-                      className="w-full text-left rounded-2xl p-4 border border-white/10 bg-gradient-to-r from-white/5 to-white/0 hover:border-emerald-300/40 hover:bg-white/10 transition shadow-lg shadow-black/20 light:border-border light:hover:bg-muted light:shadow-black/5"
+                      className="w-full text-left rounded-2xl p-4 border border-border bg-card text-foreground hover:border-success/40 hover:bg-muted transition shadow-lg shadow-black/20 light:shadow-black/5"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="space-y-1">
-                          <p className="text-[11px] uppercase tracking-[0.18em] text-white/60 flex items-center gap-2 light:text-muted-foreground">
-                            <Radio className="w-4 h-4 text-emerald-300 light:text-success" />
+                          <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground flex items-center gap-2">
+                            <Radio className="w-4 h-4 text-success" />
                             Live • {event.category}
                           </p>
                           <h3 className="text-xl font-bold">{event.title}</h3>
-                          <p className="text-sm text-white/70 flex items-center gap-2 light:text-muted-foreground">
+                          <p className="text-sm text-muted-foreground flex items-center gap-2">
                             <Clock className="w-4 h-4" />
                             {formatDateTime(event.startDate)}
-                            <span className="h-1 w-1 rounded-full bg-white/30 light:bg-muted" />
+                            <span className="h-1 w-1 rounded-full bg-muted-foreground/50" />
                             <MapPin className="w-4 h-4" />
                             {event.venue}, {event.city}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs text-white/60 light:text-muted-foreground">Occupancy</p>
+                          <p className="text-xs text-muted-foreground">Occupancy</p>
                           <p className="text-2xl font-bold">{occupancy}%</p>
-                          <p className="text-xs text-white/50 light:text-muted-foreground">
+                          <p className="text-xs text-muted-foreground">
                             {ticketTotals.sold} / {ticketTotals.total} sold
                           </p>
                         </div>

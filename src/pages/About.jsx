@@ -46,14 +46,14 @@ const About = () => {
         </div>
 
         <div className="relative mx-auto max-w-6xl px-6 pt-16 pb-20 md:pt-20 md:pb-24">
-          <Badge className="mb-4 border border-white/20 bg-white/10 text-white light:border-border light:bg-muted light:text-foreground">About Map MyParty</Badge>
+          <Badge className="mb-4 border border-white/20 bg-white/10 text-white light:border-border light:bg-muted light:text-foreground">About MapMyParty</Badge>
           <div className="grid gap-10 md:grid-cols-2 md:items-center">
             <div className="space-y-6">
               <h1 className="text-4xl font-bold leading-tight md:text-5xl">
                 We're reimagining how the world meets, celebrates, and discovers.
               </h1>
               <p className="max-w-2xl text-lg text-slate-200/80 light:text-muted-foreground">
-                Map MyParty makes it effortless to create, find, and experience unforgettable events. From intimate
+                MapMyParty makes it effortless to create, find, and experience unforgettable events. From intimate
                 gigs to city-wide festivals, we connect organizers and guests with tools that feel delightful and fast.
               </p>
               <div className="flex flex-wrap gap-3">
@@ -126,7 +126,7 @@ const About = () => {
 
             <div className="space-y-3 text-sm text-slate-200/80 light:text-muted-foreground">
               <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 light:border-border light:bg-surface">
-                "We moved our entire festival series to Map MyParty and saw 19% faster sell-outs. The guest experience
+                "We moved our entire festival series to MapMyParty and saw 19% faster sell-outs. The guest experience
                 is unmatched."
                 <div className="mt-3 font-semibold text-white light:text-foreground">- Aanya Desai, Festival Director</div>
               </div>
