@@ -1,5 +1,7 @@
 import { bankVerificationMessage } from "@/utils/bankInput";
 import ThemeToggle from "@/components/ThemeToggle";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import EntryAgentManagement from '@/components/EntryAgentManagement';
 import { useBankInput } from "@/hooks/useBankInput";
 import { buildOrganizerProfile as buildInitialData } from '@/utils/organizerProfile';
@@ -624,6 +626,49 @@ const OrganizerProfileContent = ({ user }) => {
 
   const displayedOrganizerLogo = logoPreview || editData.logo;
 
+  if (loadingProfile) {
+    return (
+      <div role="status" aria-label="Loading organizer profile" aria-busy="true" className="space-y-6">
+        <span className="sr-only">Loading organizer profile</span>
+        <div aria-hidden="true" className="flex flex-wrap items-center justify-between gap-4">
+          <div className="space-y-3">
+            <Skeleton className="h-3 w-32" />
+            <Skeleton className="h-9 w-64" />
+            <Skeleton className="h-4 w-72 max-w-full" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-32 rounded-xl" />
+            <Skeleton className="h-10 w-40 rounded-xl" />
+          </div>
+        </div>
+        <div aria-hidden="true" className="overflow-hidden rounded-2xl border border-white/10 bg-[#0f1628] light:border-border light:bg-card">
+          <div className="space-y-6 border-b border-white/10 p-8 light:border-border">
+            <div className="flex flex-wrap items-center gap-5">
+              <Skeleton className="h-20 w-20 shrink-0 rounded-full" />
+              <div className="space-y-3">
+                <Skeleton className="h-7 w-48" />
+                <Skeleton className="h-4 w-64 max-w-full" />
+              </div>
+            </div>
+            <Skeleton className="h-4 w-full max-w-lg" />
+          </div>
+          <div className="space-y-6 bg-[#0b1220] p-8 light:bg-background">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+              {Array.from({ length: 5 }, (_, index) => <Skeleton key={index} className="h-20 rounded-xl" />)}
+            </div>
+            <Skeleton className="h-6 w-40" />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-20 rounded-xl" />)}
+            </div>
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-24 w-full rounded-2xl" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 text-white light:text-foreground">
       {/* Header */}
@@ -702,7 +747,7 @@ const OrganizerProfileContent = ({ user }) => {
                 <div className="space-y-2">
                   <label className="text-sm text-white/70 light:text-muted-foreground">Avatar</label>
                   <div className="flex items-center gap-3 flex-wrap rounded-xl border border-white/10 bg-white/5/70 px-3 py-3 light:border-border light:bg-muted/70">
-                    <div className="h-12 w-12 rounded-full overflow-hidden border border-white/10 bg-white/10 flex items-center justify-center text-sm font-semibold shadow-inner shrink-0 light:border-border light:bg-muted">
+                    <div className="h-12 w-12 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-sm font-semibold shrink-0 light:bg-muted">
                       {ownerDraft.avatar ? (
                         <img src={ownerDraft.avatar} alt="Owner avatar" className="h-full w-full object-cover" />
                       ) : (
@@ -936,9 +981,9 @@ const OrganizerProfileContent = ({ user }) => {
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_15%_30%,#ffffff,transparent_35%)]" />
           <div className="relative flex flex-col gap-6">
             <div className="flex items-center gap-5 flex-wrap">
-              <div className="w-20 h-20 rounded-2xl bg-white/5 flex items-center justify-center text-white font-bold text-3xl shadow-inner border border-white/10 overflow-hidden light:bg-muted light:text-foreground light:border-border">
+              <div className="w-20 h-20 shrink-0 rounded-full bg-white/5 flex items-center justify-center text-white font-bold text-3xl overflow-hidden light:bg-muted light:text-foreground">
                 {displayedOrganizerLogo ? (
-                  <img src={displayedOrganizerLogo} alt={editData.name} className="w-full h-full object-contain p-2" />
+                  <img src={displayedOrganizerLogo} alt={editData.name} className="w-full h-full object-cover object-center" />
                 ) : (
                   (editData.name || "U").charAt(0).toUpperCase()
                 )}
@@ -977,9 +1022,7 @@ const OrganizerProfileContent = ({ user }) => {
 
         {/* Profile Details */}
         <div className="p-8 space-y-6 bg-[#0b1220] light:bg-background">
-          {loadingProfile ? (
-            <div className="text-white/70 text-sm light:text-muted-foreground">Loading organizer profile…</div>
-          ) : !isEditing ? (
+          {!isEditing ? (
             // View Mode
             <div className="space-y-6">
               {/* Snapshot */}
@@ -1139,12 +1182,12 @@ const OrganizerProfileContent = ({ user }) => {
             // Edit Mode
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row gap-4 border-b border-white/10 pb-6 light:border-border">
-                <div className="w-28 h-28 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0 light:bg-muted light:border-border">
+                <div className="w-28 h-28 rounded-full bg-white/5 flex items-center justify-center overflow-hidden shrink-0 light:bg-muted">
                   {displayedOrganizerLogo ? (
                     <img
                       src={displayedOrganizerLogo}
                       alt="Organizer logo preview"
-                      className="w-full h-full object-contain p-3"
+                      className="w-full h-full object-cover object-center"
                     />
                   ) : (
                     <ImagePlus className="w-9 h-9 text-white/35 light:text-muted-foreground" />
@@ -1529,6 +1572,7 @@ const OrganizerDashboard = () => {
   const user = {
     name: authUser?.name || "Organizer",
     email: authUser?.email || "",
+    avatar: authUser?.avatar || "",
   };
 
   const handleLogout = async () => {
@@ -1632,15 +1676,19 @@ const OrganizerDashboard = () => {
         <div className="mt-auto p-4 border-t border-white/10 light:border-border">
           <div
             ref={footerMenuRef}
-            className="relative bg-gradient-to-br from-white/5 via-white/0 to-blue-500/5 border border-white/10 rounded-xl p-3 shadow-lg shadow-black/20 light:border-border light:shadow-black/5"
+            className={`relative bg-gradient-to-br from-white/5 via-white/0 to-blue-500/5 border border-white/10 rounded-xl ${sidebarOpen ? "p-3" : "p-2"} shadow-lg shadow-black/20 light:border-border light:shadow-black/5`}
           >
             <button
               onClick={() => setFooterMenuOpen((v) => !v)}
-              className="flex items-center gap-3 w-full text-left hover:bg-white/5 transition rounded-lg px-2 py-1 light:hover:bg-muted"
+              aria-label="Organizer profile menu"
+              className={`flex items-center gap-3 w-full text-left hover:bg-white/5 transition rounded-lg py-1 light:hover:bg-muted ${sidebarOpen ? "px-2" : "justify-center"}`}
             >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500/30 via-blue-500/30 to-red-500/30 flex items-center justify-center text-red-100 font-semibold border border-white/10 light:border-border light:text-secondary-foreground light:from-secondary light:via-secondary light:to-secondary">
-                {(user.name || "U").charAt(0).toUpperCase()}
-              </div>
+              <Avatar className="h-10 w-10 rounded-full border-0 ring-0">
+                <AvatarImage src={user.avatar} alt={user.name} className="object-cover object-center" />
+                <AvatarFallback className="bg-gradient-to-br from-red-500/30 via-blue-500/30 to-red-500/30 text-red-100 font-semibold light:text-secondary-foreground light:from-secondary light:via-secondary light:to-secondary">
+                  {(user.name || "U").charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
               {sidebarOpen && (
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white truncate light:text-foreground">{user.name || "Organizer"}</p>

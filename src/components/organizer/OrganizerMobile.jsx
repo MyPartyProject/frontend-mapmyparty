@@ -11,6 +11,7 @@ import { OrganizerMobileEvents, OrganizerMobileEventDetail } from "./OrganizerMo
 import OrganizerAnalyticsSnapshot from "./OrganizerAnalyticsSnapshot";
 import { organizerMobilePage, organizerMobileTotals, organizerDesktopTask } from "@/utils/organizerMobile";
 import { buildOrganizerProfile } from "@/utils/organizerProfile";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 const card = "rounded-xl border border-border bg-card p-4 shadow-sm";
@@ -88,10 +89,26 @@ function Profile({ user }) {
     retry: false,
   });
   const data = buildOrganizerProfile(profile.data || {}, user);
+  if (profile.isPending) {
+    return <div role="status" aria-label="Loading organizer profile" aria-busy="true" className="space-y-3">
+      <span className="sr-only">Loading organizer profile</span>
+      <div aria-hidden="true" className={`${card} space-y-4`}>
+        <Skeleton className="h-20 w-20 rounded-full" />
+        <Skeleton className="h-7 w-48" />
+        {Array.from({ length: 5 }, (_, index) => <div key={index} className="space-y-2">
+          <Skeleton className="h-3 w-20" />
+          <Skeleton className="h-5 w-3/4" />
+        </div>)}
+      </div>
+      <Skeleton aria-hidden="true" className="h-48 rounded-xl" />
+      <Skeleton aria-hidden="true" className="h-48 rounded-xl" />
+      <Skeleton aria-hidden="true" className="h-16 rounded-xl" />
+    </div>;
+  }
   return <LoadState loading={profile.isPending} error={profile.error} retry={profile.refetch}>
     <div className="space-y-3">
       <section className={`${card} space-y-3`} aria-label="Organizer profile">
-        {data.logo && <img src={data.logo} alt="Organizer logo" className="h-20 w-20 rounded-xl border border-border object-cover" />}
+        {data.logo && <img src={data.logo} alt="Organizer logo" className="h-20 w-20 rounded-full object-cover object-center" />}
         <div><h2 className="break-words text-xl font-semibold">{data.name || "Organizer"}</h2><p className="mt-1 text-sm text-muted-foreground">{data.isVerified ? "Verified organizer" : "Organizer verification pending"}</p></div>
         <Fields items={[["About", data.description], ["Email", data.email], ["Phone", data.contact], ["Location", [data.address, data.state].filter(Boolean).join(", ")], ["GST number", data.gstNumber]]} />
       </section>
