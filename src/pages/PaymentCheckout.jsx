@@ -18,7 +18,7 @@ import {
 import { apiFetch } from "@/config/api";
 import { toast } from "sonner";
 import { loadCashfreeScript } from "@/utils/loadCashfreeScript";
-import { formatEventTime } from "@/lib/eventDateTime";
+import { formatEventDate, formatEventTime } from "@/lib/eventDateTime";
 
 // Payment guide text and icons.
 const paymentSteps = [
@@ -480,7 +480,7 @@ const PaymentCheckout = () => {
                     <h2 className="text-xl font-bold leading-snug">{summary.title}</h2>
                     <div className="flex flex-wrap gap-3 text-xs text-white/70 light:text-muted-foreground">
                       <span className="inline-flex items-center gap-1">
-                        <Calendar className="h-4 w-4" /> {summary.date || "Date TBA"}
+                        <Calendar className="h-4 w-4" /> {formatEventDate(summary.date) || "Date TBA"}
                       </span>
                       <span className="inline-flex items-center gap-1">
                         <Clock className="h-4 w-4" /> {summary.time || formatEventTime(summary.date) || "Time TBA"}
