@@ -55,6 +55,7 @@ import { toast } from "sonner";
 import { apiFetch, buildUrl } from "@/config/api";
 import usePublicEventDetail from "@/hooks/usePublicEventDetail";
 import { shareEventInvite } from "@/utils/eventShare";
+import { formatEventTime as formatTime } from "@/lib/eventDateTime";
 import {
   fetchSession,
   resetSessionCache,
@@ -686,15 +687,6 @@ const EventDetailNew = () => {
     });
   };
 
-  const formatTime = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
-
   const handleQuantityChange = (ticketId, change) => {
     setTicketQuantities((prev) => {
       const ticket = event?.tickets?.find((t) => t.id === ticketId);
@@ -902,7 +894,7 @@ const EventDetailNew = () => {
           id: event?.id,
           title: event.title || event.eventTitle || event.name || "Event",
           date: event.startDate,
-          time: event.time,
+          time: formatTime(event.startDate),
           venue: event.venue,
           address: event.address,
           banner: event.bannerImage || event.image || FALLBACK_IMAGE,
