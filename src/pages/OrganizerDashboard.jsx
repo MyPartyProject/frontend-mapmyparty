@@ -1572,7 +1572,7 @@ const OrganizerDashboard = () => {
   const user = {
     name: authUser?.name || "Organizer",
     email: authUser?.email || "",
-    avatar: authUser?.avatar || "",
+    logo: authUser?.logo || "",
   };
 
   const handleLogout = async () => {
@@ -1684,7 +1684,7 @@ const OrganizerDashboard = () => {
               className={`flex items-center gap-3 w-full text-left hover:bg-white/5 transition rounded-lg py-1 light:hover:bg-muted ${sidebarOpen ? "px-2" : "justify-center"}`}
             >
               <Avatar className="h-10 w-10 rounded-full border-0 ring-0">
-                <AvatarImage src={user.avatar} alt={user.name} className="object-cover object-center" />
+                <AvatarImage src={user.logo} alt={user.name} className="object-cover object-center" />
                 <AvatarFallback className="bg-gradient-to-br from-red-500/30 via-blue-500/30 to-red-500/30 text-red-100 font-semibold light:text-secondary-foreground light:from-secondary light:via-secondary light:to-secondary">
                   {(user.name || "U").charAt(0).toUpperCase()}
                 </AvatarFallback>
