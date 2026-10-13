@@ -1167,7 +1167,7 @@ const LandingPage = () => {
                   Seamless
                 </p>
                 <h2 className="mt-3 text-3xl font-black text-foreground sm:text-4xl">
-                  How Map MyParty works
+                  How MapMyParty works
                 </h2>
                 <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
                   From discovery to entry, we keep every step delightful with
@@ -1221,7 +1221,7 @@ const LandingPage = () => {
                     Built for real event discovery
                   </h2>
                   <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
-                    Map MyParty keeps the public experience focused on
+                    MapMyParty keeps the public experience focused on
                     discovery, booking, and clear event details without relying
                     on inflated claims or placeholder activity.
                   </p>

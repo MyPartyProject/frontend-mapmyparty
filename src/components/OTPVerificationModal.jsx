@@ -285,7 +285,7 @@ const OTPVerificationModal = ({
           <p className="text-xs text-center text-muted-foreground">
             For security, never share this code with anyone.
             <br />
-            Map MyParty will never ask for your code.
+            MapMyParty will never ask for your code.
           </p>
         </div>
       </DialogContent>

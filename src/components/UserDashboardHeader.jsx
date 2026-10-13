@@ -61,7 +61,7 @@ const UserDashboardHeader = () => {
         {/* Brand */}
         <Link to="/dashboard" className="flex items-center gap-2 font-bold text-xl text-white light:text-foreground">
           <img src={logo} alt="MapMyParty" className="h-8 w-auto" />
-          <span className="text-white light:text-foreground">Map MyParty</span>
+          <span className="text-white light:text-foreground">MapMyParty</span>
         </Link>
 
         {/* Desktop Search and Profile */}
