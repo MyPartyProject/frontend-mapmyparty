@@ -18,7 +18,7 @@ export default function UpcomingSettlements({ admin = false }) {
     refetchOnWindowFocus: true,
   });
   const items = data?.items || [];
-  return <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+  return <section className={admin ? "space-y-3 rounded-xl border border-border bg-card p-4" : "space-y-3 rounded-xl border border-white/10 bg-white/5 p-4 text-sm light:border-border light:bg-card [&_h2]:text-base [&_h3]:text-sm [&_h3]:break-words [&_article]:bg-black/10 light:[&_article]:bg-surface [&_article]:space-y-3 [&_article]:min-w-0 [&_dl]:border-y [&_dl]:border-border [&_dl]:py-3 [&_dl]:gap-x-4 [&_dl]:gap-y-3 sm:[&_dl]:grid-cols-3 [&_dd]:mt-1 [&_dd]:font-medium [&_dd]:tabular-nums [&_button]:rounded-lg [&_button]:border [&_button]:border-border [&_button:disabled]:opacity-50"}>
     <div className="flex items-center justify-between gap-3"><h2 className="font-semibold">Upcoming and blocked settlements</h2><button type="button" className="min-h-11 px-3 text-sm text-primary" disabled={isFetching} onClick={() => refetch()}>{isFetching ? 'Loading…' : 'Refresh'}</button></div>
     <p className="text-sm text-muted-foreground">Eligible payouts are processed automatically seven days after the event ends. Verified GST and a verified bank account are required. Bank processing can take additional time.</p>
     {admin && data?.automation && <p className="text-sm">Release mode: {data.automation.releaseMode}. Transfer execution: {data.automation.executionEnabled ? 'Enabled' : 'Disabled'}.</p>}

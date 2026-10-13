@@ -10,6 +10,7 @@ import {
   Calendar,
   Filter,
   Wallet2,
+  RefreshCw,
 } from "lucide-react";
 import PayoutDetail from "@/components/organizer/PayoutDetail";
 import UpcomingSettlements from '@/components/organizer/UpcomingSettlements';
@@ -116,51 +117,20 @@ const OrganizerPayouts = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <UpcomingSettlements />
-      {error && <p role="alert" className="text-destructive">{error}</p>}
-      <button type="button" className="min-h-11 text-primary" disabled={loading} onClick={fetchPayouts}>Refresh payout history</button>
+    <div className="min-w-0 space-y-4 text-sm">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white light:text-foreground">Payouts</h1>
-          <p className="text-sm text-white/60 mt-1 light:text-muted-foreground">
-            Track your earnings and payout history
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Filter className="w-4 h-4 text-white/60 light:text-muted-foreground" />
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setPage(1);
-            }}
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/50 light:bg-muted light:border-border light:text-foreground"
-          >
-            <option value="">All Statuses</option>
-            <option value="REVIEW_REQUIRED">Review Required</option>
-            <option value="APPROVED">Approved</option>
-            <option value="PENDING">Pending</option>
-            <option value="PROCESSING">Processing</option>
-            <option value="COMPLETED">Completed</option>
-            <option value="FAILED">Failed</option>
-            <option value="RETRY_PENDING">Retry Pending</option>
-            <option value="RECONCILED">Reconciled</option>
-            <option value="CANCELLED">Cancelled</option>
-            <option value="REVERSED">Reversed</option>
-            <option value="AUTO_APPROVED">Scheduled automatically</option>
-          </select>
-        </div>
       </div>
 
+      <UpcomingSettlements />
+
       {balanceError && <p role="alert" className="text-destructive">{balanceError} <button onClick={fetchBalanceAdjustments}>Retry</button></p>}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-5 light:bg-muted light:border-border">
+      <div className="bg-white/5 border border-white/10 rounded-xl p-4 light:bg-card light:border-border">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <div className="flex items-center gap-2">
               <Wallet2 className="h-5 w-5 text-primary light:text-accent-foreground" />
-              <h2 className="text-lg font-semibold text-white light:text-foreground">Balance adjustments</h2>
+              <h2 className="text-base font-semibold text-white light:text-foreground">Balance adjustments</h2>
             </div>
             <p className="mt-1 text-sm text-white/50 light:text-muted-foreground">
               Chargebacks or post-payout corrections are recovered from future payouts.
@@ -168,7 +138,7 @@ const OrganizerPayouts = () => {
           </div>
           <div className="text-left lg:text-right">
             <p className="text-xs text-white/40 light:text-muted-foreground">Open balance</p>
-            <p className={`text-2xl font-bold ${balanceAdjustments.summary?.openRemainingAmountCents > 0 ? "text-yellow-300 light:text-warning" : "text-green-300 light:text-success"}`}>
+            <p className={`text-xl font-semibold tracking-tight ${balanceAdjustments.summary?.openRemainingAmountCents > 0 ? "text-yellow-300 light:text-warning" : "text-green-300 light:text-success"}`}>
               {balanceError || balanceLoading ? "Unavailable" : `Rs. ${((balanceAdjustments.summary?.openRemainingAmountCents || 0) / 100).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}
             </p>
             <p className="text-xs text-white/40 light:text-muted-foreground">
@@ -197,28 +167,63 @@ const OrganizerPayouts = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden light:bg-muted light:border-border">
+      <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden light:bg-card light:border-border">
+        <div className="flex flex-col gap-3 border-b border-white/10 p-4 sm:flex-row sm:items-center sm:justify-between light:border-border">
+          <h2 className="text-base font-semibold text-white light:text-foreground">Payout history</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none">
+              <Filter aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <select
+                aria-label="Filter payouts by status"
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="min-h-11 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 sm:w-auto"
+              >
+                <option value="">All Status</option>
+                <option value="REVIEW_REQUIRED">Review Required</option>
+                <option value="APPROVED">Approved</option>
+                <option value="PENDING">Pending</option>
+                <option value="PROCESSING">Processing</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="FAILED">Failed</option>
+                <option value="RETRY_PENDING">Retry Pending</option>
+                <option value="RECONCILED">Reconciled</option>
+                <option value="CANCELLED">Cancelled</option>
+                <option value="REVERSED">Reversed</option>
+                <option value="AUTO_APPROVED">Scheduled automatically</option>
+              </select>
+            </div>
+            <button type="button" aria-label="Refresh payout history" className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-border px-3 text-sm text-foreground transition hover:bg-muted disabled:opacity-50" disabled={loading} onClick={fetchPayouts}>
+              <RefreshCw aria-hidden="true" className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+          </div>
+        </div>
+        {error && <p role="alert" className="px-4 pt-4 text-sm text-destructive">{error}</p>}
         {loading ? (
-          <div className="flex items-center justify-center py-20">
+          <div className="flex items-center justify-center py-12">
             <Loader className="w-6 h-6 animate-spin text-white/60 light:text-muted-foreground" />
           </div>
         ) : payouts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-white/40 light:text-muted-foreground">
-            <DollarSign className="w-12 h-12 mb-3 opacity-50" />
-            <p className="text-lg font-medium">No payouts found</p>
+          <div className="flex flex-col items-center justify-center py-12 text-white/40 light:text-muted-foreground">
+            <DollarSign className="w-8 h-8 mb-3 opacity-50" />
+            <p className="text-sm font-medium">No payouts found</p>
             <p className="text-sm mt-1">Your payouts will appear here once processed.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full [&_th]:whitespace-nowrap [&_td:nth-child(1)]:whitespace-nowrap [&_td:nth-child(3)]:text-right [&_th:nth-child(3)]:text-right [&_td:nth-child(4)]:whitespace-nowrap">
               <thead>
                 <tr className="border-b border-white/10 text-left text-xs text-white/50 uppercase tracking-wider light:border-border light:text-muted-foreground">
-                  <th className="px-6 py-4">Date</th>
-                  <th className="px-6 py-4">Event</th>
-                  <th className="px-6 py-4">Amount</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Bank</th>
-                  <th className="px-6 py-4">Notes</th>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Event</th>
+                  <th className="px-4 py-3">Amount</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Bank</th>
+                  <th className="px-4 py-3">Notes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 light:divide-border">
@@ -228,7 +233,7 @@ const OrganizerPayouts = () => {
                     onClick={() => setSelectedPayoutId(payout.id)}
                     className="hover:bg-white/5 cursor-pointer transition light:hover:bg-muted"
                   >
-                    <td className="px-6 py-4 text-sm text-white/80 light:text-muted-foreground">
+                    <td className="px-4 py-3 text-sm text-white/80 light:text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-white/40 light:text-muted-foreground" />
                         {payout.payoutDate
@@ -244,7 +249,7 @@ const OrganizerPayouts = () => {
                             })}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-white/70 light:text-muted-foreground">
+                    <td className="px-4 py-3 text-sm text-white/70 light:text-muted-foreground">
                       <div>
                         <div className="max-w-[220px] truncate font-medium">
                           {payout.event?.title || "Organizer payout"}
@@ -254,17 +259,17 @@ const OrganizerPayouts = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm font-semibold text-white light:text-foreground">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold tabular-nums text-white light:text-foreground">
                       Rs. {getPayoutAmount(payout).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3">
                       <Badge
                         className={`${statusColors[payout.status] || ""} border text-xs`}
                       >
                         {formatStatus(payout.status)}
                       </Badge>
                     </td>
-                    <td className="px-6 py-4 text-sm text-white/60 light:text-muted-foreground">
+                    <td className="px-4 py-3 text-sm text-white/60 light:text-muted-foreground">
                       {payout.bank_details ? (
                         <div>
                           <div>{payout.bank_details.bankName}</div>
@@ -276,7 +281,7 @@ const OrganizerPayouts = () => {
                         "-"
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-white/50 max-w-[200px] truncate light:text-muted-foreground">
+                    <td className="px-4 py-3 text-sm text-white/50 max-w-[200px] truncate light:text-muted-foreground">
                       {payout.failureReason || payout.blockedReason || payout.remarks || "-"}
                     </td>
                   </tr>
@@ -288,15 +293,16 @@ const OrganizerPayouts = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-white/10 light:border-border">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-white/10 light:border-border">
             <span className="text-sm text-white/50 light:text-muted-foreground">
               Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
             </span>
             <div className="flex items-center gap-2">
               <button
+                aria-label="Previous payout page"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="p-2 rounded-lg hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-white/70 light:hover:bg-muted light:text-muted-foreground"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-lg hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-white/70 light:hover:bg-muted light:text-muted-foreground"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -304,9 +310,10 @@ const OrganizerPayouts = () => {
                 {page} / {totalPages}
               </span>
               <button
+                aria-label="Next payout page"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="p-2 rounded-lg hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-white/70 light:hover:bg-muted light:text-muted-foreground"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-lg hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-white/70 light:hover:bg-muted light:text-muted-foreground"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>

@@ -87,7 +87,7 @@ const PayoutDetail = ({ payoutId, onBack }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="flex items-center justify-center py-12">
         <Loader className="w-6 h-6 animate-spin text-white/60 light:text-muted-foreground" />
       </div>
     );
@@ -95,7 +95,7 @@ const PayoutDetail = ({ payoutId, onBack }) => {
 
   if (!data) {
     return (
-      <div className="text-center py-20 text-white/50 light:text-muted-foreground">
+      <div className="text-center py-12 text-white/50 light:text-muted-foreground">
         <p role="alert">{error || "Payout not found."}</p>
         <button className="min-h-11 px-3" onClick={() => setReload(value => value + 1)}>Retry</button>
         <button onClick={onBack} className="mt-4 text-primary hover:underline light:text-accent-foreground">
@@ -119,48 +119,51 @@ const PayoutDetail = ({ payoutId, onBack }) => {
   const payoutAmount = getPayoutAmount(payout, summary);
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-4 text-sm [&_p]:break-words">
       {downloadError && <p role="alert" className="text-destructive">{downloadError}</p>}
-      <button className="min-h-11 text-primary" onClick={() => setReload(value => value + 1)}>Refresh payout</button>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <button
+            aria-label="Back to payouts"
             onClick={onBack}
-            className="p-2 rounded-lg hover:bg-white/10 text-white/70 light:hover:bg-muted light:text-muted-foreground"
+            className="min-h-11 min-w-11 shrink-0 flex items-center justify-center rounded-lg border border-border hover:bg-white/10 text-white/70 light:hover:bg-muted light:text-muted-foreground"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div>
-            <h1 className="text-2xl font-bold text-white light:text-foreground">Payout Detail</h1>
-            <p className="text-xs text-white/40 mt-0.5 light:text-muted-foreground">
+          <div className="min-w-0">
+            <h1 className="text-xl font-semibold tracking-tight text-white light:text-foreground">Payout Detail</h1>
+            <p className="break-all text-xs text-white/40 mt-0.5 light:text-muted-foreground">
               {payout.invoiceNumber || payout.publicId || payout.id}
             </p>
           </div>
         </div>
-        <button
-          onClick={handleDownloadInvoice}
-          disabled={downloading}
-          className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition disabled:opacity-50 light:bg-primaryCTA light:hover:bg-primaryCTA-hover light:text-inverse"
-        >
-          {downloading ? (
-            <Loader className="w-4 h-4 animate-spin" />
-          ) : (
-            <Download className="w-4 h-4" />
-          )}
-          Download Invoice
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" className="min-h-11 rounded-lg border border-border px-3 text-sm text-foreground hover:bg-muted" onClick={() => setReload(value => value + 1)}>Refresh payout</button>
+          <button
+            onClick={handleDownloadInvoice}
+            disabled={downloading}
+            className="flex min-h-11 items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition disabled:opacity-50 light:bg-primaryCTA light:hover:bg-primaryCTA-hover light:text-inverse"
+          >
+            {downloading ? (
+              <Loader className="w-4 h-4 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4" />
+            )}
+            Download Invoice
+          </button>
+        </div>
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 [&>div]:min-w-0">
         {/* Payout Info */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-5 light:bg-muted light:border-border">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 light:bg-card light:border-border">
           <div className="flex items-center gap-2 mb-3">
             <CreditCard className="w-4 h-4 text-primary light:text-accent-foreground" />
             <h3 className="text-sm font-semibold text-white/70 light:text-muted-foreground">Payout</h3>
           </div>
-          <div className="text-2xl font-bold text-white mb-2 light:text-foreground">
+          <div className="text-xl font-semibold tracking-tight text-white mb-2 light:text-foreground">
             Rs. {payoutAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
           </div>
           <Badge className={`${statusColors[payout.status] || ""} border text-xs`}>
@@ -189,7 +192,7 @@ const PayoutDetail = ({ payoutId, onBack }) => {
         </div>
 
         {/* Event Info */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-5 light:bg-muted light:border-border">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 light:bg-card light:border-border">
           <div className="flex items-center gap-2 mb-3">
             <Calendar className="w-4 h-4 text-primary light:text-accent-foreground" />
             <h3 className="text-sm font-semibold text-white/70 light:text-muted-foreground">Event</h3>
@@ -204,7 +207,7 @@ const PayoutDetail = ({ payoutId, onBack }) => {
         </div>
 
         {/* Bank Info */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-5 light:bg-muted light:border-border">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 light:bg-card light:border-border">
           <div className="flex items-center gap-2 mb-3">
             <Building2 className="w-4 h-4 text-primary light:text-accent-foreground" />
             <h3 className="text-sm font-semibold text-white/70 light:text-muted-foreground">Bank Details</h3>
@@ -225,7 +228,7 @@ const PayoutDetail = ({ payoutId, onBack }) => {
         </div>
 
         {/* Organizer Info */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-5 light:bg-muted light:border-border">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-4 light:bg-card light:border-border">
           <div className="flex items-center gap-2 mb-3">
             <FileText className="w-4 h-4 text-primary light:text-accent-foreground" />
             <h3 className="text-sm font-semibold text-white/70 light:text-muted-foreground">Organizer</h3>
@@ -241,26 +244,26 @@ const PayoutDetail = ({ payoutId, onBack }) => {
       </div>
 
       {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 light:bg-muted light:border-border">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4 light:bg-card light:border-border">
             <p className="text-xs text-white/40 light:text-muted-foreground">Gross sales</p>
             <p className="mt-1 font-semibold text-white light:text-foreground">Rs. {formatAmount(summary.grossTicketSales)}</p>
           </div>
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 light:bg-muted light:border-border">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4 light:bg-card light:border-border">
             <p className="text-xs text-white/40 light:text-muted-foreground">Refunds/reserve</p>
             <p className="mt-1 font-semibold text-white light:text-foreground">
               Rs. {formatAmount((summary.refundAmount || 0) + (summary.refundReserveAmount || 0))}
             </p>
           </div>
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 light:bg-muted light:border-border">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4 light:bg-card light:border-border">
             <p className="text-xs text-white/40 light:text-muted-foreground">Platform fee</p>
             <p className="mt-1 font-semibold text-white light:text-foreground">Rs. {formatAmount(summary.platformFeeAmount)}</p>
           </div>
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 light:bg-muted light:border-border">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4 light:bg-card light:border-border">
             <p className="text-xs text-white/40 light:text-muted-foreground">{summary.gstType || "GST"}</p>
             <p className="mt-1 font-semibold text-white light:text-foreground">Rs. {formatAmount(summary.gstTotal)}</p>
           </div>
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 light:bg-muted light:border-border">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4 light:bg-card light:border-border">
             <p className="text-xs text-white/40 light:text-muted-foreground">Net payable</p>
             <p className="mt-1 font-semibold text-primary light:text-accent-foreground">Rs. {formatAmount(summary.netPayoutAmount)}</p>
           </div>
@@ -276,24 +279,24 @@ const PayoutDetail = ({ payoutId, onBack }) => {
       )}
 
       {/* Breakdown Table */}
-      <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden light:bg-muted light:border-border">
-        <div className="px-6 py-4 border-b border-white/10 light:border-border">
-          <h2 className="text-lg font-semibold text-white light:text-foreground">Settlement Breakdown</h2>
+      <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden light:bg-card light:border-border">
+        <div className="px-4 py-3 border-b border-white/10 light:border-border">
+          <h2 className="text-base font-semibold text-white light:text-foreground">Settlement Breakdown</h2>
         </div>
         {eventBreakdowns && eventBreakdowns.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full [&_th]:whitespace-nowrap [&_td]:tabular-nums [&_td]:whitespace-nowrap [&_td:not(:first-child)]:text-right [&_th:not(:first-child)]:text-right">
               <thead>
                 <tr className="border-b border-white/10 text-left text-xs text-white/50 uppercase tracking-wider light:border-border light:text-muted-foreground">
-                  <th className="px-6 py-3">Ticket</th>
-                  <th className="px-6 py-3">Price</th>
-                  <th className="px-6 py-3">Qty</th>
-                  <th className="px-6 py-3">Gross</th>
-                  <th className="px-6 py-3">Refunds</th>
-                  <th className="px-6 py-3">Net Sales</th>
-                  <th className="px-6 py-3">Platform Fee</th>
-                  <th className="px-6 py-3">GST</th>
-                  <th className="px-6 py-3">Net Payout</th>
+                  <th className="px-4 py-3">Ticket</th>
+                  <th className="px-4 py-3">Price</th>
+                  <th className="px-4 py-3">Qty</th>
+                  <th className="px-4 py-3">Gross</th>
+                  <th className="px-4 py-3">Refunds</th>
+                  <th className="px-4 py-3">Net Sales</th>
+                  <th className="px-4 py-3">Platform Fee</th>
+                  <th className="px-4 py-3">GST</th>
+                  <th className="px-4 py-3">Net Payout</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 light:divide-border">
@@ -302,47 +305,47 @@ const PayoutDetail = ({ payoutId, onBack }) => {
                     <tr className="bg-white/[0.02] light:bg-muted">
                       <td
                         colSpan={9}
-                        className="px-6 py-3 text-sm font-semibold text-white/80 light:text-muted-foreground"
+                        className="px-4 py-3 text-sm font-semibold text-white/80 light:text-muted-foreground"
                       >
                         {evt.eventTitle}
                       </td>
                     </tr>
                     {evt.ticketBreakdowns.map((tb, idx) => (
                       <tr key={idx} className="hover:bg-white/5 light:hover:bg-muted">
-                        <td className="px-6 py-3 text-sm text-white/70 pl-10 light:text-muted-foreground">
+                        <td className="px-4 py-3 text-sm text-white/70 pl-10 light:text-muted-foreground">
                           {tb.ticketName}
                         </td>
-                        <td className="px-6 py-3 text-sm text-white/60 light:text-muted-foreground">
+                        <td className="px-4 py-3 text-sm text-white/60 light:text-muted-foreground">
                           Rs. {formatAmount(tb.ticketPrice)}
                         </td>
-                        <td className="px-6 py-3 text-sm text-white/60 light:text-muted-foreground">
+                        <td className="px-4 py-3 text-sm text-white/60 light:text-muted-foreground">
                           {tb.quantity}
                         </td>
-                        <td className="px-6 py-3 text-sm text-white/60 light:text-muted-foreground">
+                        <td className="px-4 py-3 text-sm text-white/60 light:text-muted-foreground">
                           Rs. {formatAmount(tb.ticketSubtotal)}
                         </td>
-                        <td className="px-6 py-3 text-sm text-white/60 light:text-muted-foreground">
+                        <td className="px-4 py-3 text-sm text-white/60 light:text-muted-foreground">
                           Rs. {((tb.refundAmount || 0) + (tb.refundReserveAmount || 0)).toFixed(2)}
                         </td>
-                        <td className="px-6 py-3 text-sm text-white/60 light:text-muted-foreground">
+                        <td className="px-4 py-3 text-sm text-white/60 light:text-muted-foreground">
                           Rs. {formatAmount(tb.netSales)}
                         </td>
-                        <td className="px-6 py-3 text-sm text-white/60 light:text-muted-foreground">
+                        <td className="px-4 py-3 text-sm text-white/60 light:text-muted-foreground">
                           Rs. {formatAmount(tb.platformFee)}
                         </td>
-                        <td className="px-6 py-3 text-sm text-white/60 light:text-muted-foreground">
+                        <td className="px-4 py-3 text-sm text-white/60 light:text-muted-foreground">
                           Rs. {formatAmount(tb.gstAmount)}
                         </td>
-                        <td className="px-6 py-3 text-sm font-medium text-white light:text-foreground">
+                        <td className="px-4 py-3 text-sm font-medium text-white light:text-foreground">
                           Rs. {formatAmount(tb.totalPayout)}
                         </td>
                       </tr>
                     ))}
                     <tr className="border-t border-white/10 light:border-border">
-                      <td colSpan={8} className="px-6 py-2 text-sm text-white/50 text-right light:text-muted-foreground">
+                      <td colSpan={8} className="px-4 py-2 text-sm text-white/50 text-right light:text-muted-foreground">
                         Subtotal:
                       </td>
-                      <td className="px-6 py-2 text-sm font-semibold text-white light:text-foreground">
+                      <td className="px-4 py-2 whitespace-nowrap text-sm font-semibold tabular-nums text-white light:text-foreground">
                         Rs. {formatAmount(evt.totals.netPayout)}
                       </td>
                     </tr>
@@ -351,10 +354,10 @@ const PayoutDetail = ({ payoutId, onBack }) => {
               </tbody>
               <tfoot>
                 <tr className="border-t-2 border-white/20 light:border-border">
-                  <td colSpan={8} className="px-6 py-4 text-right font-bold text-white light:text-foreground">
+                  <td colSpan={8} className="px-4 py-3 text-right font-bold text-white light:text-foreground">
                     Total Payout:
                   </td>
-                  <td className="px-6 py-4 font-bold text-white text-lg light:text-foreground">
+                  <td className="px-4 py-3 font-bold text-white text-lg light:text-foreground">
                     Rs. {payoutAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                   </td>
                 </tr>
@@ -368,8 +371,8 @@ const PayoutDetail = ({ payoutId, onBack }) => {
         )}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-5 light:border-border light:bg-card">
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="min-w-0 rounded-xl border border-white/10 bg-white/5 p-4 light:border-border light:bg-card">
           <h3 className="font-semibold text-white light:text-foreground">Payout changes</h3>
           <p className="mt-1 text-xs text-white/40 light:text-muted-foreground">Audited corrections made before disbursement.</p>
           <div className="mt-4 space-y-3">
@@ -397,8 +400,8 @@ const PayoutDetail = ({ payoutId, onBack }) => {
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-5 light:border-border light:bg-card">
+        <div className="space-y-4">
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4 light:border-border light:bg-card">
             <h3 className="font-semibold text-white light:text-foreground">Transfer attempts</h3>
             <div className="mt-4 space-y-3">
               {transferAttempts.length === 0 ? (
@@ -418,7 +421,7 @@ const PayoutDetail = ({ payoutId, onBack }) => {
             </div>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-5 light:border-border light:bg-card">
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4 light:border-border light:bg-card">
             <h3 className="font-semibold text-white light:text-foreground">Status history</h3>
             <div className="mt-4 space-y-2">
               {timeline.length === 0 ? (
