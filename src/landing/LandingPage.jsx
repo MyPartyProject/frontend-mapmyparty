@@ -232,6 +232,7 @@ const HeroMediaFill = ({
         src={slide.src}
         muted
         playsInline
+        poster="/images/ph1.jpg"
         preload="auto"
         autoPlay={autoPlay}
         loop={loop}
@@ -842,9 +843,25 @@ const LandingPage = () => {
       if (!video) return undefined;
 
       video.currentTime = 0;
-      const playAttempt = video.play();
-      if (playAttempt?.catch) playAttempt.catch(() => {});
-      return undefined;
+      const playVideo = () => {
+        video.muted = true;
+        video.defaultMuted = true;
+        const playAttempt = video.play();
+        if (playAttempt?.catch) playAttempt.catch(() => {});
+      };
+      const retryPlayback = () => {
+        if (video.paused) playVideo();
+      };
+
+      playVideo();
+      // Safari may require a user gesture when autoplay is restricted.
+      document.addEventListener("touchend", retryPlayback, { passive: true });
+      document.addEventListener("click", retryPlayback);
+      return () => {
+        document.removeEventListener("touchend", retryPlayback);
+        document.removeEventListener("click", retryPlayback);
+        video.pause();
+      };
     }
 
     if (heroVideoRef.current) {
@@ -990,6 +1007,7 @@ const LandingPage = () => {
                   <HeroMediaFill
                     slide={slide}
                     videoRef={index === 0 ? heroVideoRef : null}
+                    autoPlay={isActive && slide.type === "video"}
                     onEnded={handleHeroVideoEnded}
                     className="h-full w-full object-cover object-center"
                   />

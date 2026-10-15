@@ -810,7 +810,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                     <article
                       key={event.id || index}
                       aria-hidden={!isActive && !isSideCard}
-                      className={`${cardPositionClass} group overflow-hidden rounded-[16px] border border-border/45 bg-card shadow-[var(--shadow-card)] transition-all duration-700 ease-out sm:rounded-[1.35rem] sm:shadow-[var(--shadow-elegant)] light:border-border light:shadow-none light:duration-300 light:hover:border-[#C99774] light:focus-within:border-[#C99774]`}
+                      className={`${cardPositionClass} group overflow-hidden rounded-[16px] border border-border/45 bg-card shadow-[var(--shadow-card)] transition-all duration-700 ease-out sm:rounded-[1.35rem] sm:shadow-[var(--shadow-elegant)] light:border-border light:shadow-none light:duration-300 light:hover:border-[#C99774]`}
                     >
                       <Link
                         to={eventHref}
@@ -819,14 +819,14 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                         tabIndex={isActive ? 0 : -1}
                         aria-hidden={!isActive}
                         aria-label={`View ${event.title || event.eventTitle || "event"}`}
-                        className="relative block h-full w-full overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+                        className="relative block h-full w-full touch-manipulation overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
                         data-trending-event-link
                         data-active={isActive}
                       >
                         <img
                           src={getEventImage(event)}
                           alt={event.title || event.eventTitle || "Event"}
-                          className={`h-full w-full object-cover object-center transition-all duration-700 light:duration-200 light:group-hover:blur-[2px] light:group-focus-within:blur-[2px] ${
+                          className={`h-full w-full object-cover object-center transition-all duration-700 light:duration-200 light:group-hover:blur-[2px] ${
                             isActive ? "scale-100 opacity-100" : "scale-[1.04] opacity-95 light:opacity-100"
                           }`}
                         />
@@ -835,7 +835,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                         <div className="theme-gradient-primary absolute inset-0 opacity-10 transition-opacity duration-700 group-hover:opacity-15 light:hidden" />
 
                         <div className="absolute right-3 top-3 z-10 sm:right-4 sm:top-4">
-                          <span className="inline-flex items-center justify-center rounded-full border border-accent/30 bg-card/70 px-2.5 py-1 text-[10px] font-bold leading-none text-accent shadow-[var(--shadow-card)] backdrop-blur-md sm:px-3 sm:py-1.5 sm:text-[11px] light:bg-card/95 light:shadow-none light:backdrop-blur-none light:text-accent-foreground light:group-hover:border-[#C99774] light:group-hover:bg-[#C99774] light:group-hover:text-foreground light:group-focus-within:border-[#C99774] light:group-focus-within:bg-[#C99774] light:group-focus-within:text-foreground">
+                          <span className="inline-flex items-center justify-center rounded-full border border-accent/30 bg-card/70 px-2.5 py-1 text-[10px] font-bold leading-none text-accent shadow-[var(--shadow-card)] backdrop-blur-md sm:px-3 sm:py-1.5 sm:text-[11px] light:bg-card/95 light:shadow-none light:backdrop-blur-none light:text-accent-foreground light:group-hover:border-[#C99774] light:group-hover:bg-[#C99774] light:group-hover:text-foreground">
                             {getEventPriceDisplay(event)}
                           </span>
                         </div>
@@ -846,7 +846,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                           }`}
                         >
                           <h1
-                            className={`line-clamp-2 font-black leading-tight text-foreground drop-shadow-xl light:text-white light:drop-shadow-none light:[text-shadow:0_2px_5px_rgba(0,0,0,0.95)] light:transition-transform light:duration-200 light:group-hover:-translate-y-0.5 light:group-focus-within:-translate-y-0.5 light:motion-reduce:transition-none ${
+                            className={`line-clamp-2 font-black leading-tight text-foreground drop-shadow-xl light:text-white light:drop-shadow-none light:[text-shadow:0_2px_5px_rgba(0,0,0,0.95)] light:transition-transform light:duration-200 light:group-hover:-translate-y-0.5 light:motion-reduce:transition-none ${
                               isActive
                                 ? "text-xl sm:text-[2rem] lg:text-[2.35rem]"
                                 : "text-[0.7rem] sm:text-[1.05rem] lg:text-lg"
@@ -861,15 +861,15 @@ export default function BrowseEvents({ showPublicHeader = false }) {
                             }`}
                           >
                             <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-border/35 bg-card/65 px-2 py-1 text-[10px] text-foreground/90 shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs light:bg-card/90 light:shadow-none light:backdrop-blur-none">
-                              <Calendar className="h-3.5 w-3.5 shrink-0 text-accent light:text-accent-foreground light:group-hover:text-[#C99774] light:group-focus-within:text-[#C99774]" />
+                              <Calendar className="h-3.5 w-3.5 shrink-0 text-accent light:text-accent-foreground light:group-hover:text-[#C99774]" />
                               <span className="truncate">{formatDate(event.startDate || event.date)}</span>
                             </span>
                             <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-border/35 bg-card/65 px-2 py-1 text-[10px] text-foreground/90 shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs light:bg-card/90 light:shadow-none light:backdrop-blur-none">
-                              <MapPin className="h-3.5 w-3.5 shrink-0 text-accent light:text-accent-foreground light:group-hover:text-[#C99774] light:group-focus-within:text-[#C99774]" />
+                              <MapPin className="h-3.5 w-3.5 shrink-0 text-accent light:text-accent-foreground light:group-hover:text-[#C99774]" />
                               <span className="truncate">{getEventLocation(event)}</span>
                             </span>
                             {formatDistanceKm(event.distanceKm) && (
-                              <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2 py-1 text-[10px] font-medium text-accent shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs light:shadow-none light:backdrop-blur-none light:text-accent-foreground light:group-hover:border-[#C99774] light:group-hover:bg-[#C99774] light:group-hover:text-foreground light:group-focus-within:border-[#C99774] light:group-focus-within:bg-[#C99774] light:group-focus-within:text-foreground">
+                              <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-2 py-1 text-[10px] font-medium text-accent shadow-[var(--shadow-card)] backdrop-blur-md sm:px-2.5 sm:py-1.5 sm:text-xs light:shadow-none light:backdrop-blur-none light:text-accent-foreground light:group-hover:border-[#C99774] light:group-hover:bg-[#C99774] light:group-hover:text-foreground">
                                 {formatDistanceKm(event.distanceKm)}
                               </span>
                             )}
@@ -877,7 +877,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
 
                           <div className={`mt-3 ${isSideCard ? "hidden" : ""}`}>
                             <Button asChild variant="accent"
-                              className="h-9 w-fit rounded-[10px] px-4 text-[13px] font-semibold shadow-[var(--shadow-accent)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-elegant)] active:scale-[0.97] sm:h-10 sm:rounded-full sm:px-5 sm:text-sm light:group-hover:bg-[#C99774] light:group-hover:text-foreground light:group-hover:shadow-none light:group-focus-within:bg-[#C99774] light:group-focus-within:text-foreground light:group-focus-within:shadow-none light:focus-visible:ring-[#C99774]"
+                              className="h-9 w-fit rounded-[10px] px-4 text-[13px] font-semibold shadow-[var(--shadow-accent)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-elegant)] active:scale-[0.97] sm:h-10 sm:rounded-full sm:px-5 sm:text-sm light:group-hover:bg-[#C99774] light:group-hover:text-foreground light:group-hover:shadow-none light:focus-visible:ring-[#C99774]"
                             >
                               <span>
                                 View Details
