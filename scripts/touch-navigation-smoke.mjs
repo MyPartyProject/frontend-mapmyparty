@@ -107,11 +107,13 @@ try {
     for (const theme of ['light', 'dark']) {
       await evaluate(`localStorage.setItem('mapmyparty-theme','${theme}'); window.dispatchEvent(new StorageEvent('storage',{key:'mapmyparty-theme',newValue:'${theme}'}));`);
       await until(`document.documentElement.classList.contains('${theme}')`);
+      await delay(750); // Let the previous carousel transition finish before measuring tap coordinates.
       assert.equal(await evaluate(`${active}.querySelectorAll('a,button').length`), 0, 'No nested interactive banner content');
       assert.equal(await evaluate(`Array.from(document.querySelectorAll('[data-trending-event-link][data-active=false]')).every(a=>a.tabIndex===-1)`), true);
       const expected = await href();
       for (const child of ['img', 'h1', 'span']) {
         await evaluate(`${active}.scrollIntoView({block:'center',behavior:'instant'});`);
+        await evaluate('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
         const point = await evaluate(`(() => { const r=${active}.querySelector('${child}').getBoundingClientRect(); return {x:r.left+r.width/2,y:r.top+r.height/2}; })()`);
         const count = await evaluate('window.touchClicks.length');
         await touch('touchStart', point.x, point.y);
@@ -119,6 +121,17 @@ try {
         await until(`window.touchClicks.length === ${count + 1}`);
         assert.equal(await evaluate('window.touchClicks.at(-1)'), expected, 'First tap follows correct event');
       }
+      // Safari may omit the compatibility click: touchend alone must open the link.
+      const beforeTouchOnly = await evaluate('window.touchClicks.length');
+      await evaluate(`(() => {
+        const a = ${active};
+        const touch = new Touch({identifier: 1, target: a, clientX: 150, clientY: 150});
+        a.dispatchEvent(new TouchEvent('touchstart', {bubbles: true, touches: [touch], changedTouches: [touch]}));
+        a.dispatchEvent(new TouchEvent('touchend', {bubbles: true, touches: [], changedTouches: [touch]}));
+      })()`);
+      assert.equal(await evaluate('window.touchClicks.length'), beforeTouchOnly + 1, 'Touchend activates without a native click');
+      assert.equal(await evaluate(`${active}.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,detail:1}))`), false);
+      assert.equal(await evaluate('window.touchClicks.length'), beforeTouchOnly + 1, 'Compatibility click does not open a second tab');
       const center = await evaluate(`(() => {const r=${active}.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+40};})()`);
       const beforeSwipe = await href();
       const clicks = await evaluate('window.touchClicks.length');

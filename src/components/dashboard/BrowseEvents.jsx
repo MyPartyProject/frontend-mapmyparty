@@ -498,7 +498,13 @@ export default function BrowseEvents({ showPublicHeader = false }) {
     suppressGestureClick.current = false;
     const touch = e.touches[0];
     touchGesture.current = e.touches.length === 1
-      ? { x: touch.clientX, y: touch.clientY, endX: touch.clientX, endY: touch.clientY }
+      ? {
+          x: touch.clientX, y: touch.clientY,
+          endX: touch.clientX, endY: touch.clientY,
+          moved: false,
+          startedAt: e.timeStamp,
+          link: e.target.closest('[data-trending-event-link][data-active="true"]'),
+        }
       : null;
     setIsAutoplayPaused(true);
   };
@@ -506,23 +512,37 @@ export default function BrowseEvents({ showPublicHeader = false }) {
   const handleTouchMove = (e) => {
     if (e.touches.length !== 1) {
       touchGesture.current = null;
+      suppressGestureClick.current = true;
       return;
     }
     if (touchGesture.current) {
       touchGesture.current.endX = e.touches[0].clientX;
       touchGesture.current.endY = e.touches[0].clientY;
+      if (Math.abs(touchGesture.current.x - touchGesture.current.endX) > 10 ||
+          Math.abs(touchGesture.current.y - touchGesture.current.endY) > 10) {
+        touchGesture.current.moved = true;
+      }
     }
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e) => {
     const gesture = touchGesture.current;
     if (gesture) {
+      const touch = e.changedTouches[0];
+      gesture.endX = touch.clientX;
+      gesture.endY = touch.clientY;
       const distance = gesture.x - gesture.endX;
       const verticalDistance = Math.abs(gesture.y - gesture.endY);
+      const isTap = !gesture.moved && Math.abs(distance) <= 10 &&
+        verticalDistance <= 10 && e.timeStamp - gesture.startedAt < 500;
+      suppressGestureClick.current = !isTap;
       if (Math.abs(distance) > 50 && Math.abs(distance) > verticalDistance) {
-        suppressGestureClick.current = true;
         if (distance > 0) goToNextTrending();
         else goToPreviousTrending();
+      } else if (isTap && gesture.link?.dataset.active === "true") {
+        // Activate during the touch gesture; Safari can swallow the later native click.
+        suppressGestureClick.current = true;
+        gesture.link.click();
       }
     }
     touchGesture.current = null;
