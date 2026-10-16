@@ -1,4 +1,4 @@
-import { apiFetch } from "@/config/api";
+import { apiFetch, downloadFile } from "@/config/api";
 
 export async function fetchAdminOrganizers(params = {}) {
   const query = new URLSearchParams();
@@ -126,8 +126,8 @@ export async function cancelAdminBalanceAdjustment(adjustmentId, payload) {
   return response.data;
 }
 
-export async function calculateEventPayout(eventId) {
-  const response = await apiFetch(`admin/events/${eventId}/payouts/calculate`);
+export async function calculateEventPayout(eventId, payload = {}) {
+  const response = await apiFetch(`admin/events/${eventId}/payouts/calculate`, { method: 'POST', body: JSON.stringify(payload) });
   return response.data;
 }
 
@@ -170,9 +170,20 @@ export async function approvePayoutRevision(payoutId, revisionId) {
   return response.data;
 }
 
-export async function disbursePayout(payoutId) {
-  const response = await apiFetch(`admin/payouts/${payoutId}/disburse`, { method: "POST" });
+export async function disbursePayout(payoutId, expectedRevision) {
+  const response = await apiFetch(`admin/payouts/${payoutId}/disburse`, { method: "POST", body: JSON.stringify({ expectedRevision }) });
   return response.data;
+}
+
+export async function takeControlOfPayout(payoutId, payload) {
+  const response = await apiFetch(`admin/payouts/${payoutId}/take-control`, { method: 'POST', body: JSON.stringify(payload) });
+  return response.data;
+}
+
+export async function downloadPayoutExport(payload) {
+  return downloadFile('admin/finance/exports', `payouts.${payload.format}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
 }
 
 export async function resolvePayout(payoutId, payload) {

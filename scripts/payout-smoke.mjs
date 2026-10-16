@@ -2,7 +2,7 @@
 // Local fixtures and Chrome touch emulation; actual iPhone Safari QA is separate.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdtemp, readFile } from 'node:fs/promises';
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -20,6 +20,8 @@ const errors = [];
 const pending = new Map();
 let role = 'ORGANIZER';
 let setupComplete = true;
+const manualRequests = [];
+let manualCreated = false;
 try {
   let port;
   for (let i = 0; i < 100; i++) {
@@ -49,6 +51,23 @@ try {
       const { requestId, request } = message.params;
       const path = new URL(request.url).pathname;
       let payload = { success: true, data: { items: [], payouts: [], events: [], pagination: { total: 0, totalPages: 1 } } };
+      if (path === '/api/admin/organizers') payload.data = { organizers: [{ id: 'org', name: 'Fixture Organizer' }], pagination: { totalPages: 1 } };
+      if (path === '/api/admin/events') {
+        assert.equal(new URL(request.url).searchParams.get('organizerId'), 'org');
+        assert.equal(new URL(request.url).searchParams.get('ended'), 'true');
+        payload.data = { events: [{ id: 'event', title: 'Manual payout event', endDate: '2026-09-01T12:00:00Z' }], pagination: { totalPages: 1 } };
+      }
+      if (path.endsWith('/payouts/calculate')) {
+        const inputs = JSON.parse(request.postData || '{}'); manualRequests.push(inputs);
+        const fee = inputs.fee?.mode === 'FIXED' ? inputs.fee.amountCents / 100 : 60;
+        payload.data = { eligible: !manualCreated, ...(manualCreated ? { existingPayout: { id: 'paid', publicId: 'POT-PAID', status: 'COMPLETED', amount: 941 } } : {}), previewFingerprint: 'a'.repeat(64), lineItems: [], blockers: [], warnings: [], holdUntil: '2026-09-08T12:00:00Z',
+          totals: { grossTicketSales: 1000, refundAmount: 0, refundReserveAmount: 0, netSales: 1000, configuredFeeRate: 0.06, configuredFeeAmount: 60,
+            platformFeeRate: fee / 1000, platformFeeAmount: fee, gstTotal: fee * 0.18, cgstAmount: fee * 0.09, sgstAmount: fee * 0.09,
+            organizerBalanceAdjustmentAmount: 0, manualAdjustmentCents: 0, netPayoutAmount: 1000 - fee * 1.18 } };
+      }
+      if (path === '/api/admin/events/event/payouts' && request.method === 'POST') {
+        manualRequests.push(JSON.parse(request.postData)); manualCreated = true; payload.data = { id: 'manual-created' };
+      }
       if (path.endsWith('/auth/me')) payload = { data: { user: { id: 'payout-fixture', name: 'Payout Test', role }, organizer: { id: 'org', name: 'Fixture Organizer' }, hasOrganizerProfile: setupComplete, hasBankDetails: setupComplete, isBankVerified: setupComplete } };
       if (path.endsWith('/settlements')) payload.data = { items: [{ event: { id: 'event', title: 'Seven day settlement' }, isEstimate: true, totals: { grossTicketSales: 100, refundAmount: 0, refundReserveAmount: 0, platformFeeAmount: 6, gstTotal: 1.08, organizerBalanceAdjustmentAmount: 0, netPayoutAmount: 92.92 }, status: 'BLOCKED', eligibleAt: '2026-10-08T12:00:00Z', bankAccountMasked: '****1234', blockers: [{ code: 'GST_NOT_VERIFIED', message: 'Organizer GST details must be verified before payout.' }] }], pagination: { total: 1, totalPages: 1 } };
       if (path === '/api/organizer/me/payouts/paid-fixture') payload.data = { payout: { id: 'paid-fixture', status: 'RECONCILED', amount: 92.92, payoutDate: '2026-10-01T12:00:00Z', providerUtr: 'TESTUTR123', invoiceNumber: 'TEST-STATEMENT' }, summary: { grossTicketSales: 100, platformFeeAmount: 6, gstTotal: 1.08, netPayoutAmount: 92.92 }, bankDetails: { accountHolder: 'Fixture Organizer', accountNumberMasked: '****1234', ifscCode: 'TEST0001234' }, event: { title: 'Paid event' }, organizer: { name: 'Fixture Organizer' }, eventBreakdowns: [], timeline: [] };
@@ -68,7 +87,7 @@ try {
     return result.result.value;
   };
   const until = async expression => {
-    for (let i = 0; i < 150; i++) { if (await evaluate(expression)) return; await delay(100); }
+    for (let i = 0; i < 150; i++) { if (await evaluate(`Boolean(document.body) && Boolean(${expression})`)) return; await delay(100); }
     assert.fail(`Timed out: ${expression}\n${await evaluate('document.body.innerText.slice(0,1500)')}\n${await evaluate('location.href')}\n${errors.join('\n')}`);
   };
   await send('Page.enable');
@@ -128,4 +147,33 @@ try {
   await send('Page.navigate', { url: base + '/promoter/payouts' });
   await until("document.body.innerText.includes('Seven day settlement')");
   console.log('PASS promoter upcoming settlements');
+  await until(`document.querySelector('select[aria-label="Select organizer"] option[value="org"]')`);
+  await evaluate(`(() => { const el = document.querySelector('select[aria-label="Select organizer"]'); el.value = 'org'; el.dispatchEvent(new Event('change', { bubbles: true })); })()`);
+  await until(`document.querySelector('select[aria-label="Select completed event"] option[value="event"]')`);
+  await evaluate(`(() => { const el = document.querySelector('select[aria-label="Select completed event"]'); el.value = 'event'; el.dispatchEvent(new Event('change', { bubbles: true })); })()`);
+  await until("document.body.innerText.includes('Payout is eligible')");
+  for (const width of [390, 768, 1440]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: width < 768 });
+    await delay(150);
+    assert.equal(await evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), true, 'Manual payout form fits viewport');
+  }
+  await evaluate(`(() => { const el = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'FIXED')); el.value = 'FIXED'; el.dispatchEvent(new Event('change', { bubbles: true })); })()`);
+  assert.equal(await evaluate(`[...document.querySelectorAll('button')].find(el => el.textContent === 'Create payout draft').disabled`), true);
+  await evaluate(`(() => { const el = document.querySelector('fieldset input[type=number]'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, '50'); el.dispatchEvent(new Event('input', { bubbles: true })); const note = document.querySelector('fieldset textarea'); Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(note, 'Agreed event platform fee'); note.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+  await evaluate(`[...document.querySelectorAll('button')].find(el => el.textContent === 'Recalculate').click()`);
+  await until("document.body.innerText.includes('Payout is eligible') && document.body.innerText.includes('941')");
+  assert.equal(manualRequests.at(-1).fee.amountCents, 5000);
+  const screenshot = await send('Page.captureScreenshot', { captureBeyondViewport: true });
+  await writeFile(join(profile, 'manual-payout.png'), Buffer.from(screenshot.data, 'base64'));
+  console.log('Manual payout screenshot: ' + join(profile, 'manual-payout.png'));
+  await evaluate(`[...document.querySelectorAll('button')].find(el => el.textContent === 'Create payout draft').click()`);
+  await until(`document.querySelector('select[aria-label="Select completed event"]').value === ''`);
+  assert.equal(manualRequests.at(-1).previewFingerprint, 'a'.repeat(64));
+  assert.equal(manualRequests.at(-1).fee.amountCents, 5000);
+  assert.deepEqual(errors, []);
+  await evaluate(`(() => { const el = document.querySelector('select[aria-label="Select completed event"]'); el.value = 'event'; el.dispatchEvent(new Event('change', { bubbles: true })); })()`);
+  await until("document.body.innerText.includes('Already paid - another payout is not allowed.')");
+  assert.equal(await evaluate(`[...document.querySelectorAll('button')].find(el => el.textContent === 'Create payout draft').disabled`), true);
+  console.log('PASS manual payout organizer/event selection, responsive form, fee edit, stale preview protection and draft creation');
+  console.log('PASS already-paid warning and duplicate creation disabled');
 } finally { socket?.close(); chrome.kill(); }

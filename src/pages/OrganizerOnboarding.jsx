@@ -1,6 +1,7 @@
 import { bankVerificationMessage } from "@/utils/bankInput";
 import { useBankInput } from "@/hooks/useBankInput";
 import IndiaLocationFields from "@/components/IndiaLocationFields";
+import { isValidGstFormat } from "@/utils/gst";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { BadgeCheck, Building2, CreditCard, ImagePlus, Loader2, Upload, X } from "lucide-react";
@@ -256,6 +257,12 @@ const OrganizerOnboarding = () => {
     event.preventDefault();
     if (savingProfile) return;
 
+    const gstNumber = profileForm.gstNumber?.trim().toUpperCase() || "";
+    if (!isValidGstFormat(gstNumber)) {
+      toast.error("Enter a valid 15-character GST number (e.g., 22AAAAA0000A1Z5).");
+      return;
+    }
+
     const name = profileForm.name.trim();
     if (!name) {
       toast.error("Organizer name is required");
@@ -277,7 +284,7 @@ const OrganizerOnboarding = () => {
       email: profileForm.email?.trim() || undefined,
       state: profileForm.state?.trim() || undefined,
       address: profileForm.address?.trim() || undefined,
-      gstNumber: profileForm.gstNumber?.trim() || undefined,
+      gstNumber: gstNumber || undefined,
     };
 
     setSavingProfile(true);

@@ -1,6 +1,7 @@
 import UpcomingSettlements from '@/components/organizer/UpcomingSettlements';
 import { apiFetch } from '@/config/api';
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +46,9 @@ import {
   disbursePayout,
   fetchAdminOrganizerBalanceAdjustments,
   fetchAdminEvents,
+  fetchAdminOrganizers,
+  takeControlOfPayout,
+  downloadPayoutExport,
   fetchAdminPayoutDetail,
   holdEventPayout,
   resolvePayout,
@@ -137,6 +141,87 @@ const SummaryTile = ({ label, value, tone = "text-foreground" }) => (
   </div>
 );
 
+const emptyInputs = () => ({ feeMode: "CONFIGURED", feeValue: "", adjustments: [], reason: "" });
+const calculationInputs = (form) => ({
+  fee: form.feeMode === "CONFIGURED" ? null : form.feeMode === "FIXED"
+    ? { mode: "FIXED", amountCents: Math.round(Number(form.feeValue) * 100) }
+    : { mode: "PERCENTAGE", rate: Number(form.feeValue) / 100 },
+  adjustments: form.adjustments.map(row => ({ direction: row.direction, amountCents: Math.round(Number(row.amount) * 100),
+    category: row.category.trim(), description: row.description.trim() })),
+});
+const PayoutInputs = ({ value, onChange, totals, disabled = false }) => (
+  <fieldset disabled={disabled} className="space-y-3">
+    <div className="grid gap-3 sm:grid-cols-2">
+      <label className="space-y-1 text-sm">Platform fee
+        <select className="h-10 w-full rounded-md border border-input bg-background px-3" value={value.feeMode}
+          onChange={e => onChange({ ...value, feeMode: e.target.value, feeValue: e.target.value === "FIXED" ? String(totals?.platformFeeAmount ?? "") : String((totals?.platformFeeRate ?? 0) * 100) })}>
+          <option value="CONFIGURED">Use configured fee</option><option value="PERCENTAGE">Custom percentage</option><option value="FIXED">Custom amount (INR)</option>
+        </select>
+      </label>
+      <label className="space-y-1 text-sm">{value.feeMode === "FIXED" ? "Fee amount (INR)" : "Fee rate (%)"}
+        <Input type="number" min="0" max={value.feeMode === "PERCENTAGE" ? 100 : undefined} step="0.01"
+          readOnly={value.feeMode === "CONFIGURED"} required={value.feeMode !== "CONFIGURED"}
+          value={value.feeMode === "CONFIGURED" ? (totals ? String((totals.configuredFeeRate ?? totals.platformFeeRate) * 100) : "") : value.feeValue}
+          onChange={e => onChange({ ...value, feeValue: e.target.value })} />
+      </label>
+    </div>
+    <p className="text-xs text-muted-foreground">GST is calculated automatically. Sales, refunds and bank details cannot be edited here.</p>
+    {value.adjustments.map((row, index) => {
+      const update = patch => onChange({ ...value, adjustments: value.adjustments.map((item, i) => i === index ? { ...item, ...patch } : item) });
+      return <div key={index} className="grid gap-2 rounded-lg border border-border p-3 sm:grid-cols-2">
+        <label className="text-sm">Adjustment
+          <select className="h-10 w-full rounded-md border border-input bg-background px-3" value={row.direction} onChange={e => update({ direction: e.target.value })}>
+            <option value="DEBIT">Deduct from payout</option><option value="CREDIT">Add to payout</option>
+          </select>
+        </label>
+        <label className="text-sm">Amount (INR)<Input type="number" min="0.01" step="0.01" required value={row.amount} onChange={e => update({ amount: e.target.value })} /></label>
+        <label className="text-sm">Category<Input required maxLength={80} value={row.category} onChange={e => update({ category: e.target.value })} /></label>
+        <label className="text-sm">Description<Input required minLength={3} maxLength={300} value={row.description} onChange={e => update({ description: e.target.value })} /></label>
+        <Button type="button" variant="ghost" size="sm" onClick={() => onChange({ ...value, adjustments: value.adjustments.filter((_, i) => i !== index) })}>Remove adjustment</Button>
+      </div>;
+    })}
+    <Button type="button" variant="outline" size="sm" disabled={value.adjustments.length >= 20}
+      onClick={() => onChange({ ...value, adjustments: [...value.adjustments, { direction: "DEBIT", amount: "", category: "MANUAL_CORRECTION", description: "" }] })}>
+      <Plus className="h-4 w-4" /> Add adjustment
+    </Button>
+    <label className="block space-y-1 text-sm">Reason / review note
+      <Textarea maxLength={500} minLength={5} required={value.feeMode !== "CONFIGURED" || value.adjustments.length > 0}
+        placeholder="Explain any fee change or adjustment" value={value.reason} onChange={e => onChange({ ...value, reason: e.target.value })} />
+    </label>
+  </fieldset>
+);
+const PayoutBreakdown = ({ totals }) => totals ? (
+  <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
+    {[
+      ["Gross ticket sales", totals.grossTicketSales], ["Processed refunds", totals.refundAmount],
+      ["Pending refund reserves", totals.refundReserveAmount], ["Net sales", totals.netSales],
+      ["Configured platform fee", totals.configuredFeeAmount], ["Effective platform fee", totals.platformFeeAmount],
+      ["CGST", totals.cgstAmount], ["SGST", totals.sgstAmount], ["IGST", totals.igstAmount],
+      ["Balance recovery", (totals.organizerBalanceAdjustmentCents || 0) / 100],
+      ["Manual adjustments (+ / −)", (totals.manualAdjustmentCents || 0) / 100], ["Final payout", totals.netPayoutAmount],
+    ].map(([label, amount]) => <div key={label} className="flex justify-between gap-4 border-b border-border/40 py-2">
+      <dt className="text-muted-foreground">{label}</dt><dd className="font-medium tabular-nums">{amount == null ? "Unavailable" : formatMoney(amount, 2)}</dd>
+    </div>)}
+  </dl>
+) : <p className="text-sm text-muted-foreground">No calculation snapshot is available.</p>;
+const PayoutDownloads = ({ payoutId, filters = {} }) => {
+  const [busy, setBusy] = useState(false);
+  const [section, setSection] = useState("Summary");
+  const download = async format => {
+    setBusy(true);
+    try { await downloadPayoutExport({ ...filters, exportType: payoutId ? "payout_detail" : "payout_summary", ...(payoutId ? { payoutId } : {}), format, section }); }
+    catch (error) { toast.error(error.message || "Download failed"); }
+    finally { setBusy(false); }
+  };
+  return <div className="flex flex-wrap items-center gap-2">
+    {payoutId && <select aria-label="CSV section" className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={section} onChange={e => setSection(e.target.value)}>
+      {["Summary", "Ticket Lines", "Adjustments", "Transfers", "Status History"].map(name => <option key={name}>{name}</option>)}
+    </select>}
+    <Button variant="outline" size="sm" disabled={busy} onClick={() => download("csv")}>Download CSV</Button>
+    <Button variant="outline" size="sm" disabled={busy} onClick={() => download("xlsx")}>Download Excel</Button>
+  </div>;
+};
+
 const PayoutDetailModal = ({
   payout,
   loading,
@@ -144,49 +229,28 @@ const PayoutDetailModal = ({
   onCreateRevision,
   onApproveRevision,
   revisionBusy,
+  onTakeControl,
 }) => {
   const lineItems = payout?.lineItems || [];
   const revisions = payout?.revisions || [];
   const transferAttempts = payout?.transferAttempts || [];
   const statusHistory = payout?.statusHistory || [];
   const adjustmentAmount = Number(payout?.organizerBalanceAdjustmentCents || 0) / 100;
-  const [revisionForm, setRevisionForm] = useState({
-    direction: "DEBIT",
-    amount: "",
-    category: "MANUAL_CORRECTION",
-    description: "",
-    reason: "",
-  });
-
+  const [revisionForm, setRevisionForm] = useState(emptyInputs);
   useEffect(() => {
-    setRevisionForm({
-      direction: "DEBIT",
-      amount: "",
-      category: "MANUAL_CORRECTION",
-      description: "",
-      reason: "",
-    });
-  }, [payout?.id]);
-
-  const canRevise = payout && ["REVIEW_REQUIRED", "AUTO_APPROVED", "APPROVED", "FAILED"].includes(payout.status)
-    && !payout.initiatedAt
-    && Number(payout.automaticAttemptCount || 0) === 0;
-
-  const submitRevision = async (event) => {
+    const fee = payout?.calculationSnapshot?.inputs?.fee;
+    setRevisionForm({ ...emptyInputs(), feeMode: fee?.mode || "CONFIGURED",
+      feeValue: fee ? String(fee.mode === "PERCENTAGE" ? fee.rate * 100 : fee.amountCents / 100) : "" });
+  }, [payout?.id, payout?.revisionNumber, payout?.calculationSnapshot?.inputs?.fee]);
+  const canTakeControl = payout?.eventId && !payout.manualControl && ["PENDING", "REVIEW_REQUIRED", "AUTO_APPROVED", "APPROVED", "FAILED"].includes(payout.status)
+    && !payout.initiatedAt && !payout.automaticAttemptCount && !transferAttempts.length;
+  const canRevise = payout?.manualControl && ["PENDING", "REVIEW_REQUIRED", "APPROVED", "FAILED"].includes(payout.status)
+    && !payout.initiatedAt && !payout.automaticAttemptCount && !transferAttempts.length;
+  const submitRevision = async event => {
     event.preventDefault();
-    const amountCents = Math.round(Number(revisionForm.amount) * 100);
-    if (!Number.isInteger(amountCents) || amountCents <= 0) {
-      toast.error("Enter a valid positive adjustment amount.");
-      return;
-    }
+    if (revisionForm.reason.trim().length < 5) return toast.error("Explain the revision in at least 5 characters.");
     await onCreateRevision(payout.id, {
-      reason: revisionForm.reason.trim(),
-      adjustments: [{
-        direction: revisionForm.direction,
-        amountCents,
-        category: revisionForm.category.trim(),
-        description: revisionForm.description.trim(),
-      }],
+      ...calculationInputs(revisionForm), expectedRevision: payout.revisionNumber, reason: revisionForm.reason.trim(),
     });
   };
 
@@ -210,6 +274,21 @@ const PayoutDetailModal = ({
         ) : (
           payout && (
             <div className="space-y-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <Badge variant="outline">{payout.manualControl ? "Promoter controlled" : "Automatic"} · Revision {payout.revisionNumber}</Badge>
+                <PayoutDownloads payoutId={payout.id} />
+              </div>
+              <PayoutBreakdown totals={payout.calculationSnapshot?.totals} />
+              <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+                <p>Eligible from: {formatDate(payout.holdUntil)}</p><p>Completed: {formatDate(payout.completedAt)}</p>
+                <p>Approved by: {payout.approvedById || "Not approved"}</p><p>Released by: {payout.releasedById || "Not released"}</p>
+                <p>Transfer: {payout.cashfreeTransferId || payout.providerPayoutId || "Not submitted"}</p><p>UTR: {payout.providerUtr || "Not available"}</p>
+              </div>
+              {canTakeControl && <div className="space-y-2 rounded-lg border border-border p-3">
+                <p className="text-sm">Take control to edit this payout and require your approval before release.</p>
+                <Textarea aria-label="Take control reason" value={revisionForm.reason} onChange={e => setRevisionForm(current => ({ ...current, reason: e.target.value }))} placeholder="Reason for taking control" />
+                <Button disabled={revisionBusy || revisionForm.reason.trim().length < 5} onClick={() => onTakeControl(payout, revisionForm.reason.trim())}>Take control</Button>
+              </div>}
               <div className="grid gap-3 md:grid-cols-4">
                 <SummaryTile label="Net payout" value={formatMoney(getPayoutAmount(payout), 2)} tone="text-accent light:text-accent-foreground" />
                 <SummaryTile label="Gross sales" value={formatMoney(payout.grossTicketSales, 2)} />
@@ -327,45 +406,7 @@ const PayoutDetailModal = ({
                   </p>
                   {canRevise && (
                     <form className="mt-4 grid gap-3" onSubmit={submitRevision}>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <select
-                          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                          value={revisionForm.direction}
-                          onChange={(event) => setRevisionForm((current) => ({ ...current, direction: event.target.value }))}
-                        >
-                          <option value="DEBIT">Deduct from payout</option>
-                          <option value="CREDIT">Add to payout</option>
-                        </select>
-                        <Input
-                          type="number"
-                          min="0.01"
-                          step="0.01"
-                          placeholder="Amount in INR"
-                          value={revisionForm.amount}
-                          onChange={(event) => setRevisionForm((current) => ({ ...current, amount: event.target.value }))}
-                          required
-                        />
-                      </div>
-                      <Input
-                        placeholder="Category"
-                        value={revisionForm.category}
-                        onChange={(event) => setRevisionForm((current) => ({ ...current, category: event.target.value }))}
-                        required
-                      />
-                      <Input
-                        placeholder="Adjustment description"
-                        value={revisionForm.description}
-                        onChange={(event) => setRevisionForm((current) => ({ ...current, description: event.target.value }))}
-                        minLength={3}
-                        required
-                      />
-                      <Textarea
-                        placeholder="Reason for changing this payout"
-                        value={revisionForm.reason}
-                        onChange={(event) => setRevisionForm((current) => ({ ...current, reason: event.target.value }))}
-                        minLength={5}
-                        required
-                      />
+                      <PayoutInputs value={revisionForm} onChange={setRevisionForm} totals={payout.calculationSnapshot?.totals} disabled={revisionBusy} />
                       <Button type="submit" disabled={revisionBusy}>
                         <Plus className="h-4 w-4" />
                         Propose revision
@@ -382,6 +423,7 @@ const PayoutDetailModal = ({
                           <Badge className={`${statusClass(revision.status)} border`}>{formatStatus(revision.status)}</Badge>
                         </div>
                         <p className="mt-2 text-muted-foreground">{revision.reason}</p>
+                        {revision.afterSnapshot?.totals && <PayoutBreakdown totals={revision.afterSnapshot.totals} />}
                         {(revision.adjustments || []).map((adjustment) => (
                           <div key={adjustment.id} className="mt-2 flex justify-between gap-3 text-xs">
                             <span>{formatStatus(adjustment.category)} - {adjustment.description}</span>
@@ -607,11 +649,27 @@ const BalanceAdjustmentsModal = ({
 };
 
 const PromoterPayouts = () => {
-  const { items, statistics, filters, loading, isFetching, error, updateFilters, refresh } = useAdminPayouts();
+  const { items, statistics, filters, loading, isFetching, error, updateFilters, refresh: refreshPayouts, pagination, changePage } = useAdminPayouts();
+  const queryClient = useQueryClient();
+  const refresh = () => { refreshPayouts(); queryClient.invalidateQueries({ queryKey: ["upcoming-settlements"] }); };
+  const [organizers, setOrganizers] = useState([]);
+  const [organizerId, setOrganizerId] = useState("");
+  const [organizerSearch, setOrganizerSearch] = useState("");
+  const [organizerPage, setOrganizerPage] = useState(1);
+  const [organizerPages, setOrganizerPages] = useState(1);
+  const [organizersLoading, setOrganizersLoading] = useState(false);
+  const [eventPage, setEventPage] = useState(1);
+  const [eventPages, setEventPages] = useState(1);
+  const [eventSearch, setEventSearch] = useState("");
+  const [financialForm, setFinancialForm] = useState(emptyInputs);
+  const [releaseTarget, setReleaseTarget] = useState(null);
+  const previewRequest = useRef(0);
+
   const [events, setEvents] = useState([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [createForm, setCreateForm] = useState({ eventId: "", remarks: "" });
   const [preview, setPreview] = useState(null);
+  const [lastTotals, setLastTotals] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [statusForm, setStatusForm] = useState({});
@@ -633,30 +691,35 @@ const PromoterPayouts = () => {
 
   useEffect(() => {
     let cancelled = false;
-
-    const loadEvents = async () => {
-      setEventsLoading(true);
+    setOrganizersLoading(true);
+    const timer = setTimeout(async () => {
       try {
-        const data = await fetchAdminEvents({ limit: 50 });
-        if (!cancelled) {
-          setEvents(data?.events || []);
-        }
-      } catch (loadError) {
-        if (!cancelled) {
-          toast.error(loadError.message || "Failed to load events for payout.");
-        }
-      } finally {
-        if (!cancelled) {
-          setEventsLoading(false);
-        }
-      }
-    };
-
-    loadEvents();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+        const data = await fetchAdminOrganizers({ page: organizerPage, limit: 20, search: organizerSearch });
+        if (!cancelled) { setOrganizers(data?.organizers || []); setOrganizerPages(data?.pagination?.totalPages || 1); }
+      } catch (error) { if (!cancelled) toast.error(error.message); }
+      finally { if (!cancelled) setOrganizersLoading(false); }
+    }, 250);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [organizerSearch, organizerPage]);
+  useEffect(() => { setOrganizerId(""); }, [organizerSearch, organizerPage]);
+  useEffect(() => {
+    previewRequest.current += 1;
+    setCreateForm({ eventId: "", remarks: "" }); setPreview(null); setLastTotals(null); setFinancialForm(emptyInputs());
+  }, [organizerId, eventSearch, eventPage]);
+  useEffect(() => {
+    let cancelled = false;
+    setEvents([]);
+    if (!organizerId) { setEventsLoading(false); return; }
+    setEventsLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const data = await fetchAdminEvents({ organizerId, ended: true, page: eventPage, limit: 20, search: eventSearch });
+        if (!cancelled) { setEvents(data?.events || []); setEventPages(data?.pagination?.totalPages || 1); }
+      } catch (error) { if (!cancelled) toast.error(error.message); }
+      finally { if (!cancelled) setEventsLoading(false); }
+    }, 250);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [organizerId, eventPage, eventSearch]);
 
   const totals = useMemo(() => {
     const base = {
@@ -704,32 +767,33 @@ const PromoterPayouts = () => {
     };
   };
 
-  const handlePreviewPayout = async () => {
-    if (!createForm.eventId) {
-      toast.error("Select an event first.");
-      return;
-    }
-
+  const invalidatePreview = () => { previewRequest.current += 1; setPreview(null); setPreviewLoading(false); };
+  const handlePreviewPayout = useCallback(async () => {
+    if (!createForm.eventId) return;
+    const request = ++previewRequest.current;
     setPreviewLoading(true);
     setPreview(null);
     try {
-      const result = await calculateEventPayout(createForm.eventId);
-      setPreview(result);
-      if (result.eligible) {
-        toast.success("Payout calculation is ready for review.");
-      } else {
-        toast.error("Payout is blocked. Review the eligibility reasons.");
-      }
-    } catch (previewError) {
-      setPreview(previewError.data || null);
-      toast.error(previewError.message || "Failed to calculate payout.");
-    } finally {
-      setPreviewLoading(false);
-    }
-  };
+      const result = await calculateEventPayout(createForm.eventId, calculationInputs(financialForm));
+      if (request === previewRequest.current) { setPreview(result); setLastTotals(result.totals); }
+    } catch (error) {
+      if (request === previewRequest.current) toast.error(error.message || "Failed to calculate payout");
+    } finally { if (request === previewRequest.current) setPreviewLoading(false); }
+  }, [createForm.eventId, financialForm]);
+  useEffect(() => {
+    if (!createForm.eventId) return;
+    const request = ++previewRequest.current;
+    setPreviewLoading(true);
+    calculateEventPayout(createForm.eventId).then(result => {
+      if (request === previewRequest.current) { setPreview(result); setLastTotals(result.totals); }
+    }).catch(error => { if (request === previewRequest.current) toast.error(error.message); })
+      .finally(() => { if (request === previewRequest.current) setPreviewLoading(false); });
+    return () => { previewRequest.current += 1; };
+  }, [createForm.eventId]);
 
   const handleCreateEventPayout = async (event) => {
     event.preventDefault();
+    if (isCreating || previewLoading || !preview?.eligible) return;
     if (!createForm.eventId) {
       toast.error("Select an event first.");
       return;
@@ -737,13 +801,17 @@ const PromoterPayouts = () => {
 
     setIsCreating(true);
     try {
-      await createEventPayout(createForm.eventId, { remarks: createForm.remarks.trim() });
+      await createEventPayout(createForm.eventId, {
+        ...calculationInputs(financialForm), remarks: createForm.remarks.trim(),
+        reason: financialForm.reason.trim() || undefined, previewFingerprint: preview.previewFingerprint,
+      });
       toast.success("Event payout draft created.");
       setCreateForm({ eventId: "", remarks: "" });
+      setFinancialForm(emptyInputs());
       setPreview(null);
       refresh();
     } catch (createError) {
-      setPreview(createError.data || preview);
+      setPreview(createError.data?.data || null);
       toast.error(createError.message || "Failed to create event payout.");
     } finally {
       setIsCreating(false);
@@ -753,7 +821,7 @@ const PromoterPayouts = () => {
   const handleApprove = async (payoutId) => {
     setUpdatingId(payoutId);
     try {
-      await approveEventPayout(payoutId, getActionPayload(payoutId));
+      await approveEventPayout(payoutId, { ...getActionPayload(payoutId), expectedRevision: items.find(item => item.id === payoutId)?.revisionNumber });
       toast.success("Payout approved for provider processing.");
       refresh();
     } catch (approveError) {
@@ -788,8 +856,9 @@ const PromoterPayouts = () => {
   const handleDisburse = async (payoutId) => {
     setUpdatingId(payoutId);
     try {
-      await disbursePayout(payoutId);
+      await disbursePayout(payoutId, releaseTarget.revisionNumber);
       toast.success("Payout released to the Cashfree queue.");
+      setReleaseTarget(null);
       refresh();
     } catch (error) {
       toast.error(error.message || "Failed to disburse payout.");
@@ -1001,44 +1070,52 @@ const PromoterPayouts = () => {
             Create event payout
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            Select an ended event, preview the backend settlement ledger, then create a review draft.
+            Select an organizer and completed event, review the calculation, then create a payout draft.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="grid gap-3 lg:grid-cols-[1fr_auto]" onSubmit={handleCreateEventPayout}>
-            <div className="grid gap-3 md:grid-cols-2">
-              <select
-                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                value={createForm.eventId}
-                onChange={(event) => {
-                  setCreateForm((current) => ({ ...current, eventId: event.target.value }));
-                  setPreview(null);
-                }}
-                disabled={eventsLoading}
-              >
-                <option value="">{eventsLoading ? "Loading events..." : "Select event"}</option>
-                {events.map((event) => (
-                  <option key={event.id} value={event.id}>
-                    {event.title} - {event.organizer?.name || "Organizer"} - {formatStatus(event.type)}
-                  </option>
-                ))}
-              </select>
-              <Textarea
-                className="min-h-10 md:min-h-10"
-                placeholder="Internal payout remarks"
-                value={createForm.remarks}
-                onChange={(event) => setCreateForm((current) => ({ ...current, remarks: event.target.value }))}
-              />
+          <form className="space-y-5" onSubmit={handleCreateEventPayout}>
+            <div className="grid gap-5 md:grid-cols-2">
+              <div className="space-y-2">
+                <label htmlFor="payout-organizer-search" className="text-sm font-medium">1. Organizer</label>
+                <Input id="payout-organizer-search" placeholder="Search organizers" value={organizerSearch} onChange={e => { setOrganizerSearch(e.target.value); setOrganizerPage(1); }} />
+                <select aria-label="Select organizer" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={organizerId} disabled={organizersLoading}
+                  onChange={e => { invalidatePreview(); setOrganizerId(e.target.value); setEventPage(1); setEventSearch(""); setCreateForm({ eventId: "", remarks: "" }); setFinancialForm(emptyInputs()); }}>
+                  <option value="">{organizersLoading ? "Loading organizers..." : "Select organizer"}</option>
+                  {organizers.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select>
+                <div className="flex items-center justify-between text-xs">
+                  <Button type="button" size="sm" variant="ghost" disabled={organizerPage <= 1 || organizersLoading} onClick={() => setOrganizerPage(page => page - 1)}>Previous</Button>
+                  <span>Page {organizerPage} of {Math.max(1, organizerPages)}</span>
+                  <Button type="button" size="sm" variant="ghost" disabled={organizerPage >= organizerPages || organizersLoading} onClick={() => setOrganizerPage(page => page + 1)}>Next</Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="payout-event-search" className="text-sm font-medium">2. Completed event</label>
+                <Input id="payout-event-search" disabled={!organizerId} placeholder="Search ended events" value={eventSearch} onChange={e => { setEventSearch(e.target.value); setEventPage(1); }} />
+                <select aria-label="Select completed event" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={createForm.eventId} disabled={!organizerId || eventsLoading}
+                  onChange={e => { invalidatePreview(); setCreateForm(current => ({ ...current, eventId: e.target.value })); setFinancialForm(emptyInputs()); }}>
+                  <option value="">{eventsLoading ? "Loading events..." : "Select completed event"}</option>
+                  {events.map(event => <option key={event.id} value={event.id}>{event.title} - {formatDate(event.endDate)}</option>)}
+                </select>
+                {organizerId && !eventsLoading && !events.length && <p className="text-xs text-muted-foreground">No matching completed events.</p>}
+                <div className="flex items-center justify-between text-xs">
+                  <Button type="button" size="sm" variant="ghost" disabled={eventPage <= 1 || eventsLoading} onClick={() => setEventPage(page => page - 1)}>Previous</Button>
+                  <span>Page {eventPage} of {Math.max(1, eventPages)}</span>
+                  <Button type="button" size="sm" variant="ghost" disabled={eventPage >= eventPages || eventsLoading} onClick={() => setEventPage(page => page + 1)}>Next</Button>
+                </div>
+              </div>
             </div>
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              <Button type="button" variant="outline" onClick={handlePreviewPayout} disabled={previewLoading || !createForm.eventId}>
-                {previewLoading ? <Loader className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-                Preview
-              </Button>
-              <Button type="submit" disabled={isCreating || !preview?.eligible}>
-                {isCreating ? "Creating..." : "Create draft"}
-              </Button>
-            </div>
+            {createForm.eventId && <>
+              <h3 className="text-sm font-medium">3. Review calculation</h3>
+              <PayoutInputs value={financialForm} totals={lastTotals} disabled={isCreating || Boolean(preview?.existingPayout)}
+                onChange={value => { invalidatePreview(); setFinancialForm(value); }} />
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button type="button" variant="outline" onClick={handlePreviewPayout} disabled={previewLoading || isCreating}>{previewLoading ? "Calculating..." : "Recalculate"}</Button>
+                <Button type="submit" disabled={isCreating || previewLoading || !preview?.eligible}>{isCreating ? "Creating..." : "Create payout draft"}</Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Release is available after the settlement hold. Creating a draft stops automatic release for this event.</p>
+            </>}
           </form>
 
           {selectedEvent && (
@@ -1062,13 +1139,19 @@ const PromoterPayouts = () => {
             </div>
           )}
 
+          {preview?.existingPayout && <div role="status" className="mt-4 space-y-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4">
+            <p className="font-medium">{["COMPLETED", "RECONCILED"].includes(preview.existingPayout.status) ? "Already paid - another payout is not allowed." : "A payout already exists for this event."}</p>
+            <p className="text-sm">{formatStatus(preview.existingPayout.status)} - {formatMoney(preview.existingPayout.amount, 2)} - {preview.existingPayout.publicId}</p>
+            {preview.existingPayout.completedAt && <p className="text-sm">Completed {formatDate(preview.existingPayout.completedAt)}</p>}
+            <Button variant="outline" onClick={() => openDetail(preview.existingPayout.id)}>View existing payout</Button>
+          </div>}
           {preview && (
             <div className="mt-4 space-y-4 rounded-xl border border-border/60 bg-background/40 p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="font-semibold">{preview.eligible ? "Payout is eligible" : "Payout is blocked"}</p>
                   <p className="text-sm text-muted-foreground">
-                    Backend calculated {preview.lineItems?.length || 0} ticket settlement lines.
+                    Includes {preview.lineItems?.length || 0} ticket settlement lines.
                   </p>
                 </div>
                 <Badge className={`${preview.eligible ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300 light:text-success" : "border-destructive/40 bg-destructive/15 text-destructive"} border`}>
@@ -1076,15 +1159,8 @@ const PromoterPayouts = () => {
                 </Badge>
               </div>
 
-              {previewTotals && (
-                <div className="grid gap-3 md:grid-cols-5">
-                  <SummaryTile label="Gross sales" value={formatMoney(previewTotals.grossTicketSales, 2)} />
-                  <SummaryTile label="Refunds/reserve" value={formatMoney((previewTotals.refundAmount || 0) + (previewTotals.refundReserveAmount || 0), 2)} />
-                  <SummaryTile label={`Platform fee (${previewTotals.platformFeePercent || 0}%)`} value={formatMoney(previewTotals.platformFeeAmount, 2)} />
-                  <SummaryTile label={`${previewTotals.gstType || "GST"} deducted`} value={formatMoney(previewTotals.gstTotal, 2)} />
-                  <SummaryTile label="Net payout" value={formatMoney(previewTotals.netPayoutAmount, 2)} tone="text-accent light:text-accent-foreground" />
-                </div>
-              )}
+              <p className="text-sm text-muted-foreground">Eligible from: {formatDate(preview.holdUntil)}</p>
+              <PayoutBreakdown totals={previewTotals} />
 
               {(blockers.length > 0 || warnings.length > 0) && (
                 <div className="grid gap-3 md:grid-cols-2">
@@ -1115,6 +1191,7 @@ const PromoterPayouts = () => {
         </CardContent>
       </Card>
 
+      <PayoutDownloads filters={filters} />
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative min-w-[240px] flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -1263,12 +1340,12 @@ const PromoterPayouts = () => {
                           </Button>
                         )}
                         {payout.status === "APPROVED" && !payout.manualInterventionRequired && (
-                          <Button onClick={() => handleDisburse(payout.id)} disabled={updatingId === payout.id}>
+                          <Button onClick={() => setReleaseTarget(payout)} disabled={updatingId === payout.id}>
                             <Banknote className="h-4 w-4" />
-                            Disburse
+                            Initiate payout
                           </Button>
                         )}
-                        {payout.manualInterventionRequired && (
+                        {payout.manualInterventionRequired && payout.providerStatus !== "REVISION_PENDING_APPROVAL" && (
                           <Button variant="outline" onClick={() => handleManualRetry(payout.id)} disabled={updatingId === payout.id}>
                             <RefreshCw className="h-4 w-4" />
                             Resolve & Retry
@@ -1290,12 +1367,36 @@ const PromoterPayouts = () => {
         </div>
       )}
 
+      <div className="flex items-center justify-between gap-3">
+        <Button variant="outline" disabled={!pagination.hasPrevPage || isFetching} onClick={() => changePage(pagination.page - 1)}>Previous</Button>
+        <span className="text-sm text-muted-foreground">Page {pagination.page} of {Math.max(1, pagination.totalPages)}</span>
+        <Button variant="outline" disabled={!pagination.hasNextPage || isFetching} onClick={() => changePage(pagination.page + 1)}>Next</Button>
+      </div>
+      <Dialog open={Boolean(releaseTarget)} onOpenChange={open => { if (!open && !updatingId) setReleaseTarget(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Initiate this payout?</DialogTitle><DialogDescription>Confirm the organizer, event and amount before sending it to the payment queue.</DialogDescription></DialogHeader>
+          <p>{releaseTarget?.organizer?.name} - {releaseTarget?.event?.title}</p>
+          <p className="text-xl font-semibold">{formatMoney(getPayoutAmount(releaseTarget), 2)}</p>
+          <p className="text-sm text-muted-foreground">Bank: {releaseTarget?.bank_details?.accountNumberMasked || "See verified destination in payout details"}</p>
+          <p className="text-sm text-muted-foreground">The server rechecks eligibility and approval. Queued does not mean paid.</p>
+          <Button disabled={Boolean(updatingId)} onClick={() => handleDisburse(releaseTarget.id)}>{updatingId ? "Submitting..." : "Confirm and initiate"}</Button>
+        </DialogContent>
+      </Dialog>
       <UpcomingSettlements admin />
       <PayoutDetailModal
         payout={detailPayout}
         loading={detailLoading}
         revisionBusy={revisionBusy}
         onCreateRevision={handleCreateRevision}
+        onTakeControl={async (payout, reason) => {
+          setRevisionBusy(true);
+          try {
+            await takeControlOfPayout(payout.id, { reason, expectedRevision: payout.revisionNumber });
+            await reloadDetail(payout.id); refresh();
+            toast.success("Payout moved to manual review.");
+          } catch (error) { toast.error(error.message); }
+          finally { setRevisionBusy(false); }
+        }}
         onApproveRevision={handleApproveRevision}
         onOpenChange={(open) => {
           if (!open) {

@@ -101,7 +101,6 @@ const PromoterOverview = () => {
           </div>
           <Button variant="outline" size="sm" onClick={() => { refreshDashboard(); refresh(); }} disabled={summaryLoading || dashboardLoading}>
             <RefreshCw className={`h-4 w-4 ${summaryLoading || dashboardLoading ? "animate-spin" : ""}`} />
-            Refresh
           </Button>
         </CardHeader>
         <CardContent>
@@ -136,12 +135,6 @@ const PromoterOverview = () => {
           </form>
           </div>
           {dateError && <p role="alert" className="mb-3 text-sm text-destructive">{dateError}</p>}
-          <p className="mb-3 text-sm font-medium text-muted-foreground">
-            Applied: {dashboard?.period
-              ? `${displayDate(dashboard.period.startDate)} – ${displayDate(dashboard.period.endDate)}`
-              : filter.month ? months.find(month => month.value === filter.month)?.label || filter.month
-                : `${displayDate(filter.startDate)} – ${displayDate(filter.endDate)}`} · Asia/Kolkata
-          </p>
           {dashboardError ? <p role="alert" className="py-6 text-destructive">{dashboardError}</p> : dashboardLoading ? (
             <div className="flex items-center justify-center py-12 text-muted-foreground">
               <RefreshCw className="mr-3 h-5 w-5 animate-spin" />

@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import EntryAgentManagement from '@/components/EntryAgentManagement';
 import { useBankInput } from "@/hooks/useBankInput";
 import { buildOrganizerProfile as buildInitialData } from '@/utils/organizerProfile';
+import { isValidGstFormat } from '@/utils/gst';
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -202,6 +203,11 @@ const OrganizerProfileContent = ({ user }) => {
 
   const handleSave = async () => {
     if (isSaving) return;
+    const gstNumber = editData.gstNumber?.trim().toUpperCase() || "";
+    if (!isValidGstFormat(gstNumber)) {
+      toast.error("Enter a valid 15-character GST number (e.g., 22AAAAA0000A1Z5).");
+      return;
+    }
     setIsSaving(true);
     let uploadedLogoStorageKey = null;
     try {
@@ -224,7 +230,7 @@ const OrganizerProfileContent = ({ user }) => {
       const allowed = {
         name: editData.name,
         description: editData.description,
-        gstNumber: editData.gstNumber,
+        gstNumber,
         instagram: editData.instagram,
         linkedin: editData.linkedin,
         facebook: editData.facebook,
