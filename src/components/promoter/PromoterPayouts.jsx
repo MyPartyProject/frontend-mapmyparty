@@ -29,7 +29,6 @@ import {
   RefreshCw,
   Search,
   ShieldCheck,
-  Sparkles,
   Wallet2,
   XCircle,
 } from "lucide-react";
@@ -149,7 +148,7 @@ const calculationInputs = (form) => ({
   adjustments: form.adjustments.map(row => ({ direction: row.direction, amountCents: Math.round(Number(row.amount) * 100),
     category: row.category.trim(), description: row.description.trim() })),
 });
-const PayoutInputs = ({ value, onChange, totals, disabled = false }) => (
+const PayoutInputs = ({ value, onChange, totals, disabled = false, compact = false }) => (
   <fieldset disabled={disabled} className="space-y-3">
     <div className="grid gap-3 sm:grid-cols-2">
       <label className="space-y-1 text-sm">Platform fee
@@ -165,7 +164,7 @@ const PayoutInputs = ({ value, onChange, totals, disabled = false }) => (
           onChange={e => onChange({ ...value, feeValue: e.target.value })} />
       </label>
     </div>
-    <p className="text-xs text-muted-foreground">GST is calculated automatically. Sales, refunds and bank details cannot be edited here.</p>
+    {!compact && <p className="text-xs text-muted-foreground">GST is calculated automatically. Sales, refunds and bank details cannot be edited here.</p>}
     {value.adjustments.map((row, index) => {
       const update = patch => onChange({ ...value, adjustments: value.adjustments.map((item, i) => i === index ? { ...item, ...patch } : item) });
       return <div key={index} className="grid gap-2 rounded-lg border border-border p-3 sm:grid-cols-2">
@@ -654,13 +653,15 @@ const PromoterPayouts = () => {
   const refresh = () => { refreshPayouts(); queryClient.invalidateQueries({ queryKey: ["upcoming-settlements"] }); };
   const [organizers, setOrganizers] = useState([]);
   const [organizerId, setOrganizerId] = useState("");
-  const [organizerSearch, setOrganizerSearch] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createSuccess, setCreateSuccess] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const createTrigger = useRef(null);
   const [organizerPage, setOrganizerPage] = useState(1);
   const [organizerPages, setOrganizerPages] = useState(1);
   const [organizersLoading, setOrganizersLoading] = useState(false);
   const [eventPage, setEventPage] = useState(1);
   const [eventPages, setEventPages] = useState(1);
-  const [eventSearch, setEventSearch] = useState("");
   const [financialForm, setFinancialForm] = useState(emptyInputs);
   const [releaseTarget, setReleaseTarget] = useState(null);
   const previewRequest = useRef(0);
@@ -690,36 +691,26 @@ const PromoterPayouts = () => {
   });
 
   useEffect(() => {
+    if (!createOpen) return;
     let cancelled = false;
     setOrganizersLoading(true);
-    const timer = setTimeout(async () => {
-      try {
-        const data = await fetchAdminOrganizers({ page: organizerPage, limit: 20, search: organizerSearch });
-        if (!cancelled) { setOrganizers(data?.organizers || []); setOrganizerPages(data?.pagination?.totalPages || 1); }
-      } catch (error) { if (!cancelled) toast.error(error.message); }
-      finally { if (!cancelled) setOrganizersLoading(false); }
-    }, 250);
-    return () => { cancelled = true; clearTimeout(timer); };
-  }, [organizerSearch, organizerPage]);
-  useEffect(() => { setOrganizerId(""); }, [organizerSearch, organizerPage]);
+    fetchAdminOrganizers({ page: organizerPage, limit: 20 }).then(data => {
+      if (!cancelled) { setOrganizers(data?.organizers || []); setOrganizerPages(data?.pagination?.totalPages || 1); }
+    }).catch(error => { if (!cancelled) toast.error(error.message); })
+      .finally(() => { if (!cancelled) setOrganizersLoading(false); });
+    return () => { cancelled = true; };
+  }, [createOpen, organizerPage]);
+
   useEffect(() => {
-    previewRequest.current += 1;
-    setCreateForm({ eventId: "", remarks: "" }); setPreview(null); setLastTotals(null); setFinancialForm(emptyInputs());
-  }, [organizerId, eventSearch, eventPage]);
-  useEffect(() => {
+    if (!createOpen || !organizerId) return;
     let cancelled = false;
-    setEvents([]);
-    if (!organizerId) { setEventsLoading(false); return; }
     setEventsLoading(true);
-    const timer = setTimeout(async () => {
-      try {
-        const data = await fetchAdminEvents({ organizerId, ended: true, page: eventPage, limit: 20, search: eventSearch });
-        if (!cancelled) { setEvents(data?.events || []); setEventPages(data?.pagination?.totalPages || 1); }
-      } catch (error) { if (!cancelled) toast.error(error.message); }
-      finally { if (!cancelled) setEventsLoading(false); }
-    }, 250);
-    return () => { cancelled = true; clearTimeout(timer); };
-  }, [organizerId, eventPage, eventSearch]);
+    fetchAdminEvents({ organizerId, ended: true, page: eventPage, limit: 20 }).then(data => {
+      if (!cancelled) { setEvents(data?.events || []); setEventPages(data?.pagination?.totalPages || 1); }
+    }).catch(error => { if (!cancelled) toast.error(error.message); })
+      .finally(() => { if (!cancelled) setEventsLoading(false); });
+    return () => { cancelled = true; };
+  }, [createOpen, organizerId, eventPage]);
 
   const totals = useMemo(() => {
     const base = {
@@ -743,11 +734,6 @@ const PromoterPayouts = () => {
     return base;
   }, [statistics]);
 
-  const selectedEvent = useMemo(
-    () => events.find((event) => event.id === createForm.eventId),
-    [events, createForm.eventId]
-  );
-
   const updatePayoutForm = (payoutId, updates) => {
     setStatusForm((current) => ({
       ...current,
@@ -767,9 +753,18 @@ const PromoterPayouts = () => {
     };
   };
 
-  const invalidatePreview = () => { previewRequest.current += 1; setPreview(null); setPreviewLoading(false); };
+  const invalidatePreview = () => { previewRequest.current += 1; setPreview(null); setPreviewLoading(false); setCreateError(""); };
+  const resetEventSelection = () => {
+    invalidatePreview(); setEvents([]); setEventsLoading(false);
+    setCreateForm({ eventId: "", remarks: "" }); setLastTotals(null); setFinancialForm(emptyInputs());
+  };
+  const changeCreateOpen = open => {
+    if (isCreating) return;
+    resetEventSelection(); setOrganizerId(""); setOrganizers([]); setOrganizerPage(1); setEventPage(1);
+    setOrganizerPages(1); setEventPages(1); setCreateSuccess(false); setCreateOpen(open);
+  };
   const handlePreviewPayout = useCallback(async () => {
-    if (!createForm.eventId) return;
+    if (!createOpen || !createForm.eventId) return;
     const request = ++previewRequest.current;
     setPreviewLoading(true);
     setPreview(null);
@@ -779,9 +774,9 @@ const PromoterPayouts = () => {
     } catch (error) {
       if (request === previewRequest.current) toast.error(error.message || "Failed to calculate payout");
     } finally { if (request === previewRequest.current) setPreviewLoading(false); }
-  }, [createForm.eventId, financialForm]);
+  }, [createOpen, createForm.eventId, financialForm]);
   useEffect(() => {
-    if (!createForm.eventId) return;
+    if (!createOpen || !createForm.eventId) return;
     const request = ++previewRequest.current;
     setPreviewLoading(true);
     calculateEventPayout(createForm.eventId).then(result => {
@@ -789,29 +784,33 @@ const PromoterPayouts = () => {
     }).catch(error => { if (request === previewRequest.current) toast.error(error.message); })
       .finally(() => { if (request === previewRequest.current) setPreviewLoading(false); });
     return () => { previewRequest.current += 1; };
-  }, [createForm.eventId]);
+  }, [createOpen, createForm.eventId]);
 
   const handleCreateEventPayout = async (event) => {
     event.preventDefault();
-    if (isCreating || previewLoading || !preview?.eligible) return;
+    if (isCreating || createSuccess || previewLoading || !preview?.eligible) return;
     if (!createForm.eventId) {
       toast.error("Select an event first.");
       return;
     }
 
     setIsCreating(true);
+    setCreateError("");
     try {
       await createEventPayout(createForm.eventId, {
         ...calculationInputs(financialForm), remarks: createForm.remarks.trim(),
         reason: financialForm.reason.trim() || undefined, previewFingerprint: preview.previewFingerprint,
       });
       toast.success("Event payout draft created.");
+      setCreateSuccess(true);
+      previewRequest.current += 1;
       setCreateForm({ eventId: "", remarks: "" });
       setFinancialForm(emptyInputs());
       setPreview(null);
       refresh();
     } catch (createError) {
       setPreview(createError.data?.data || null);
+      setCreateError(createError.message || "Failed to create event payout.");
       toast.error(createError.message || "Failed to create event payout.");
     } finally {
       setIsCreating(false);
@@ -822,7 +821,7 @@ const PromoterPayouts = () => {
     setUpdatingId(payoutId);
     try {
       await approveEventPayout(payoutId, { ...getActionPayload(payoutId), expectedRevision: items.find(item => item.id === payoutId)?.revisionNumber });
-      toast.success("Payout approved for provider processing.");
+      toast.success("Payout approved. Release requires bank and beneficiary readiness.");
       refresh();
     } catch (approveError) {
       toast.error(approveError.message || "Failed to approve payout.");
@@ -920,7 +919,7 @@ const PromoterPayouts = () => {
       await approvePayoutRevision(payoutId, revisionId);
       await reloadDetail(payoutId);
       refresh();
-      toast.success("Payout revision approved and ready for disbursement.");
+      toast.success("Payout approved. Release requires bank and beneficiary readiness.");
     } catch (revisionError) {
       toast.error(revisionError.message || "Failed to approve payout revision.");
     } finally {
@@ -1026,10 +1025,12 @@ const PromoterPayouts = () => {
           <h2 className="text-2xl font-bold">Payouts</h2>
           <p className="text-muted-foreground">Automatic settlement after seven days. Review blocked payouts and resolve exceptions.</p>
         </div>
-        <Button variant="outline" size="sm" onClick={refresh} disabled={isFetching}>
+        <div className="flex items-center gap-2">
+          <Button ref={createTrigger} onClick={() => changeCreateOpen(true)}>Create Event Payout</Button>
+        <Button aria-label="Refresh payouts" variant="outline" size="sm" onClick={refresh} disabled={isFetching}>
           <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
-          Refresh
         </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
@@ -1063,133 +1064,81 @@ const PromoterPayouts = () => {
         </Card>
       </div>
 
-      <Card className="border-border/60 bg-card/70">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary light:text-accent-foreground" />
-            Create event payout
-          </CardTitle>
-          <CardDescription className="text-muted-foreground">
-            Select an organizer and completed event, review the calculation, then create a payout draft.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-5" onSubmit={handleCreateEventPayout}>
-            <div className="grid gap-5 md:grid-cols-2">
-              <div className="space-y-2">
-                <label htmlFor="payout-organizer-search" className="text-sm font-medium">1. Organizer</label>
-                <Input id="payout-organizer-search" placeholder="Search organizers" value={organizerSearch} onChange={e => { setOrganizerSearch(e.target.value); setOrganizerPage(1); }} />
-                <select aria-label="Select organizer" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={organizerId} disabled={organizersLoading}
-                  onChange={e => { invalidatePreview(); setOrganizerId(e.target.value); setEventPage(1); setEventSearch(""); setCreateForm({ eventId: "", remarks: "" }); setFinancialForm(emptyInputs()); }}>
-                  <option value="">{organizersLoading ? "Loading organizers..." : "Select organizer"}</option>
-                  {organizers.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
-                </select>
-                <div className="flex items-center justify-between text-xs">
-                  <Button type="button" size="sm" variant="ghost" disabled={organizerPage <= 1 || organizersLoading} onClick={() => setOrganizerPage(page => page - 1)}>Previous</Button>
-                  <span>Page {organizerPage} of {Math.max(1, organizerPages)}</span>
-                  <Button type="button" size="sm" variant="ghost" disabled={organizerPage >= organizerPages || organizersLoading} onClick={() => setOrganizerPage(page => page + 1)}>Next</Button>
+      <Dialog open={createOpen} onOpenChange={changeCreateOpen}>
+        <DialogContent closeDisabled={isCreating} aria-describedby={undefined}
+          className="promoter-theme dashboard-theme flex h-[100dvh] max-h-[100dvh] w-full max-w-none flex-col gap-0 overflow-hidden rounded-none bg-background p-0 sm:h-auto sm:max-h-[90dvh] sm:w-[calc(100%_-_2rem)] sm:max-w-4xl sm:rounded-xl"
+          onPointerDownOutside={event => event.preventDefault()}
+          onInteractOutside={event => event.preventDefault()}
+          onEscapeKeyDown={event => event.preventDefault()}
+          onCloseAutoFocus={event => { event.preventDefault(); createTrigger.current?.focus(); }}>
+          <DialogHeader className="shrink-0 border-b px-5 py-4 pr-12 text-left">
+            <DialogTitle>Create Event Payout</DialogTitle>
+          </DialogHeader>
+          {createSuccess ? <div role="status" className="p-6 text-sm">Event payout draft created.</div> : <>
+            <form id="create-event-payout" onSubmit={handleCreateEventPayout} className="min-h-0 flex-1 overflow-y-auto p-5">
+              <fieldset disabled={isCreating} className="min-w-0 space-y-5">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <label htmlFor="payout-organizer" className="text-sm font-medium">Organizer</label>
+                    <select id="payout-organizer" aria-label="Select organizer" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                      value={organizerId} disabled={organizersLoading}
+                      onChange={e => { resetEventSelection(); setOrganizerId(e.target.value); setEventPage(1); setEventPages(1); }}>
+                      <option value="">{organizersLoading ? "Loading organizers..." : "Select organizer"}</option>
+                      {organizers.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+                    </select>
+                    {!organizersLoading && !organizers.length && <p className="text-xs text-muted-foreground">No organizers found.</p>}
+                    {organizerPages > 1 && <div className="flex items-center justify-between text-xs">
+                      <Button type="button" size="sm" variant="ghost" disabled={organizerPage <= 1 || organizersLoading} onClick={() => { resetEventSelection(); setOrganizerId(""); setOrganizers([]); setEventPage(1); setOrganizerPage(page => page - 1); }}>Previous</Button>
+                      <span>Page {organizerPage} of {organizerPages}</span>
+                      <Button type="button" size="sm" variant="ghost" disabled={organizerPage >= organizerPages || organizersLoading} onClick={() => { resetEventSelection(); setOrganizerId(""); setOrganizers([]); setEventPage(1); setOrganizerPage(page => page + 1); }}>Next</Button>
+                    </div>}
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="payout-event" className="text-sm font-medium">Completed event</label>
+                    <select id="payout-event" aria-label="Select completed event" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                      value={createForm.eventId} disabled={!organizerId || eventsLoading}
+                      onChange={e => { invalidatePreview(); setLastTotals(null); setCreateForm({ eventId: e.target.value, remarks: "" }); setFinancialForm(emptyInputs()); }}>
+                      <option value="">{eventsLoading ? "Loading events..." : "Select completed event"}</option>
+                      {events.map(event => <option key={event.id} value={event.id}>{event.title} - {formatDate(event.endDate)}</option>)}
+                    </select>
+                    {organizerId && !eventsLoading && !events.length && <p className="text-xs text-muted-foreground">No completed events.</p>}
+                    {organizerId && eventPages > 1 && <div className="flex items-center justify-between text-xs">
+                      <Button type="button" size="sm" variant="ghost" disabled={eventPage <= 1 || eventsLoading} onClick={() => { resetEventSelection(); setEventPage(page => page - 1); }}>Previous</Button>
+                      <span>Page {eventPage} of {eventPages}</span>
+                      <Button type="button" size="sm" variant="ghost" disabled={eventPage >= eventPages || eventsLoading} onClick={() => { resetEventSelection(); setEventPage(page => page + 1); }}>Next</Button>
+                    </div>}
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="payout-event-search" className="text-sm font-medium">2. Completed event</label>
-                <Input id="payout-event-search" disabled={!organizerId} placeholder="Search ended events" value={eventSearch} onChange={e => { setEventSearch(e.target.value); setEventPage(1); }} />
-                <select aria-label="Select completed event" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={createForm.eventId} disabled={!organizerId || eventsLoading}
-                  onChange={e => { invalidatePreview(); setCreateForm(current => ({ ...current, eventId: e.target.value })); setFinancialForm(emptyInputs()); }}>
-                  <option value="">{eventsLoading ? "Loading events..." : "Select completed event"}</option>
-                  {events.map(event => <option key={event.id} value={event.id}>{event.title} - {formatDate(event.endDate)}</option>)}
-                </select>
-                {organizerId && !eventsLoading && !events.length && <p className="text-xs text-muted-foreground">No matching completed events.</p>}
-                <div className="flex items-center justify-between text-xs">
-                  <Button type="button" size="sm" variant="ghost" disabled={eventPage <= 1 || eventsLoading} onClick={() => setEventPage(page => page - 1)}>Previous</Button>
-                  <span>Page {eventPage} of {Math.max(1, eventPages)}</span>
-                  <Button type="button" size="sm" variant="ghost" disabled={eventPage >= eventPages || eventsLoading} onClick={() => setEventPage(page => page + 1)}>Next</Button>
-                </div>
+                {createForm.eventId && <PayoutInputs compact value={financialForm} totals={lastTotals} disabled={isCreating || Boolean(preview?.existingPayout)}
+                  onChange={value => { invalidatePreview(); setFinancialForm(value); }} />}
+                {previewLoading && <p role="status" className="text-sm text-muted-foreground">Calculating...</p>}
+                {createError && <p role="alert" className="text-sm text-destructive">{createError}</p>}
+                {preview?.existingPayout && <div role="status" className="space-y-2 border-t pt-4 text-sm">
+                  <p>A payout already exists for this event.</p>
+                  <p className="text-muted-foreground">{formatStatus(preview.existingPayout.status)} ? {formatMoney(preview.existingPayout.amount, 2)}</p>
+                  <Button type="button" variant="outline" onClick={() => openDetail(preview.existingPayout.id)}>View existing payout</Button>
+                </div>}
+                {preview && <div className="space-y-3 border-t pt-4">
+                  <PayoutBreakdown totals={previewTotals} />
+                  {blockers.length > 0 && <ul role="alert" className="space-y-1 text-sm text-destructive">
+                    {blockers.map(blocker => <li key={blocker.code}>{blocker.message || blocker.code}</li>)}
+                  </ul>}
+                  {warnings.length > 0 && <ul className="space-y-1 text-sm text-muted-foreground">
+                    {warnings.map(warning => <li key={warning.code}>{warning.message || warning.code}</li>)}
+                  </ul>}
+                </div>}
+              </fieldset>
+            </form>
+            <div className="shrink-0 space-y-3 border-t px-5 py-4">
+              <p className="text-xs text-muted-foreground">Creating a draft stops automatic release for this event.</p>
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={handlePreviewPayout} disabled={!createForm.eventId || previewLoading || isCreating || Boolean(preview?.existingPayout)}>{previewLoading ? "Calculating..." : "Recalculate"}</Button>
+                <Button type="submit" form="create-event-payout" disabled={isCreating || previewLoading || !preview?.eligible || Boolean(preview?.existingPayout)}>{isCreating ? "Creating..." : "Create payout draft"}</Button>
               </div>
             </div>
-            {createForm.eventId && <>
-              <h3 className="text-sm font-medium">3. Review calculation</h3>
-              <PayoutInputs value={financialForm} totals={lastTotals} disabled={isCreating || Boolean(preview?.existingPayout)}
-                onChange={value => { invalidatePreview(); setFinancialForm(value); }} />
-              <div className="flex flex-wrap justify-end gap-2">
-                <Button type="button" variant="outline" onClick={handlePreviewPayout} disabled={previewLoading || isCreating}>{previewLoading ? "Calculating..." : "Recalculate"}</Button>
-                <Button type="submit" disabled={isCreating || previewLoading || !preview?.eligible}>{isCreating ? "Creating..." : "Create payout draft"}</Button>
-              </div>
-              <p className="text-xs text-muted-foreground">Release is available after the settlement hold. Creating a draft stops automatic release for this event.</p>
-            </>}
-          </form>
-
-          {selectedEvent && (
-            <div className="mt-4 grid gap-3 rounded-xl border border-border/60 bg-background/40 p-4 text-sm md:grid-cols-4">
-              <div>
-                <p className="text-xs text-muted-foreground">Selected event</p>
-                <p className="font-semibold">{selectedEvent.title}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Organizer</p>
-                <p className="font-semibold">{selectedEvent.organizer?.name || "N/A"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Event type</p>
-                <p className="font-semibold">{formatStatus(selectedEvent.type)}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Ends</p>
-                <p className="font-semibold">{formatDate(selectedEvent.endDate)}</p>
-              </div>
-            </div>
-          )}
-
-          {preview?.existingPayout && <div role="status" className="mt-4 space-y-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4">
-            <p className="font-medium">{["COMPLETED", "RECONCILED"].includes(preview.existingPayout.status) ? "Already paid - another payout is not allowed." : "A payout already exists for this event."}</p>
-            <p className="text-sm">{formatStatus(preview.existingPayout.status)} - {formatMoney(preview.existingPayout.amount, 2)} - {preview.existingPayout.publicId}</p>
-            {preview.existingPayout.completedAt && <p className="text-sm">Completed {formatDate(preview.existingPayout.completedAt)}</p>}
-            <Button variant="outline" onClick={() => openDetail(preview.existingPayout.id)}>View existing payout</Button>
-          </div>}
-          {preview && (
-            <div className="mt-4 space-y-4 rounded-xl border border-border/60 bg-background/40 p-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="font-semibold">{preview.eligible ? "Payout is eligible" : "Payout is blocked"}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Includes {preview.lineItems?.length || 0} ticket settlement lines.
-                  </p>
-                </div>
-                <Badge className={`${preview.eligible ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300 light:text-success" : "border-destructive/40 bg-destructive/15 text-destructive"} border`}>
-                  {preview.eligible ? "Ready for draft" : "Review required"}
-                </Badge>
-              </div>
-
-              <p className="text-sm text-muted-foreground">Eligible from: {formatDate(preview.holdUntil)}</p>
-              <PayoutBreakdown totals={previewTotals} />
-
-              {(blockers.length > 0 || warnings.length > 0) && (
-                <div className="grid gap-3 md:grid-cols-2">
-                  {blockers.length > 0 && (
-                    <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
-                      <p className="text-sm font-semibold text-destructive">Eligibility blockers</p>
-                      <ul className="mt-2 space-y-1 text-sm text-destructive/80">
-                        {blockers.map((blocker) => (
-                          <li key={blocker.code}>{blocker.message || blocker.code}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {warnings.length > 0 && (
-                    <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
-                      <p className="text-sm font-semibold text-amber-300 light:text-warning">Warnings</p>
-                      <ul className="mt-2 space-y-1 text-sm text-amber-200/80 light:text-warning">
-                        {warnings.map((warning) => (
-                          <li key={warning.code}>{warning.message || warning.code}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </>}
+        </DialogContent>
+      </Dialog>
 
       <PayoutDownloads filters={filters} />
       <div className="flex flex-wrap items-center gap-3">

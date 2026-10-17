@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
     Search,
-    Bell,
     Home,
     MapPin,
     ChevronDown,
@@ -112,7 +111,7 @@ const PromoterDashboardHeader = ({ isHeaderVisible = true }) => {
                         </nav>
                     </div>
 
-                    {/* Right Side - Search, Notifications, Profile */}
+                    {/* Right Side - Search, Profile */}
                     <div className="flex items-center gap-3">
                         {/* Search */}
                         <div className="hidden lg:flex relative w-64">
@@ -123,16 +122,6 @@ const PromoterDashboardHeader = ({ isHeaderVisible = true }) => {
                                 className="w-full pl-10 pr-4 py-2 bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.15)] text-white placeholder:text-[rgba(255,255,255,0.5)] focus:ring-2 focus:ring-[#D60024] focus:border-[#D60024] rounded-full transition-all duration-300 hover:bg-[rgba(255,255,255,0.12)] light:text-foreground light:focus:ring-ring light:focus:border-primary"
                             />
                         </div>
-
-                        {/* Notifications */}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="relative text-white hover:bg-[rgba(255,255,255,0.08)] border border-transparent hover:border-[rgba(255,255,255,0.1)] rounded-full transition-all duration-300 light:text-foreground"
-                        >
-                            <Bell className="h-5 w-5" />
-                            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-[#D60024] animate-pulse light:bg-primaryCTA"></span>
-                        </Button>
 
                         {/* Profile Dropdown */}
                         <DropdownMenu>

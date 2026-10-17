@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
 import {
   Search,
-  Bell,
   Home,
   MapPin,
   ChevronDown,
@@ -573,11 +572,6 @@ const NewUserDashboard = () => {
             )}
           </form>
 
-          <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.06] light:text-muted-foreground light:hover:text-foreground light:hover:bg-muted">
-            <Bell className="h-4 w-4" />
-            <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-[#D60024] light:bg-primaryCTA"></span>
-          </Button>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-9 pl-1.5 pr-3 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] light:bg-muted light:hover:bg-muted light:border-border">
@@ -645,10 +639,6 @@ const NewUserDashboard = () => {
         </Link>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="relative h-8 w-8 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.06] light:text-muted-foreground light:hover:text-foreground light:hover:bg-muted">
-            <Bell className="h-4 w-4" />
-            <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-[#D60024] light:bg-primaryCTA"></span>
-          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">

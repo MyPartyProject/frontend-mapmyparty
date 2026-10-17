@@ -5,7 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, X, ChevronDown, User, Ticket, LogOut, Search, Bell } from "lucide-react";
+import { Menu, X, ChevronDown, User, Ticket, LogOut, Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -78,9 +78,6 @@ const UserDashboardHeader = () => {
           </form>
 
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.18)] light:text-foreground">
-              <Bell className="h-5 w-5" />
-            </Button>
 
             {/* Profile Dropdown */}
             <DropdownMenu>
@@ -123,9 +120,6 @@ const UserDashboardHeader = () => {
 
         {/* Mobile menu button */}
         <div className="flex items-center gap-2 md:hidden">
-          <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.18)] light:text-foreground">
-            <Bell className="h-5 w-5" />
-          </Button>
           <button
             className="md:hidden p-2"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

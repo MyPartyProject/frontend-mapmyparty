@@ -22,6 +22,7 @@ let role = 'ORGANIZER';
 let setupComplete = true;
 const manualRequests = [];
 let manualCreated = false;
+let creationAttempts = 0;
 try {
   let port;
   for (let i = 0; i < 100; i++) {
@@ -50,12 +51,13 @@ try {
     } else if (message.method === 'Fetch.requestPaused') {
       const { requestId, request } = message.params;
       const path = new URL(request.url).pathname;
+      let responseCode = 200;
       let payload = { success: true, data: { items: [], payouts: [], events: [], pagination: { total: 0, totalPages: 1 } } };
-      if (path === '/api/admin/organizers') payload.data = { organizers: [{ id: 'org', name: 'Fixture Organizer' }], pagination: { totalPages: 1 } };
+      if (path === '/api/admin/organizers') payload.data = { organizers: [{ id: 'org', name: 'Fixture Organizer' }], pagination: { totalPages: 2 } };
       if (path === '/api/admin/events') {
         assert.equal(new URL(request.url).searchParams.get('organizerId'), 'org');
         assert.equal(new URL(request.url).searchParams.get('ended'), 'true');
-        payload.data = { events: [{ id: 'event', title: 'Manual payout event', endDate: '2026-09-01T12:00:00Z' }], pagination: { totalPages: 1 } };
+        payload.data = { events: [{ id: 'event', title: 'Manual payout event', endDate: '2026-09-01T12:00:00Z' }], pagination: { totalPages: 2 } };
       }
       if (path.endsWith('/payouts/calculate')) {
         const inputs = JSON.parse(request.postData || '{}'); manualRequests.push(inputs);
@@ -66,14 +68,18 @@ try {
             organizerBalanceAdjustmentAmount: 0, manualAdjustmentCents: 0, netPayoutAmount: 1000 - fee * 1.18 } };
       }
       if (path === '/api/admin/events/event/payouts' && request.method === 'POST') {
-        manualRequests.push(JSON.parse(request.postData)); manualCreated = true; payload.data = { id: 'manual-created' };
+        manualRequests.push(JSON.parse(request.postData));
+        creationAttempts += 1;
+        await delay(700);
+        if (creationAttempts === 1) { responseCode = 400; payload = { success: false, message: 'Fixture creation failed', errorMessage: 'Fixture creation failed' }; }
+        else { manualCreated = true; payload.data = { id: 'manual-created' }; }
       }
       if (path.endsWith('/auth/me')) payload = { data: { user: { id: 'payout-fixture', name: 'Payout Test', role }, organizer: { id: 'org', name: 'Fixture Organizer' }, hasOrganizerProfile: setupComplete, hasBankDetails: setupComplete, isBankVerified: setupComplete } };
       if (path.endsWith('/settlements')) payload.data = { items: [{ event: { id: 'event', title: 'Seven day settlement' }, isEstimate: true, totals: { grossTicketSales: 100, refundAmount: 0, refundReserveAmount: 0, platformFeeAmount: 6, gstTotal: 1.08, organizerBalanceAdjustmentAmount: 0, netPayoutAmount: 92.92 }, status: 'BLOCKED', eligibleAt: '2026-10-08T12:00:00Z', bankAccountMasked: '****1234', blockers: [{ code: 'GST_NOT_VERIFIED', message: 'Organizer GST details must be verified before payout.' }] }], pagination: { total: 1, totalPages: 1 } };
       if (path === '/api/organizer/me/payouts/paid-fixture') payload.data = { payout: { id: 'paid-fixture', status: 'RECONCILED', amount: 92.92, payoutDate: '2026-10-01T12:00:00Z', providerUtr: 'TESTUTR123', invoiceNumber: 'TEST-STATEMENT' }, summary: { grossTicketSales: 100, platformFeeAmount: 6, gstTotal: 1.08, netPayoutAmount: 92.92 }, bankDetails: { accountHolder: 'Fixture Organizer', accountNumberMasked: '****1234', ifscCode: 'TEST0001234' }, event: { title: 'Paid event' }, organizer: { name: 'Fixture Organizer' }, eventBreakdowns: [], timeline: [] };
       if (path.includes('/event/manage/')) payload.data = { id: 'event', organizerId: 'org', title: 'Fixture Event Finance', startDate: '2026-09-01T10:00:00Z', endDate: '2026-09-01T12:00:00Z', tickets: [], venues: [], category: 'MUSIC' };
       if (path.endsWith('/analytics/summary')) payload.data = { settlement: { isEstimate: true, totals: { grossTicketSales: 100, refundAmount: 0, refundReserveAmount: 0, platformFeeAmount: 6, gstTotal: 1.08, organizerBalanceAdjustmentAmount: 0, netPayoutAmount: 92.92 }, eligibleAt: '2026-09-08T12:00:00Z', blockers: [] } };
-      await send('Fetch.fulfillRequest', { requestId, responseCode: 200, responseHeaders: [
+      await send('Fetch.fulfillRequest', { requestId, responseCode, responseHeaders: [
         { name: 'Content-Type', value: 'application/json' }, { name: 'Access-Control-Allow-Origin', value: base },
         { name: 'Access-Control-Allow-Credentials', value: 'true' },
         { name: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
@@ -147,32 +153,69 @@ try {
   await send('Page.navigate', { url: base + '/promoter/payouts' });
   await until("document.body.innerText.includes('Seven day settlement')");
   console.log('PASS promoter upcoming settlements');
+  assert.equal(await evaluate('!!document.querySelector("#payout-organizer")'), false);
+  await evaluate('[...document.querySelectorAll("button")].find(el => el.textContent === "Create Event Payout").click()');
   await until(`document.querySelector('select[aria-label="Select organizer"] option[value="org"]')`);
+  await evaluate('[...document.querySelector("#payout-organizer").parentElement.querySelectorAll("button")].find(el => el.textContent === "Next").click()');
+  await until('document.querySelector("#payout-organizer").parentElement.innerText.includes("Page 2 of 2") && !document.querySelector("#payout-organizer").disabled');
   await evaluate(`(() => { const el = document.querySelector('select[aria-label="Select organizer"]'); el.value = 'org'; el.dispatchEvent(new Event('change', { bubbles: true })); })()`);
   await until(`document.querySelector('select[aria-label="Select completed event"] option[value="event"]')`);
+  await evaluate('[...document.querySelector("#payout-event").parentElement.querySelectorAll("button")].find(el => el.textContent === "Next").click()');
+  await until('document.querySelector("#payout-event").parentElement.innerText.includes("Page 2 of 2") && !document.querySelector("#payout-event").disabled');
   await evaluate(`(() => { const el = document.querySelector('select[aria-label="Select completed event"]'); el.value = 'event'; el.dispatchEvent(new Event('change', { bubbles: true })); })()`);
-  await until("document.body.innerText.includes('Payout is eligible')");
+  await until("document.body.innerText.includes('Final payout')");
   for (const width of [390, 768, 1440]) {
     await send('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: width < 768 });
     await delay(150);
+    if (width === 390) {
+      const shot = await send('Page.captureScreenshot', { captureBeyondViewport: false });
+      await writeFile(join(profile, 'manual-payout-mobile.png'), Buffer.from(shot.data, 'base64'));
+      console.log('Mobile modal screenshot: ' + join(profile, 'manual-payout-mobile.png'));
+    }
     assert.equal(await evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), true, 'Manual payout form fits viewport');
+    assert.equal(await evaluate('(() => { const d = document.querySelector("[role=dialog]"); const r = d.getBoundingClientRect(); return r.width <= innerWidth + 1 && r.height <= innerHeight + 1 && d.scrollWidth <= d.clientWidth + 1; })()'), true);
+    assert.equal(await evaluate('[...document.querySelectorAll("input")].some(el => /Search organizers|Search ended events/.test(el.placeholder))'), false);
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape' });
+    await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape' });
+    assert.equal(await evaluate('!!document.querySelector("#payout-organizer")'), true, 'Escape does not close creation');
+    if (width >= 768) {
+      await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: 5, y: 5, button: 'left', clickCount: 1 });
+      await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: 5, y: 5, button: 'left', clickCount: 1 });
+      assert.equal(await evaluate('!!document.querySelector("#payout-organizer")'), true, 'Outside click does not close creation');
+    }
   }
   await evaluate(`(() => { const el = [...document.querySelectorAll('select')].find(el => [...el.options].some(o => o.value === 'FIXED')); el.value = 'FIXED'; el.dispatchEvent(new Event('change', { bubbles: true })); })()`);
   assert.equal(await evaluate(`[...document.querySelectorAll('button')].find(el => el.textContent === 'Create payout draft').disabled`), true);
   await evaluate(`(() => { const el = document.querySelector('fieldset input[type=number]'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, '50'); el.dispatchEvent(new Event('input', { bubbles: true })); const note = document.querySelector('fieldset textarea'); Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(note, 'Agreed event platform fee'); note.dispatchEvent(new Event('input', { bubbles: true })); })()`);
   await evaluate(`[...document.querySelectorAll('button')].find(el => el.textContent === 'Recalculate').click()`);
-  await until("document.body.innerText.includes('Payout is eligible') && document.body.innerText.includes('941')");
+  await until("document.querySelector('[role=dialog]').innerText.includes('941') && ![...document.querySelectorAll('button')].find(el => el.textContent === 'Create payout draft').disabled");
   assert.equal(manualRequests.at(-1).fee.amountCents, 5000);
   const screenshot = await send('Page.captureScreenshot', { captureBeyondViewport: true });
   await writeFile(join(profile, 'manual-payout.png'), Buffer.from(screenshot.data, 'base64'));
   console.log('Manual payout screenshot: ' + join(profile, 'manual-payout.png'));
   await evaluate(`[...document.querySelectorAll('button')].find(el => el.textContent === 'Create payout draft').click()`);
-  await until(`document.querySelector('select[aria-label="Select completed event"]').value === ''`);
+  assert.equal(await evaluate('[...document.querySelectorAll("[role=dialog] button")].find(el => el.textContent.trim() === "Close").disabled'), true, 'Close disabled during submission');
+  await until('document.querySelector("[role=dialog]")?.innerText.includes("Fixture creation failed")');
+  assert.equal(await evaluate('document.querySelector("#payout-event").value'), 'event');
+  assert.equal(await evaluate('document.querySelector("fieldset input[type=number]").value'), '50');
+  await evaluate('[...document.querySelectorAll("button")].find(el => el.textContent === "Recalculate").click()');
+  await until('![...document.querySelectorAll("button")].find(el => el.textContent === "Create payout draft").disabled');
+  await evaluate('[...document.querySelectorAll("button")].find(el => el.textContent === "Create payout draft").click()');
+  await until('document.querySelector("[role=dialog]")?.innerText.includes("Event payout draft created.")');
+  assert.equal(await evaluate('!!document.querySelector("#create-event-payout")'), false, 'Success prevents duplicate submission');
   assert.equal(manualRequests.at(-1).previewFingerprint, 'a'.repeat(64));
   assert.equal(manualRequests.at(-1).fee.amountCents, 5000);
   assert.deepEqual(errors, []);
+  await evaluate('[...document.querySelectorAll("[role=dialog] button")].find(el => el.textContent.trim() === "Close").click()');
+  await until('!document.querySelector("[role=dialog]")');
+  assert.equal(await evaluate('document.activeElement.textContent'), 'Create Event Payout');
+  await evaluate('[...document.querySelectorAll("button")].find(el => el.textContent === "Create Event Payout").click()');
+  await until('document.querySelector("#payout-organizer option[value=org]")');
+  assert.equal(await evaluate('document.querySelector("#payout-organizer").value'), '');
+  await evaluate('(() => { const el = document.querySelector("#payout-organizer"); el.value = "org"; el.dispatchEvent(new Event("change", { bubbles: true })); })()');
+  await until('document.querySelector("#payout-event option[value=event]")');
   await evaluate(`(() => { const el = document.querySelector('select[aria-label="Select completed event"]'); el.value = 'event'; el.dispatchEvent(new Event('change', { bubbles: true })); })()`);
-  await until("document.body.innerText.includes('Already paid - another payout is not allowed.')");
+  await until("document.body.innerText.includes('A payout already exists for this event.')");
   assert.equal(await evaluate(`[...document.querySelectorAll('button')].find(el => el.textContent === 'Create payout draft').disabled`), true);
   console.log('PASS manual payout organizer/event selection, responsive form, fee edit, stale preview protection and draft creation');
   console.log('PASS already-paid warning and duplicate creation disabled');

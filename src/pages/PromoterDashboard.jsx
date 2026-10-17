@@ -17,7 +17,6 @@ import {
   BarChart3,
   Building2,
   ShieldCheck,
-  Bell,
   Search,
   ChevronLeft,
   Menu,
@@ -806,10 +805,6 @@ const PromoterDashboard = () => {
             <div className="flex items-center gap-2">
               <Button variant="outline" size="icon" className="border-border/60 text-foreground/80 hover:bg-muted">
                 <Search className="w-4 h-4" />
-              </Button>
-              <Button variant="outline" size="icon" className="border-border/60 relative text-foreground/80 hover:bg-muted">
-                <Bell className="w-4 h-4" />
-                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-accent" />
               </Button>
             </div>
           </div>

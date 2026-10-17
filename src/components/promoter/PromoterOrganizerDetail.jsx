@@ -333,7 +333,7 @@ const ProfileHeader = ({
                   onClick={onVerifyBank}
                   disabled={isBankActionSubmitting || profile.bankDetails.verificationStatus === "VERIFIED"}
                 >
-                  {isBankActionSubmitting ? "Updating..." : "Approve bank review"}
+                  {isBankActionSubmitting ? "Updating..." : "Verify bank manually"}
                 </Button>
                 <Button
                   type="button"
@@ -743,14 +743,14 @@ const PromoterOrganizerDetail = () => {
 
     setIsBankActionSubmitting(true);
     try {
-      await manuallyVerifyAdminBank(profile.bankDetails.id, {
+      const result = await manuallyVerifyAdminBank(profile.bankDetails.id, {
         reviewNotes: bankReviewNote.trim(),
       });
-      toast.success("Review approved. Cashfree verification is required for payouts.");
+      toast.success(result.message || "Bank account manually verified.");
       setBankReviewNote("");
       refresh();
     } catch (error) {
-      toast.error(error.message || "Failed to approve bank review.");
+      toast.error(error.message || "Failed to verify bank account.");
     } finally {
       setIsBankActionSubmitting(false);
     }
