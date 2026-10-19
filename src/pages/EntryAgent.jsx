@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { QrCode, ShieldCheck, LogOut, ArrowLeft, ArrowRight, RefreshCw, Lock, CalendarDays, MapPin, Users, Ticket, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogContent, AlertDialogTitle, AlertDialogDescription, AlertDialogAction } from '@/components/ui/alert-dialog';
 import EntryAgentPassword from '@/components/EntryAgentPassword';
 import QRScanner from '@/components/QRScanner';
 import { agentFetch, agentDate } from '@/services/entryAgentService';
@@ -65,6 +66,7 @@ function AgentWorkspace({ eventId }) {
   const [scanner, setScanner] = useState(false);
   const [ticket, setTicket] = useState(null);
   const [result, setResult] = useState('');
+  const [alreadyCheckedInAlert, setAlreadyCheckedInAlert] = useState(false);
   const [manualCode, setManualCode] = useState('');
   const [page, setPage] = useState(1);
   const [updated, setUpdated] = useState(null);
@@ -130,7 +132,9 @@ function AgentWorkspace({ eventId }) {
   }, [data, refresh]);
 
   useEffect(() => {
-    if (ticket) ticketPanel.current?.focus();
+    const alreadyCheckedIn = !!ticket && result === 'already';
+    setAlreadyCheckedInAlert(alreadyCheckedIn);
+    if (ticket && !alreadyCheckedIn) ticketPanel.current?.focus();
   }, [ticket, result]);
 
   const verify = async payload => {
@@ -247,6 +251,14 @@ function AgentWorkspace({ eventId }) {
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-4"><Button variant="outline" className={button} disabled={refreshing || page === 1} onClick={() => setPage(p => p - 1)}>Previous</Button><span className="text-xs text-muted-foreground">Page {page}</span><Button variant="outline" className={button} disabled={refreshing || page * 20 >= data.activity.total} onClick={() => setPage(p => p + 1)}>Next</Button></div>
       </section>
     </>}
+    <AlertDialog open={alreadyCheckedInAlert && !!ticket && result === 'already'} onOpenChange={setAlreadyCheckedInAlert}>
+      <AlertDialogContent className="entry-agent-light w-[calc(100%-2rem)] max-w-sm rounded-2xl border-warning bg-background text-foreground" onCloseAutoFocus={event => { event.preventDefault(); ticketPanel.current?.focus(); }}>
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-warning-soft text-warning"><AlertTriangle className="h-8 w-8" aria-hidden="true" /></div>
+        <AlertDialogTitle className="text-2xl font-bold">Already checked in</AlertDialogTitle>
+        <AlertDialogDescription className="text-base text-foreground">This user has already checked in.</AlertDialogDescription>
+        <AlertDialogAction className={primary + ' w-full'}>OK</AlertDialogAction>
+      </AlertDialogContent>
+    </AlertDialog>
     {scanner && <QRScanner presentation="agent" rearOnly onScan={scan} onClose={() => { setScanner(false); window.setTimeout(() => manualInput.current?.focus(), 0); }} isProcessing={busy} />}
   </Shell>;
 }
