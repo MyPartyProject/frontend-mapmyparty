@@ -1,5 +1,11 @@
 import { apiFetch, downloadFile } from "@/config/api";
 
+export const downloadAdminPayoutInvoice = id => downloadFile(`admin/payouts/${id}/invoice`, `payout-${id}.pdf`);
+export const fetchPayoutDocumentEmail = async id => (await apiFetch(`admin/payouts/${id}/invoice/email`)).data;
+export const sendPayoutDocumentEmail = async (id, payload) => (await apiFetch(`admin/payouts/${id}/invoice/email`, {
+  method: 'POST', body: JSON.stringify(payload),
+})).data;
+
 export async function fetchAdminOrganizers(params = {}) {
   const query = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {

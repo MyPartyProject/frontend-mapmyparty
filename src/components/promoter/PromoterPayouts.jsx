@@ -1,4 +1,5 @@
 import UpcomingSettlements from '@/components/organizer/UpcomingSettlements';
+import PayoutDocumentActions from './PayoutDocumentActions';
 import { apiFetch } from '@/config/api';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -1186,7 +1187,7 @@ const PromoterPayouts = () => {
           <Loader className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {items.length === 0 ? (
             <Card className="border-border/60 bg-card/70">
               <CardContent className="py-12 text-center text-muted-foreground">No payouts found.</CardContent>
@@ -1197,115 +1198,105 @@ const PromoterPayouts = () => {
               const form = statusForm[payout.id] || {};
 
               return (
-                <Card key={payout.id} className="border-border/60 bg-card/70 transition hover:border-primary/30 hover:bg-card/85">
-                  <CardContent className="p-4">
-                    <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                <Card key={payout.id} className="border-border/60 bg-card/70">
+                  <CardContent className="space-y-3 p-3 text-xs sm:p-4">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary light:text-accent-foreground">
-                            {isEventPayout ? <CalendarDays className="h-5 w-5" /> : <Wallet2 className="h-5 w-5" />}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="truncate text-lg font-semibold">
-                              {payout.event?.title || `${payout.organizer?.name || "Organizer"} manual payout`}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {payout.organizer?.name || "Unknown organizer"} - {payout.event?.type ? formatStatus(payout.event.type) : "Legacy payout"}
-                            </p>
-                          </div>
-                          <Badge className={`${statusClass(payout.status)} border`}>{formatStatus(payout.status)}</Badge>
-                          {payout.invoiceNumber && <Badge variant="outline">{payout.invoiceNumber}</Badge>}
-                          {!isEventPayout && <Badge variant="outline">Manual</Badge>}
-                        </div>
-
-                        <div className="mt-4 grid gap-3 md:grid-cols-4">
-                          <SummaryTile label="Gross sales" value={formatMoney(payout.grossTicketSales, 2)} />
-                          <SummaryTile label="Refunds/reserve" value={formatMoney((payout.refundAmount || 0) + (payout.refundReserveAmount || 0), 2)} />
-                          <SummaryTile label="Fee + GST" value={formatMoney((payout.platformFeeAmount || 0) + (payout.gstTotal || 0), 2)} />
-                          <SummaryTile label="Net payout" value={formatMoney(getPayoutAmount(payout), 2)} tone="text-accent light:text-accent-foreground" />
-                        </div>
+                        <p className="break-words text-sm font-semibold leading-5">{payout.event?.title || `${payout.organizer?.name || "Organizer"} manual payout`}</p>
+                        <p className="mt-0.5 break-words text-xs text-muted-foreground">{payout.organizer?.name || "Unknown organizer"} - {payout.event?.type ? formatStatus(payout.event.type) : "Legacy payout"}</p>
                       </div>
-
-                      <div className="min-w-[220px] space-y-2 text-sm xl:text-right">
-                        <p className="text-xs text-muted-foreground">Created</p>
-                        <p className="font-medium">{formatDate(payout.createdAt)}</p>
-                        <p className="text-xs text-muted-foreground">Provider</p>
-                        <p className="text-xs">{payout.providerStatus || payout.provider || "Manual review"}</p>
-                        <div className="flex flex-wrap gap-2 xl:justify-end">
-                          <Button variant="outline" size="sm" onClick={() => openDetail(payout.id)}>
-                            <Eye className="h-4 w-4" />
-                            View details
+                      <div className="min-w-0 space-y-1 sm:max-w-[45%] sm:text-right">
+                        <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
+                          <Badge className={`${statusClass(payout.status)} border px-2 py-0.5 text-[11px]`}>{formatStatus(payout.status)}</Badge>
+                          {payout.invoiceNumber && <span className="break-all text-[11px] text-muted-foreground">{payout.invoiceNumber}</span>}
+                          {!isEventPayout && <Badge variant="outline" className="text-[11px]">Manual</Badge>}
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">Created <span className="text-foreground">{formatDate(payout.createdAt)}</span></p>
+                      </div>
+                    </div>
+                    <dl className="grid grid-cols-2 gap-x-4 gap-y-2 border-y border-border/60 py-2.5 md:grid-cols-4">
+                      {[
+                        ['Gross sales', formatMoney(payout.grossTicketSales, 2)],
+                        ['Refunds/reserve', formatMoney((payout.refundAmount || 0) + (payout.refundReserveAmount || 0), 2)],
+                        ['Fee + GST', formatMoney((payout.platformFeeAmount || 0) + (payout.gstTotal || 0), 2)],
+                        ['Net payout', formatMoney(getPayoutAmount(payout), 2)],
+                      ].map(([label, value]) => <div key={label} className="min-w-0">
+                        <dt className="text-[11px] text-muted-foreground">{label}</dt>
+                        <dd className={`mt-0.5 break-all text-xs tabular-nums ${label === 'Net payout' ? 'font-semibold text-accent light:text-accent-foreground' : 'font-medium'}`}>{value}</dd>
+                      </div>)}
+                    </dl>
+                    <div className="grid gap-x-4 gap-y-2 md:grid-cols-4">
+                      <div className="min-w-0 space-y-0.5">
+                        <p className="text-[11px] text-muted-foreground">Bank</p>
+                        <p className="break-words font-medium">{payout.bank_details?.bankName || "No bank"}</p>
+                        <p className="break-words text-[11px] text-muted-foreground">{payout.bank_details?.accountNumberMasked || (payout.bank_details?.accountNumberLast4 ? `****${payout.bank_details.accountNumberLast4}` : "No account")} - {payout.bank_details?.verificationStatus || "Unknown"}</p>
+                      </div>
+                      <div className="min-w-0 space-y-0.5">
+                        <p className="text-[11px] text-muted-foreground">Provider payout</p>
+                        <p className="break-all font-medium">{payout.providerStatus || payout.provider || "Manual review"}</p>
+                        <p className="break-all text-[11px] text-muted-foreground">{payout.providerPayoutId || "Not set"}</p>
+                        <p className="break-all text-[11px] text-muted-foreground">Batch {payout.providerBatchId || "not set"}</p>
+                      </div>
+                      <div className="min-w-0 space-y-0.5 md:col-span-2">
+                        <p className="text-[11px] text-muted-foreground">Review notes</p>
+                        <p className={`break-words leading-5 ${payout.failureReason || payout.blockedReason ? 'text-destructive' : 'text-foreground'}`}>{payout.failureReason || payout.blockedReason || payout.remarks || "No remarks"}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2 border-t border-border/60 pt-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button className="h-10 gap-1.5 px-2.5 text-xs sm:h-8 [&_svg]:size-3.5" variant="outline" size="sm" onClick={() => openDetail(payout.id)}>
+                          <Eye className="h-4 w-4" />
+                          View details
+                        </Button>
+                        {isEventPayout && <PayoutDocumentActions payout={payout} />}
+                        {payout.organizer?.id && (
+                          <Button className="h-10 gap-1.5 px-2.5 text-xs sm:h-8 [&_svg]:size-3.5" variant="outline" size="sm" onClick={() => openBalanceAdjustments(payout.organizer)}>
+                            <Wallet2 className="h-4 w-4" />
+                            Adjustments
                           </Button>
-                          {payout.organizer?.id && (
-                            <Button variant="outline" size="sm" onClick={() => openBalanceAdjustments(payout.organizer)}>
-                              <Wallet2 className="h-4 w-4" />
-                              Adjustments
+                        )}
+                      </div>
+                      <div className="grid items-start gap-2 xl:grid-cols-[minmax(180px,1fr)_auto]">
+                        <Input
+                          aria-label="Payout review or resolution reason"
+                          className="h-10 min-w-0 text-base sm:h-8 sm:text-xs"
+                          placeholder="Review, hold, or manual-resolution reason"
+                          value={form.remarks ?? form.blockedReason ?? payout.blockedReason ?? payout.failureReason ?? payout.remarks ?? ""}
+                          onChange={(event) =>
+                            updatePayoutForm(payout.id, {
+                              remarks: event.target.value,
+                              blockedReason: event.target.value,
+                              failureReason: event.target.value,
+                            })
+                          }
+                        />
+                        <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+                          {isEventPayout && !payout.initiatedAt && !payout.automaticAttemptCount && reviewableStatuses.has(payout.status) && <Button className="h-10 gap-1.5 px-2.5 text-xs sm:h-8 [&_svg]:size-3.5" variant="outline" onClick={async () => { try { const reason = statusForm[payout.id]?.remarks || statusForm[payout.id]?.blockedReason || ""; if (reason.trim().length < 10) { toast.error("Enter a recalculation reason of at least 10 characters in the remarks field"); return; } await apiFetch(`admin/payouts/${payout.id}/recalculate`, { method: "POST", body: JSON.stringify({ reason }) }); toast.success("Payout recalculated for review"); refresh(); } catch (error) { toast.error(error.message); } }}>Recalculate</Button>}
+                          {isEventPayout && reviewableStatuses.has(payout.status) && (
+                            <Button className="h-10 gap-1.5 px-2.5 text-xs sm:h-8 [&_svg]:size-3.5" variant="outline" onClick={() => handleApprove(payout.id)} disabled={updatingId === payout.id}>
+                              <ShieldCheck className="h-4 w-4" />
+                              Approve
+                            </Button>
+                          )}
+                          {payout.status === "APPROVED" && !payout.manualInterventionRequired && (
+                            <Button className="h-10 gap-1.5 px-2.5 text-xs sm:h-8 [&_svg]:size-3.5" onClick={() => setReleaseTarget(payout)} disabled={updatingId === payout.id}>
+                              <Banknote className="h-4 w-4" />
+                              Initiate payout
+                            </Button>
+                          )}
+                          {payout.manualInterventionRequired && payout.providerStatus !== "REVISION_PENDING_APPROVAL" && (
+                            <Button className="h-10 gap-1.5 px-2.5 text-xs sm:h-8 [&_svg]:size-3.5" variant="outline" onClick={() => handleManualRetry(payout.id)} disabled={updatingId === payout.id}>
+                              <RefreshCw className="h-4 w-4" />
+                              Resolve & Retry
+                            </Button>
+                          )}
+                          {isEventPayout && !terminalStatuses.has(payout.status) && (
+                            <Button className="h-10 gap-1.5 px-2.5 text-xs sm:h-8 [&_svg]:size-3.5" variant="outline" onClick={() => handleHold(payout.id)} disabled={updatingId === payout.id}>
+                              <PauseCircle className="h-4 w-4" />
+                              Hold
                             </Button>
                           )}
                         </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 grid gap-3 md:grid-cols-4">
-                      <div className="rounded-lg border border-border/60 bg-background/40 p-3">
-                        <p className="flex items-center gap-2 text-xs text-muted-foreground"><Banknote className="h-4 w-4" /> Bank</p>
-                        <p className="truncate font-semibold">{payout.bank_details?.bankName || "No bank"}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {payout.bank_details?.accountNumberMasked || (payout.bank_details?.accountNumberLast4 ? `****${payout.bank_details.accountNumberLast4}` : "No account")} - {payout.bank_details?.verificationStatus || "Unknown"}
-                        </p>
-                      </div>
-                      <div className="rounded-lg border border-border/60 bg-background/40 p-3">
-                        <p className="flex items-center gap-2 text-xs text-muted-foreground"><Clock3 className="h-4 w-4" /> Provider payout</p>
-                        <p className="truncate font-semibold">{payout.providerPayoutId || "Not set"}</p>
-                        <p className="text-xs text-muted-foreground">Batch {payout.providerBatchId || "not set"}</p>
-                      </div>
-                      <div className="rounded-lg border border-border/60 bg-background/40 p-3 md:col-span-2">
-                        <p className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {payout.failureReason || payout.blockedReason ? <XCircle className="h-4 w-4 text-destructive" /> : <CheckCircle2 className="h-4 w-4 text-emerald-400 light:text-success" />}
-                          Review notes
-                        </p>
-                        <p className="truncate font-semibold">{payout.failureReason || payout.blockedReason || payout.remarks || "No remarks"}</p>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 grid gap-3 xl:grid-cols-[1fr_auto]">
-                      <Input
-                        placeholder="Review, hold, or manual-resolution reason"
-                        value={form.remarks ?? form.blockedReason ?? payout.blockedReason ?? payout.failureReason ?? payout.remarks ?? ""}
-                        onChange={(event) =>
-                          updatePayoutForm(payout.id, {
-                            remarks: event.target.value,
-                            blockedReason: event.target.value,
-                            failureReason: event.target.value,
-                          })
-                        }
-                      />
-                      <div className="flex flex-wrap justify-end gap-2">
-                        {isEventPayout && !payout.initiatedAt && !payout.automaticAttemptCount && reviewableStatuses.has(payout.status) && <Button variant="outline" onClick={async () => { try { const reason = statusForm[payout.id]?.remarks || statusForm[payout.id]?.blockedReason || ""; if (reason.trim().length < 10) { toast.error("Enter a recalculation reason of at least 10 characters in the remarks field"); return; } await apiFetch(`admin/payouts/${payout.id}/recalculate`, { method: "POST", body: JSON.stringify({ reason }) }); toast.success("Payout recalculated for review"); refresh(); } catch (error) { toast.error(error.message); } }}>Recalculate</Button>}
-                        {isEventPayout && reviewableStatuses.has(payout.status) && (
-                          <Button variant="outline" onClick={() => handleApprove(payout.id)} disabled={updatingId === payout.id}>
-                            <ShieldCheck className="h-4 w-4" />
-                            Approve
-                          </Button>
-                        )}
-                        {payout.status === "APPROVED" && !payout.manualInterventionRequired && (
-                          <Button onClick={() => setReleaseTarget(payout)} disabled={updatingId === payout.id}>
-                            <Banknote className="h-4 w-4" />
-                            Initiate payout
-                          </Button>
-                        )}
-                        {payout.manualInterventionRequired && payout.providerStatus !== "REVISION_PENDING_APPROVAL" && (
-                          <Button variant="outline" onClick={() => handleManualRetry(payout.id)} disabled={updatingId === payout.id}>
-                            <RefreshCw className="h-4 w-4" />
-                            Resolve & Retry
-                          </Button>
-                        )}
-                        {isEventPayout && !terminalStatuses.has(payout.status) && (
-                          <Button variant="outline" onClick={() => handleHold(payout.id)} disabled={updatingId === payout.id}>
-                            <PauseCircle className="h-4 w-4" />
-                            Hold
-                          </Button>
-                        )}
                       </div>
                     </div>
                   </CardContent>
