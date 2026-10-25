@@ -349,6 +349,30 @@ const EventDetailNew = () => {
       `
       @keyframes tabFadeSlide {0%{opacity:0;transform:translateY(10px);}100%{opacity:1;transform:translateY(0);}}
       @keyframes sponsorMarquee {0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+      @media (max-width: 767px) {
+        .event-sponsor-viewport .event-sponsor-track {
+          width: max-content;
+          animation: sponsorMarquee 40s linear infinite;
+          touch-action: pan-y pinch-zoom;
+          user-select: none;
+          cursor: grab;
+        }
+        .event-sponsor-track:active { cursor: grabbing; }
+        .event-sponsor-track > .event-sponsor-group {
+          display: flex;
+          min-width: 100vw;
+          justify-content: space-around;
+          gap: 1rem;
+          padding: 0.5rem;
+        }
+        .event-sponsor-group > a { flex-shrink: 0; }
+        .event-sponsor-group > a > div { flex-shrink: 0; }
+      }
+      @media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+        .event-sponsor-viewport { overflow-x: auto; }
+        .event-sponsor-viewport .event-sponsor-track { animation: none; touch-action: auto; }
+        .event-sponsor-track > .event-sponsor-group:nth-child(n + 2) { display: none; }
+      }
       @keyframes eventGlassSheen {0%,18%{transform:translateX(-70%) rotate(10deg);opacity:0;}35%{opacity:1;}58%,100%{transform:translateX(70%) rotate(10deg);opacity:0;}}
 
       .event-glass-panel {
@@ -581,6 +605,38 @@ const EventDetailNew = () => {
     [hasSponsors, sponsorsSorted],
   );
   const showSponsorStrip = hasSponsors;
+  const sponsorDragRef = useRef(null);
+  const handleSponsorPointerDown = (e) => {
+    if (!window.matchMedia("(max-width: 767px)").matches || !e.isPrimary || e.button !== 0) return;
+    sponsorDragRef.current = null;
+    const animation = e.currentTarget.getAnimations()[0];
+    if (!animation) return;
+    animation.pause();
+    sponsorDragRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      lastX: e.clientX,
+      dragged: false,
+      animation,
+    };
+  };
+  const handleSponsorPointerMove = (e) => {
+    const drag = sponsorDragRef.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    if (!drag.dragged && Math.abs(e.clientX - drag.startX) < 6) return;
+    drag.dragged = true;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const duration = drag.animation.effect.getTiming().duration;
+    const delta = (drag.lastX - e.clientX) / (e.currentTarget.offsetWidth / 2) * duration;
+    drag.animation.currentTime = ((drag.animation.currentTime + delta) % duration + duration) % duration;
+    drag.lastX = e.clientX;
+  };
+  const handleSponsorPointerEnd = (e) => {
+    const drag = sponsorDragRef.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    drag.animation.play();
+    drag.pointerId = null;
+  };
   const sponsorStripMoves = hasSponsors && sponsorsSorted.length > 3;
   const sponsorStripGroups = useMemo(
     () =>
@@ -1296,14 +1352,31 @@ const EventDetailNew = () => {
               <div className="absolute right-0 top-0 bottom-0 w-16 lg:w-24 bg-gradient-to-l from-gray-950 to-transparent z-10 pointer-events-none" />
             )}
 
-            <div className="relative overflow-hidden border-y border-gray-800/50 bg-gray-900/30 backdrop-blur-sm light:border-border light:bg-surface">
+            <div className="event-sponsor-viewport relative overflow-hidden border-y border-gray-800/50 bg-gray-900/30 backdrop-blur-sm light:border-border light:bg-surface">
               <div
-                className={`flex ${sponsorStripMoves ? "w-max animate-[sponsorMarquee_25s_linear_infinite] hover:[animation-play-state:paused]" : "w-full"}`}
+                onPointerDown={handleSponsorPointerDown}
+                onPointerMove={handleSponsorPointerMove}
+                onPointerUp={handleSponsorPointerEnd}
+                onPointerCancel={handleSponsorPointerEnd}
+                onLostPointerCapture={handleSponsorPointerEnd}
+                onClickCapture={(e) => {
+                  if (e.detail > 0 && window.matchMedia("(max-width: 767px)").matches && sponsorDragRef.current?.dragged) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    sponsorDragRef.current = null;
+                  }
+                }}
+                onDragStart={(e) => {
+                  if (window.matchMedia("(max-width: 767px)").matches) e.preventDefault();
+                }}
+                className={`event-sponsor-track flex ${sponsorStripMoves ? "w-max animate-[sponsorMarquee_25s_linear_infinite] hover:[animation-play-state:paused]" : "w-full"}`}
               >
-                {sponsorStripGroups.map((sponsorGroup, groupIdx) => (
+                {sponsorStripGroups.concat(sponsorStripMoves ? [] : [sponsorsSorted]).map((sponsorGroup, groupIdx) => (
                   <div
                     key={`sponsor-group-${groupIdx}`}
-                    className={`flex min-w-full shrink-0 items-center gap-6 px-6 py-2 lg:px-12 ${sponsorStripMoves ? "" : "justify-start md:justify-center"}`}
+                    aria-hidden={!sponsorStripMoves && groupIdx > 0 ? true : undefined}
+                    inert={!sponsorStripMoves && groupIdx > 0 ? "" : undefined}
+                    className={`event-sponsor-group ${!sponsorStripMoves && groupIdx > 0 ? "hidden" : "flex"} min-w-full shrink-0 items-center gap-6 px-6 py-2 lg:px-12 ${sponsorStripMoves ? "" : "justify-start md:justify-center"}`}
                   >
                     {sponsorGroup.map((s, idx) => (
                       <a
