@@ -20,6 +20,7 @@ export const usePromoterEvents = (initialFilters = {}) => {
 
   // Use refs for filters/page to break the useCallback dependency chains
   const filtersRef = useRef({
+    reviewStatus: initialFilters.reviewStatus || 'ALL',
     eventStatus: initialFilters.eventStatus || 'ALL',
     publishStatus: initialFilters.publishStatus || 'ALL',
     search: initialFilters.search || '',
@@ -48,6 +49,7 @@ export const usePromoterEvents = (initialFilters = {}) => {
       const params = new URLSearchParams();
       params.set('page', pageNum);
       params.set('limit', '12');
+      if (currentFilters.reviewStatus && currentFilters.reviewStatus !== 'ALL') params.set('reviewStatus', currentFilters.reviewStatus);
 
       if (currentFilters.eventStatus && currentFilters.eventStatus !== 'ALL') {
         params.set('status', currentFilters.eventStatus);

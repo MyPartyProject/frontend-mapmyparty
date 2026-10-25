@@ -1,3 +1,4 @@
+import { useAdminTaskSummary } from '@/hooks/useAdminTaskSummary';
 import { useMemo, useState, useEffect, useRef } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -54,6 +55,9 @@ const PromoterDashboard = () => {
   const footerMenuRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const taskSummary = useAdminTaskSummary(location.pathname + location.search);
+  const pendingQueueActive = new URLSearchParams(location.search).get('reviewStatus') === 'PENDING';
+  const navActive = (isActive, label) => isActive && (label === 'Pending reviews' ? pendingQueueActive : label === 'Events' ? !pendingQueueActive : true);
   const { logout: contextLogout } = useAuth();
 
   // Fetch real dashboard data
@@ -626,17 +630,17 @@ const PromoterDashboard = () => {
           expanded ? "w-full px-2 pr-3" : "w-full px-1 pr-2"
         }`}>
           <div className={expanded ? "space-y-1.5" : "flex flex-col items-center gap-2"}>
-            {navItems.map(({ label, to, icon: Icon }) => (
+            {[...navItems.slice(0, 3), { label: 'Pending reviews', to: '/promoter/events?reviewStatus=PENDING', icon: ShieldCheck }, ...navItems.slice(3)].map(({ label, to, icon: Icon }) => (
               <NavLink
                 key={label}
                 to={to}
-                title={!expanded ? label : undefined}
+                title={!expanded ? `${label}${label === 'Pending reviews' ? ` (${taskSummary.summary?.moderation?.pendingEvents ?? '...'})` : ''}` : undefined}
                 onClick={() => { if (isMobile) setMobileSidebarOpen(false); }}
                 className={({ isActive }) =>
                   `group relative flex items-center rounded-xl border text-sm transition-all duration-200 ease-out ${
                     expanded ? "h-11 w-full gap-3 px-3" : "h-11 w-11 justify-center"
                   } ${
-                    isActive
+                    navActive(isActive, label)
                       ? "border-sidebar-accent/40 bg-sidebar-accent/38 text-sidebar-foreground shadow-[inset_0_0_0_1px_hsl(var(--sidebar-accent)/0.14)]"
                       : "border-transparent text-sidebar-foreground/75 hover:border-sidebar-border/55 hover:bg-sidebar-accent/28 hover:text-sidebar-foreground"
                   }`
@@ -647,20 +651,20 @@ const PromoterDashboard = () => {
                     {expanded && (
                       <span
                         className={`absolute left-1 top-1/2 h-6 w-1 -translate-y-1/2 rounded-full bg-primary transition-all duration-200 ease-out  light:bg-primaryCTA ${
-                          isActive ? "opacity-100 scale-y-100" : "opacity-0 scale-y-50"
+                          navActive(isActive, label) ? "opacity-100 scale-y-100" : "opacity-0 scale-y-50"
                         }`}
                       />
                     )}
                     <span
                       className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all duration-200 ease-out ${
-                        isActive
-                          ? "bg-primary/16 text-primary-foreground light:text-accent-foreground shadow-[0_0_18px_hsl(var(--primary)/0.12)]"
+                        navActive(isActive, label)
+                      ? "bg-primary/16 text-primary-foreground light:text-accent-foreground shadow-[0_0_18px_hsl(var(--primary)/0.12)]"
                           : "text-sidebar-foreground/75 group-hover:bg-sidebar-accent/42 group-hover:text-sidebar-foreground group-hover:scale-105"
                       }`}
                     >
                       <Icon className="h-4 w-4" />
                     </span>
-                    {expanded && <span className="min-w-0 truncate font-medium transition-all duration-200 ease-out">{label}</span>}
+                    {expanded && <span className="min-w-0 truncate font-medium transition-all duration-200 ease-out">{label}{label === 'Pending reviews' ? ` (${taskSummary.summary?.moderation?.pendingEvents ?? '...'})` : ''}</span>}
                   </>
                 )}
               </NavLink>
@@ -811,7 +815,7 @@ const PromoterDashboard = () => {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-          <Outlet context={{ data, currency, statusBadge, dashboardLoading, dashboardError, refreshDashboard, filter, applyFilter, dashboard }} />
+          <Outlet context={{ taskSummary, data, currency, statusBadge, dashboardLoading, dashboardError, refreshDashboard, filter, applyFilter, dashboard }} />
         </div>
       </div>
     </div>

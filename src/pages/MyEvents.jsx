@@ -1,3 +1,4 @@
+import PublicationStatus from '@/components/organizer/PublicationStatus';
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -54,6 +55,7 @@ const MyEvents = () => {
       const endDate = event.endDate ? new Date(event.endDate) : null;
       return {
         id: event.id,
+        publication: event.publication,
         title: event.title,
         slug: event.slug,
         flyerImage: resolveEventBannerImage(event, "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800"),
@@ -352,9 +354,10 @@ const MyEvents = () => {
                         {state.text}
                       </span>
                     </div>
+                    <div className="absolute top-3 right-3"><PublicationStatus event={event} /></div>
                     {/* Category pill on image */}
                     {event.category && (
-                      <span className="absolute top-3 right-3 inline-flex h-6 max-w-[38%] items-center truncate rounded-lg border border-border/50 bg-background/80 px-2.5 text-[10px] font-semibold text-foreground/85 backdrop-blur-md">
+                      <span className="absolute bottom-3 right-3 inline-flex h-6 max-w-[38%] items-center truncate rounded-lg border border-border/50 bg-background/80 px-2.5 text-[10px] font-semibold text-foreground/85 backdrop-blur-md">
                         {event.category}
                       </span>
                     )}

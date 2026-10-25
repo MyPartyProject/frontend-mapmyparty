@@ -16,7 +16,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useAdminTaskSummary } from "@/hooks/useAdminTaskSummary";
+
 
 const PromoterOverview = () => {
   const { data, dashboardLoading, dashboardError, refreshDashboard, filter, applyFilter, dashboard } = useOutletContext();
@@ -35,14 +35,15 @@ const PromoterOverview = () => {
     applyFilter({ startDate, endDate });
   };
   const displayDate = value => new Date(value + "T00:00:00Z").toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
-  const { summary, loading: summaryLoading, error: summaryError, refresh } = useAdminTaskSummary();
+  const { taskSummary } = useOutletContext();
+  const { summary, loading: summaryLoading, error: summaryError, refresh } = taskSummary;
 
   const tasks = [
     {
       title: "Pending event reviews",
       value: summary?.moderation?.pendingEvents || 0,
       description: "Events waiting for promoter approval.",
-      to: "/promoter/events",
+      to: "/promoter/events?reviewStatus=PENDING",
       icon: CalendarClock,
     },
     {

@@ -120,7 +120,7 @@ const LiveEventPage = ({ embedded = false }) => {
     try {
       // Fetch event details, bookings, and check-ins in parallel
       const [eventResponse, bookingsResponse, checkInsResponse] = await Promise.allSettled([
-        apiFetch(`event/manage/${id}`, { cache: "no-store" }),
+        apiFetch(`event/manage/${id}?view=approved`, { cache: "no-store" }),
         ...(!background || !statsLoadedRef.current ? [apiFetch(`booking/event/${id}`),
           apiFetch(`booking/event/${id}/check-ins`)] : []),
       ]);

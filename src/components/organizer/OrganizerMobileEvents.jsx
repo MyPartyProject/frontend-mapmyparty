@@ -1,3 +1,4 @@
+import PublicationStatus from './PublicationStatus';
 import EventSettlementSummary from './EventSettlementSummary';
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -66,11 +67,11 @@ export function OrganizerMobileEvents() {
       {list.events.map((event) => {
         const image = resolveEventBannerImage(event);
         const venue = event.venues?.[0];
-        return <Link key={event.id} to={{ pathname: `/organizer/events/${encodeURIComponent(event.id)}/preview`, search: params.toString() }} className="flex min-h-11 items-start gap-3 rounded-xl border border-border bg-card p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:bg-muted/40">
+        return <div key={event.id} className="relative"><div className="absolute right-3 top-3 z-10"><PublicationStatus event={event} /></div><Link to={{ pathname: `/organizer/events/${encodeURIComponent(event.id)}/preview`, search: params.toString() }} className="flex min-h-11 items-start gap-3 pr-14 rounded-xl border border-border bg-card p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:bg-muted/40">
           {image ? <img src={image} alt="" loading="lazy" className="h-14 w-14 shrink-0 rounded-lg object-cover" /> : <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-muted"><CalendarDays size={20} aria-hidden="true" /></span>}
           <div className="min-w-0 flex-1 space-y-1.5"><h2 className="break-words text-sm font-semibold">{event.title || "Untitled event"}</h2><p className="text-xs text-muted-foreground">{date(event.startDate)}</p><p className="break-words text-xs text-muted-foreground">{[venue?.name, venue?.city].filter(Boolean).join(", ") || "Location to be announced"}</p><Status event={event} /></div>
           <ChevronRight size={16} className="mt-1 shrink-0 text-muted-foreground" aria-hidden="true" />
-        </Link>;
+        </Link></div>;
       })}
       {list.totalPages > 1 && <nav aria-label="Event pages" className="flex items-center justify-between gap-2"><button className={button} disabled={list.page <= 1} onClick={() => update(search, list.page - 1)}>Previous</button><span className="text-xs text-muted-foreground">{list.page} / {list.totalPages}</span><button className={button} disabled={list.page >= list.totalPages} onClick={() => update(search, list.page + 1)}>Next</button></nav>}
     </QueryState>

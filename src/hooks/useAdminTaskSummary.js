@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchAdminTaskSummary } from "@/services/adminService";
 
-export const useAdminTaskSummary = () => {
+export const useAdminTaskSummary = (refreshKey) => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,11 +32,18 @@ export const useAdminTaskSummary = () => {
   useEffect(() => {
     mountedRef.current = true;
     loadSummary();
+    const visibleRefresh = () => { if (document.visibilityState === 'visible') loadSummary(); };
+    const timer = setInterval(visibleRefresh, 60000);
+    window.addEventListener('focus', visibleRefresh);
+    document.addEventListener('visibilitychange', visibleRefresh);
 
     return () => {
+      clearInterval(timer);
+      window.removeEventListener('focus', visibleRefresh);
+      document.removeEventListener('visibilitychange', visibleRefresh);
       mountedRef.current = false;
     };
-  }, [loadSummary]);
+  }, [loadSummary, refreshKey]);
 
   return {
     summary,

@@ -176,7 +176,7 @@ const ReceptionDetail = () => {
 
     try {
       const [eventResponse, checkInsResponse] = await Promise.allSettled([
-        apiFetch(`event/manage/${id}`, { cache: "no-store" }),
+        apiFetch(`event/manage/${id}?view=approved`, { cache: "no-store" }),
         ...(!background || !statsLoadedRef.current ? [apiFetch(`booking/event/${id}/check-ins?checkedIn=true&limit=1`)] : []),
       ]);
 

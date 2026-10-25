@@ -1,8 +1,9 @@
-import { useCallback, useMemo } from "react";
-import { Link, useOutletContext } from "react-router-dom";
-import { Calendar, MapPin, Search, Ticket, Users, ChevronRight, AlertCircle, Loader } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useCallback, useMemo, useEffect } from "react";
+import { Link, useOutletContext, useSearchParams } from "react-router-dom";
+import { Calendar, MapPin, Search, Users, ChevronRight, AlertCircle, Loader } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Pagination,
@@ -16,11 +17,14 @@ import {
 import { usePromoterEvents } from "@/hooks/usePromoterEvents";
 
 const PromoterEvents = () => {
-  const { currency, statusBadge } = useOutletContext();
+  const { currency } = useOutletContext();
+  const [params, setParams] = useSearchParams();
+  const reviewStatus = params.get('reviewStatus') || 'ALL';
   const {
     events, loading, isFetching, error, pagination, filters,
     updateFilters, changePage,
-  } = usePromoterEvents();
+  } = usePromoterEvents({ reviewStatus });
+  useEffect(() => { updateFilters({ reviewStatus }); }, [reviewStatus, updateFilters]);
 
   const handleSearchChange = useCallback((e) => {
     updateFilters({ search: e.target.value });
@@ -56,70 +60,42 @@ const PromoterEvents = () => {
   }, [pagination.totalPages, pagination.page]);
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-4 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Events</h2>
-          <p className="text-muted-foreground">All events across organizers with live status and revenue.</p>
+          <h2 className="text-xl font-semibold">{reviewStatus === 'PENDING' ? 'Pending event reviews' : 'Events'}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">All events across organizers with live status and revenue.</p>
         </div>
-        <Badge variant="outline" className="text-sm py-1 px-3 border-border/70">
+        <Badge variant="outline" className="shrink-0 border-border/70 px-2 py-1 text-xs">
           {pagination.total} Events
         </Badge>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[220px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search events (min 2 chars)..."
-            value={filters.search}
-            onChange={handleSearchChange}
-            className="pl-9"
-          />
-          {/* Subtle inline spinner while fetching */}
-          {isFetching && (
-            <Loader className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
-          )}
+      <div className="space-y-3">
+        <div className="relative min-w-0">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input aria-label="Search events" placeholder="Search events (min 2 chars)..." value={filters.search} onChange={handleSearchChange} className="h-11 pl-9 pr-10 text-sm md:h-9 [@media(pointer:coarse)]:h-11" />
+          {isFetching && <Loader className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />}
         </div>
-        <div className="flex flex-col gap-2 text-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            Event Status
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {["ALL", "ONGOING", "UPCOMING", "COMPLETED", "CANCELLED"].map((status) => (
-              <button
-                key={status}
-                onClick={() => handleStatusFilter(status)}
-                className={`px-3 py-2 rounded-lg border border-border/60 transition ${
-                  filters.eventStatus === status
-                    ? "bg-primary text-primary-foreground light:bg-primaryCTA"
-                    : "bg-card/70 text-muted-foreground hover:bg-card"
-                }`}
-              >
-                {status}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex flex-col gap-2 text-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            Publish Status
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {["ALL", "DRAFT", "PENDING", "PUBLISHED"].map((status) => (
-              <button
-                key={status}
-                onClick={() => handlePublishStatusFilter(status)}
-                className={`px-3 py-2 rounded-lg border border-border/60 transition ${
-                  filters.publishStatus === status
-                    ? "bg-primary text-primary-foreground light:bg-primaryCTA"
-                    : "bg-card/70 text-muted-foreground hover:bg-card"
-                }`}
-              >
-                {status}
-              </button>
-            ))}
-          </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <label className="min-w-0 space-y-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Review status</span>
+            <select value={reviewStatus} onChange={e => setParams(e.target.value === 'ALL' ? {} : { reviewStatus: e.target.value })} className="h-11 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:h-9 [@media(pointer:coarse)]:h-11">
+              {['ALL', 'PENDING', 'CHANGES_REQUIRED'].map(status => <option key={status} value={status}>{status.replaceAll('_', ' ')}</option>)}
+            </select>
+          </label>
+          <label className="min-w-0 space-y-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Event status</span>
+            <select value={filters.eventStatus} onChange={e => handleStatusFilter(e.target.value)} className="h-11 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:h-9 [@media(pointer:coarse)]:h-11">
+              {['ALL', 'ONGOING', 'UPCOMING', 'COMPLETED', 'CANCELLED'].map(status => <option key={status} value={status}>{status}</option>)}
+            </select>
+          </label>
+          <label className="min-w-0 space-y-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Publish status</span>
+            <select value={filters.publishStatus} onChange={e => handlePublishStatusFilter(e.target.value)} className="h-11 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:h-9 [@media(pointer:coarse)]:h-11">
+              {['ALL', 'DRAFT', 'PENDING', 'PUBLISHED'].map(status => <option key={status} value={status}>{status}</option>)}
+            </select>
+          </label>
         </div>
       </div>
 
@@ -132,7 +108,7 @@ const PromoterEvents = () => {
 
       {error && (
         <Card className="bg-destructive/10 border-destructive/30">
-          <CardContent className="pt-6 flex items-start gap-3">
+          <CardContent className="flex items-start gap-3 p-4">
             <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold text-destructive">Error loading events</p>
@@ -152,7 +128,7 @@ const PromoterEvents = () => {
       {/* Empty state — only when not loading and no results */}
       {!loading && !isFetching && events.length === 0 && (
         <Card className="bg-card/70 border-border/60">
-          <CardContent className="pt-6 text-center text-muted-foreground py-12">
+          <CardContent className="p-6 text-center text-sm text-muted-foreground">
             <p>No events found. Try adjusting your filters.</p>
           </CardContent>
         </Card>
@@ -167,67 +143,26 @@ const PromoterEvents = () => {
               const bookings = event._count.bookings;
 
               return (
-                <Card key={event.id} className="bg-card/70 border-border/60">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <CardTitle className="text-lg">{event.title}</CardTitle>
-                        <CardDescription className="text-muted-foreground flex flex-wrap items-center gap-2">
-                          <Users className="w-4 h-4" />
-                          {event.organizer?.name}
-                          <span className="text-muted-foreground/60">•</span>
-                          <Calendar className="w-4 h-4" />
-                          {new Date(event.startDate).toLocaleDateString()}
-                          {event.venues[0] && (
-                            <>
-                              <span className="text-muted-foreground/60">•</span>
-                              <MapPin className="w-4 h-4" />
-                              {event.venues[0].city}
-                            </>
-                          )}
-                        </CardDescription>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant={statusBadge(event.eventStatus)}>{event.eventStatus}</Badge>
-                        {event.publishStatus && (
-                          <Badge variant={event.publishStatus === "PUBLISHED" ? "success" : "secondary"}>
-                            {event.publishStatus}
-                          </Badge>
-                        )}
-                      </div>
+                <Card key={event.id} className="flex min-w-0 flex-col border-border/60 bg-card/70">
+                  <CardHeader className="space-y-2 p-4 pb-3">
+                    <CardTitle className="break-words text-base leading-snug [overflow-wrap:anywhere]">{event.title}</CardTitle>
+                    <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs leading-5 text-muted-foreground">
+                      <span className="inline-flex min-w-0 max-w-full items-start gap-1.5"><Users className="mt-0.5 h-3.5 w-3.5 shrink-0" /><span className="min-w-0 [overflow-wrap:anywhere]">{event.organizer?.name}</span></span>
+                      <span className="inline-flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 shrink-0" />{new Date(event.startDate).toLocaleDateString()}</span>
+                      {event.venues[0] && <span className="inline-flex min-w-0 max-w-full items-start gap-1.5"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" /><span className="min-w-0 [overflow-wrap:anywhere]">{event.venues[0].city}</span></span>}
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="rounded-xl border border-border/60 bg-card/80 p-3">
-                        <p className="text-xs text-muted-foreground flex items-center gap-2">
-                          <Ticket className="w-4 h-4" /> Tickets
-                        </p>
-                        <p className="text-lg font-semibold">{ticketsSold.toLocaleString()}</p>
-                      </div>
-                      <div className="rounded-xl border border-border/60 bg-card/80 p-3">
-                        <p className="text-xs text-muted-foreground">Bookings</p>
-                        <p className="text-lg font-semibold">{bookings.toLocaleString()}</p>
-                      </div>
-                      <div className="rounded-xl border border-border/60 bg-card/80 p-3">
-                        <p className="text-xs text-muted-foreground">Min Price</p>
-                        <p className="text-lg font-semibold text-accent light:text-accent-foreground">
-                          {event.tickets.length > 0 ? currency(event.tickets[0].price) : 'N/A'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-sm">
-                      <div>
-                        <p className="text-muted-foreground">Category</p>
-                        <p className="font-medium">{event.category}</p>
-                      </div>
-                      <Link
-                        to={`/promoter/events/${event.id}`}
-                        className="inline-flex items-center gap-2 text-sm font-semibold text-accent hover:text-accent/80 transition light:text-accent-foreground light:hover:text-accent-foreground/80"
-                      >
-                        View details <ChevronRight className="w-4 h-4" />
-                      </Link>
+                  <CardContent className="flex flex-1 flex-col gap-3 px-4 pb-4 pt-0">
+                    <dl className="grid grid-cols-3 gap-3 border-y border-border/50 py-3">
+                      <div className="min-w-0"><dt className="text-xs text-muted-foreground">Tickets</dt><dd className="mt-1 break-words text-sm font-semibold tabular-nums [overflow-wrap:anywhere]">{ticketsSold.toLocaleString()}</dd></div>
+                      <div className="min-w-0"><dt className="text-xs text-muted-foreground">Bookings</dt><dd className="mt-1 break-words text-sm font-semibold tabular-nums [overflow-wrap:anywhere]">{bookings.toLocaleString()}</dd></div>
+                      <div className="min-w-0"><dt className="text-xs text-muted-foreground">Min price</dt><dd className="mt-1 break-words text-sm font-semibold tabular-nums text-accent light:text-accent-foreground [overflow-wrap:anywhere]">{event.tickets.length > 0 ? currency(event.tickets[0].price) : 'N/A'}</dd></div>
+                    </dl>
+                    <div className="mt-auto flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0"><p className="text-xs text-muted-foreground">Category</p><p className="text-sm font-medium [overflow-wrap:anywhere]">{event.category}</p></div>
+                      <Button asChild variant="outline" size="sm" className="h-11 w-full shrink-0 text-sm sm:w-auto md:h-9 [@media(pointer:coarse)]:h-11">
+                        <Link to={'/promoter/events/' + event.id}>View details <ChevronRight className="h-4 w-4" /></Link>
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -238,9 +173,13 @@ const PromoterEvents = () => {
           {pagination.totalPages > 1 && (
             <div className="flex justify-center mt-6">
               <Pagination>
-                <PaginationContent>
+                <PaginationContent className="flex-wrap justify-center gap-1 [&_a]:h-11 [&_a]:min-w-11 md:[&_a]:h-9 md:[&_a]:min-w-9 [@media(pointer:coarse)]:[&_a]:h-11 [@media(pointer:coarse)]:[&_a]:min-w-11">
                   <PaginationItem>
                     <PaginationPrevious
+                      role="button"
+                      tabIndex={pagination.hasPrevPage ? 0 : -1}
+                      aria-disabled={!pagination.hasPrevPage}
+                      onKeyDown={(event) => { if (pagination.hasPrevPage && ['Enter', ' '].includes(event.key)) { event.preventDefault(); changePage(pagination.page - 1); } }}
                       onClick={() => changePage(pagination.page - 1)}
                       className={!pagination.hasPrevPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                     />
@@ -252,6 +191,9 @@ const PromoterEvents = () => {
                         <PaginationEllipsis />
                       ) : (
                         <PaginationLink
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(event) => { if (['Enter', ' '].includes(event.key)) { event.preventDefault(); changePage(pageNum); } }}
                           onClick={() => changePage(pageNum)}
                           isActive={pageNum === pagination.page}
                           className="cursor-pointer"
@@ -264,6 +206,10 @@ const PromoterEvents = () => {
 
                   <PaginationItem>
                     <PaginationNext
+                      role="button"
+                      tabIndex={pagination.hasNextPage ? 0 : -1}
+                      aria-disabled={!pagination.hasNextPage}
+                      onKeyDown={(event) => { if (pagination.hasNextPage && ['Enter', ' '].includes(event.key)) { event.preventDefault(); changePage(pagination.page + 1); } }}
                       onClick={() => changePage(pagination.page + 1)}
                       className={!pagination.hasNextPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                     />

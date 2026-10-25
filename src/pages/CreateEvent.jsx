@@ -67,7 +67,7 @@ import FlyerCropDialog from "@/components/events/FlyerCropDialog";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { updateEventStep1, updateEventStep2, uploadFlyerImage, deleteFlyerImage, uploadGalleryImages, deleteGalleryImage, generateEventId, createTicket, updateTicket, deleteTicket, createVenue, updateVenue, updateEventStep6, uploadArtistImage, uploadSponsorLogo, deleteArtist, createEventStep1, persistFlyerUrl, uploadDraftImage, persistGalleryUrls, deleteDraftStorageObject } from "@/services/eventService";
-import { apiFetch } from "@/config/api";
+import { eventDraftFetch as apiFetch, rememberEventRevision, requestEventPublication } from "@/services/eventService";
 import { TEMPLATE_CONFIGS, DETAIL_TEMPLATE_CONFIGS, getTemplateConfig, mapTemplateId, mapTemplateNameToId } from "@/config/templates";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -86,6 +86,23 @@ import {
   getImageFileDimensions,
   isStandardFlyerDimensions,
 } from "@/utils/flyerImageCrop";
+
+const advisoryOptions = [
+  { id: 'smokingAllowed', label: '🚬 Smoking allowed' },
+  { id: 'drinkingAllowed', label: '🍺 Drinking allowed' },
+  { id: 'petsAllowed', label: '🐾 Pets allowed' },
+  { id: 'ageRestricted', label: '🔞 Show is 18+' },
+  { id: 'camerasAllowed', label: '📸 Cameras and photos allowed' },
+  { id: 'outsideFoodAllowed', label: '🍔 Outside food & drinks allowed' },
+  { id: 'seatingProvided', label: '🪑 Seating provided' },
+  { id: 'wheelchairAccessible', label: '♿ Wheelchair accessible venue' },
+  { id: 'liveMusic', label: '🎵 Live music' },
+  { id: 'parkingAvailable', label: '🚗 Parking available' },
+  { id: 'reentryAllowed', label: '🔁 Re-entry allowed' },
+  { id: 'onsitePayments', label: '💳 On-site payments available' },
+  { id: 'securityCheck', label: '👮 Security check at entry' },
+  { id: 'cloakroom', label: '🧥 Cloakroom available' },
+];
 
 const DEFAULT_ARTIST_GENDER = "MALE";
 const ARTIST_GENDER_VALUES = ["MALE", "FEMALE", "OTHER"];
@@ -229,6 +246,8 @@ const CreateEvent = () => {
   const [isSponsored, setIsSponsored] = useState(false);
   const [originalIsSponsored, setOriginalIsSponsored] = useState(false);
   const [publishState, setPublishState] = useState("DRAFT");
+  const [publication, setPublication] = useState(null);
+  const publicationLocked = publication?.status === 'PENDING' || (publication?.status === 'REJECTED' && publication.isInitial);
   const [isPublished, setIsPublished] = useState(false);
   const eventCacheRef = useRef(null);
   const editHydratedRef = useRef(null);
@@ -629,6 +648,7 @@ const CreateEvent = () => {
   const [advisory, setAdvisory] = useState(initialAdvisoryState);
   const [customAdvisories, setCustomAdvisories] = useState([]);
   const [newCustomAdvisory, setNewCustomAdvisory] = useState("");
+  const [customAdvisoryEmoji, setCustomAdvisoryEmoji] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [advisoryDialogOpen, setAdvisoryDialogOpen] = useState(false);
   const [artistDialogOpen, setArtistDialogOpen] = useState(false);
@@ -638,6 +658,7 @@ const CreateEvent = () => {
   const [customQuestions, setCustomQuestions] = useState([]);
   const [newQuestion, setNewQuestion] = useState("");
   const [newAnswer, setNewAnswer] = useState("");
+  const [questionDialogOpen, setQuestionDialogOpen] = useState(false);
   const [organizerNote, setOrganizerNote] = useState("");
   const [selectedEventTypeCategory, setSelectedEventTypeCategory] = useState("");
   const [fullAddress, setFullAddress] = useState("");
@@ -935,6 +956,8 @@ const CreateEvent = () => {
 
       editHydratedRef.current = editId;
       eventCacheRef.current = eventToEdit;
+      rememberEventRevision(eventToEdit);
+      setPublication(eventToEdit.publication || null);
       setEditHydrationError("");
 
       const start = parseSafeDate(eventToEdit.startDate);
@@ -1506,7 +1529,7 @@ const CreateEvent = () => {
     { number: 5, title: "Sponsor" },
     { number: 6, title: "Add Artist" },
     { number: 7, title: "Additional Info" },
-    { number: 8, title: "Review & Publish" },
+    { number: 8, title: "Review & Submit" },
   ];
 
   const progress = (currentStep / steps.length) * 100;
@@ -2336,6 +2359,7 @@ const CreateEvent = () => {
           name: artist.name,
           gender: normalizeArtistGender(artist.gender),
           image: artist.image || artist.photo || null,
+          imageStorageKey: artist.imageStorageKey || null,
           instagramLink: artist.instagram || artist.instagramLink || null,
           spotifyLink: artist.spotify || artist.spotifyLink || null,
         }));
@@ -2432,7 +2456,7 @@ const CreateEvent = () => {
           advisory: advisoryJson,
           questions: questionsJson,
           organizerNote: organizerNote,
-          publishStatus: publishState || "DRAFT",
+
         };
 
         await updateEventStep6(backendEventId, updateData);
@@ -2918,6 +2942,7 @@ const CreateEvent = () => {
       const newArtists = [...artists];
       newArtists[index].photo = imageUrl;
       newArtists[index].image = imageUrl;
+      newArtists[index].imageStorageKey = res?.data?.storageKey || res?.data?.key || publicId || "";
       if (publicId) newArtists[index].publicId = publicId;
       setArtists(newArtists);
 
@@ -2946,6 +2971,7 @@ const CreateEvent = () => {
     const newArtists = [...artists];
     newArtists[index].photo = "";
     newArtists[index].image = "";
+    newArtists[index].imageStorageKey = "";
     newArtists[index].publicId = "";
     setArtists(newArtists);
   };
@@ -3413,7 +3439,7 @@ const CreateEvent = () => {
   const handleSubmit = async (targetState) => {
     const effectiveState = targetState || publishState;
     const isDraft = effectiveState !== "PUBLISHED";
-    setPublishState(effectiveState);
+    if (publicationLocked) return;
     // Validation
     if (!eventTitle || !mainCategory || selectedCategories.length === 0) {
       toast.error("Please fill in all required fields");
@@ -3423,7 +3449,7 @@ const CreateEvent = () => {
     // Call API for Step 7 - Update Additional Information
     try {
       setIsSubmitting(true);
-      setLoadingMessage(isDraft ? "Saving draft..." : "Publishing event...");
+      setLoadingMessage(isDraft ? "Saving draft..." : "Submitting for approval...");
       setShowLoading(true);
       
       // Check if we have backend event ID
@@ -3461,15 +3487,16 @@ const CreateEvent = () => {
         advisory: advisoryJson,
         questions: questionsJson,
         organizerNote: organizerNote,
-        publishStatus: isDraft ? "DRAFT" : "PUBLISHED",
+
       };
 
       const response = await updateEventStep6(backendEventId, updateData);
+      if (!isDraft) await requestEventPublication(backendEventId);
       
       console.log("Step 7 API Response:", response);
       
       // Success handling (no explicit status payloads)
-      toast.success(isDraft ? "Event saved as draft!" : "Event updated successfully!");
+      toast.success(isDraft ? "Event draft saved!" : "Publication requested. Awaiting promoter approval.");
       
       // Navigate to dashboard after successful submission
       navigate("/organizer/dashboard-v2");
@@ -3502,12 +3529,12 @@ const CreateEvent = () => {
       0
     );
     const totalSold = savedTickets.reduce((sum, ticket) => sum + (Number(ticket.soldQty) || 0), 0);
-    const advisoryEntries =
-      customAdvisories.length > 0
-        ? customAdvisories
-        : Object.entries(advisory || {})
-            .filter(([, val]) => val)
-            .map(([key]) => key.replace(/([A-Z])/g, " $1").trim());
+    const advisoryEntries = [
+      ...advisoryOptions
+        .filter((item) => advisory[item.id])
+        .map((item) => item.label),
+      ...customAdvisories,
+    ];
 
     const questionsEntries = customQuestions.map((q, i) => ({
       title: q.question,
@@ -3598,9 +3625,9 @@ const CreateEvent = () => {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Final Checkpoint</p>
-              <h2 className="mt-2 text-2xl font-bold text-foreground">Review before publishing</h2>
+              <h2 className="mt-2 text-2xl font-bold text-foreground">Review before submitting</h2>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                Scan each grouped section, confirm missing items, then use the single action area below to save a draft or publish.
+                Scan each grouped section, confirm missing items, then use the single action area below to save a draft or request publication.
               </p>
             </div>
             <div className="rounded-lg border border-border/50 bg-card px-4 py-3">
@@ -4031,6 +4058,13 @@ const CreateEvent = () => {
             )}
           </div>
 
+          {publication && <div role="status" className="rounded-xl border border-border bg-card p-4 space-y-2">
+            <p className="font-semibold">{publication.status.replaceAll('_', ' ')}</p>
+            {publishState === 'PUBLISHED' && <p className="text-sm">Your current event remains live. These changes require approval.</p>}
+            {publicationLocked && <p className="text-sm">{publication.status === 'PENDING' ? 'This submission is locked while the promoter reviews it.' : 'This event was rejected and cannot be published.'}</p>}
+            {publication.notes && <p className="whitespace-pre-wrap break-words text-sm">{publication.notes}</p>}
+          </div>}
+          <fieldset disabled={publicationLocked || isEditHydrating} className="min-w-0 space-y-6 disabled:opacity-70">
           {/* Progress Header */}
           <Card className={`${cardBase}`} style={{ boxShadow: pageTheme.glow }}>
             <CardContent className="space-y-5 p-5 sm:p-6">
@@ -4056,7 +4090,7 @@ const CreateEvent = () => {
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Complete each section, review the event, then publish when everything is ready.
+                    Complete each section, review the event, then request publication when everything is ready.
                   </p>
                 </div>
                 <div className="w-full rounded-lg border border-border/50 bg-background/40 p-3 lg:w-[280px]">
@@ -4256,15 +4290,15 @@ const CreateEvent = () => {
                         {uploadingCover && (
                           <div className="flex items-center gap-2 text-sm text-primary light:text-accent-foreground">
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>Uploading cover image to cloud...</span>
+                            <span>Uploading cover image...</span>
                           </div>
                         )}
                         
                         {coverImage && !uploadingCover && (
                           <div className="relative w-full h-44 rounded-xl overflow-hidden border border-border/50">
-                            <img 
-                              src={coverImage} 
-                              alt="Cover preview" 
+                            <img
+                              src={coverImage}
+                              alt="Cover preview"
                               className="w-full h-full object-cover"
                             />
                             <Button
@@ -4319,7 +4353,7 @@ const CreateEvent = () => {
                         {uploadingGallery && (
                           <div className="flex items-center gap-2 text-sm text-primary light:text-accent-foreground">
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>Uploading gallery images to cloud...</span>
+                            <span>Uploading gallery images...</span>
                           </div>
                         )}
                         
@@ -4330,9 +4364,9 @@ const CreateEvent = () => {
                           >
                             {galleryImages.map((img, index) => (
                               <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-border/50 group bg-background/60">
-                                <img 
-                                  src={img} 
-                                  alt={`Gallery preview ${index + 1}`} 
+                                <img
+                                  src={img}
+                                  alt={`Gallery preview ${index + 1}`}
                                   className="w-full h-full object-cover"
                                 />
                                 <Button
@@ -4352,7 +4386,7 @@ const CreateEvent = () => {
                         )}
                         {galleryImages.length > 0 && !uploadingGallery && (
                           <p className="text-xs text-success">
-                            ✅ {galleryImages.length} image{galleryImages.length !== 1 ? 's' : ''} uploaded to cloud
+                            ✅ {galleryImages.length} image{galleryImages.length !== 1 ? 's' : ''} uploaded successfully.
                           </p>
                         )}
                       </div>
@@ -5373,22 +5407,6 @@ const CreateEvent = () => {
 
               {/* Step 7: Additional Information */}
               {currentStep === 7 && (() => {
-                const advisoryOptions = [
-                  { id: 'smokingAllowed', label: '🚬 Smoking allowed' },
-                  { id: 'drinkingAllowed', label: '🍺 Drinking allowed' },
-                  { id: 'petsAllowed', label: '🐾 Pets allowed' },
-                  { id: 'ageRestricted', label: '🔞 Show is 18+' },
-                  { id: 'camerasAllowed', label: '📸 Cameras and photos allowed' },
-                  { id: 'outsideFoodAllowed', label: '🍔 Outside food & drinks allowed' },
-                  { id: 'seatingProvided', label: '🪑 Seating provided' },
-                  { id: 'wheelchairAccessible', label: '♿ Wheelchair accessible venue' },
-                  { id: 'liveMusic', label: '🎵 Live music' },
-                  { id: 'parkingAvailable', label: '🚗 Parking available' },
-                  { id: 'reentryAllowed', label: '🔁 Re-entry allowed' },
-                  { id: 'onsitePayments', label: '💳 On-site payments available' },
-                  { id: 'securityCheck', label: '👮 Security check at entry' },
-                  { id: 'cloakroom', label: '🧥 Cloakroom available' },
-                ];
                 const emojiPalette = [
                   "✨","✅","⚠️","🚫","🎟️","🎉","🎵","🍽️","🍺","🍷","🥤","🍾","🚭","📸","🧒","🔞",
                   "🧳","🎒","🕒","⏰","🚗","🅿️","♿","🎭","🎬","🎧","🎤","🎸","🪩","🎆","🎇","🏟️","🧥","🔒","🛡️"
@@ -5458,7 +5476,11 @@ const CreateEvent = () => {
                           </div>
 
                           <Dialog open={advisoryDialogOpen} onOpenChange={setAdvisoryDialogOpen}>
-                            <DialogContent className="max-w-4xl border-border/40 bg-popover text-foreground max-h-[90vh] overflow-hidden p-0">
+                            <DialogContent
+                              onInteractOutside={(event) => event.preventDefault()}
+                              onEscapeKeyDown={(event) => event.preventDefault()}
+                              className="w-[calc(100%-2rem)] max-w-4xl rounded-xl border-border/40 bg-popover text-foreground max-h-[90vh] overflow-hidden p-0"
+                            >
                             <div className="p-5 overflow-y-auto max-h-[70vh] space-y-4">
                               <DialogHeader>
                                 <DialogTitle className="text-2xl">Choose advisories</DialogTitle>
@@ -5472,22 +5494,20 @@ const CreateEvent = () => {
                                   {advisoryOptions.map((item) => {
                                     const active = advisory[item.id];
                                     return (
-                                      <button
+                                      <label
                                         key={item.id}
-                                        type="button"
-                                        className={`flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition ${
+                                        className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition ${
                                           active
                                             ? "border-ring bg-accent/10 text-foreground"
                                             : "border-border/50 bg-background/40 text-muted-foreground hover:border-ring/60 hover:bg-muted/40"
                                         }`}
-                                        onClick={() => setAdvisory({ ...advisory, [item.id]: !active })}
                                       >
                                         <Checkbox
                                           checked={active}
                                           onCheckedChange={(checked) => setAdvisory({ ...advisory, [item.id]: !!checked })}
                                         />
                                         <span className="text-sm font-medium">{item.label}</span>
-                                      </button>
+                                      </label>
                                     );
                                   })}
                                 </div>
@@ -5496,20 +5516,23 @@ const CreateEvent = () => {
                                   <p className="text-sm font-semibold text-foreground">Custom advisory</p>
                                   <div className="flex flex-col sm:flex-row gap-3">
                                     <div className="flex-1 flex gap-2">
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        aria-label="Choose advisory emoji"
+                                        aria-expanded={showEmojiPicker}
+                                        className="h-12 w-12 shrink-0 rounded-[10px] border-border"
+                                        onClick={() => setShowEmojiPicker((prev) => !prev)}
+                                      >
+                                        {customAdvisoryEmoji || <Smile className="w-4 h-4" />}
+                                      </Button>
                                       <Input
+                                        aria-label="Custom advisory"
                                         placeholder="e.g., No re-entry after 10 PM"
                                         value={newCustomAdvisory}
                                         onChange={(e) => setNewCustomAdvisory(e.target.value)}
                                         className={fieldClass}
                                       />
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        className="h-12 w-12 rounded-[10px] border-border bg-background/60 text-foreground hover:border-ring/60 hover:bg-muted"
-                                        onClick={() => setShowEmojiPicker((prev) => !prev)}
-                                      >
-                                        <Smile className="w-4 h-4" />
-                                      </Button>
                                     </div>
                                     <Button
                                       type="button"
@@ -5517,25 +5540,32 @@ const CreateEvent = () => {
                                       onClick={() => {
                                         const trimmed = newCustomAdvisory.trim();
                                         if (!trimmed) return;
-                                        setCustomAdvisories([...customAdvisories, trimmed]);
+                                        setCustomAdvisories([...customAdvisories, [customAdvisoryEmoji, trimmed].filter(Boolean).join(" ")]);
                                         setNewCustomAdvisory("");
+                                        setCustomAdvisoryEmoji("");
+                                        setShowEmojiPicker(false);
                                         toast.success("Custom advisory added");
                                       }}
                                     >
-                                      <Plus className="w-4 h-4" />
+                                      <Plus className="w-4 h-4 mr-2" /> Add advisory
                                     </Button>
                                   </div>
 
                                   {showEmojiPicker && (
                                     <div className="rounded-xl border border-border/50 bg-background/40 p-3 space-y-2 max-h-60 overflow-y-auto">
                                       <p className="text-xs uppercase tracking-wider text-muted-foreground/80">Emoji</p>
-                                      <div className="grid grid-cols-8 gap-2 text-lg">
+                                      <div className="grid grid-cols-[repeat(auto-fill,minmax(2.25rem,1fr))] gap-2 text-lg">
                                         {emojiPalette.map((emoji, idx) => (
                                           <button
                                             key={`emoji-${idx}`}
                                             type="button"
                                             className="h-9 w-9 rounded-lg border border-border/50 bg-background/40 hover:border-ring/60 hover:bg-muted/40 transition"
-                                            onClick={() => setNewCustomAdvisory((prev) => `${prev}${emoji}`)}
+                                            aria-label={`Use ${emoji} emoji`}
+                                            aria-pressed={customAdvisoryEmoji === emoji}
+                                            onClick={() => {
+                                              setCustomAdvisoryEmoji(emoji);
+                                              setShowEmojiPicker(false);
+                                            }}
                                           >
                                             {emoji}
                                           </button>
@@ -5545,16 +5575,17 @@ const CreateEvent = () => {
                                   )}
 
                                   {customAdvisories.length > 0 && (
-                                    <div className="flex flex-wrap gap-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                       {customAdvisories.map((item, idx) => (
                                         <button
                                           key={`custom-dialog-${idx}`}
                                           type="button"
-                                          className="group flex items-center gap-2 rounded-full border border-border/50 bg-background/40 px-3 py-1 text-sm text-muted-foreground hover:border-ring/60 hover:bg-muted/40"
+                                          aria-label={`Remove ${item}`}
+                                          className="group flex items-center justify-between gap-3 rounded-xl border border-ring bg-accent/10 px-3.5 py-3 text-left text-sm font-medium text-foreground"
                                           onClick={() => setCustomAdvisories(customAdvisories.filter((_, i) => i !== idx))}
                                         >
-                                          ✨ {item}
-                                          <X className="w-3 h-3 text-muted-foreground group-hover:text-foreground" />
+                                          <span className="min-w-0 break-words">{item}</span>
+                                          <X className="w-4 h-4 shrink-0 text-muted-foreground group-hover:text-foreground" />
                                         </button>
                                       ))}
                                     </div>
@@ -5568,23 +5599,7 @@ const CreateEvent = () => {
                                     ? `${selectedBuiltIns.length + customAdvisories.length} selected`
                                     : "No advisories selected yet"}
                                 </p>
-                                <div className="flex gap-2 justify-end">
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    className="text-foreground hover:text-foreground"
-                                    onClick={() => setAdvisoryDialogOpen(false)}
-                                  >
-                                    Close
-                                  </Button>
-                                  <Button
-                                    type="button"
-                                    variant="accent"
-                                    onClick={() => setAdvisoryDialogOpen(false)}
-                                  >
-                                    Done
-                                  </Button>
-                                </div>
+                                <p className="text-xs text-muted-foreground">Use the close icon when you’re finished.</p>
                               </DialogFooter>
                             </div>
                           </DialogContent>
@@ -5609,7 +5624,7 @@ const CreateEvent = () => {
                                   className="group flex items-center gap-2 rounded-full border border-border/50 bg-background/40 px-3 py-1 text-sm text-muted-foreground hover:border-ring/60 hover:bg-muted/40"
                                   onClick={() => setCustomAdvisories(customAdvisories.filter((_, i) => i !== idx))}
                                 >
-                                  ✨ {item}
+                                  {item}
                                   <X className="w-3 h-3 text-muted-foreground group-hover:text-foreground" />
                                 </button>
                               ))}
@@ -5628,40 +5643,69 @@ const CreateEvent = () => {
                               <p className="text-xs text-muted-foreground">Collect details like dietary needs or preferences.</p>
                             </div>
                             <Button
+                              type="button"
                               variant="outline"
                               size="sm"
                               className="h-10 rounded-lg border-border text-foreground bg-background/60 hover:bg-muted hover:border-ring/60"
-                              onClick={() => {
-                                if (newQuestion.trim()) {
-                                  setCustomQuestions([...customQuestions, { question: newQuestion, answer: newAnswer }]);
-                                  setNewQuestion('');
-                                  setNewAnswer('');
-                                  toast.success('Question added');
-                                } else {
-                                  toast.error('Please enter a question');
-                                }
-                              }}
+                              onClick={() => setQuestionDialogOpen(true)}
                             >
                               <Plus className="w-4 h-4 mr-2" />
                               Add Question
                             </Button>
                           </div>
 
-                          <div className="space-y-2">
+                          <Dialog open={questionDialogOpen} onOpenChange={setQuestionDialogOpen}>
+                            <DialogContent
+                              onInteractOutside={(event) => event.preventDefault()}
+                              onEscapeKeyDown={(event) => event.preventDefault()}
+                              className="w-[calc(100%-2rem)] max-w-xl max-h-[90vh] overflow-y-auto rounded-xl border-border/50 bg-popover text-foreground"
+                            >
+                              <DialogHeader className="pr-6">
+                                <DialogTitle>Add attendee question</DialogTitle>
+                                <DialogDescription>Write a question and answer for attendees. Both fields are required.</DialogDescription>
+                              </DialogHeader>
+                          <div className="space-y-3">
+                            <Label htmlFor="attendee-question">Question *</Label>
                             <Input
+                              id="attendee-question"
+                              required
                               placeholder="Question (e.g., Dietary requirements?)"
                               value={newQuestion}
                               onChange={(e) => setNewQuestion(e.target.value)}
                               className={fieldClass}
                             />
+                            <Label htmlFor="attendee-answer">Answer *</Label>
                             <Textarea
-                              placeholder="Answer (optional - organizer can provide default answer)"
+                              id="attendee-answer"
+                              required
+                              placeholder="Enter the answer for attendees"
                               value={newAnswer}
                               onChange={(e) => setNewAnswer(e.target.value)}
                               rows={2}
                               className={`${fieldClass} min-h-[120px] py-3`}
                             />
                           </div>
+                              <DialogFooter>
+                                <Button
+                                  type="button"
+                                  variant="accent"
+                                  onClick={() => {
+                                    if (newQuestion.trim() && newAnswer.trim()) {
+                                      setCustomQuestions([...customQuestions, { question: newQuestion, answer: newAnswer }]);
+                                      setNewQuestion('');
+                                      setNewAnswer('');
+                                      setQuestionDialogOpen(false);
+                                      toast.success('Question added');
+                                    } else {
+                                      toast.error(!newQuestion.trim() ? 'Please enter a question' : 'Please enter an answer');
+                                    }
+                                  }}
+                                >
+                                  <Plus className="w-4 h-4 mr-2" /> Create question
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
 
                           {customQuestions.length > 0 ? (
                             <div className="space-y-3">
@@ -5711,7 +5755,7 @@ const CreateEvent = () => {
                 );
               })()}
 
-              {/* Step 8: Review & Publish */}
+              {/* Step 8: Review & Submit */}
               {currentStep === 8 && renderReviewStep()}
 
             </CardContent>
@@ -5765,7 +5809,7 @@ const CreateEvent = () => {
                         disabled={isSectionBusy}
                         className="h-11 rounded-[10px] px-5 font-semibold"
                       >
-                        {isSectionBusy ? "Publishing..." : isEditMode ? "Update & Publish" : "Publish Event"}
+                        {isSectionBusy ? "Submitting..." : publishState === "PUBLISHED" ? "Submit changes for approval" : "Request publication"}
                       </Button>
                     </>
                   )}
@@ -5773,6 +5817,7 @@ const CreateEvent = () => {
               </div>
             </div>
           </Card>
+          </fieldset>
         </div>
       </main>
 

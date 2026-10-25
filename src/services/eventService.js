@@ -1,4 +1,38 @@
-import { buildUrl, apiFetch } from "@/config/api";
+import { buildUrl, apiFetch as request } from "@/config/api";
+import { invalidateOrganizerEventsCache } from "@/hooks/useOrganizerEvents";
+
+const publicationVersions = new Map();
+const itemEvents = new Map();
+export const rememberEventRevision = event => {
+  if (!event?.id) return;
+  publicationVersions.set(event.id, event.publication?.version || 0);
+  for (const kind of ['tickets', 'venues', 'artists', 'images']) for (const row of event[kind] || []) itemEvents.set(row.id, event.id);
+};
+
+export async function eventDraftFetch(url, options = {}) {
+  const path = String(url).split('?')[0];
+  const parts = path.split('/');
+  const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
+  const eventId = body?.eventId || parts.find(id => publicationVersions.has(id)) || itemEvents.get(parts.at(-1));
+  const writing = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(options.method);
+  const response = await request(url, { ...options, headers: { ...options.headers,
+    ...(writing && eventId ? { 'x-event-revision': String(publicationVersions.get(eventId) || 0) } : {}),
+  } });
+  const data = response?.data;
+  if (data?.publication) {
+    const id = eventId || data.eventId || data.id;
+    publicationVersions.set(id, data.publication.version);
+    if (data.id && data.id !== id) itemEvents.set(data.id, id);
+    if (data.tickets) rememberEventRevision({ ...data, id });
+  } else if (path.includes('/create-event') && data?.id) rememberEventRevision(data);
+  if (writing && eventId) invalidateOrganizerEventsCache();
+  return response;
+}
+const apiFetch = eventDraftFetch;
+
+export const requestEventPublication = eventId => apiFetch(buildUrl(`/api/event/${eventId}/publication-request`), {
+  method: 'POST', body: JSON.stringify({ expectedVersion: publicationVersions.get(eventId) || 0 }),
+});
 
 // -------- S3 Storage Upload Helpers (internal) --------
 const DRAFT_MEDIA_TYPE_BY_FOLDER = {
@@ -1134,31 +1168,8 @@ export async function updateEventStep6(eventId, updateData) {
   return response;
 }
 
-/**
- * Publish event - Update status from DRAFT to PUBLISHED
- * 
- * API Endpoint: PATCH /api/event/update-event/:eventId
- * 
- * @param {string} eventId - Event ID to update
- * @returns {Promise<Object>} Updated event response
- */
-export async function publishEvent(eventId) {
-  const url = buildUrl(`/api/event/update-event/${eventId}`);
-  
-  console.log("🚀 Publishing Event");
-  console.log("📋 Event ID:", eventId);
-  
-  // Backend no longer accepts status fields here; publish handled server-side or elsewhere.
-  const response = await apiFetch(url, {
-    method: "PATCH",
-    body: JSON.stringify({}),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  
-  return response;
-}
+// Existing callers also submit for promoter approval.
+export const publishEvent = requestEventPublication;
 
 /**
  * Update an existing venue

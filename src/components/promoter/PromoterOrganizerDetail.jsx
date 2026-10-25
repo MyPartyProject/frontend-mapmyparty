@@ -783,12 +783,12 @@ const PromoterOrganizerDetail = () => {
   return (
     <div className="space-y-6">
       {/* Back link */}
-      <Link
+      {/* <Link
         to="/promoter/organizers"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-accent transition light:hover:text-accent-foreground"
       >
         <ArrowLeft className="w-4 h-4" /> Back to organizers
-      </Link>
+      </Link> */}
 
       {/* Section 1: Profile (API: GET /api/organizer/:id) */}
       {loading.profile && <SectionSkeleton lines={5} />}
