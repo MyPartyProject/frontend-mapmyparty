@@ -352,7 +352,7 @@ const EventDetailNew = () => {
       @media (max-width: 767px) {
         .event-sponsor-viewport .event-sponsor-track {
           width: max-content;
-          animation: sponsorMarquee 40s linear infinite;
+          animation: sponsorMarquee 20s linear infinite;
           touch-action: pan-y pinch-zoom;
           user-select: none;
           cursor: grab;
@@ -367,6 +367,25 @@ const EventDetailNew = () => {
         }
         .event-sponsor-group > a { flex-shrink: 0; }
         .event-sponsor-group > a > div { flex-shrink: 0; }
+        .event-sponsor-group .event-sponsor-logo-glow { display: none; }
+        .event-sponsor-track .event-sponsor-group .event-sponsor-logo {
+          width: 60px;
+          height: 40px;
+          padding: 0;
+          border: 0;
+          border-radius: 16px;
+          background: #fff;
+          box-shadow: 0 0 0 1px rgb(148 163 184 / 0.2), 0 4px 8px -3px rgb(0 0 0 / 0.3);
+        }
+        .event-sponsor-track .event-sponsor-group .event-sponsor-logo img {
+          width: 100%;
+          height: 100%;
+          padding: 0;
+          border-radius: inherit;
+          object-fit: cover;
+          transform: none;
+          filter: none;
+        }
       }
       @media (max-width: 767px) and (prefers-reduced-motion: reduce) {
         .event-sponsor-viewport { overflow-x: auto; }
@@ -412,6 +431,13 @@ const EventDetailNew = () => {
         background: hsl(var(--card) / 0.16);
         border: 1px solid hsl(var(--foreground) / 0.055);
         box-shadow: inset 0 1px 0 hsl(var(--foreground) / 0.07);
+      }
+
+      .event-type-label {
+        background: hsl(var(--background) / 0.72);
+        border: 1px solid hsl(var(--foreground) / 0.12);
+        box-shadow: 0 2px 8px rgb(0 0 0 / 0.22);
+        text-shadow: 0 1px 3px hsl(var(--background) / 0.9);
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -1174,7 +1200,7 @@ const EventDetailNew = () => {
         </div>
 
         <div className="relative mx-auto hidden max-w-7xl px-6 lg:block lg:px-12">
-          <div className="grid min-h-[560px] items-center gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.45fr)]">
+          <div className="grid min-h-[560px] items-center gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,360px)]">
             {/* Banner interaction layer */}
             <div className="relative min-h-[320px] lg:min-h-[520px]">
               <div className="absolute right-0 top-0">
@@ -1205,18 +1231,18 @@ const EventDetailNew = () => {
 
             {/* Right: Event Details Glass Panel */}
             <aside className="event-glass-panel relative flex min-h-[350px] w-full max-w-[360px] flex-col justify-self-center overflow-hidden rounded-[var(--radius)] p-4 sm:p-5 lg:justify-self-end lg:p-6">
-              <div className="relative z-10 flex flex-1 flex-col">
+              <div className="relative z-10 flex flex-1 flex-col gap-4">
                 {/* Event Title and Category */}
                 <div className="space-y-2">
                   <h2 className="text-2xl font-semibold leading-[1.12] text-foreground sm:text-3xl lg:text-[2rem]">{event.title}</h2>
-                  <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                  <div className="event-type-label flex w-fit max-w-full flex-wrap items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground [overflow-wrap:anywhere]">
                     {event.category && <span>{event.category}</span>}
                     {event.category && event.subCategory && <span>•</span>}
                     {event.subCategory && <span>{event.subCategory}</span>}
                   </div>
                 </div>
 
-                <div className="mt-5 space-y-3">
+                <div className="space-y-3">
                   {/* Date & Time */}
                   <div className="event-info-block flex items-start gap-3 rounded-lg p-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border/30 bg-primaryCTA/15 text-accent shadow-inner light:text-accent-foreground">
@@ -1224,8 +1250,14 @@ const EventDetailNew = () => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Date & Time</p>
-                      <p className="text-[13px] font-semibold leading-snug text-foreground">{formatDate(event.startDate)}</p>
+                      <p className="text-[13px] font-semibold leading-snug text-foreground">Starts: {formatDate(event.startDate)}</p>
                       <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{formatTime(event.startDate)}</p>
+                      {event.endDate && (
+                        <>
+                          <p className="mt-2 text-[13px] font-semibold leading-snug text-foreground">Ends: {formatDate(event.endDate)}</p>
+                          <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{formatTime(event.endDate)}</p>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -1266,7 +1298,7 @@ const EventDetailNew = () => {
                 <h1 className="text-xl font-semibold leading-tight text-foreground">
                   {event.title}
                 </h1>
-                <div className="flex flex-wrap items-center gap-1.5 text-[9px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                <div className="event-type-label flex w-fit max-w-full flex-wrap items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-foreground [overflow-wrap:anywhere]">
                   {event.category && <span>{event.category}</span>}
                   {event.category && event.subCategory && <span>&middot;</span>}
                   {event.subCategory && <span>{event.subCategory}</span>}
@@ -1292,11 +1324,21 @@ const EventDetailNew = () => {
                     Date & Time
                   </p>
                   <p className="text-xs font-semibold leading-snug text-foreground">
-                    {formatDate(event.startDate)}
+                    Starts: {formatDate(event.startDate)}
                   </p>
                   <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
                     {formatTime(event.startDate)}
                   </p>
+                  {event.endDate && (
+                    <>
+                      <p className="mt-2 text-xs font-semibold leading-snug text-foreground">
+                        Ends: {formatDate(event.endDate)}
+                      </p>
+                      <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                        {formatTime(event.endDate)}
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -1388,8 +1430,8 @@ const EventDetailNew = () => {
                       >
                         {/* Logo Container */}
                         <div className="relative">
-                          <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-red-600/20 to-transparent opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-100" />
-                          <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border border-gray-700/50 bg-gray-800/80 shadow-lg transition-all duration-300 group-hover:border-gray-600/50 group-hover:shadow-xl group-hover:shadow-red-600/10 light:border-border light:bg-surface light:group-hover:border-border">
+                          <div className="event-sponsor-logo-glow absolute inset-0 rounded-xl bg-gradient-to-br from-red-600/20 to-transparent opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-100" />
+                          <div className="event-sponsor-logo relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border border-gray-700/50 bg-gray-800/80 shadow-lg transition-all duration-300 group-hover:border-gray-600/50 group-hover:shadow-xl group-hover:shadow-red-600/10 light:border-border light:bg-surface light:group-hover:border-border">
                             <img
                               src={s.logo || SPONSOR_PLACEHOLDER}
                               alt={s.name || "Sponsor"}
