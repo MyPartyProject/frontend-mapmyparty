@@ -109,6 +109,31 @@ try {
   roles = ['SUPER_ADMIN', 'ADMIN'];
   await visit('/promoter/my-teams');
   await until('document.body.innerText.includes("Agent Example")');
+  const loginUrl = new URL('/team/login', base).href;
+  for (const width of [1440, 390, 320]) {
+    await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false });
+    for (const theme of ['light', 'dark']) {
+      await evaluate(`localStorage.setItem('mapmyparty-theme', '${theme}')`);
+      await visit('/promoter/my-teams');
+      await until('Boolean(document.querySelector("input[readonly]"))');
+      assert.equal(await evaluate('document.querySelector("input[readonly]").value'), loginUrl);
+      assert.ok(await evaluate('document.querySelector("input[readonly]").getBoundingClientRect().width >= 180'), 'Login URL remains readable');
+      await evaluate('document.querySelector("button[title$=URL]").click()');
+      await until('window.copiedText === '+JSON.stringify(loginUrl));
+      await evaluate('Array.from(document.querySelectorAll("button")).find(el => el.textContent === "Add member").click()');
+      await until('Boolean(document.querySelector("[role=dialog] input[readonly]"))');
+      const writesBeforeCopy = writes.length;
+      assert.equal(await evaluate('document.querySelector("[role=dialog] input[readonly]").readOnly'), true);
+      assert.ok(await evaluate('document.querySelector("[role=dialog] input[readonly]").getBoundingClientRect().width >= 180'), 'Dialog login URL remains readable');
+      assert.equal(await evaluate('document.querySelector("[role=dialog] button[title$=URL]").type'), 'button');
+      await evaluate('window.copiedText = null; document.querySelector("[role=dialog] button[title$=URL]").click()');
+      await until('window.copiedText === '+JSON.stringify(loginUrl));
+      assert.equal(writes.length, writesBeforeCopy, 'Copy must not save a member');
+      assert.equal(await evaluate('document.documentElement.scrollWidth <= window.innerWidth'), true, 'Login URL row fits mobile');
+      await evaluate('document.querySelector("[role=dialog] .modal-close-button").click()');
+      await until('!document.querySelector("[role=dialog]")');
+    }
+  }
   await evaluate('Array.from(document.querySelectorAll("button")).find(el => el.textContent === "Add member").click()');
   await until('Boolean(document.querySelector("input[name=password]"))');
   assert.equal(await evaluate('document.querySelector("input[name=password]").type'), 'password');
@@ -130,5 +155,5 @@ try {
   await until('document.body.innerText.includes("Go to Login")');
   assert.equal(await evaluate('Array.from(document.querySelectorAll("a")).find(el => el.textContent === "Go to Login").getAttribute("href")'), '/team/login');
   assert.deepEqual(errors, []);
-  console.log(`PASS agent isolation, event list/detail, light/dark, desktop/mobile, copy, download payload, account creation, multi-role editing, reset navigation. Screenshots: ${directory}`);
+  console.log(`PASS agent isolation, event list/detail, light/dark, desktop/mobile, copy, team login URL, download payload, account creation, multi-role editing, reset navigation. Screenshots: ${directory}`);
 } finally { socket?.close(); chrome.kill(); }

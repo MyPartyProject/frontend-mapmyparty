@@ -8,6 +8,17 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { CopyButton, Pager, QueryState } from '@/components/team/TeamShared';
 
+function TeamLoginLink() {
+  const loginUrl = new URL('/team/login', window.location.origin).href;
+  return <div className="space-y-2 rounded-lg border bg-card p-3">
+    <p className="text-xs font-medium text-muted-foreground">Team login URL</p>
+    <div className="flex flex-wrap items-center gap-2">
+      <Input aria-label="Team login URL" value={loginUrl} readOnly className="min-w-0 flex-1 basis-48 text-sm" />
+      <CopyButton value={loginUrl} label="Copy login URL" />
+    </div>
+  </div>;
+}
+
 export default function MyTeams() {
   const [filters, setFilters] = useState({ page: 1, q: '', role: '' });
   const [editor, setEditor] = useState(null);
@@ -32,12 +43,14 @@ export default function MyTeams() {
   }
   return <section className="p-4 space-y-4 text-foreground">
     <header className="flex items-center justify-between gap-3"><div><h1 className="text-xl font-semibold">My Teams</h1><p className="text-sm text-muted-foreground">Manage platform team access.</p></div><Button size="sm" onClick={() => open()} disabled={!catalog.data}>Add member</Button></header>
+    <TeamLoginLink />
     <QueryState query={catalog} />
     <div className="flex flex-wrap gap-2"><Button size="sm" variant={!filters.role ? 'default' : 'outline'} onClick={() => setFilters({ ...filters, role: '', page: 1 })}>All roles</Button>{catalog.data?.map(role => <Button key={role.name} size="sm" variant={filters.role === role.name ? 'default' : 'outline'} disabled={role.deferred} onClick={() => setFilters({ ...filters, role: role.name, page: 1 })}>{role.label}{role.deferred ? ' · Coming later' : ` (${role.count ?? 0})`}</Button>)}</div>
     <Input aria-label="Search team" placeholder="Search name, email or user ID" value={filters.q} onChange={e => setFilters({ ...filters, q: e.target.value, page: 1 })} className="max-w-md" />
     <QueryState query={members} />
     {!members.isPending && !members.isError && <><div className="rounded-lg border divide-y bg-card">{members.data.items.length ? members.data.items.map(member => <div key={member.id} className="p-3 flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><p className="text-sm font-medium">{member.name} {member.isSuspended && <Badge variant="secondary">Suspended</Badge>}</p><div className="text-sm text-muted-foreground break-all">{member.email}<CopyButton value={member.email} label="Copy email" /></div><div className="flex flex-wrap gap-1">{member.roles.map(role => <Badge key={role} variant="secondary">{catalog.data?.find(r => r.name === role)?.label || role}</Badge>)}</div></div><Button size="sm" variant="outline" disabled={!catalog.data || member.roles.includes('SUPER_ADMIN')} onClick={() => open(member)}>Manage roles</Button></div>) : <p className="p-4 text-sm text-muted-foreground">No team members match your search.</p>}</div><Pager {...members.data} onChange={page => setFilters({ ...filters, page })} /></>}
     <Dialog open={Boolean(editor)} onOpenChange={open => { if (!open && !busy) setEditor(null); }}><DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto"><DialogHeader><DialogTitle className="text-lg">{mode === 'edit' ? 'Manage roles' : 'Add team member'}</DialogTitle><DialogDescription>Roles add permissions. Admin grants existing platform administration access.</DialogDescription></DialogHeader>
+      <TeamLoginLink />
       <form onSubmit={save} className="space-y-3">
         {mode !== 'edit' && <div className="flex gap-2"><Button type="button" size="sm" variant={mode === 'new' ? 'default' : 'outline'} onClick={() => { setMode('new'); setEditor({}); }}>Create account</Button><Button type="button" size="sm" variant={mode === 'existing' ? 'default' : 'outline'} onClick={() => { setMode('existing'); setEditor({}); }}>Existing account</Button></div>}
         {mode === 'new' && <>{[['name', 'Name', 'text'], ['email', 'Email', 'email'], ['phone', 'Phone (optional, 10 digits)', 'tel'], ['password', 'Initial password', 'password']].map(([name, label, type]) => <label key={name} className="block text-sm">{label}<Input name={name} type={type} required={name !== 'phone'} autoComplete={name === 'password' ? 'new-password' : 'off'} /></label>)}<p className="text-xs text-muted-foreground">Password: 8+ characters with uppercase, lowercase, number and special character. Share credentials privately; passwords are never displayed again.</p></>}
