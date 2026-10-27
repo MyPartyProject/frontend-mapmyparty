@@ -461,7 +461,7 @@ const OrganizerProfile = () => {
               </h2>
               <button
                 onClick={handleCancelPayment}
-                className="text-gray-500 hover:text-gray-700 light:text-muted-foreground"
+                className="modal-close-button text-gray-500 hover:text-gray-700 light:text-muted-foreground"
               >
                 <X className="w-5 h-5" />
               </button>

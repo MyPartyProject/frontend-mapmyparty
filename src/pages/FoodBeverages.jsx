@@ -301,7 +301,7 @@ const FoodBeverages = () => {
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center hover:bg-white/10 light:border-border light:bg-muted light:hover:bg-muted"
+                className="modal-close-button w-10 h-10 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 light:border-border light:bg-muted light:hover:bg-muted"
               >
                 <X className="w-4 h-4" />
               </button>

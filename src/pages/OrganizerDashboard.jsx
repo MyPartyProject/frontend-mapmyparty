@@ -714,7 +714,7 @@ const OrganizerProfileContent = ({ user }) => {
                 <p className="text-xs uppercase tracking-[0.2em] text-white/50 light:text-muted-foreground">Owner</p>
                 <h3 className="text-xl font-semibold text-white light:text-foreground">Edit Owner Details</h3>
               </div>
-              <button onClick={handleCancelOwner} className="text-white/60 hover:text-white rounded-full p-2 hover:bg-white/10 transition light:text-muted-foreground light:hover:text-foreground light:hover:bg-muted">
+              <button onClick={handleCancelOwner} className="modal-close-button text-white/60 hover:text-white rounded-full p-2 hover:bg-white/10 transition light:text-muted-foreground light:hover:text-foreground light:hover:bg-muted">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -827,7 +827,7 @@ const OrganizerProfileContent = ({ user }) => {
                 <p className="text-xs uppercase tracking-[0.2em] text-white/50 light:text-muted-foreground">Owner</p>
                 <h3 className="text-xl font-semibold text-white light:text-foreground">Choose Your Avatar</h3>
               </div>
-              <button onClick={closeOwnerAvatarPicker} className="text-white/60 hover:text-white light:text-muted-foreground light:hover:text-foreground">
+              <button onClick={closeOwnerAvatarPicker} className="modal-close-button text-white/60 hover:text-white light:text-muted-foreground light:hover:text-foreground">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -923,7 +923,7 @@ const OrganizerProfileContent = ({ user }) => {
                 <p className="text-xs uppercase tracking-[0.2em] text-white/50 light:text-muted-foreground">Owner</p>
                 <h3 className="text-xl font-semibold text-white light:text-foreground">Capture with Camera</h3>
               </div>
-              <button onClick={closeOwnerCamera} className="text-white/60 hover:text-white light:text-muted-foreground light:hover:text-foreground">
+              <button onClick={closeOwnerCamera} className="modal-close-button text-white/60 hover:text-white light:text-muted-foreground light:hover:text-foreground">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1347,7 +1347,7 @@ const OrganizerProfileContent = ({ user }) => {
                   {bankExists ? "Bank Details" : "Add Bank Details"}
                 </h2>
               </div>
-              <button onClick={handleCancelBank} className="text-white/60 hover:text-white light:text-muted-foreground light:hover:text-foreground">
+              <button onClick={handleCancelBank} className="modal-close-button text-white/60 hover:text-white light:text-muted-foreground light:hover:text-foreground">
                 <X className="w-5 h-5" />
               </button>
             </div>

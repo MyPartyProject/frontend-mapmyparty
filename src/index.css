@@ -475,6 +475,29 @@
 }
 
 @layer components {
+  .modal-close-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 2rem;
+    min-height: 2rem;
+    line-height: 1;
+  }
+
+  .modal-close-button > svg {
+    display: block;
+    flex-shrink: 0;
+    margin: 0;
+  }
+
+  @media (pointer: coarse) {
+    .modal-close-button {
+      min-width: 44px;
+      min-height: 44px;
+    }
+  }
+
   .heading-xl {
     font-family: var(--font-heading);
     font-size: clamp(2.75rem, 3vw + 1.35rem, 4.75rem);

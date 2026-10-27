@@ -216,7 +216,7 @@ const QRScanner = ({ onScan, onClose, isProcessing, isPaused = false, rearOnly =
           <div className="flex items-center gap-2"><Camera className="h-5 w-5 shrink-0 text-accent-foreground" aria-hidden="true" /><DialogPrimitive.Title className="text-lg font-bold">Scan ticket QR</DialogPrimitive.Title></div>
           <div className="flex gap-2">
             {cameras.length > 1 && <Button variant="outline" className="h-11 w-11 rounded-xl" disabled={isStarting || isProcessing} onClick={switchCamera} aria-label="Switch camera"><SwitchCamera aria-hidden="true" /></Button>}
-            <Button variant="ghost" className="h-11 w-11 rounded-xl" onClick={onClose} aria-label="Close scanner"><X aria-hidden="true" /></Button>
+            <Button variant="ghost" className="modal-close-button h-11 w-11 rounded-xl" onClick={onClose} aria-label="Close scanner"><X aria-hidden="true" /></Button>
           </div>
         </div>
         <DialogPrimitive.Description id="agent-scanner-description" className="px-5 py-4 text-sm text-muted-foreground">Point the rear camera at the QR code. You'll review the ticket before allowing entry.</DialogPrimitive.Description>
@@ -254,7 +254,7 @@ const QRScanner = ({ onScan, onClose, isProcessing, isPaused = false, rearOnly =
             )}
             <button
               onClick={onClose}
-              className="p-2 rounded-lg bg-white/10 border border-white/15 hover:bg-white/15 transition light:bg-muted light:border-border light:hover:bg-secondary"
+              className="modal-close-button p-2 rounded-lg bg-white/10 border border-white/15 hover:bg-white/15 transition light:bg-muted light:border-border light:hover:bg-secondary"
             >
               <X className="w-5 h-5 text-white light:text-foreground" />
             </button>

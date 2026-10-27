@@ -864,7 +864,7 @@ const EventAnalyticsPage = () => {
               </h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-1 rounded text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors light:text-muted-foreground light:hover:text-foreground light:hover:bg-muted"
+                className="modal-close-button p-1 rounded text-white/40 hover:text-white hover:bg-white/[0.06] transition-colors light:text-muted-foreground light:hover:text-foreground light:hover:bg-muted"
               >
                 <X className="w-4 h-4" />
               </button>

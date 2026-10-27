@@ -644,7 +644,7 @@ const LiveEventPage = ({ embedded = false }) => {
           </div>
           <button
             onClick={closeOffPlatformModal}
-            className="p-1.5 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition light:hover:bg-muted light:text-muted-foreground light:hover:text-foreground"
+            className="modal-close-button p-1.5 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition light:hover:bg-muted light:text-muted-foreground light:hover:text-foreground"
           >
             <X className="w-3.5 h-3.5" />
           </button>

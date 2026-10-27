@@ -2571,7 +2571,8 @@ const EventDetailNew = () => {
           <Button
             variant="ghost"
             onClick={() => setSelectedImage(null)}
-            className="absolute top-4 right-4 text-white hover:bg-white/10 light:text-foreground light:hover:bg-muted"
+            size="icon"
+            className="modal-close-button absolute top-4 right-4 text-white hover:bg-white/10 light:text-foreground light:hover:bg-muted"
           >
             <X className="h-6 w-6" />
           </Button>
