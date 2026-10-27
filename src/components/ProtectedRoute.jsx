@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { fetchOrganizerOnboardingStatus } from "@/services/organizerOnboardingService";
 import { useOrganizerCompact } from "@/hooks/useOrganizerCompact";
 import OrganizerMobile from "@/components/organizer/OrganizerMobile";
+import OrganizerAccessGate from "@/components/organizer/OrganizerAccessGate";
 
 const ProtectedRoute = ({ children, requiredRole = null, skipOrganizerOnboarding = false }) => {
   const location = useLocation();
@@ -144,4 +145,13 @@ const ProtectedRoute = ({ children, requiredRole = null, skipOrganizerOnboarding
   return children;
 };
 
-export default ProtectedRoute;
+const ProtectedRouteWithAccess = (props) => {
+  const { isAuthenticated, user, loading } = useAuth();
+  if (!loading && isAuthenticated && props.requiredRole?.toUpperCase() === 'ORGANIZER'
+      && (user?.roles || [user?.role]).includes('ORGANIZER')) {
+    return <OrganizerAccessGate><ProtectedRoute {...props} /></OrganizerAccessGate>;
+  }
+  return <ProtectedRoute {...props} />;
+};
+
+export default ProtectedRouteWithAccess;

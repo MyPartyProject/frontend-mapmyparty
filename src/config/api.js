@@ -279,6 +279,9 @@ export async function customFetch(url, options = {}, retrying = false, challenge
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response);
+    if (errorData.errorCode === 'ORGANIZATION_SUSPENDED') {
+      window.dispatchEvent(new Event('organization:suspended'));
+    }
 
     if (response.status === 500 && import.meta.env.DEV) {
       console.error("API 500:", url, errorData);

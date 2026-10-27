@@ -131,6 +131,8 @@ function normalizeCoreEvent(data) {
     id: data.id,
     slug: data.slug || data.id,
     title: data.title || "Untitled Event",
+    bookingAvailable: data.bookingAvailable,
+    bookingUnavailableReason: data.bookingUnavailableReason,
     category: data.category || "EVENT",
     bannerImage,
     image: bannerImage,

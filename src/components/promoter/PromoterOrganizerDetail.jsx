@@ -375,7 +375,7 @@ const ProfileHeader = ({
                   <AlertDialogHeader>
                     <AlertDialogTitle>Suspend this organizer?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This prevents organizer-side access while preserving existing events and bookings.
+                      This limits the organizer to support, hides events from discovery, and blocks new bookings, event changes and payouts. Existing bookings and assigned-agent entry remain available.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <div className="space-y-2">

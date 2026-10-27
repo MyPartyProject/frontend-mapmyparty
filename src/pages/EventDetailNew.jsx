@@ -840,6 +840,7 @@ const EventDetailNew = () => {
   }, [event?.tickets, hasTickets]);
 
   const bookingDisabledReason = useMemo(() => {
+    if (event?.bookingAvailable === false) return 'Bookings unavailable';
     if (isPreviewMode) return "Preview only";
     if (isSalesClosed) return "Sales closed";
     if (allTicketsComingSoon) return "Coming Soon";
@@ -847,6 +848,7 @@ const EventDetailNew = () => {
     if (hasTickets && !hasBookableTickets) return "Unavailable";
     return "";
   }, [
+    event?.bookingAvailable,
     isPreviewMode,
     isSalesClosed,
     allTicketsComingSoon,
@@ -856,7 +858,7 @@ const EventDetailNew = () => {
   ]);
 
   const isBookingUnavailable =
-    isPreviewMode || isSalesClosed || (hasTickets && !hasBookableTickets);
+    event?.bookingAvailable === false || isPreviewMode || isSalesClosed || (hasTickets && !hasBookableTickets);
 
   const ensureSession = async (forceRefresh = false) => {
     setAuthLoading(true);
