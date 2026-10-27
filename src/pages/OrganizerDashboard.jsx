@@ -1602,6 +1602,7 @@ const OrganizerDashboard = () => {
     { id: "food-beverages", name: "Food & Beverages", icon: <CupSoda className="w-6 h-6 mr-3" /> },
     { id: "payouts", name: "Payouts", icon: <CreditCard className="w-6 h-6 mr-3" /> },
     { id: "support", name: "Support", icon: <LifeBuoy className="w-6 h-6 mr-3" /> },
+    ...((authUser?.roles || []).includes('SOCIAL_MEDIA_AGENT') ? [{ id: 'marketing', name: 'Marketing events', icon: <Calendar className="w-6 h-6 mr-3" /> }] : []),
     // { id: "financial", name: "Financial Reporting", icon: <Download className="w-6 h-6 mr-3" /> },
   ];
 
@@ -1664,7 +1665,7 @@ const OrganizerDashboard = () => {
             {navItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => handleNav(item.id)}
+                onClick={() => item.id === 'marketing' ? navigate('/team/events') : handleNav(item.id)}
                 className={`flex items-center w-full px-3 py-3 text-sm font-medium rounded-xl transition ${
                   activeTab === item.id
                     ? "text-white bg-white/10 border border-white/10 shadow-lg shadow-black/20 light:text-foreground light:bg-muted light:border-border light:shadow-black/5"

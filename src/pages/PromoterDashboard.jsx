@@ -58,7 +58,7 @@ const PromoterDashboard = () => {
   const taskSummary = useAdminTaskSummary(location.pathname + location.search);
   const pendingQueueActive = new URLSearchParams(location.search).get('reviewStatus') === 'PENDING';
   const navActive = (isActive, label) => isActive && (label === 'Pending reviews' ? pendingQueueActive : label === 'Events' ? !pendingQueueActive : true);
-  const { logout: contextLogout } = useAuth();
+  const { logout: contextLogout, user: authUser } = useAuth();
 
   // Fetch real dashboard data
   const { dashboard, loading: dashboardLoading, error: dashboardError, refresh: refreshDashboard, filter, applyFilter } = usePromoterDashboard();
@@ -630,7 +630,7 @@ const PromoterDashboard = () => {
           expanded ? "w-full px-2 pr-3" : "w-full px-1 pr-2"
         }`}>
           <div className={expanded ? "space-y-1.5" : "flex flex-col items-center gap-2"}>
-            {[...navItems.slice(0, 3), { label: 'Pending reviews', to: '/promoter/events?reviewStatus=PENDING', icon: ShieldCheck }, ...navItems.slice(3)].map(({ label, to, icon: Icon }) => (
+            {[...navItems.slice(0, 3), { label: 'Pending reviews', to: '/promoter/events?reviewStatus=PENDING', icon: ShieldCheck }, ...navItems.slice(3), ...((authUser?.roles || []).includes('SUPER_ADMIN') ? [{ label: 'My Teams', to: '/promoter/my-teams', icon: Users }] : []), { label: 'Marketing events', to: '/team/events', icon: CalendarClock }].map(({ label, to, icon: Icon }) => (
               <NavLink
                 key={label}
                 to={to}

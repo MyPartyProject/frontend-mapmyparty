@@ -447,6 +447,7 @@ const NewUserDashboard = () => {
     { name: 'Bookings', icon: Ticket, path: '/dashboard/bookings' },
     { name: 'Support', icon: LifeBuoy, path: '/dashboard/support' },
     { name: 'Profile', icon: UserIcon, path: '/dashboard/profile' },
+    ...((authUser?.roles || []).includes('SOCIAL_MEDIA_AGENT') ? [{ name: 'Marketing', icon: Compass, path: '/team/events' }] : []),
   ];
 
   const isActive = (path) => {

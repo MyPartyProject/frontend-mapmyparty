@@ -54,6 +54,7 @@ function normalizeSessionResponse(data) {
     ? {
         ...user,
         role,
+        roles: Array.isArray(payload.roles) ? payload.roles : (user.roles || [role]),
         authProvider: user.authProvider || user.provider || null,
       }
     : null;

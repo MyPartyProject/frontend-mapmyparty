@@ -141,6 +141,7 @@ export default function OrganizerMobile({ setupRequired = false }) {
     </header>
     <main className="mx-auto max-w-2xl space-y-3 px-4 pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
       <h1 className="text-xl font-bold">{title}</h1>
+      {(user?.roles || []).includes('SOCIAL_MEDIA_AGENT') && <Link className={control} to="/team/events">Marketing events</Link>}
       {setupRequired || page === "desktop" ? <section className={`${card} space-y-3`}>
         <Monitor className="h-9 w-9 text-primary" aria-hidden="true" />
         <h2 className="text-xl font-semibold">{setupRequired ? "Complete organizer setup on a laptop or PC" : "Continue on a laptop or PC"}</h2>

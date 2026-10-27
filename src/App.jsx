@@ -19,6 +19,10 @@ import MyBookings from "./pages/MyBookings";
 import AttendeeProfile from "./pages/AttendeeProfile";
 import DashboardSupport from "./pages/DashboardSupport";
 import PromoterDashboard from "./pages/PromoterDashboard";
+import TeamLogin from './pages/TeamLogin';
+import TeamEvents from './pages/TeamEvents';
+import MyTeams from './pages/MyTeams';
+import TeamAccess from './components/team/TeamAccess';
 import PromoterEventDetail from "./pages/PromoterEventDetail";
 import PromoterOverview from "./components/promoter/PromoterOverview";
 import PromoterOrganizers from "./components/promoter/PromoterOrganizers";
@@ -295,6 +299,9 @@ const App = () => {
                 </ProtectedRoute>
               } />
               
+              <Route path="/team/login" element={<TeamLogin />} />
+              <Route path="/team/events" element={<TeamAccess><TeamEvents /></TeamAccess>} />
+              <Route path="/team/events/:eventId" element={<TeamAccess><TeamEvents /></TeamAccess>} />
               {/* Protected Promoter Routes */}
               <Route path="/promoter" element={
                 <ProtectedRoute requiredRole="promoter">
@@ -303,6 +310,7 @@ const App = () => {
               }>
                 <Route index element={<Navigate to="/promoter/overview" replace />} />
                 <Route path="overview" element={<PromoterOverview />} />
+                <Route path="my-teams" element={<TeamAccess owner><MyTeams /></TeamAccess>} />
                 <Route path="organizers" element={<PromoterOrganizers />} />
                 <Route path="organizers/:id" element={<PromoterOrganizerDetail />} />
                 <Route path="events" element={<PromoterEvents />} />

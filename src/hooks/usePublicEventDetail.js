@@ -32,7 +32,7 @@ const decodeHtmlEntities = (value) => {
   return textarea.value;
 };
 
-function buildAdvisoryItems(raw) {
+export function buildAdvisoryItems(raw) {
   if (!raw) return [];
   if (Array.isArray(raw) && raw.every((i) => typeof i === "string")) return raw.filter(Boolean);
 

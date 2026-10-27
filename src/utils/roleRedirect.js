@@ -8,12 +8,14 @@ export function normalizeRoleForRouting(role) {
   if (normalized === "ORGANIZER") {
     return "ORGANIZER";
   }
+  if (normalized === "SOCIAL_MEDIA_AGENT") return normalized;
 
   return "USER";
 }
 
 export function getDashboardPathForRole(role) {
   const normalized = normalizeRoleForRouting(role);
+  if (normalized === "SOCIAL_MEDIA_AGENT") return "/team/events";
 
   if (normalized === "PROMOTER") {
     return "/promoter/overview";

@@ -101,7 +101,9 @@ const ProtectedRoute = ({ children, requiredRole = null, skipOrganizerOnboarding
     };
     const acceptedRoles = roleAliases[normalizedRequiredRole] || [normalizedRequiredRole];
 
-    if (!acceptedRoles.includes(userRole)) {
+    const assignedRoles = user?.roles || [userRole];
+    const matches = assignedRoles.some(role => acceptedRoles.includes(role));
+    if (!matches) {
       console.warn(
         `Role mismatch: required one of [${acceptedRoles.join(", ")}], got "${userRole}"`
       );

@@ -11,7 +11,7 @@ import { PASSWORD_REQUIREMENTS_TEXT, isStrongPassword } from "@/utils/passwordRu
 import Logo from "../assets/android-chrome-192x192.png";
 
 const normalizeUserType = (value) => {
-  if (value === "user" || value === "organizer") {
+  if (value === "user" || value === "organizer" || value === "social_media_agent") {
     return value;
   }
 
@@ -23,6 +23,7 @@ const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const token = (searchParams.get("token") || "").trim();
   const userType = normalizeUserType(searchParams.get("type"));
+  const loginPath = userType === 'social_media_agent' ? '/team/login' : '/auth';
   const [form, setForm] = useState({ password: "", confirmPassword: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -56,7 +57,7 @@ const ResetPassword = () => {
       });
 
       navigate(
-        userType
+        userType === 'social_media_agent' ? '/team/login?reset=success' : userType
           ? `/auth?mode=login&reset=success&type=${userType}`
           : "/auth?mode=login&reset=success",
         { replace: true }
@@ -75,7 +76,7 @@ const ResetPassword = () => {
       <Button
         variant="ghost"
         className="absolute top-6 left-6 text-gray-400 hover:text-white hover:bg-gray-900 rounded-lg light:text-muted-foreground light:hover:text-foreground light:hover:bg-surface"
-        onClick={() => navigate("/auth")}
+        onClick={() => navigate(loginPath)}
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back
@@ -105,7 +106,7 @@ const ResetPassword = () => {
                   Request a fresh password reset email from the login page and use the newest link.
                 </p>
                 <Button asChild className="w-full">
-                  <Link to="/auth">Go to Login</Link>
+                  <Link to={loginPath}>Go to Login</Link>
                 </Button>
               </div>
             ) : (
@@ -197,7 +198,7 @@ const ResetPassword = () => {
                   type="button"
                   variant="ghost"
                   className="w-full text-gray-300 hover:text-white hover:bg-gray-800 light:text-muted-foreground light:hover:text-foreground light:hover:bg-surface"
-                  onClick={() => navigate("/auth")}
+                  onClick={() => navigate(loginPath)}
                 >
                   Back to login
                 </Button>
