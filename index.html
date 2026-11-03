@@ -1,16 +1,16 @@
 <!doctype html>
-<html lang="en" class="light">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <script>
       // Apply the saved palette before the app paints; storage may be blocked.
       (() => {
-        let theme = "light";
+        let theme = "dark";
         try {
           const saved = localStorage.getItem("mapmyparty-theme");
-          if (saved === "dark") theme = "dark";
-          else if (saved && saved !== "light") localStorage.removeItem("mapmyparty-theme");
-        } catch { /* Keep the light default when storage is unavailable. */ }
+          if (saved === "light" || saved === "dark") theme = saved;
+          else if (saved) localStorage.removeItem("mapmyparty-theme");
+        } catch { /* Keep the dark default when storage is unavailable. */ }
         document.documentElement.className = theme;
         document.documentElement.style.colorScheme = theme;
       })();

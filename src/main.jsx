@@ -7,7 +7,7 @@ import { useEffect } from "react";
 function ValidateTheme() {
   const { theme, setTheme } = useTheme();
   useEffect(() => {
-    if (theme !== "light" && theme !== "dark") setTheme("light");
+    if (theme !== "light" && theme !== "dark") setTheme("dark");
   }, [theme, setTheme]);
   return null;
 }
@@ -16,7 +16,7 @@ const rootElement = document.getElementById("root");
 if (rootElement) {
   const root = createRoot(rootElement);
   root.render(
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange storageKey="mapmyparty-theme">
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange storageKey="mapmyparty-theme">
       <ValidateTheme />
       <App />
     </ThemeProvider>,

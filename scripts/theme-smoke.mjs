@@ -113,9 +113,13 @@ try {
   const theme = value => `document.documentElement.classList.contains('${value}')`;
   const clickToggle = `Array.from(document.querySelectorAll('[data-theme-toggle]')).find(el => el.getBoundingClientRect().width > 0).click()`;
   await page.resize(1440);
-  await page.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'dark' }] });
+  await page.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'light' }] });
   await page.visit('/');
-  assert.equal(await page.evaluate(theme('light')), true, 'First visit defaults to light despite OS dark');
+  assert.equal(await page.evaluate(theme('dark')), true, 'First visit defaults to dark despite OS light');
+  await page.evaluate(clickToggle);
+  await page.until(theme('light'));
+  await page.visit('/');
+  assert.equal(await page.evaluate(theme('light')), true, 'Saved light survives reload');
   assert.equal(await page.evaluate('getComputedStyle(document.body).backgroundColor'), 'rgb(255, 255, 255)');
   assert.equal(await page.evaluate('getComputedStyle(document.querySelector("h1")).color'), 'rgb(255, 255, 255)', 'Media headline stays inverse');
   await page.screenshot('landing-light');
@@ -135,7 +139,7 @@ try {
   await second.evaluate(clickToggle);
   await page.until(theme('dark'));
   await second.evaluate('localStorage.setItem("mapmyparty-theme", "invalid")');
-  await page.until(theme('light'));
+  await page.until(theme('dark'));
   console.log('PASS default, toggle, persistence, tab sync, invalid preference');
 
   for (const [testRole, path] of [[null,'/auth'],['USER','/dashboard/bookings'],['ORGANIZER','/organizer/myevents'],['ADMIN','/promoter/overview']]) {
@@ -237,7 +241,7 @@ try {
   await page.visit('/auth');
   await page.evaluate(`localStorage.setItem('mapmyparty-theme','garbage')`);
   await page.visit('/auth');
-  assert.equal(await page.evaluate(theme('light')), true, 'Invalid saved value defaults to light');
+  assert.equal(await page.evaluate(theme('dark')), true, 'Invalid saved value defaults to dark');
   const blocked = await page.send('Page.addScriptToEvaluateOnNewDocument', { source: `
     for (const method of ['getItem','setItem','removeItem']) {
       const original = Storage.prototype[method];
@@ -247,9 +251,9 @@ try {
       };
     }` });
   await page.visit('/auth');
-  assert.equal(await page.evaluate(theme('light')), true);
+  assert.equal(await page.evaluate(theme('dark')), true);
   await page.evaluate(clickToggle);
-  await page.until(theme('dark'));
+  await page.until(theme('light'));
   await page.send('Page.removeScriptToEvaluateOnNewDocument', { identifier: blocked.identifier });
   assert.deepEqual(page.errors, [], 'No uncaught application errors');
   console.log('PASS unavailable storage; screenshots saved to ' + profile);
