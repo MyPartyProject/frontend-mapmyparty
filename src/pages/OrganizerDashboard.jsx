@@ -1419,7 +1419,11 @@ const OrganizerProfileContent = ({ user }) => {
                 <div className="rounded-xl border border-amber-400/25 bg-amber-500/10 px-4 py-3">
                   <p className="text-sm font-medium text-amber-200 light:text-warning">Bank verified; payouts still on hold</p>
                   <p className="text-xs text-white/55 mt-0.5 light:text-muted-foreground">
-                    {bankDraft.payoutCoolingOffUntil && new Date(bankDraft.payoutCoolingOffUntil) > new Date()
+                    {bankDraft.beneficiaryStatus === 'BENEFICIARY_SETUP_FAILED'
+                        ? 'Bank verified, but beneficiary setup failed. Contact support to recover the payout destination.'
+                        : !bankDraft.providerBeneficiaryId || bankDraft.beneficiaryStatus !== 'BENEFICIARY_VERIFIED'
+                        ? 'Bank verified. Cashfree beneficiary setup is pending.'
+                        : bankDraft.payoutCoolingOffUntil && new Date(bankDraft.payoutCoolingOffUntil) > new Date()
                         ? `Payouts are held until ${formatDate(bankDraft.payoutCoolingOffUntil)}.`
                         : `Cashfree beneficiary status: ${bankDraft.beneficiaryStatus || "Pending"}`}
                   </p>
