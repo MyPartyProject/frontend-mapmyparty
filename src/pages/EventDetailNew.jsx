@@ -61,6 +61,8 @@ import {
   resetSessionCache,
   isAuthenticated as isAuthedSync,
 } from "@/utils/auth";
+import OTPVerificationModal from "@/components/OTPVerificationModal";
+import { isStrongPassword, PASSWORD_REQUIREMENTS_TEXT } from "@/utils/passwordRules";
 import BillingDetailsModal from "@/components/BillingDetailsModal";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -210,6 +212,7 @@ const EventDetailNew = () => {
   const [ticketQuantities, setTicketQuantities] = useState({});
 
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [signupOtpEmail, setSignupOtpEmail] = useState("");
   const [billingModalOpen, setBillingModalOpen] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
@@ -1038,7 +1041,9 @@ const EventDetailNew = () => {
 
   const handleInlineSignup = async (e) => {
     e.preventDefault();
-    const { name, email, phone, password } = signupForm;
+    const name = signupForm.name.trim();
+    const email = signupForm.email.trim();
+    const { phone, password } = signupForm;
     if (!name || !email || !phone || !password) {
       toast.error("Please fill all fields");
       return;
@@ -1048,33 +1053,52 @@ const EventDetailNew = () => {
       toast.error("Please enter a valid phone number");
       return;
     }
+    if (!isStrongPassword(password)) {
+      toast.error(PASSWORD_REQUIREMENTS_TEXT);
+      return;
+    }
     setAuthLoading(true);
     try {
-      await apiFetch("auth/signup", {
+      await apiFetch("auth/send-signup-otp", {
         method: "POST",
-        body: JSON.stringify({
-          name,
-          email,
-          phone: phoneDigits,
-          password,
-          role: "USER",
-        }),
+        body: JSON.stringify({ name, email, phone: phoneDigits, password, role: "USER" }),
       });
+      setSignupOtpEmail(email);
+      setAuthModalOpen(false);
+      toast.success("Verification code sent to your email!");
+    } catch (err) {
+      toast.error(err?.message || "Failed to send verification code");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
+  const handleSignupOtpClose = () => {
+    setSignupOtpEmail("");
+    setAuthMode("signup");
+    setAuthModalOpen(true);
+  };
+
+  const handleSignupOtpSuccess = async () => {
+    const verifiedEmail = signupOtpEmail;
+    setSignupOtpEmail("");
+    setSignupForm((current) => ({ ...current, password: "" }));
+    setAuthLoading(true);
+    try {
       resetSessionCache();
       const session = await fetchSession(true);
-
       if (!session?.isAuthenticated) {
-        throw new Error("Signup succeeded but session validation failed");
+        throw new Error("Session validation failed");
       }
-
+      await syncAuthSession(session);
       setIsSessionAuthed(true);
       setSessionUser(session.user);
-      await syncAuthSession(session);
-      setAuthModalOpen(false);
       setBillingModalOpen(true);
-    } catch (err) {
-      toast.error(err?.message || "Signup failed");
+    } catch {
+      setLoginForm((current) => ({ ...current, email: verifiedEmail }));
+      setAuthMode("login");
+      setAuthModalOpen(true);
+      toast.error("Your email is verified. Please log in to continue your booking.");
     } finally {
       setAuthLoading(false);
     }
@@ -2783,7 +2807,7 @@ const EventDetailNew = () => {
                   {authLoading ? (
                     <span className="flex items-center justify-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Creating your account...
+                      Sending verification code...
                     </span>
                   ) : (
                     "Sign Up & Book"
@@ -2794,6 +2818,13 @@ const EventDetailNew = () => {
           </Tabs>
         </DialogContent>
       </Dialog>
+
+      <OTPVerificationModal
+        isOpen={Boolean(signupOtpEmail)}
+        email={signupOtpEmail}
+        onClose={handleSignupOtpClose}
+        onVerificationSuccess={handleSignupOtpSuccess}
+      />
 
       {/* Billing Details Modal */}
       <BillingDetailsModal
