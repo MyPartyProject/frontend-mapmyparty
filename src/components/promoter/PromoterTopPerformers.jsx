@@ -1,5 +1,5 @@
  import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, Users, Calendar, DollarSign } from "lucide-react";
+import { TrendingUp, Users, Calendar, IndianRupee } from "lucide-react";
 
 const PromoterTopPerformers = () => {
   const topEvents = [
@@ -100,7 +100,7 @@ const PromoterTopPerformers = () => {
                     <span>{event.ticketsSold} tickets</span>
                   </div>
                   <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 dark:bg-neutral-900/30 text-black dark:text-white font-semibold">
-                    <DollarSign className="w-3 h-3" />
+                    <IndianRupee className="w-3 h-3" />
                     <span>₹{event.revenue.toLocaleString()}</span>
                   </div>
                 </div>
@@ -138,7 +138,7 @@ const PromoterTopPerformers = () => {
                     <span>{organizer.totalEvents} events</span>
                   </div>
                   <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 font-semibold">
-                    <DollarSign className="w-3 h-3" />
+                    <IndianRupee className="w-3 h-3" />
                     <span>₹{organizer.totalRevenue.toLocaleString()}</span>
                   </div>
                 </div>

@@ -5,7 +5,7 @@ import {
   Download,
   Loader,
   BarChart2,
-  DollarSign,
+  IndianRupee,
   Ticket,
   Receipt,
   BadgePercent,
@@ -386,7 +386,7 @@ const EventAnalyticsPage = () => {
               accent="bg-violet-500/15 text-violet-400 light:text-accent-foreground"
             />
             <MetricCard
-              icon={DollarSign}
+              icon={IndianRupee}
               label="Total Revenue"
               value={fmt(s.totalRevenue)}
               accent="bg-emerald-500/15 text-emerald-400 light:text-success"
@@ -476,7 +476,7 @@ const EventAnalyticsPage = () => {
           ) : revenue.byTicketType?.length > 0 ? (
             <div className="rounded-xl bg-white/[0.03] ring-1 ring-white/[0.07] p-4 light:bg-muted light:ring-border">
               <h2 className="text-sm font-semibold mb-4 flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-emerald-400 light:text-success" />
+                <IndianRupee className="w-4 h-4 text-emerald-400 light:text-success" />
                 Revenue by Ticket Type
               </h2>
               <div className="flex items-center gap-4">

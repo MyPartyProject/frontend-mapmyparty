@@ -6,7 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader,
-  DollarSign,
+  IndianRupee,
   Calendar,
   Filter,
   Wallet2,
@@ -209,7 +209,7 @@ const OrganizerPayouts = () => {
           </div>
         ) : payouts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-white/40 light:text-muted-foreground">
-            <DollarSign className="w-8 h-8 mb-3 opacity-50" />
+            <IndianRupee className="w-8 h-8 mb-3 opacity-50" />
             <p className="text-sm font-medium">No payouts found</p>
             <p className="text-sm mt-1">Your payouts will appear here once processed.</p>
           </div>

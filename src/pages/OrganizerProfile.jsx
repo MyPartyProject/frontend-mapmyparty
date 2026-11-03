@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, Edit2, Save, X, CreditCard, DollarSign } from "lucide-react";
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, Edit2, Save, X, CreditCard, IndianRupee } from "lucide-react";
 
 const OrganizerProfile = () => {
   const navigate = useNavigate();
@@ -227,14 +227,14 @@ const OrganizerProfile = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
-                        <DollarSign className="w-4 h-4 text-green-600" />
+                        <IndianRupee className="w-4 h-4 text-green-600" />
                         <p className="text-sm text-gray-600">Total Ticket Sales</p>
                       </div>
                       <p className="text-2xl font-bold text-green-600">{user.paymentDetails.totalTicketSales}</p>
                     </div>
                     <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
-                        <DollarSign className="w-4 h-4 text-yellow-600" />
+                        <IndianRupee className="w-4 h-4 text-yellow-600" />
                         <p className="text-sm text-gray-600">Pending Payment</p>
                       </div>
                       <p className="text-2xl font-bold text-yellow-600">{user.paymentDetails.pendingPayment}</p>

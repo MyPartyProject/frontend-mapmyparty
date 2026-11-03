@@ -1,4 +1,4 @@
- import { Calendar, MapPin, Mail, Globe, DollarSign } from "lucide-react";
+ import { Calendar, MapPin, Mail, Globe, IndianRupee } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const EventDescription = ({
@@ -92,7 +92,7 @@ const EventDescription = ({
 
               <div className="flex items-start gap-3 group p-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-300">
                 <div className="p-2 rounded-xl bg-red-600 text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-md light:bg-secondary light:text-secondary-foreground">
-                  <DollarSign className="w-5 h-5" />
+                  <IndianRupee className="w-5 h-5" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm text-muted-foreground">Price Range</p>

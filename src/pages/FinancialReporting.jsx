@@ -5,7 +5,7 @@ import {
   Download,
   TrendingUp,
   TrendingDown,
-  DollarSign,
+  IndianRupee,
   PieChart as PieChartIcon,
   BarChart3,
   Wallet,
@@ -492,7 +492,7 @@ const FinancialReporting = () => {
                 <p className="text-sm text-white/60 light:text-muted-foreground">Gross sales (bookings.totalAmount)</p>
                 <p className="text-3xl font-extrabold mt-2">{formatINR(summary.grossSales)}</p>
               </div>
-              <DollarSign className="w-10 h-10 text-emerald-200/70 light:text-success" />
+              <IndianRupee className="w-10 h-10 text-emerald-200/70 light:text-success" />
             </div>
             <div className="mt-3 flex items-center gap-2 text-emerald-300 text-sm light:text-success">
               <TrendingUp className="w-4 h-4" />

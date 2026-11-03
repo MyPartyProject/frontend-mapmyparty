@@ -6,7 +6,7 @@ import AnalyticsProgressBar from "@/components/analytics/AnalyticsProgressBar";
 import { 
   Calendar, 
   Users, 
-  DollarSign, 
+  IndianRupee,
   TrendingUp, 
   Activity,
   BarChart3,
@@ -137,7 +137,7 @@ const EventDetailModal = ({ isOpen, onClose, event }) => {
       title: "Total Revenue",
       value: `₹${event.revenue.toLocaleString()}`,
       change: "+24% from target",
-      icon: DollarSign,
+      icon: IndianRupee,
       color: ANALYTICS_COLORS.primary,
       bgColor: "bg-teal-100 dark:bg-teal-900/20",
     },

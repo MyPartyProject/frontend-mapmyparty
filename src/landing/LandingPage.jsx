@@ -29,36 +29,36 @@ import { createEventCategoryFilter } from "@/config/eventCategories";
 const PICK_YOUR_VIBE_SECTION_CONFIG = [
   {
     key: "concerts",
-    label: "Concerts",
+    label: "Live",
     eyebrow: "Live",
-    description: "Arena shows, acoustic nights, and high-energy concert moments.",
+    description: "Arena tours, stadium shows, acoustic sets, and headliner performances.",
     icon: Music2,
     image: "/images/ph1.jpg",
     filters: createEventCategoryFilter("Concerts", "Live Concerts"),
   },
   {
     key: "club-nights",
-    label: "Club Nights",
+    label: "Nightlife",
     eyebrow: "Nightlife",
-    description: "Late-night dance floors, DJs, and bottle-service energy.",
+    description: "Late-night dance floors, resident DJs, guest sets, and high-energy nightlife.",
     icon: Sparkles,
     image: "/images/ph1.jpg",
     filters: createEventCategoryFilter("Music", "Club Nights"),
   },
   {
     key: "music-festivals",
-    label: "Music Festivals",
-    eyebrow: "Festival",
-    description: "Outdoor stages, immersive lineups, and all-day memories.",
+    label: "Festivals",
+    eyebrow: "Festivals",
+    description: "Multi-stage lineups, outdoor festivals, immersive production, and all-day music.",
     icon: Music2,
     image: "/images/ph3.jpg",
     filters: createEventCategoryFilter("Music", "Music Festivals"),
   },
   {
     key: "sports",
-    label: "Sports",
-    eyebrow: "Action",
-    description: "Matches, tournaments, and crowd-pumping live sports events.",
+    label: "Electronic/Rave",
+    eyebrow: "Electronic",
+    description: "Techno, house, warehouse raves, boiler-room vibes, and electronic showcases.",
     icon: Trophy,
     image: "/images/ph2.jpg",
     filters: createEventCategoryFilter("Sports", "Live Sports"),
@@ -66,9 +66,9 @@ const PICK_YOUR_VIBE_SECTION_CONFIG = [
   },
   {
     key: "movies",
-    label: "Movies",
-    eyebrow: "Cinema",
-    description: "Screenings, premieres, and film nights with a big-screen feel.",
+    label: "Accoustic/Underground",
+    eyebrow: "Underground",
+    description: "Jazz lounges, indie acoustic nights, open mics, and intimate secret sessions.",
     icon: Clapperboard,
     image: eventFallback,
     filters: createEventCategoryFilter("Movies", "Movie Screenings"),
@@ -1135,7 +1135,7 @@ const LandingPage = () => {
                           </div>
                         </div>
                         <div className="relative flex flex-1 flex-col p-4 pb-[11px]">
-                          <h3 className="h-14 shrink-0 line-clamp-2 text-xl font-black text-foreground">
+                          <h3 className="min-h-14 shrink-0 text-xl font-black text-foreground [overflow-wrap:anywhere]">
                             {section.label}
                           </h3>
                           <p className="mt-2 h-[4.5rem] shrink-0 line-clamp-3 text-sm leading-6 text-muted-foreground light:text-foreground/85">

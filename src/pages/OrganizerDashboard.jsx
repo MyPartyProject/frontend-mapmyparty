@@ -46,7 +46,7 @@ import {
   ImagePlus,
   Upload,
   CupSoda,
-  Receipt,
+  IndianRupee,
   LifeBuoy,
 } from "lucide-react";
 import FinancialReporting from "./FinancialReporting";
@@ -1599,7 +1599,7 @@ const OrganizerDashboard = () => {
   const navItems = [
     { id: "dashboard", name: "Dashboard", icon: <Home className="w-6 h-6 mr-3" /> },
     { id: "myevents", name: "My Events", icon: <Calendar className="w-6 h-6 mr-3" /> },
-    { id: "bookings", name: "My Bookings", icon: <Receipt className="w-6 h-6 mr-3" /> },
+    { id: "bookings", name: "My Bookings", icon: <IndianRupee className="w-6 h-6 mr-3" /> },
     { id: "analytics", name: "Audience Analytics", icon: <Users className="w-6 h-6 mr-3" /> },
     { id: "live", name: "Live Events", icon: <Radio className="w-6 h-6 mr-3" /> },
     { id: "reception", name: "Reception", icon: <Shield className="w-6 h-6 mr-3" /> },

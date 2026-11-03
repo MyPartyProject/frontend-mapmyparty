@@ -12,7 +12,7 @@ import {
   ChevronRight,
   CheckCircle2,
   XCircle,
-  DollarSign,
+  IndianRupee,
   Ticket,
 } from "lucide-react";
 
@@ -130,7 +130,7 @@ const EventAttendees = () => {
           </div>
           <div className="bg-white/5 border border-white/10 rounded-xl p-4 light:bg-muted light:border-border">
             <div className="flex items-center gap-2 text-white/50 text-xs mb-1 light:text-muted-foreground">
-              <DollarSign className="w-3.5 h-3.5" /> Revenue
+              <IndianRupee className="w-3.5 h-3.5" /> Revenue
             </div>
             <p className="text-xl font-bold text-white light:text-foreground">
               Rs. {stats.totalRevenue?.toLocaleString("en-IN")}

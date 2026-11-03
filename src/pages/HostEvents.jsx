@@ -8,10 +8,11 @@ import {
   CalendarDays,
   Kanban,
   LineChart,
+  MapPin,
+  Music2,
   PencilLine,
   QrCode,
   Rocket,
-  Save,
   ScanLine,
   ShieldCheck,
   Sparkles,
@@ -21,10 +22,26 @@ import {
 } from "lucide-react";
 
 const highlights = [
-  { title: "Organizer setup", value: "Profile + bank", icon: ShieldCheck },
-  { title: "Event editing", value: "Save by section", icon: Save },
-  { title: "Reception ops", value: "QR + manual", icon: QrCode },
-  { title: "Reporting", value: "Analytics + payouts", icon: BarChart3 },
+  {
+    title: "Instant Ticketing",
+    value: "Seamless booking and instant QR ticket delivery in seconds.",
+    icon: QrCode,
+  },
+  {
+    title: "Live Discovery",
+    value: "Discover verified nightlife, concerts, and festivals happening near you.",
+    icon: MapPin,
+  },
+  {
+    title: "Curated Lineups",
+    value: "Handpicked events featuring top local and international artists.",
+    icon: Music2,
+  },
+  {
+    title: "Partner Growth",
+    value: "Powerful tools for organizers to host, manage, and scale events effortlessly",
+    icon: LineChart,
+  },
 ];
 
 const organizerBenefits = [
@@ -207,8 +224,8 @@ const HostEvents = () => {
                     <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl border border-[#A855F7]/25 bg-[#A855F7]/10 text-[#C084FC] light:border-primary/25 light:bg-primaryCTA/10 light:text-accent-foreground">
                       <Icon className="h-5 w-5" />
                     </div>
-                    <div className="text-xs text-muted-foreground">{title}</div>
-                    <div className="host-events__metric mt-1.5 font-semibold text-foreground">{value}</div>
+                    <div className="text-base font-semibold text-foreground">{title}</div>
+                    <div className="mt-1.5 text-sm leading-6 text-muted-foreground">{value}</div>
                   </div>
                 ))}
               </div>
