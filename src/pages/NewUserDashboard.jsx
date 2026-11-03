@@ -1,3 +1,4 @@
+import { getInitials } from "@/utils/userInitials";
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
 import {
@@ -55,19 +56,7 @@ const POPULAR_CITIES = [
   { name: "Kochi", icon: "🌴", landmark: "Backwaters" },
 ];
 
-const getInitials = (name, email) => {
-  if (name) {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length === 1) {
-      return parts[0].slice(0, 2).toUpperCase();
-    }
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  }
-  if (email) {
-    return email.slice(0, 2).toUpperCase();
-  }
-  return "U";
-};
+
 
 const getStoredUserInfo = () => {
   let storedProfile = {};
@@ -578,7 +567,7 @@ const NewUserDashboard = () => {
               <Button variant="ghost" className="h-9 pl-1.5 pr-3 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] light:bg-muted light:hover:bg-muted light:border-border">
                 <Avatar className="h-6 w-6">
                   <AvatarImage src={userInfo.avatar} />
-                  <AvatarFallback className="bg-[#D60024] text-white text-[10px] font-bold light:bg-primaryCTA light:text-inverse">
+                  <AvatarFallback className="profile-initials">
                     {getInitials(userInfo.name, userInfo.email)}
                   </AvatarFallback>
                 </Avatar>
@@ -593,7 +582,7 @@ const NewUserDashboard = () => {
                 <div className="flex items-center gap-3">
                   <Avatar className="h-9 w-9">
                     <AvatarImage src={userInfo.avatar} />
-                    <AvatarFallback className="bg-[#D60024] text-white text-xs font-bold light:bg-primaryCTA light:text-inverse">
+                    <AvatarFallback className="profile-initials">
                       {getInitials(userInfo.name, userInfo.email)}
                     </AvatarFallback>
                   </Avatar>
@@ -645,7 +634,7 @@ const NewUserDashboard = () => {
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
                 <Avatar className="h-7 w-7">
                   <AvatarImage src={userInfo.avatar} />
-                  <AvatarFallback className="bg-[#D60024] text-white text-[10px] font-bold light:bg-primaryCTA light:text-inverse">
+                  <AvatarFallback className="profile-initials">
                     {getInitials(userInfo.name, userInfo.email)}
                   </AvatarFallback>
                 </Avatar>

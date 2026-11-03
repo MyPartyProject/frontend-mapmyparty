@@ -1,3 +1,4 @@
+import { getInitials } from "@/utils/userInitials";
 import { useEffect, useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { toast } from "sonner";
@@ -26,14 +27,7 @@ import {
   Wallet2,
 } from "lucide-react";
 
-const getInitials = (name, email) => {
-  if (name) {
-    const parts = name.trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-  }
-  return (email || "PR").slice(0, 2).toUpperCase();
-};
+
 
 const formatDate = (value) => {
   if (!value) return "Unknown";
@@ -199,7 +193,7 @@ const PromoterProfile = () => {
             <div className="flex flex-col gap-5 sm:flex-row sm:items-end">
               <Avatar className="h-24 w-24 border-4 border-background shadow-[var(--shadow-card)] sm:h-28 sm:w-28">
                 <AvatarImage src={form.avatar || profile?.avatar || ""} alt={profile?.name || "Promoter"} />
-                <AvatarFallback className="bg-primary/20 text-2xl font-semibold text-primary-foreground">
+                <AvatarFallback className="profile-initials">
                   {getInitials(profile?.name, profile?.email)}
                 </AvatarFallback>
               </Avatar>
@@ -309,7 +303,7 @@ const PromoterProfile = () => {
                   <div className="mt-4 flex items-center gap-3">
                     <Avatar className="h-14 w-14 border border-border/60">
                       <AvatarImage src={form.avatar || profile?.avatar || ""} alt={form.name || profile?.name || "Promoter"} />
-                      <AvatarFallback className="bg-primary/20 text-primary-foreground">
+                      <AvatarFallback className="profile-initials">
                         {getInitials(form.name || profile?.name, form.email || profile?.email)}
                       </AvatarFallback>
                     </Avatar>

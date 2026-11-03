@@ -1,3 +1,4 @@
+import { getInitials } from "@/utils/userInitials";
 import { bankVerificationMessage } from "@/utils/bankInput";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -991,7 +992,7 @@ const OrganizerProfileContent = ({ user }) => {
                 {displayedOrganizerLogo ? (
                   <img src={displayedOrganizerLogo} alt={editData.name} className="w-full h-full object-cover object-center" />
                 ) : (
-                  (editData.name || "U").charAt(0).toUpperCase()
+                  <span className="profile-initials h-full w-full">{getInitials(editData.name, editData.email)}</span>
                 )}
               </div>
               <div className="text-white space-y-2 light:text-foreground">
@@ -1696,8 +1697,8 @@ const OrganizerDashboard = () => {
             >
               <Avatar className="h-10 w-10 rounded-full border-0 ring-0">
                 <AvatarImage src={user.logo} alt={user.name} className="object-cover object-center" />
-                <AvatarFallback className="bg-gradient-to-br from-red-500/30 via-blue-500/30 to-red-500/30 text-red-100 font-semibold light:text-secondary-foreground light:from-secondary light:via-secondary light:to-secondary">
-                  {(user.name || "U").charAt(0).toUpperCase()}
+                <AvatarFallback className="profile-initials">
+                  {getInitials(user.name, user.email)}
                 </AvatarFallback>
               </Avatar>
               {sidebarOpen && (
@@ -1724,7 +1725,7 @@ const OrganizerDashboard = () => {
                     }}
                     className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition light:bg-muted light:border-border light:text-foreground light:hover:bg-muted"
                   >
-                    <User className="w-4 h-4" />
+                    <span aria-hidden="true" className="w-4 h-4 inline-flex shrink-0 items-center justify-center text-[10px] font-semibold leading-none profile-initials profile-initials-small">{getInitials(user.name, user.email)}</span>
                     {sidebarOpen && <span>My Profile</span>}
                   </button>
                   <button

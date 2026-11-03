@@ -1164,3 +1164,65 @@ html.light[data-organizer-ui] :is([role="dialog"], [role="menu"], [role="listbox
   border-radius: 16px;
   border-color: hsl(var(--border));
 }
+
+/* Signed-in profile initials: scoped so photos and other controls keep their styling. */
+.profile-initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  border-radius: 9999px;
+  background: #F3E8FF;
+  color: #732F9B;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.h-6 > .profile-initials { font-size: 12px; }
+.h-8 > .profile-initials { font-size: 16px; }
+.h-16 > .profile-initials, .h-20 > .profile-initials,
+.h-24 > .profile-initials { font-size: 24px; }
+.profile-initials.profile-initials-small { font-size: 10px; }
+button.profile-initials-trigger {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: #F3E8FF;
+  color: #732F9B;
+  transition: width 250ms ease-out;
+}
+.profile-trigger-initials, .profile-trigger-label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  font-weight: 600;
+  transition: opacity 250ms ease-out;
+  pointer-events: none;
+}
+.profile-trigger-initials { font-size: 16px; text-transform: uppercase; }
+.profile-trigger-label { font-size: 14px; opacity: 0; }
+html.dark .profile-initials,
+html.dark button.profile-initials-trigger {
+  background: #9547BD;
+  color: #FFFFFF;
+}
+button.profile-initials-trigger:focus-visible { width: 88px; }
+.profile-initials-trigger:focus-visible .profile-trigger-initials { opacity: 0; }
+.profile-initials-trigger:focus-visible .profile-trigger-label { opacity: 1; }
+@media (hover: hover) and (pointer: fine) {
+  button.profile-initials-trigger:hover { width: 88px; }
+  .profile-initials-trigger:hover .profile-trigger-initials { opacity: 0; }
+  .profile-initials-trigger:hover .profile-trigger-label { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  button.profile-initials-trigger, .profile-trigger-initials, .profile-trigger-label { transition: none; }
+}

@@ -1,3 +1,4 @@
+import { getInitials } from "@/utils/userInitials";
 import { useAdminTaskSummary } from '@/hooks/useAdminTaskSummary';
 import { useMemo, useState, useEffect, useRef } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
@@ -21,7 +22,6 @@ import {
   Search,
   ChevronLeft,
   Menu,
-  User,
   LogOut,
   ChevronDown,
   FileText,
@@ -680,8 +680,8 @@ const PromoterDashboard = () => {
               }`}
               title={!expanded ? user.name || "Promoter" : undefined}
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/30 bg-primary/20 font-semibold text-primary-foreground light:text-accent-foreground">
-                {(user.name || "P").charAt(0).toUpperCase()}
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/30 bg-primary/20 font-semibold text-primary-foreground light:text-accent-foreground profile-initials">
+                {getInitials(user.name, user.email)}
               </div>
               {expanded && (
                 <>
@@ -711,7 +711,7 @@ const PromoterDashboard = () => {
                   }}
                   className="flex h-10 w-full items-center gap-2 rounded-xl border border-sidebar-border/60 bg-sidebar-accent/35 px-3 text-sm text-foreground transition-all duration-200 hover:bg-sidebar-accent/65"
                 >
-                  <User className="h-4 w-4" />
+                  <span aria-hidden="true" className="h-4 w-4 inline-flex shrink-0 items-center justify-center text-[10px] font-semibold leading-none profile-initials profile-initials-small">{getInitials(user?.name, user?.email)}</span>
                   <span>My Profile</span>
                 </button>
                 <button
@@ -737,7 +737,7 @@ const PromoterDashboard = () => {
                     }}
                     className="flex h-10 w-full items-center gap-2 rounded-xl border border-sidebar-border/60 bg-sidebar-accent/35 px-3 text-sm text-foreground transition-all duration-200 hover:bg-sidebar-accent/65"
                   >
-                    <User className="h-4 w-4" />
+                    <span aria-hidden="true" className="h-4 w-4 inline-flex shrink-0 items-center justify-center text-[10px] font-semibold leading-none profile-initials profile-initials-small">{getInitials(user?.name, user?.email)}</span>
                     <span>My Profile</span>
                   </button>
                   <button

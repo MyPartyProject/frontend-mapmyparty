@@ -1,3 +1,4 @@
+import { getInitials } from "@/utils/userInitials";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,13 +15,7 @@ const formatDate = (value) => {
   return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 };
 
-const getInitials = (name, email) => {
-  const source = (name || email || "").trim();
-  if (!source) return "U";
-  const parts = source.split(/\s+/).filter(Boolean);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-};
+
 
 const roleLabel = (roles = []) => {
   if (!Array.isArray(roles) || roles.length === 0) return "Attendee";
@@ -139,7 +134,7 @@ export default function AttendeeProfile() {
         <div className="flex flex-col sm:flex-row sm:items-start gap-5">
           <Avatar className="h-20 w-20 border border-white/20 light:border-border">
             <AvatarImage src={profile.avatar || undefined} alt={fullName} />
-            <AvatarFallback className="bg-white/10 text-white text-lg light:bg-muted light:text-foreground">
+            <AvatarFallback className="profile-initials">
               {getInitials(fullName, email)}
             </AvatarFallback>
           </Avatar>

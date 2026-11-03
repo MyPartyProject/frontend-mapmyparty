@@ -1,3 +1,4 @@
+import { getInitials } from "@/utils/userInitials";
 import { useTheme } from "next-themes";
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -101,15 +102,7 @@ const formatDate = (value) => {
   return new Intl.DateTimeFormat(undefined, { year: "numeric", month: "long", day: "numeric" }).format(date);
 };
 
-const getInitials = (name, email) => {
-  if (name) {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  }
-  if (email) return email.slice(0, 2).toUpperCase();
-  return "U";
-};
+
 
 export default function UserProfile() {
   const { theme } = useTheme();
@@ -391,7 +384,7 @@ export default function UserProfile() {
                     {profile.avatarUrl ? (
                       <AvatarImage src={profile.avatarUrl} alt={profile.name} />
                     ) : (
-                      <AvatarFallback className="text-xl font-bold bg-[#D60024] text-white light:bg-primaryCTA light:text-inverse">
+                      <AvatarFallback className="profile-initials">
                         {getInitials(profile.name, profile.email)}
                       </AvatarFallback>
                     )}

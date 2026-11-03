@@ -1,3 +1,4 @@
+import { getInitials } from "@/utils/userInitials";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -5,26 +6,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, X, ChevronDown, User, Ticket, LogOut, Search } from "lucide-react";
+import { Menu, X, ChevronDown, Ticket, LogOut, Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import logo from "@/assets/MMP logo.svg";
 import { useAuth } from "@/contexts/AuthContext";
 
-const getInitials = (name, email) => {
-  if (name) {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length === 1) {
-      return parts[0].slice(0, 2).toUpperCase();
-    }
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  }
-  if (email) {
-    return email.slice(0, 2).toUpperCase();
-  }
-  return "U";
-};
+
 
 const UserDashboardHeader = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -85,7 +74,7 @@ const UserDashboardHeader = () => {
                 <Button variant="ghost" className="gap-2 px-3 h-10 rounded-full border border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] text-white light:text-foreground">
                   <Avatar className="h-8 w-8 bg-[#000000] ring-1 ring-[rgba(255,255,255,0.18)] light:bg-background">
                     <AvatarImage src="https://github.com/shadcn.png" alt="User" />
-                    <AvatarFallback className="bg-[rgba(255,255,255,0.08)] text-white text-sm font-medium light:text-foreground">{getInitials(userInfo.name, userInfo.email)}</AvatarFallback>
+                    <AvatarFallback className="profile-initials">{getInitials(userInfo.name, userInfo.email)}</AvatarFallback>
                   </Avatar>
                   <span className="hidden md:inline-flex items-center text-sm font-medium text-white light:text-foreground">
                     {userInfo.name}
@@ -103,7 +92,7 @@ const UserDashboardHeader = () => {
                   onClick={() => navigate("/dashboard/profile")}
                   className="cursor-pointer hover:bg-[rgba(255,255,255,0.08)]"
                 >
-                  <User className="mr-2 h-4 w-4" />
+                  <span aria-hidden="true" className="mr-2 h-4 w-4 inline-flex shrink-0 items-center justify-center text-[10px] font-semibold leading-none profile-initials profile-initials-small">{getInitials(userInfo?.name, userInfo?.email)}</span>
                   My Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem

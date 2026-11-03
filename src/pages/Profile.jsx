@@ -1,3 +1,4 @@
+import { getInitials } from "@/utils/userInitials";
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -132,19 +133,7 @@ const formatDate = (value) => {
   }).format(date);
 };
 
-const getInitials = (name, email) => {
-  if (name) {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length === 1) {
-      return parts[0].slice(0, 2).toUpperCase();
-    }
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  }
-  if (email) {
-    return email.slice(0, 2).toUpperCase();
-  }
-  return "U";
-};
+
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -572,7 +561,7 @@ const Profile = () => {
                                 {profile.avatarUrl ? (
                                   <AvatarImage src={profile.avatarUrl} alt={profile.name} />
                                 ) : (
-                                  <AvatarFallback className="text-xl font-semibold">
+                                  <AvatarFallback className="profile-initials">
                                     {getInitials(profile.name, profile.email)}
                                   </AvatarFallback>
                                 )}

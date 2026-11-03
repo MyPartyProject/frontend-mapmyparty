@@ -1,3 +1,4 @@
+import { getInitials } from "@/utils/userInitials";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import {
@@ -156,6 +157,7 @@ const Header = ({
   const navigate = useNavigate();
   const location = useLocation();
   const {
+    user: contextUser,
     isAuthenticated: contextIsAuthenticated,
     role: contextRole,
     logout: contextLogout,
@@ -724,11 +726,11 @@ const Header = ({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className={expandingActionButtonClass}
+                        className={`profile-initials-trigger ${isLandingPage ? "h-[38px] w-[38px]" : "h-8 w-8"}`}
                         aria-label="Profile"
                       >
-                        <User className="h-4 w-4" />
-                        <span aria-hidden="true" className={expandingActionLabelClass}>Profile</span>
+                        <span aria-hidden="true" className="profile-trigger-initials">{getInitials(contextUser?.name, contextUser?.email)}</span>
+                        <span aria-hidden="true" className="profile-trigger-label">Profile</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -739,7 +741,7 @@ const Header = ({
                         onClick={handleProfileNav}
                         className={dropdownItemClass}
                       >
-                        <User className="mr-2 h-4 w-4" />
+                        <span aria-hidden="true" className="mr-2 h-4 w-4 inline-flex shrink-0 items-center justify-center text-[10px] font-semibold leading-none profile-initials profile-initials-small">{getInitials(contextUser?.name, contextUser?.email)}</span>
                         Profile
                       </DropdownMenuItem>
                       <DropdownMenuItem
@@ -765,11 +767,11 @@ const Header = ({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={expandingActionButtonClass}
+                      className={`profile-initials-trigger ${isLandingPage ? "h-[38px] w-[38px]" : "h-8 w-8"}`}
                       aria-label="Profile"
                     >
-                      <User className="h-4 w-4" />
-                      <span aria-hidden="true" className={expandingActionLabelClass}>Profile</span>
+                      <span aria-hidden="true" className="profile-trigger-initials">{getInitials(contextUser?.name, contextUser?.email)}</span>
+                      <span aria-hidden="true" className="profile-trigger-label">Profile</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
@@ -780,7 +782,7 @@ const Header = ({
                       onClick={() => navigate("/promoter/profile")}
                       className={dropdownItemClass}
                     >
-                      <User className="mr-2 h-4 w-4" />
+                      <span aria-hidden="true" className="mr-2 h-4 w-4 inline-flex shrink-0 items-center justify-center text-[10px] font-semibold leading-none profile-initials profile-initials-small">{getInitials(contextUser?.name, contextUser?.email)}</span>
                       My Profile
                     </DropdownMenuItem>
                     <DropdownMenuItem
@@ -1015,7 +1017,7 @@ const Header = ({
                               }}
                               className={mobileMenuItemClass}
                             >
-                              <User className="h-4 w-4" />
+                              <span aria-hidden="true" className="h-4 w-4 inline-flex shrink-0 items-center justify-center text-[10px] font-semibold leading-none profile-initials profile-initials-small">{getInitials(contextUser?.name, contextUser?.email)}</span>
                               Profile
                             </Button>
                             <Button
@@ -1051,7 +1053,7 @@ const Header = ({
                               }}
                               className={mobileMenuItemClass}
                             >
-                              <User className="h-4 w-4" />
+                              <span aria-hidden="true" className="h-4 w-4 inline-flex shrink-0 items-center justify-center text-[10px] font-semibold leading-none profile-initials profile-initials-small">{getInitials(contextUser?.name, contextUser?.email)}</span>
                               My Profile
                             </Button>
                             <Button

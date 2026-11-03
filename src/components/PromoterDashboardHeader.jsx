@@ -1,3 +1,4 @@
+import { getInitials } from "@/utils/userInitials";
 import { useState, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
@@ -25,19 +26,7 @@ import { toast } from "sonner";
 import logoSvg from '@/assets/MMP logo.svg';
 import { useAuth } from "@/contexts/AuthContext";
 
-const getInitials = (name, email) => {
-    if (name) {
-        const parts = name.trim().split(/\s+/);
-        if (parts.length === 1) {
-            return parts[0].slice(0, 2).toUpperCase();
-        }
-        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    if (email) {
-        return email.slice(0, 2).toUpperCase();
-    }
-    return "U";
-};
+
 
 const getStoredUserInfo = () => {
     let storedProfile = {};
@@ -132,7 +121,7 @@ const PromoterDashboardHeader = ({ isHeaderVisible = true }) => {
                                 >
                                     <Avatar className="h-8 w-8 bg-[#000000] ring-2 ring-[rgba(255,255,255,0.2)] light:bg-background">
                                         <AvatarImage src={userInfo.avatar} />
-                                        <AvatarFallback className="bg-gradient-to-br from-[#D60024] to-[#ff4d67] text-white font-bold text-sm light:from-primaryCTA light:to-primaryCTA-hover light:text-inverse">
+                                        <AvatarFallback className="profile-initials">
                                             {getInitials(userInfo.name, userInfo.email)}
                                         </AvatarFallback>
                                     </Avatar>
@@ -151,7 +140,7 @@ const PromoterDashboardHeader = ({ isHeaderVisible = true }) => {
                                     <div className="flex items-center gap-3 rounded-lg bg-[rgba(255,255,255,0.05)] p-3 hover:bg-[rgba(255,255,255,0.08)] transition-all duration-300">
                                         <Avatar className="h-10 w-10 bg-[#000000] ring-2 ring-[rgba(255,255,255,0.2)] light:bg-background">
                                             <AvatarImage src={userInfo.avatar} />
-                                            <AvatarFallback className="bg-gradient-to-br from-[#D60024] to-[#ff4d67] text-white font-bold light:from-primaryCTA light:to-primaryCTA-hover light:text-inverse">
+                                            <AvatarFallback className="profile-initials">
                                                 {getInitials(userInfo.name, userInfo.email)}
                                             </AvatarFallback>
                                         </Avatar>
