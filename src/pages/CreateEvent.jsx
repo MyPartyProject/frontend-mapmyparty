@@ -2769,15 +2769,15 @@ const CreateEvent = () => {
       for (const file of validFiles) {
         const res = await uploadDraftImage(file, 'gallery');
         uploads.push(res);
+        if (res.url) {
+          setGalleryImages((prev) => [...prev, res.url]);
+          if (res.publicId) {
+            setDraftGalleryUploads((prev) => [...prev, { url: res.url, publicId: res.publicId }]);
+            setGalleryImageStorageKeys((prev) => ({ ...prev, [res.url]: res.publicId }));
+          }
+          setImagesChanged(true);
+        }
       }
-
-      const newUrls = uploads.map((u) => u.url).filter(Boolean);
-      const newDrafts = uploads.map((u) => ({ url: u.url, publicId: u.publicId })).filter((u) => u.url && u.publicId);
-
-      setGalleryImages((prev) => [...prev, ...newUrls]);
-      setDraftGalleryUploads((prev) => [...prev, ...newDrafts]);
-      setGalleryImageStorageKeys((prev) => ({ ...prev, ...newDrafts.reduce((acc, d) => ({ ...acc, [d.url]: d.publicId }), {}) }));
-      setImagesChanged(true);
 
       toast.success(`${uploads.length} gallery image(s) uploaded.`);
     } catch (error) {
@@ -4363,7 +4363,7 @@ const CreateEvent = () => {
                             style={{ gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))" }}
                           >
                             {galleryImages.map((img, index) => (
-                              <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-border/50 group bg-background/60">
+                              <div key={img} className="relative aspect-square rounded-lg overflow-hidden border border-border/50 group bg-background/60 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 motion-safe:duration-300 motion-safe:ease-out motion-reduce:animate-none">
                                 <img
                                   src={img}
                                   alt={`Gallery preview ${index + 1}`}
