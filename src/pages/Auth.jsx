@@ -89,15 +89,16 @@ const Auth = () => {
   const [showSignupPassword, setShowSignupPassword] = useState(false);
 
   const initialEmail = searchParams.get("email") || "";
-  const [loginForm, setLoginForm] = useState({
-    ...EMPTY_LOGIN_FORM,
-    email: initialEmail,
-  });
-  const [signupForm, setSignupForm] = useState({
-    ...EMPTY_SIGNUP_FORM,
-    email: initialEmail,
-  });
+  const [loginForm, setLoginForm] = useState({ ...EMPTY_LOGIN_FORM });
+  const [signupForm, setSignupForm] = useState({ ...EMPTY_SIGNUP_FORM });
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState(initialEmail);
+
+  useEffect(() => {
+    setLoginForm({ ...EMPTY_LOGIN_FORM });
+    setSignupForm({ ...EMPTY_SIGNUP_FORM });
+    setShowLoginPassword(false);
+    setShowSignupPassword(false);
+  }, [userType, isLogin]);
 
   useEffect(() => {
     if (searchParams.get("reset") !== "success") {
@@ -536,6 +537,7 @@ const Auth = () => {
                   <>
                     <form
                       onSubmit={(event) => handleLoginSubmit(event, userType)}
+                      autoComplete="off"
                       className="space-y-3.5"
                     >
                       <div className="space-y-2">
@@ -547,6 +549,9 @@ const Auth = () => {
                         </Label>
                         <Input
                           id="email"
+                          autoComplete="off"
+                          autoCapitalize="none"
+                          spellCheck={false}
                           type="email"
                           placeholder="Enter your email"
                           required
@@ -570,6 +575,9 @@ const Auth = () => {
                         <div className="relative">
                           <Input
                             id="password"
+                            autoComplete="off"
+                            autoCapitalize="none"
+                            spellCheck={false}
                             type={showLoginPassword ? "text" : "password"}
                             placeholder="Enter your password"
                             required
@@ -679,6 +687,7 @@ const Auth = () => {
               <TabsContent value="signup" className="space-y-3.5 mt-0">
                 <form
                   onSubmit={(event) => handleSignupSubmit(event, userType)}
+                  autoComplete="off"
                   className="space-y-3.5"
                 >
                   <div className="space-y-2">
@@ -690,6 +699,8 @@ const Auth = () => {
                     </Label>
                     <Input
                       id="name"
+                      autoComplete="off"
+                      spellCheck={false}
                       placeholder="Enter your full name"
                       required
                       value={signupForm.name}
@@ -711,6 +722,9 @@ const Auth = () => {
                     </Label>
                     <Input
                       id="signup-email"
+                      autoComplete="off"
+                      autoCapitalize="none"
+                      spellCheck={false}
                       type="email"
                       placeholder="Enter your email"
                       required
@@ -733,6 +747,7 @@ const Auth = () => {
                     </Label>
                     <Input
                       id="signup-phone"
+                      autoComplete="off"
                       {...PHONE_INPUT_PROPS}
                       placeholder="10 digit phone number"
                       required
@@ -756,6 +771,9 @@ const Auth = () => {
                     <div className="relative">
                       <Input
                         id="signup-password"
+                        autoComplete="off"
+                        autoCapitalize="none"
+                        spellCheck={false}
                         type={showSignupPassword ? "text" : "password"}
                         placeholder="Create a password"
                         required

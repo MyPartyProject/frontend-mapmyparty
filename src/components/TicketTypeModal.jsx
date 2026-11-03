@@ -386,7 +386,8 @@ const TicketTypeModal = ({ open, onClose, ticketType, onSave, initialTicket = nu
                       Mark as Coming Soon
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  {/* Door-only ticket creation is temporarily hidden; preserve existing ticket values. */}
+                  <div className="hidden">
                     <Checkbox
                       id="onsiteOnly"
                       checked={onsiteOnly}
