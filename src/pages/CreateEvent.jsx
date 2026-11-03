@@ -173,6 +173,12 @@ const extractArtistList = (payload) => {
   return candidates.find(Array.isArray) || [];
 };
 
+const scheduleCalendarClassNames = {
+  caption: "relative flex min-h-10 items-center justify-center px-10 py-1 text-white light:text-foreground",
+  caption_label: "text-center text-sm font-semibold leading-5 tracking-normal uppercase whitespace-normal",
+  nav: "absolute inset-0 flex items-center justify-between pointer-events-none",
+};
+
 const CreateEvent = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -318,6 +324,20 @@ const CreateEvent = () => {
     return Boolean(isEditMode && saved?.eventStatus !== 'CANCELLED' && saved?.startDate && saved?.endDate &&
       new Date(saved.startDate).getTime() <= Date.now() && new Date(saved.endDate).getTime() > Date.now());
   };
+  const getEventDateTimeError = (start, end) => {
+    const ongoingEdit = isOngoingScheduleEdit();
+    if (start && start.getTime() < Date.now() && !ongoingEdit) {
+      return "Starting date and time must be in the future";
+    }
+
+    if (ongoingEdit && end && end.getTime() <= Date.now()) {
+      return "Ending date and time must be in the future";
+    }
+    if (start && end && end.getTime() <= start.getTime()) {
+      return "Ending date and time must be after starting date and time";
+    }
+    return null;
+  };
   const validateEventDateTime = () => {
     const start = buildEventDateTime(startDate, startTime);
     const end = buildEventDateTime(endDate, endTime);
@@ -326,22 +346,26 @@ const CreateEvent = () => {
       return { error: "Please select a valid start and end date/time" };
     }
 
-    const ongoingEdit = isOngoingScheduleEdit();
-    if (start.getTime() < Date.now() && !ongoingEdit) {
-      return { error: "Starting date and time must be in the future" };
-    }
-
-    if (ongoingEdit && end.getTime() <= Date.now()) {
-      return { error: "Ending date and time must be in the future" };
-    }
-    if (end.getTime() <= start.getTime()) {
-      return { error: "Ending date and time must be after starting date and time" };
-    }
+    const error = getEventDateTimeError(start, end);
+    if (error) return { error };
 
     return {
       startDateTime: start.toISOString(),
       endDateTime: end.toISOString(),
     };
+  };
+  const validateTimeSelection = (field, value) => {
+    const isStart = field === "start";
+    const dateValue = isStart ? startDate : endDate;
+    if (!dateValue) return isStart ? "Starting date is required" : "Ending date is required";
+    if (!value) return isStart ? "Starting time is required" : "Ending time is required";
+
+    const selected = buildEventDateTime(dateValue, value);
+    if (!selected) return "Please select a valid start and end date/time";
+
+    return isStart
+      ? getEventDateTimeError(selected, null)
+      : getEventDateTimeError(buildEventDateTime(startDate, startTime), selected);
   };
   const isEndDateTimeNotAfterStart = ({
     nextStartDate = startDate,
@@ -411,7 +435,7 @@ const CreateEvent = () => {
     return `${hour}:${minute} ${ampm}`;
   };
 
-  const TimePicker = ({ value, onChange, onClose, defaultAmpm = "AM", isValueInvalid, onInvalid }) => {
+  const TimePicker = ({ value, onChange, onClose, defaultAmpm = "AM", validateValue }) => {
     const parsedTime = parseTime(value, defaultAmpm);
     const [draftHour, setDraftHour] = useState(parsedTime.hour);
     const [draftMinute, setDraftMinute] = useState(parsedTime.minute);
@@ -424,23 +448,22 @@ const CreateEvent = () => {
       setDraftAmpm(nextTime.ampm);
     }, [value, defaultAmpm]);
 
-    const setPart = (h = draftHour, m = draftMinute, ap = draftAmpm, close = false) => {
+    const setPart = (h = draftHour, m = draftMinute, ap = draftAmpm) => {
       setDraftHour(h);
       setDraftMinute(m);
       setDraftAmpm(ap);
+    };
 
-      if (!h) return;
-
-      const nextValue = buildTime(h, m, ap);
-      const invalid = typeof isValueInvalid === "function" && isValueInvalid(nextValue);
-
-      if (invalid) {
-        if (close) onInvalid?.();
+    const handleConfirm = () => {
+      const nextValue = buildTime(draftHour, draftMinute, draftAmpm);
+      const error = validateValue(nextValue);
+      if (error) {
+        toast.error(error);
         return;
       }
 
       onChange(nextValue);
-      if (close) onClose?.();
+      onClose?.();
     };
 
     const itemBase =
@@ -457,7 +480,7 @@ const CreateEvent = () => {
                 key={h}
                 type="button"
                 className={`${itemBase} ${h === draftHour ? itemActive : ""}`}
-                onClick={() => setPart(h, draftMinute, draftAmpm, false)}
+                onClick={() => setPart(h, draftMinute, draftAmpm)}
               >
                 {h}
               </button>
@@ -472,7 +495,7 @@ const CreateEvent = () => {
                 key={m}
                 type="button"
                 className={`${itemBase} ${m === draftMinute ? itemActive : ""}`}
-                onClick={() => setPart(draftHour, m, draftAmpm, true)}
+                onClick={() => setPart(draftHour, m, draftAmpm)}
               >
                 {m}
               </button>
@@ -487,12 +510,15 @@ const CreateEvent = () => {
                 key={ap}
                 type="button"
                 className={`${itemBase} ${ap === draftAmpm ? itemActive : ""}`}
-                onClick={() => setPart(draftHour, draftMinute, ap, Boolean(draftHour))}
+                onClick={() => setPart(draftHour, draftMinute, ap)}
               >
                 {ap}
               </button>
             ))}
           </div>
+          <Button type="button" className="w-full" onClick={handleConfirm}>
+            OK
+          </Button>
         </div>
       </div>
     );
@@ -1695,7 +1721,7 @@ const CreateEvent = () => {
 
             response = await updateEventStep1(backendEventId, eventData);
             
-            toast.success("Event details updated successfully!");
+            toast.success("Changes saved as draft. Submit changes for approval when ready.");
             
             // Reset change flags after successful update
             setTextFieldsChanged(false);
@@ -1721,7 +1747,7 @@ const CreateEvent = () => {
 
           response = await createEventStep1(eventData);
           
-          toast.success("Event details saved successfully!");
+          toast.success("Changes saved as draft. Submit changes for approval when ready.");
           
           // Store the backend event ID for future updates
           let backendId = response.data?.id || response.data?._id || response.id || response._id;
@@ -1945,7 +1971,7 @@ const CreateEvent = () => {
 
         const response = await updateEventStep2(backendEventId, updateData);
         
-        toast.success("Date & time updated successfully!");
+        toast.success("Changes saved as draft. Submit changes for approval when ready.");
         console.log("Step 3 API Response:", response);
         eventCacheRef.current = { ...eventCacheRef.current, ...response.data, startDate: startDateTime, endDate: endDateTime };
         setOriginalDateTime({ start: startDateTime, end: endDateTime });
@@ -2105,7 +2131,7 @@ const CreateEvent = () => {
             localStorage.setItem(`event_${backendEventId}_venueData`, JSON.stringify(updatedVenueData));
             
             console.log('💾 Saved updated venue data:', { id: updatedVenueId });
-            toast.success("Venue updated successfully!");
+            toast.success("Changes saved as draft. Submit changes for approval when ready.");
 
             // Update originalVenueData to prevent unnecessary API calls on next visit
             setOriginalVenueData(venueData);
@@ -2164,7 +2190,7 @@ const CreateEvent = () => {
             localStorage.setItem(`event_${backendEventId}_venueData`, JSON.stringify(updatedVenueData));
             
             console.log('✅ Created new venue with ID:', newVenueId);
-            toast.success("Venue created successfully!");
+            toast.success("Changes saved as draft. Submit changes for approval when ready.");
 
             // Update originalVenueData to prevent unnecessary API calls on next visit
             setOriginalVenueData(venueData);
@@ -2234,7 +2260,7 @@ const CreateEvent = () => {
           setOriginalSponsors([]);
           setOriginalIsSponsored(false);
           setSponsors([emptySponsor]);
-          toast.success("Sponsor details saved");
+          toast.success("Changes saved as draft. Submit changes for approval when ready.");
           moveToNextStep();
         } catch (error) {
           console.error("Error saving sponsors:", error);
@@ -2287,7 +2313,7 @@ const CreateEvent = () => {
         console.log("Step 5 (Sponsor) API Response:", response);
         setOriginalSponsors(cleanedSponsors);
         setOriginalIsSponsored(true);
-        toast.success("Sponsor details saved");
+        toast.success("Changes saved as draft. Submit changes for approval when ready.");
         moveToNextStep();
       } catch (error) {
         console.error("Error saving sponsors:", error);
@@ -2384,7 +2410,7 @@ const CreateEvent = () => {
         }
         artistsLoadedRef.current = true;
         if (!advance) {
-          toast.success("Artist details saved.");
+          toast.success("Changes saved as draft. Submit changes for approval when ready.");
         }
         
         // Move to next step after successful API call
@@ -2463,7 +2489,7 @@ const CreateEvent = () => {
         // Refresh original snapshot to avoid re-saving unchanged data on subsequent clicks
         originalAdditionalRef.current = normalizeAdditionalFromState();
         currentAdditionalRef.current = originalAdditionalRef.current;
-        toast.success("Additional info saved");
+        toast.success("Changes saved as draft. Submit changes for approval when ready.");
         moveToNextStep();
       } catch (error) {
         console.error("Error saving additional info:", error);
@@ -3358,7 +3384,7 @@ const CreateEvent = () => {
         localStorage.setItem(`event_${backendEventId}_tickets`, JSON.stringify(updatedTickets));
         setEditingTicketIndex(null);
 
-        toast.success("Ticket updated successfully!");
+        toast.success("Changes saved as draft. Submit changes for approval when ready.");
         return;
       }
       
@@ -3386,7 +3412,7 @@ const CreateEvent = () => {
       // Save to localStorage
       localStorage.setItem(`event_${backendEventId}_tickets`, JSON.stringify(updatedTickets));
       
-      toast.success("Ticket created successfully!");
+      toast.success("Changes saved as draft. Submit changes for approval when ready.");
     } catch (error) {
       console.error("Error saving ticket:", error);
       toast.error(error.message || "Failed to save ticket. Please try again.");
@@ -3491,12 +3517,16 @@ const CreateEvent = () => {
       };
 
       const response = await updateEventStep6(backendEventId, updateData);
-      if (!isDraft) await requestEventPublication(backendEventId);
+      if (response?.data?.publication) setPublication(response.data.publication);
+      if (!isDraft) {
+        const submitted = await requestEventPublication(backendEventId);
+        if (submitted?.data?.publication) setPublication(submitted.data.publication);
+      }
       
       console.log("Step 7 API Response:", response);
       
       // Success handling (no explicit status payloads)
-      toast.success(isDraft ? "Event draft saved!" : "Publication requested. Awaiting promoter approval.");
+      toast.success(isDraft ? "Changes saved as draft. Submit changes for approval when ready." : "Publication requested. Awaiting promoter approval.");
       
       // Navigate to dashboard after successful submission
       navigate("/organizer/dashboard-v2");
@@ -4059,7 +4089,8 @@ const CreateEvent = () => {
           </div>
 
           {publication && <div role="status" className="rounded-xl border border-border bg-card p-4 space-y-2">
-            <p className="font-semibold">{publication.status.replaceAll('_', ' ')}</p>
+            <p className="font-semibold">{publication.status === 'DRAFT' && !publication.isInitial ? 'Unsubmitted changes' : publication.status.replaceAll('_', ' ')}</p>
+            {['DRAFT', 'CHANGES_REQUIRED'].includes(publication.status) && <p className="text-sm">{publication.status === 'CHANGES_REQUIRED' ? 'Save your corrections, then resubmit for approval.' : 'Saved edits are not sent to the promoter yet.'} Complete the final review step to request approval.</p>}
             {publishState === 'PUBLISHED' && <p className="text-sm">Your current event remains live. These changes require approval.</p>}
             {publicationLocked && <p className="text-sm">{publication.status === 'PENDING' ? 'This submission is locked while the promoter reviews it.' : 'This event was rejected and cannot be published.'}</p>}
             {publication.notes && <p className="whitespace-pre-wrap break-words text-sm">{publication.notes}</p>}
@@ -4751,6 +4782,7 @@ const CreateEvent = () => {
                         <PopoverContent align="start" className="w-auto p-0 border-border/50 bg-background/40">
                           <Calendar
                             mode="single"
+                            classNames={scheduleCalendarClassNames}
                             selected={parseSafeDateOnly(startDate) || undefined}
                             onSelect={(date) => {
                               if (!date) return;
@@ -4792,6 +4824,7 @@ const CreateEvent = () => {
                         >
                           <TimePicker
                             value={startTime}
+                            validateValue={(value) => validateTimeSelection("start", value)}
                             onChange={handleStartTimeChange}
                             onClose={() => setStartTimeOpen(false)}
                           />
@@ -4818,6 +4851,7 @@ const CreateEvent = () => {
                         <PopoverContent align="start" className="w-auto p-0 border-border/50 bg-background/40">
                           <Calendar
                             mode="single"
+                            classNames={scheduleCalendarClassNames}
                             selected={parseSafeDateOnly(endDate) || undefined}
                             onSelect={(date) => {
                               if (!date) return;
@@ -4857,11 +4891,10 @@ const CreateEvent = () => {
                         >
                           <TimePicker
                             value={endTime}
+                            validateValue={(value) => validateTimeSelection("end", value)}
                             onChange={handleEndTimeChange}
                             onClose={() => setEndTimeOpen(false)}
                             defaultAmpm={parseTime(startTime).ampm}
-                            isValueInvalid={(value) => isEndDateTimeNotAfterStart({ nextEndTime: value })}
-                            onInvalid={() => toast.error("Ending time must be after starting time")}
                           />
                         </PopoverContent>
                       </Popover>
@@ -5780,7 +5813,7 @@ const CreateEvent = () => {
                       disabled={isSectionBusy}
                       className="h-11 rounded-[10px] border-border bg-background px-5 text-foreground hover:bg-muted hover:text-foreground"
                     >
-                      {isSectionBusy ? "Saving..." : "Save Section"}
+                      {isSectionBusy ? "Saving..." : "Save Section as Draft"}
                     </Button>
                   )}
 

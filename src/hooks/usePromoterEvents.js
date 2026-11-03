@@ -111,7 +111,8 @@ export const usePromoterEvents = (initialFilters = {}) => {
   }, [fetchEvents]);
 
   const clearFilters = useCallback(() => {
-    const cleared = { eventStatus: 'ALL', publishStatus: 'ALL', search: '', organizerId: null };
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const cleared = { reviewStatus: filtersRef.current.reviewStatus, eventStatus: 'ALL', publishStatus: 'ALL', search: '', organizerId: null };
     filtersRef.current = cleared;
     setFilters(cleared);
     fetchEvents(1);

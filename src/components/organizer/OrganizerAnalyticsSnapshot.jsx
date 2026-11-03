@@ -1,4 +1,4 @@
-import { BarChart3, CalendarDays, Receipt, RefreshCw } from "lucide-react";
+import { BarChart3, CalendarDays, IndianRupee, RefreshCw } from "lucide-react";
 
 const toTitleCase = (value) => {
   if (!value) return "-";
@@ -128,7 +128,7 @@ const OrganizerAnalyticsSnapshot = ({ analytics, loading, error, compact = false
 
           <div className="rounded-lg border border-gray-800 bg-gray-950 p-3 light:border-border light:bg-surface">
             <p className="text-xs font-semibold text-white flex items-center gap-1 light:text-foreground">
-              <Receipt className="w-3.5 h-3.5" /> Refunds
+              <IndianRupee className="w-3.5 h-3.5" /> Refunds
             </p>
             {Object.keys(refunds || {}).length === 0 ? (
               <p className="text-xs text-gray-500 mt-2 light:text-muted-foreground">No refunds in selected period.</p>

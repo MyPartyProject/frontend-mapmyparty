@@ -22,9 +22,12 @@ const PromoterEvents = () => {
   const reviewStatus = params.get('reviewStatus') || 'ALL';
   const {
     events, loading, isFetching, error, pagination, filters,
-    updateFilters, changePage,
+    updateFilters, changePage, clearFilters,
   } = usePromoterEvents({ reviewStatus });
-  useEffect(() => { updateFilters({ reviewStatus }); }, [reviewStatus, updateFilters]);
+  useEffect(() => {
+    updateFilters({ reviewStatus, search: '', eventStatus: 'ALL', publishStatus: 'ALL', organizerId: null });
+  }, [reviewStatus, updateFilters]);
+  const hasOptionalFilters = Boolean(filters.search || filters.organizerId || filters.eventStatus !== 'ALL' || filters.publishStatus !== 'ALL');
 
   const handleSearchChange = useCallback((e) => {
     updateFilters({ search: e.target.value });
@@ -64,7 +67,7 @@ const PromoterEvents = () => {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold">{reviewStatus === 'PENDING' ? 'Pending event reviews' : 'Events'}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">All events across organizers with live status and revenue.</p>
+          <p className="mt-1 text-sm text-muted-foreground">{reviewStatus === 'PENDING' ? 'Submitted events and updates awaiting approval. Published events can have pending changes.' : 'All events across organizers with live status and revenue.'}</p>
         </div>
         <Badge variant="outline" className="shrink-0 border-border/70 px-2 py-1 text-xs">
           {pagination.total} Events
@@ -98,6 +101,11 @@ const PromoterEvents = () => {
           </label>
         </div>
       </div>
+
+      {hasOptionalFilters && <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+        <span>Filters are narrowing this list.</span>
+        <Button type="button" variant="outline" size="sm" onClick={clearFilters}>Clear filters</Button>
+      </div>}
 
       {/* Thin progress bar when fetching — visible but non-intrusive */}
       {isFetching && !loading && (
