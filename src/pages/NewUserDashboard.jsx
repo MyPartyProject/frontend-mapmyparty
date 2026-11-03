@@ -564,8 +564,8 @@ const NewUserDashboard = () => {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-9 pl-1.5 pr-3 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] light:bg-muted light:hover:bg-muted light:border-border">
-                <Avatar className="h-6 w-6">
+              <Button variant="ghost" className="h-8 pl-1 pr-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] light:bg-muted light:hover:bg-muted light:border-border">
+                <Avatar className="navbar-profile-avatar h-6 w-6">
                   <AvatarImage src={userInfo.avatar} />
                   <AvatarFallback className="profile-initials">
                     {getInitials(userInfo.name, userInfo.email)}
@@ -632,7 +632,7 @@ const NewUserDashboard = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                <Avatar className="h-7 w-7">
+                <Avatar className="navbar-profile-avatar h-6 w-6">
                   <AvatarImage src={userInfo.avatar} />
                   <AvatarFallback className="profile-initials">
                     {getInitials(userInfo.name, userInfo.email)}

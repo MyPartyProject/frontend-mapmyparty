@@ -1695,7 +1695,7 @@ const OrganizerDashboard = () => {
               aria-label="Organizer profile menu"
               className={`flex items-center gap-3 w-full text-left hover:bg-white/5 transition rounded-lg py-1 light:hover:bg-muted ${sidebarOpen ? "px-2" : "justify-center"}`}
             >
-              <Avatar className="h-10 w-10 rounded-full border-0 ring-0">
+              <Avatar className="navbar-profile-avatar h-6 w-6 rounded-full border-0 ring-0">
                 <AvatarImage src={user.logo} alt={user.name} className="object-cover object-center" />
                 <AvatarFallback className="profile-initials">
                   {getInitials(user.name, user.email)}

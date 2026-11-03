@@ -1179,12 +1179,24 @@ html.light[data-organizer-ui] :is([role="dialog"], [role="menu"], [role="listbox
   font-weight: 600;
   line-height: 1;
   text-transform: uppercase;
+  text-align: center;
+  text-indent: 0;
+  letter-spacing: 0;
 }
 .h-6 > .profile-initials { font-size: 12px; }
 .h-8 > .profile-initials { font-size: 16px; }
 .h-16 > .profile-initials, .h-20 > .profile-initials,
 .h-24 > .profile-initials { font-size: 24px; }
 .profile-initials.profile-initials-small { font-size: 10px; }
+.navbar-profile-avatar > .profile-initials {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1;
+  text-align: center;
+  letter-spacing: 0;
+}
 button.profile-initials-trigger {
   position: relative;
   display: inline-grid;
@@ -1200,10 +1212,17 @@ button.profile-initials-trigger {
 }
 .profile-trigger-initials, .profile-trigger-label {
   position: absolute;
-  inset: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  padding: 0;
   display: grid;
   place-items: center;
   line-height: 1;
+  text-align: center;
+  text-indent: 0;
+  letter-spacing: 0;
   font-weight: 600;
   transition: opacity 250ms ease-out;
   pointer-events: none;
