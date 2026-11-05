@@ -95,7 +95,6 @@ const LiveEventPage = ({ embedded = false }) => {
 
   // Ignore outdated responses after another refresh or a route change.
   const requestRef = useRef(0);
-  const statsLoadedRef = useRef(false);
   const currentIdRef = useRef(id);
   currentIdRef.current = id;
   const isMountedRef = useRef(true);
@@ -121,8 +120,8 @@ const LiveEventPage = ({ embedded = false }) => {
       // Fetch event details, bookings, and check-ins in parallel
       const [eventResponse, bookingsResponse, checkInsResponse] = await Promise.allSettled([
         apiFetch(`event/manage/${id}?view=approved`, { cache: "no-store" }),
-        ...(!background || !statsLoadedRef.current ? [apiFetch(`booking/event/${id}`),
-          apiFetch(`booking/event/${id}/check-ins`)] : []),
+        ...([apiFetch(`booking/event/${id}`),
+          apiFetch(`booking/event/${id}/check-ins`)]),
       ]);
 
       if (!isMountedRef.current || currentIdRef.current !== id || request !== requestRef.current) return;
@@ -165,7 +164,6 @@ const LiveEventPage = ({ embedded = false }) => {
         const summary = checkInsResponse.value.data?.summary || checkInsResponse.value.summary;
         if (summary) {
           setCheckIns(summary);
-          statsLoadedRef.current = true;
         }
       }
     } catch (err) {
@@ -182,7 +180,6 @@ const LiveEventPage = ({ embedded = false }) => {
   // Track mount state without remounting the scanner on refresh.
   useEffect(() => {
     isMountedRef.current = true;
-    statsLoadedRef.current = false;
     setEvent(null);
 
     return () => {
@@ -194,7 +191,7 @@ const LiveEventPage = ({ embedded = false }) => {
   // Ticket types - Uses REAL-TIME socket data when available, fallback to event.tickets
   const ticketTypes = useMemo(() => {
     // Prefer real-time socket data (updates automatically when someone books)
-    if (realtimeTickets && realtimeTickets.length > 0) {
+    if (realtimeTickets !== null) {
       return realtimeTickets.map((ticket) => ({
         id: ticket.ticketId,
         name: ticket.name,
@@ -301,12 +298,15 @@ const LiveEventPage = ({ embedded = false }) => {
     Number(offPlatformForm.members) > 0 &&
     Number(offPlatformForm.price) >= 0;
 
+  const offPlatformRequest = useRef(0);
   const loadOffPlatformRecords = useCallback(async () => {
     if (!organizerId || !id) return;
+    const request = ++offPlatformRequest.current;
     setOffPlatformLoading(true);
     setOffPlatformError("");
     try {
       const data = await fetchOffPlatformTickets(organizerId, id);
+      if (request !== offPlatformRequest.current || currentIdRef.current !== id) return;
       setOffPlatformRecords(data?.items || data || []);
     } catch (err) {
       console.error("Failed to load off-platform tickets:", err);
@@ -316,35 +316,7 @@ const LiveEventPage = ({ embedded = false }) => {
     }
   }, [organizerId, id]);
 
-  useEffect(() => {
-    if (!organizerId || !id) return undefined;
-
-    let cancelled = false;
-
-    const run = async () => {
-      setOffPlatformLoading(true);
-      setOffPlatformError("");
-      try {
-        const data = await fetchOffPlatformTickets(organizerId, id);
-        if (cancelled) return;
-        setOffPlatformRecords(data?.items || data || []);
-      } catch (err) {
-        if (cancelled) return;
-        console.error("Failed to load off-platform tickets:", err);
-        setOffPlatformError(err.message || "Failed to load off-platform tickets.");
-      } finally {
-        if (!cancelled) {
-          setOffPlatformLoading(false);
-        }
-      }
-    };
-
-    run();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [organizerId, id]);
+  useEventMetadataRefresh(loadOffPlatformRecords, organizerId ? id : null);
 
   const resetOffPlatformForm = useCallback(() => {
     setEditingOffPlatformRecord(null);
@@ -1064,7 +1036,7 @@ const LiveEventPage = ({ embedded = false }) => {
                     )}
                   </div>
                 ) : (
-                  <p className="text-sm text-white/50 light:text-muted-foreground">No items tracked yet</p>
+                  <p className="text-sm text-white/50 light:text-muted-foreground">{socketError ? "Food & beverage data unavailable" : "No items tracked yet"}</p>
                 )}
               </div>
             </div>

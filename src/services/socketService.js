@@ -8,6 +8,7 @@ const getServerUrl = () => {
 };
 
 let ticketAnalyticsSocket = null;
+let consumers = 0;
 
 /**
  * Fetch socket token from the server (uses cookie auth)
@@ -16,7 +17,6 @@ let ticketAnalyticsSocket = null;
 export const fetchSocketToken = async () => {
   try {
     const response = await apiFetch("auth/socket-token");
-    console.log("[socket-token] Fetched token successfully");
     return response.token || null;
   } catch (error) {
     console.error("[socket-token] Failed to fetch token:", error.message);
@@ -30,6 +30,7 @@ export const fetchSocketToken = async () => {
  * @returns {Socket} - Socket.io socket instance
  */
 export const connectTicketAnalytics = (authToken) => {
+  consumers++;
   // If socket exists and is connected, reuse it
   if (ticketAnalyticsSocket?.connected || ticketAnalyticsSocket?.active) {
     console.log("[ticket-analytics] Already connected, reusing socket");
@@ -46,8 +47,6 @@ export const connectTicketAnalytics = (authToken) => {
 
   const serverUrl = getServerUrl();
   console.log("[ticket-analytics] Connecting to:", `${serverUrl}/ticket-analytics`);
-  console.log("[ticket-analytics] Auth token provided:", authToken ? `${authToken.substring(0, 20)}...` : "NONE");
-  console.log("[ticket-analytics] Full token length:", authToken ? authToken.length : 0);
 
   // Build connection options - use cookies (withCredentials) as primary auth
   // Fall back to token if provided
@@ -55,7 +54,7 @@ export const connectTicketAnalytics = (authToken) => {
     // WebSocket-only avoids sticky-session requirements across API replicas.
     transports: ["websocket"],
     reconnection: true,
-    reconnectionAttempts: 5,
+    reconnectionAttempts: Infinity,
     reconnectionDelay: 1000,
     withCredentials: true, // Send cookies with the connection
   };
@@ -93,6 +92,8 @@ export const getTicketAnalyticsSocket = () => ticketAnalyticsSocket;
  * Disconnect from ticket analytics
  */
 export const disconnectTicketAnalytics = () => {
+  consumers = Math.max(0, consumers - 1);
+  if (consumers) return;
   if (ticketAnalyticsSocket) {
     ticketAnalyticsSocket.disconnect();
     ticketAnalyticsSocket = null;
@@ -115,9 +116,9 @@ export const joinEventRoom = (eventId) => {
     }
 
     console.log("[ticket-analytics] Emitting join_event for eventId:", eventId);
-    ticketAnalyticsSocket.emit("join_event", { eventId }, (response) => {
+    ticketAnalyticsSocket.timeout(10000).emit("join_event", { eventId }, (err, response) => {
       console.log("[ticket-analytics] join_event response:", response);
-      resolve(response);
+      resolve(err ? { error: "Event subscription timed out" } : response);
     });
   });
 };
@@ -134,7 +135,7 @@ export const leaveEventRoom = (eventId) => {
       return;
     }
 
-    ticketAnalyticsSocket.emit("leave_event", { eventId }, (response) => {
+    ticketAnalyticsSocket.timeout(10000).emit("leave_event", { eventId }, (err, response) => {
       resolve(response);
     });
   });

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { connectTicketAnalytics, fetchSocketToken } from '@/services/socketService';
+import { connectTicketAnalytics, disconnectTicketAnalytics, fetchSocketToken } from '@/services/socketService';
 
 // Shares the existing socket; changes invalidate metadata rather than replacing it.
 export function useEventMetadataRefresh(refresh, eventId = null, boundaries = []) {
@@ -38,7 +38,7 @@ export function useEventMetadataRefresh(refresh, eventId = null, boundaries = []
       const token = await fetchSocketToken();
       if (disposed || !token) return;
       socket = connectTicketAnalytics(token);
-      socket.on('event_changed', onChange);
+      for (const name of ['event_changed', 'ticket_update', 'checkin_update']) socket.on(name, onChange);
       socket.on('connect', refreshNow);
       // Catch edits between the initial read and socket subscription.
       if (socket.connected) refreshNow();
@@ -49,8 +49,9 @@ export function useEventMetadataRefresh(refresh, eventId = null, boundaries = []
       clearInterval(interval);
       window.removeEventListener('focus', refreshNow);
       document.removeEventListener('visibilitychange', onVisible);
-      socket?.off('event_changed', onChange);
+      for (const name of ['event_changed', 'ticket_update', 'checkin_update']) socket?.off(name, onChange);
       socket?.off('connect', refreshNow);
+      if (socket) disconnectTicketAnalytics();
     };
   }, [eventId]);
 

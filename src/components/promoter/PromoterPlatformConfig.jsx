@@ -1,3 +1,4 @@
+import OrganizerPayoutFees from './OrganizerPayoutFees';
 import IndiaLocationFields from "@/components/IndiaLocationFields";
 import { useEffect, useMemo, useState } from "react";
 import { AlertCircle, RefreshCw, Settings2, Save } from "lucide-react";
@@ -299,6 +300,7 @@ const PromoterPlatformConfig = () => {
           )}
         </CardContent>
       </Card>
+      <OrganizerPayoutFees />
     </div>
   );
 };

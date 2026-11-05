@@ -168,7 +168,7 @@ const LiveEvents = () => {
         setSocketConnected(true);
 
         // Join rooms for all live events
-        liveEvents.forEach((event) => {
+        [...liveEvents, ...upcomingEvents].forEach((event) => {
           if (!joinedRoomsRef.current.has(event.id)) {
             socket.emit("join_event", { eventId: event.id }, (response) => {
               if (response?.success) {
@@ -194,13 +194,7 @@ const LiveEvents = () => {
         setLiveEvents((prev) =>
           prev.map((event) => {
             if (event.id === data.eventId) {
-              const updatedTickets = event.ticketTypes.map((t) => {
-                const updated = data.tickets.find((u) => u.ticketId === t.id);
-                if (updated) {
-                  return { ...t, soldQty: nonNegativeNumber(updated.soldQty), totalQty: nonNegativeNumber(updated.totalQty) };
-                }
-                return t;
-              });
+              const updatedTickets = data.tickets.map(t => ({ ...t, id: t.ticketId, soldQty: nonNegativeNumber(t.soldQty), totalQty: nonNegativeNumber(t.totalQty) }));
               return { ...event, ticketTypes: updatedTickets };
             }
             return event;
@@ -211,13 +205,7 @@ const LiveEvents = () => {
         setUpcomingEvents((prev) =>
           prev.map((event) => {
             if (event.id === data.eventId) {
-              const updatedTickets = event.ticketTypes.map((t) => {
-                const updated = data.tickets.find((u) => u.ticketId === t.id);
-                if (updated) {
-                  return { ...t, soldQty: nonNegativeNumber(updated.soldQty), totalQty: nonNegativeNumber(updated.totalQty) };
-                }
-                return t;
-              });
+              const updatedTickets = data.tickets.map(t => ({ ...t, id: t.ticketId, soldQty: nonNegativeNumber(t.soldQty), totalQty: nonNegativeNumber(t.totalQty) }));
               return { ...event, ticketTypes: updatedTickets };
             }
             return event;
@@ -264,6 +252,7 @@ const LiveEvents = () => {
           socket.emit("leave_event", { eventId });
         });
         joinedRoomsRef.current.clear();
+        disconnectTicketAnalytics();
       };
     };
 
@@ -273,14 +262,14 @@ const LiveEvents = () => {
       isCancelled = true;
       if (cleanupFn) cleanupFn();
     };
-  }, [liveEvents.length]);
+  }, [liveEvents.map(e => e.id).join(), upcomingEvents.map(e => e.id).join()]);
 
   // Join rooms for newly loaded live events
   useEffect(() => {
     const socket = getTicketAnalyticsSocket();
     if (!socket?.connected) return;
 
-    liveEvents.forEach((event) => {
+    [...liveEvents, ...upcomingEvents].forEach((event) => {
       if (!joinedRoomsRef.current.has(event.id)) {
         socket.emit("join_event", { eventId: event.id }, (response) => {
           if (response?.success) {
@@ -290,12 +279,12 @@ const LiveEvents = () => {
         });
       }
     });
-  }, [liveEvents]);
+  }, [liveEvents, upcomingEvents]);
 
   // Cleanup socket on unmount
   useEffect(() => {
     return () => {
-      disconnectTicketAnalytics();
+      // The shared transport also serves metadata subscribers.
     };
   }, []);
 

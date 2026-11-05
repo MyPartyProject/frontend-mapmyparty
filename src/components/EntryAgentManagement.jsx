@@ -1,3 +1,4 @@
+import { useEventMetadataRefresh } from '@/hooks/useEventMetadataRefresh';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ChevronDown, KeyRound, Pencil, Plus, Power } from 'lucide-react';
@@ -86,6 +87,7 @@ function AssignmentEditor({ eventId, onClose }) {
     const timer = window.setInterval(() => { if (!document.hidden) refresh(); }, 15000);
     return () => { ++requestId.current; window.clearInterval(timer); };
   }, [refresh]);
+  useEventMetadataRefresh(refresh, eventId);
   const save = async () => {
     setBusy(true); setMessage(''); setError('');
     try { await call(`/events/${eventId}`, { method: 'PUT', body: JSON.stringify({ agentIds: selected, instructions }) }); setMessage('Assignments and instructions saved.'); await refresh(); }
