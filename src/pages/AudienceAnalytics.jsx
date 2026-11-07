@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import EventSettlementSummary from '@/components/organizer/EventSettlementSummary';
 import { nonNegativeNumber, progressPercent } from '@/lib/progress';
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -22,8 +23,8 @@ import {
 import { apiFetch } from "@/config/api";
 import AnalyticsProgressBar from "@/components/analytics/AnalyticsProgressBar";
 
-const gradientCard =
-  "relative rounded-2xl p-4 bg-white/5 border border-white/10 backdrop-blur overflow-hidden shadow-lg shadow-black/30 light:bg-muted light:border-border light:shadow-black/5";
+const summaryCardClass =
+  "relative min-w-0 rounded-2xl p-5 bg-card border border-border/50 shadow-sm";
 
 const buildQuery = (path, params = {}) => {
   const qs = Object.entries(params)
@@ -411,26 +412,22 @@ const AudienceAnalytics = () => {
       {
         key: "events",
         title: "Events",
-        icon: <Sparkles className="w-8 h-8 text-white light:text-foreground" />,
-        tone: "from-primary/80 via-secondary/60 to-accent/60",
+        icon: <Sparkles className="w-8 h-8 text-foreground" />,
       },
       {
         key: "attendees",
         title: "Attendees",
-        icon: <Users className="w-8 h-8 text-white light:text-foreground" />,
-        tone: "from-secondary/80 via-primary/60 to-accent/60",
+        icon: <Users className="w-8 h-8 text-foreground" />,
       },
       {
         key: "revenue",
         title: "Revenue",
-        icon: <Coins className="w-8 h-8 text-white light:text-foreground" />,
-        tone: "from-accent/80 via-primary/60 to-secondary/60",
+        icon: <Coins className="w-8 h-8 text-foreground" />,
       },
       {
         key: "ticketSales",
         title: "Tickets Sold",
-        icon: <Ticket className="w-8 h-8 text-white light:text-foreground" />,
-        tone: "from-primary/80 via-accent/60 to-secondary/60",
+        icon: <Ticket className="w-8 h-8 text-foreground" />,
       },
     ];
 
@@ -490,9 +487,9 @@ const AudienceAnalytics = () => {
           const share = showValues ? progressPercent(item.value, total) : progressPercent(item.value);
           return (
             <div key={item.label} className="space-y-1">
-              <div className="flex justify-between text-sm">
-                <span className="text-white/70 light:text-muted-foreground">{item.label}</span>
-                <span className="font-semibold text-white light:text-foreground">
+              <div className="flex flex-wrap justify-between gap-2 text-sm">
+                <span className="text-muted-foreground">{item.label}</span>
+                <span className="font-semibold text-foreground">
                   {showValues ? formatNumber(item.value) : formatPercent(item.value)}
                 </span>
               </div>
@@ -538,37 +535,38 @@ const AudienceAnalytics = () => {
   );
 
   return (
-    <div className="space-y-6 text-white light:text-foreground">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-w-0 space-y-6 text-foreground [&_*]:min-w-0 [overflow-wrap:anywhere]">
+      <div className="w-full max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-card p-5 shadow-[var(--shadow-elegant)]">
           <div className="absolute -left-10 top-0 h-32 w-32 rounded-full bg-primary/25 blur-3xl" />
           <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-secondary/20 blur-3xl" />
           <div className="absolute bottom-0 right-12 h-24 w-24 rounded-full bg-accent/15 blur-3xl" />
-          <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="relative flex flex-col gap-6">
             <div className="space-y-1">
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Organizer Portal</p>
               
               <h2 className="text-3xl font-extrabold">Audience Analytics</h2>
-              <p className="text-sm text-white/70 light:text-muted-foreground">Understand who’s engaging with your events.</p>
-              <p className="text-xs text-white/50 light:text-muted-foreground">Period: {periodLabel}</p>
+              <p className="text-sm text-muted-foreground">Understand who’s engaging with your events.</p>
+              <p className="text-xs text-muted-foreground">Period: {periodLabel}</p>
             </div>
-            <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+            <div className="flex flex-wrap items-center gap-3 border-t border-border/50 pt-4">
               {[{ value: "day", label: "24h" }, { value: "week", label: "7d" }, { value: "month", label: "30d" }, { value: "year", label: "1y" }, { value: "all", label: "All" }].map((period) => (
                 <button
                   key={period.value}
                   onClick={() => setTimePeriod(period.value)}
-                  className={`px-3 py-2 rounded-2xl text-sm border transition shadow-sm ${
+                  aria-pressed={timePeriod === period.value}
+                  className={`min-h-11 px-4 py-2 rounded-lg text-sm border transition focus-visible:ring-2 focus-visible:ring-ring ${
                     timePeriod === period.value
-                      ? "bg-primary text-primary-foreground border-primary/60 shadow-[var(--shadow-card)] light:bg-primaryCTA"
-                      : "bg-white/5 border-white/10 text-white/75 hover:bg-white/10 light:bg-muted light:border-border light:text-muted-foreground light:hover:bg-muted"
+                      ? "bg-primaryCTA text-primary-foreground border-primary shadow-[var(--shadow-card)]"
+                      : "bg-muted/40 border-border/50 text-muted-foreground hover:bg-muted/70"
                   }`}
                 >
                   {period.label}
                 </button>
               ))}
-              <div className="flex items-center gap-2 text-xs text-white/80 bg-white/5 border border-white/10 rounded-2xl px-3 py-2 light:text-muted-foreground light:bg-muted light:border-border">
-                <label className="flex items-center gap-1">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-card border border-border/50 rounded-2xl px-3 py-2">
+                <label className="flex min-h-11 items-center gap-2">
                   <input
                     type="checkbox"
                     className="accent-accent"
@@ -577,7 +575,7 @@ const AudienceAnalytics = () => {
                   />
                   Draft
                 </label>
-                <label className="flex items-center gap-1">
+                <label className="flex min-h-11 items-center gap-2">
                   <input
                     type="checkbox"
                     className="accent-accent"
@@ -587,87 +585,80 @@ const AudienceAnalytics = () => {
                   Cancelled
                 </label>
               </div>
-              <div className="flex items-center gap-2 text-xs text-white/80 bg-white/5 border border-white/10 rounded-2xl px-3 py-2 light:text-muted-foreground light:bg-muted light:border-border">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-card border border-border/50 rounded-2xl px-3 py-2">
                 <input
                   type="date"
-                  value={startDate}
+                  aria-label="Start date" value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-transparent focus:outline-none"
+                  className="w-full min-h-11 bg-transparent focus-visible:ring-2 focus-visible:ring-ring"
                 />
-                <span className="text-white/50 light:text-muted-foreground">→</span>
+                <span className="text-muted-foreground">→</span>
                 <input
                   type="date"
-                  value={endDate}
+                  aria-label="End date" value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="bg-transparent focus:outline-none"
+                  className="w-full min-h-11 bg-transparent focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>
-              <button
-                onClick={loadOrganizerAnalytics}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold shadow-[var(--shadow-card)] hover:bg-primary/90 transition light:bg-primaryCTA light:hover:bg-primaryCTA-hover"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Refresh
-              </button>
+              <Button onClick={loadOrganizerAnalytics} className="min-h-11 gap-2"><RefreshCw className="w-4 h-4" />Refresh</Button>
             </div>
           </div>
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 text-amber-200 text-sm bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2 light:text-warning">
+          <div className="flex items-center gap-2 text-warning text-sm bg-warning/10 border border-warning/30 rounded-xl px-3 py-2">
             <AlertTriangle className="w-4 h-4" />
             {error}
           </div>
         )}
 
         {/* Analytics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {summaryCards.map((card, index) => (
-            <div key={index} className={gradientCard}>
-              <div className={`absolute inset-0 bg-gradient-to-br ${card.tone} opacity-20`} />
-              <div className="relative flex items-center justify-between">
+            <div key={index} className={summaryCardClass}>
+              <div className="relative flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-white/60 light:text-muted-foreground">{card.title}</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{card.title}</p>
                   <p className="text-2xl font-bold mt-2">{card.value}</p>
                   <p
                     className={`text-[12px] mt-2 inline-flex items-center gap-1 ${
-                      card.isNegative ? "text-amber-200 light:text-warning" : "text-emerald-200 light:text-success"
+                      card.isNegative ? "text-warning" : "text-foreground"
                     }`}
                   >
                     {card.isNegative ? <ArrowDownRight className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
                     {card.change || "vs prev"}
                   </p>
                 </div>
-                <div className="p-3 rounded-xl bg-white/10 border border-white/10 light:bg-muted light:border-border">{card.icon}</div>
+                <div className="p-3 rounded-xl bg-muted/40 border border-border/50">{card.icon}</div>
               </div>
             </div>
           ))}
         </div>
 
         {/* Timeline + Top events */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur shadow-lg shadow-black/30 lg:h-[360px] flex flex-col light:bg-muted light:border-border light:shadow-black/5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          <div className="xl:col-span-2 bg-card border border-border/50 rounded-2xl p-5 shadow-sm xl:max-h-[420px] flex flex-col">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-accent light:text-accent-foreground" />
+                  <BarChart3 className="w-5 h-5 text-accent" />
                   Engagement trends
                 </h3>
-                <div className="flex items-center gap-2 text-[11px] text-white/60 light:text-muted-foreground">
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 border border-white/10 light:bg-muted light:border-border">
-                    <span className="w-3 h-2 rounded-full bg-emerald-400 light:bg-success" /> Revenue
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted/40 border border-border/50">
+                    <span className="w-3 h-2 rounded-full bg-[var(--organizer-revenue-bar)]" /> Revenue
                   </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 border border-white/10 light:bg-muted light:border-border">
-                    <span className="w-3 h-2 rounded-full bg-sky-400 light:bg-info" /> Bookings
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted/40 border border-border/50">
+                    <span className="w-3 h-2 rounded-full bg-[var(--organizer-bookings-bar)]" /> Bookings
                   </span>
                 </div>
               </div>
-              {loading && <Loader2 className="w-5 h-5 animate-spin text-white/60 light:text-muted-foreground" />}
+              {loading && <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />}
             </div>
-            <p className="text-xs text-white/60 mb-3 light:text-muted-foreground">Revenue / bookings trend over time</p>
+            <p className="text-xs text-muted-foreground mb-3">Revenue / bookings trend over time</p>
             <div className="space-y-3 overflow-y-auto pr-1 flex-1">
               {timelinePoints.data.length === 0 && (
-                <p className="text-sm text-white/60 light:text-muted-foreground">No trend data for the selected period.</p>
+                <p className="text-sm text-muted-foreground">No trend data for the selected period.</p>
               )}
               {timelinePoints.data.map((point, idx) => {
                 const revenueVal = point.revenue ?? point.value ?? 0;
@@ -677,11 +668,11 @@ const AudienceAnalytics = () => {
                 const title = `Revenue: ₹${formatNumber(revenueVal, "0")}, Bookings: ${formatNumber(bookingVal, "0")}`;
                 return (
                   <div key={idx} className="space-y-2" title={title}>
-                    <div className="flex justify-between text-xs text-white/60 light:text-muted-foreground">
+                    <div className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
                       <span>{point.label || point.date || `Point ${idx + 1}`}</span>
-                      <span className="text-white font-semibold flex gap-2 light:text-foreground">
-                        <span className="text-emerald-200 light:text-success">₹{formatNumber(revenueVal, "0")}</span>
-                        <span className="text-blue-200 light:text-info">{formatNumber(bookingVal, "0")} bookings</span>
+                      <span className="text-foreground font-semibold flex flex-wrap gap-2">
+                        <span className="text-foreground">₹{formatNumber(revenueVal, "0")}</span>
+                        <span className="text-muted-foreground">{formatNumber(bookingVal, "0")} bookings</span>
                       </span>
                     </div>
                     <div className="space-y-1">
@@ -702,13 +693,13 @@ const AudienceAnalytics = () => {
             </div>
           </div>
 
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur shadow-lg shadow-black/30 lg:h-[360px] flex flex-col light:bg-muted light:border-border light:shadow-black/5">
-            <div className="flex items-center justify-between mb-3">
+          <div className="bg-card border border-border/50 rounded-2xl p-5 shadow-sm xl:max-h-[420px] flex flex-col">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
               <h3 className="text-lg font-semibold">Top events</h3>
-              <span className="text-xs text-white/60 light:text-muted-foreground">{topEvents.length} items</span>
+              <span className="text-xs text-muted-foreground">{topEvents.length} items</span>
             </div>
             <div className="space-y-3 overflow-y-auto pr-1 flex-1">
-              {topEvents.length === 0 && <p className="text-sm text-white/60 light:text-muted-foreground">No events in this window.</p>}
+              {topEvents.length === 0 && <p className="text-sm text-muted-foreground">No events in this window.</p>}
               {topEvents.map((evt) => {
                 const eventNode = evt.event || evt;
                 const isActive = selectedEvent === evt.id;
@@ -716,14 +707,15 @@ const AudienceAnalytics = () => {
                   <button
                     key={evt.id}
                     type="button"
+                    aria-pressed={isActive}
                     onClick={() => setSelectedEvent(evt.id)}
-                    className={`flex items-start justify-between rounded-xl bg-white/5 border px-3 py-2 text-left transition  light:bg-muted ${
-                      isActive ? "border-primary/60 bg-primary/10" : "border-white/10 hover:bg-white/10 light:border-border light:hover:bg-muted"
+                    className={`w-full flex flex-wrap items-start justify-between gap-3 focus-visible:ring-2 focus-visible:ring-ring rounded-xl bg-muted/40 border px-3 py-2 text-left transition  ${
+                      isActive ? "border-primary/60 bg-primary/10" : "border-border/50 hover:bg-muted/70"
                     }`}
                   >
                     <div className="pr-3">
                       <p className="font-semibold leading-snug">{evt.title || "Event"}</p>
-                      <p className="text-xs text-white/60 flex items-center gap-1 light:text-muted-foreground">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
                         {eventNode?.city || evt.city || evt.location || "—"}
                       </p>
@@ -732,7 +724,7 @@ const AudienceAnalytics = () => {
                       <p className="text-sm font-semibold">
                         {formatNumber(evt.revenue ?? evt.net ?? evt.total ?? evt.amount ?? 0, "—")}
                       </p>
-                      <p className="text-xs text-white/60 light:text-muted-foreground">{formatNumber(evt.ticketsSold ?? evt.sold ?? 0, "0")} tickets</p>
+                      <p className="text-xs text-muted-foreground">{formatNumber(evt.ticketsSold ?? evt.sold ?? 0, "0")} tickets</p>
                     </div>
                   </button>
                 );
@@ -742,22 +734,22 @@ const AudienceAnalytics = () => {
         </div>
 
         {/* Breakdown + Demographics */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur shadow-lg shadow-black/30 lg:col-span-3 light:bg-muted light:border-border light:shadow-black/5">
-            <div className="flex items-center justify-between mb-4">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          <div className="bg-card border border-border/50 rounded-2xl p-5 shadow-sm xl:col-span-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <PieChartIcon className="w-5 h-5 text-accent light:text-accent-foreground" />
+                  <PieChartIcon className="w-5 h-5 text-accent" />
                 Breakdown
               </h3>
-              <span className="text-xs text-white/60 light:text-muted-foreground">{periodLabel}</span>
+              <span className="text-xs text-muted-foreground">{periodLabel}</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-2 light:bg-muted light:border-border">
-                <p className="text-sm text-white/70 flex items-center gap-2 light:text-muted-foreground">
+              <div className="rounded-xl bg-muted/40 border border-border/50 p-4 space-y-2">
+                <p className="text-sm text-muted-foreground flex items-center gap-2">
                   <BadgePercent className="w-4 h-4" /> Status
                 </p>
                 {safeBreakdowns.status.length === 0 ? (
-                  <p className="text-xs text-white/50 light:text-muted-foreground">No status data.</p>
+                  <p className="text-xs text-muted-foreground">No status data.</p>
                 ) : (
                   renderBarList(
                     safeBreakdowns.status.map((b) => ({
@@ -770,12 +762,12 @@ const AudienceAnalytics = () => {
                 )}
               </div>
 
-              <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-2 light:bg-muted light:border-border">
-                <p className="text-sm text-white/70 flex items-center gap-2 light:text-muted-foreground">
+              <div className="rounded-xl bg-muted/40 border border-border/50 p-4 space-y-2">
+                <p className="text-sm text-muted-foreground flex items-center gap-2">
                   <Sparkles className="w-4 h-4" /> Category
                 </p>
                 {safeBreakdowns.category.length === 0 ? (
-                  <p className="text-xs text-white/50 light:text-muted-foreground">No category data.</p>
+                  <p className="text-xs text-muted-foreground">No category data.</p>
                 ) : (
                   renderBarList(
                     safeBreakdowns.category.map((b) => ({
@@ -788,12 +780,12 @@ const AudienceAnalytics = () => {
                 )}
               </div>
 
-              <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-2 light:bg-muted light:border-border">
-                <p className="text-sm text-white/70 flex items-center gap-2 light:text-muted-foreground">
+              <div className="rounded-xl bg-muted/40 border border-border/50 p-4 space-y-2">
+                <p className="text-sm text-muted-foreground flex items-center gap-2">
                   <Ticket className="w-4 h-4" /> Ticket Types
                 </p>
                 {safeBreakdowns.ticketType.length === 0 ? (
-                  <p className="text-xs text-white/50 light:text-muted-foreground">No ticket type data.</p>
+                  <p className="text-xs text-muted-foreground">No ticket type data.</p>
                 ) : (
                   renderBarList(
                     safeBreakdowns.ticketType.map((b) => ({
@@ -806,12 +798,12 @@ const AudienceAnalytics = () => {
                 )}
               </div>
 
-              <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-2 light:bg-muted light:border-border">
-                <p className="text-sm text-white/70 flex items-center gap-2 light:text-muted-foreground">
+              <div className="rounded-xl bg-muted/40 border border-border/50 p-4 space-y-2">
+                <p className="text-sm text-muted-foreground flex items-center gap-2">
                   <Activity className="w-4 h-4" /> Booking Status
                 </p>
                 {safeBreakdowns.bookingStatus.length === 0 ? (
-                  <p className="text-xs text-white/50 light:text-muted-foreground">No booking status data.</p>
+                  <p className="text-xs text-muted-foreground">No booking status data.</p>
                 ) : (
                   renderBarList(
                     safeBreakdowns.bookingStatus.map((b) => ({
@@ -831,11 +823,11 @@ const AudienceAnalytics = () => {
         {(ageGroups.length > 0 || (gender.female !== null && gender.male !== null)) && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {ageGroups.length > 0 && (
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur shadow-lg shadow-black/30 light:bg-muted light:border-border light:shadow-black/5">
-                <div className="flex items-center justify-between mb-4">
+              <div className="bg-card border border-border/50 rounded-2xl p-5 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <h3 className="text-lg font-semibold">Audience Demographics</h3>
-                  <span className="text-xs text-white/60 flex items-center gap-2 light:text-muted-foreground">
-                    <Flame className="w-4 h-4 text-red-300 light:text-destructive" />
+                  <span className="text-xs text-muted-foreground flex items-center gap-2">
+                    <Flame className="w-4 h-4 text-accent-foreground" />
                     by age group
                   </span>
                 </div>
@@ -844,19 +836,19 @@ const AudienceAnalytics = () => {
             )}
 
             {gender.female !== null && gender.male !== null && (
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur shadow-lg shadow-black/30 light:bg-muted light:border-border light:shadow-black/5">
-                <div className="flex items-center justify-between mb-6">
+              <div className="bg-card border border-border/50 rounded-2xl p-5 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                   <h3 className="text-lg font-semibold">Gender Distribution</h3>
-                  <span className="text-xs text-white/60 light:text-muted-foreground">{periodLabel}</span>
+                  <span className="text-xs text-muted-foreground">{periodLabel}</span>
                 </div>
                 <div className="h-48 flex items-center justify-center">
                   <div className="relative w-40 h-40">
-                    <div className="absolute inset-0 rounded-full border-8 border-white/10 light:border-border"></div>
-                    <div className="absolute inset-1 rounded-full border-6 border-primary/60"></div>
+                    <div className="absolute inset-0 rounded-full border-8 border-border/50"></div>
+                    <div className="absolute inset-1 rounded-full border-[6px] border-primary/60"></div>
                     <div className="absolute inset-2 rounded-full bg-gradient-to-br from-card via-background to-card flex flex-col items-center justify-center text-center">
                       <span className="text-2xl font-bold">{gender.female}%</span>
-                      <span className="text-xs text-white/60 light:text-muted-foreground">Female</span>
-                      <span className="text-xs text-white/50 light:text-muted-foreground">{gender.male}% Male</span>
+                      <span className="text-xs text-muted-foreground">Female</span>
+                      <span className="text-xs text-muted-foreground">{gender.male}% Male</span>
                     </div>
                   </div>
                 </div>
@@ -866,55 +858,75 @@ const AudienceAnalytics = () => {
         )}
 
         {/* Event drilldown */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur shadow-lg shadow-black/30 light:bg-muted light:border-border light:shadow-black/5">
+        <div className="bg-card border border-border/50 rounded-2xl p-5 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
             <div className="space-y-1">
               <h3 className="text-lg font-semibold">Event drill-down</h3>
-              <p className="text-xs text-white/60 light:text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 {selectedEventOption ? `${selectedEventOption.title} performance over the selected period` : "Ticket performance and sales timeline"}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex w-full md:max-w-sm items-center gap-2">
               <select
-                value={selectedEvent}
+                aria-label="Select event for drill-down" value={selectedEvent}
                 onChange={(e) => setSelectedEvent(e.target.value)}
-                className="bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-sm text-white min-w-[260px] focus:outline-none focus:border-accent light:bg-muted light:border-border light:text-foreground"
+                className="w-full min-h-11 bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {!selectedEvent && (
-                  <option value="" className="bg-card text-white/70 light:text-muted-foreground">
+                  <option value="" className="bg-card text-muted-foreground">
                     Select event
                   </option>
                 )}
                 {eventOptions.map((evt) => {
                   return (
-                    <option key={evt.id} value={evt.id} className="bg-card text-white light:text-foreground">
+                    <option key={evt.id} value={evt.id} className="bg-card text-foreground">
                       {evt.title || "Event"}
                     </option>
                   );
                 })}
               </select>
-              {eventLoading && <Loader2 className="w-4 h-4 animate-spin text-white/60 light:text-muted-foreground" />}
+              {eventLoading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
             </div>
           </div>
           {eventError && (
-            <div className="flex items-center gap-2 text-amber-200 text-xs bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2 mb-3 light:text-warning">
+            <div className="flex items-center gap-2 text-warning text-xs bg-warning/10 border border-warning/30 rounded-xl px-3 py-2 mb-3">
               <AlertTriangle className="w-4 h-4" />
               {eventError}
             </div>
           )}
           {!selectedEvent ? (
-            <p className="text-sm text-white/60 light:text-muted-foreground">Select an event to view its analytics.</p>
+            <p className="text-sm text-muted-foreground">Select an event to view its analytics.</p>
           ) : (
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
-              <div className="xl:col-span-2 grid grid-cols-1 lg:grid-cols-5 gap-3">
-                <div className="lg:col-span-3 rounded-xl bg-white/5 border border-white/10 p-4 space-y-3 light:bg-muted light:border-border">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-white/70 light:text-muted-foreground">Sales timeline</p>
-                    <span className="text-[11px] px-2 py-1 rounded-full bg-white/5 border border-white/10 text-white/60 light:bg-muted light:border-border light:text-muted-foreground">Revenue & bookings</span>
+            <div className="space-y-5">
+              <div className="space-y-3">
+                {eventOverview && (
+                  <div className="rounded-xl bg-muted/40 border border-border/50 px-4 py-4 space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
+                      <p className="text-sm text-muted-foreground">Sales for selected period</p>
+                      <span className="text-[11px] px-2 py-1 rounded-full bg-muted/40 border border-border/50 text-muted-foreground">Quick stats</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 text-sm">
+                      <div className="flex flex-col gap-2 rounded-xl border border-border/50 bg-background p-4 text-muted-foreground"><span>Net ticket sales</span><span className="text-2xl font-semibold tabular-nums text-foreground">{formatNumber(eventOverview.overview?.revenue ?? eventOverview.revenue ?? eventOverview.total)}</span></div>
+                      <div className="flex flex-col gap-2 rounded-xl border border-border/50 bg-background p-4 text-muted-foreground"><span>Bookings</span><span className="text-2xl font-semibold tabular-nums text-foreground">{formatNumber(eventOverview.overview?.bookings ?? eventOverview.bookings ?? 0, "0")}</span></div>
+                      <div className="flex flex-col gap-2 rounded-xl border border-border/50 bg-background p-4 text-muted-foreground"><span>Tickets</span><span className="text-2xl font-semibold tabular-nums text-foreground">{formatNumber(eventOverview.overview?.ticketsSold ?? eventOverview.ticketsSold ?? eventOverview.sold ?? 0, "0")}</span></div>
+                      <div className="flex flex-col gap-2 rounded-xl border border-border/50 bg-background p-4 text-muted-foreground"><span>Avg booking</span><span className="text-2xl font-semibold tabular-nums text-foreground">₹{formatNumber((eventOverview.overview?.revenue ?? eventOverview.revenue ?? eventOverview.total ?? 0) / Math.max(eventOverview.overview?.bookings ?? eventOverview.bookings ?? 1, 1), "0")}</span></div>
+                    </div>
+                    <div className="text-sm">Gross ticket sales: ₹{formatNumber(eventOverview.grossTicketSales)} · Ticket refunds: ₹{formatNumber(eventOverview.processedTicketRefunds)}</div>
+                    {eventOverview.unresolvedRefunds > 0 && <p role="alert">Net sales unavailable: a refund needs review.</p>}
+
                   </div>
-                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                <div className="rounded-xl bg-muted/40 border border-border/50 p-4 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-sm text-muted-foreground">Sales timeline</p>
+                    <span className="text-[11px] px-2 py-1 rounded-full bg-muted/40 border border-border/50 text-muted-foreground">Revenue & tickets</span>
+                  </div>
+                  <div className="space-y-2 xl:max-h-96 overflow-y-auto pr-1">
                     {eventTimeline.length === 0 && (
-                      <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-4 text-xs text-white/60 text-center light:border-border light:bg-muted light:text-muted-foreground">
+                      <div className="rounded-xl border border-border/50 bg-muted/40 px-3 py-4 text-xs text-muted-foreground text-center">
                         No timeline data for this period.
                       </div>
                     )}
@@ -925,11 +937,11 @@ const AudienceAnalytics = () => {
                       const width = progressPercent(revenueVal, maxRevenue);
                       return (
                         <div key={idx} className="space-y-2" title={`₹${formatNumber(revenueVal, "0")}, ${formatNumber(tickets, "0")} tickets`}>
-                          <div className="flex justify-between text-xs text-white/60 light:text-muted-foreground">
+                          <div className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
                             <span>{row.label || row.date || `Day ${idx + 1}`}</span>
-                            <span className="text-white font-semibold flex gap-2 light:text-foreground">
-                              <span className="text-emerald-200 light:text-success">₹{formatNumber(revenueVal, "0")}</span>
-                              <span className="text-blue-200 light:text-info">{formatNumber(tickets, "0")} tickets</span>
+                            <span className="text-foreground font-semibold flex flex-wrap gap-2">
+                              <span className="text-foreground">₹{formatNumber(revenueVal, "0")}</span>
+                              <span className="text-muted-foreground">{formatNumber(tickets, "0")} tickets</span>
                             </span>
                           </div>
                           <AnalyticsProgressBar
@@ -943,23 +955,23 @@ const AudienceAnalytics = () => {
                   </div>
                 </div>
 
-                <div className="lg:col-span-2 rounded-xl bg-white/5 border border-white/10 p-4 space-y-3 light:bg-muted light:border-border">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-white/70 light:text-muted-foreground">Ticket performance</p>
-                    <span className="text-[11px] px-2 py-1 rounded-full bg-white/5 border border-white/10 text-white/60 light:bg-muted light:border-border light:text-muted-foreground">Top 5</span>
+                <div className="rounded-xl bg-muted/40 border border-border/50 p-4 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-sm text-muted-foreground">Ticket performance</p>
+                    <span className="text-[11px] px-2 py-1 rounded-full bg-muted/40 border border-border/50 text-muted-foreground">Top 5</span>
                   </div>
                   {eventTickets.length === 0 && (
-                    <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-xs text-white/60 text-center light:border-border light:bg-muted light:text-muted-foreground">No ticket data.</div>
+                    <div className="rounded-xl border border-border/50 bg-muted/40 px-3 py-3 text-xs text-muted-foreground text-center">No ticket data.</div>
                   )}
-                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                  <div className="space-y-2 xl:max-h-96 overflow-y-auto pr-1">
                     {eventTickets.slice(0, 5).map((ticket, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-between rounded-lg bg-white/5 border border-white/10 px-3 py-2 light:bg-muted light:border-border"
+                        className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-lg bg-muted/40 border border-border/50 px-3 py-2"
                       >
                         <div>
                           <p className="font-semibold leading-tight">{ticket.ticketName || ticket.name || "Ticket"}</p>
-                          <p className="text-[11px] text-white/60 light:text-muted-foreground">
+                          <p className="text-[11px] text-muted-foreground">
                             {formatNumber(ticket.soldQuantity ?? ticket.sold ?? ticket.quantity ?? ticket.count ?? 0, "0")} sold
                           </p>
                         </div>
@@ -967,7 +979,7 @@ const AudienceAnalytics = () => {
                           <p className="text-sm font-semibold">
                             {formatNumber(ticket.revenue ?? ticket.total ?? ticket.amount ?? 0, "—")}
                           </p>
-                          <p className="text-[11px] text-white/60 light:text-muted-foreground">Avg ₹{formatNumber((ticket.revenue ?? ticket.total ?? ticket.amount ?? 0) / Math.max(ticket.soldQuantity ?? ticket.sold ?? ticket.quantity ?? ticket.count ?? 1, 1), "0")}</p>
+                          <p className="text-[11px] text-muted-foreground">Avg ₹{formatNumber((ticket.revenue ?? ticket.total ?? ticket.amount ?? 0) / Math.max(ticket.soldQuantity ?? ticket.sold ?? ticket.quantity ?? ticket.count ?? 1, 1), "0")}</p>
                         </div>
                       </div>
                     ))}
@@ -975,49 +987,34 @@ const AudienceAnalytics = () => {
                 </div>
               </div>
 
-              <div className="space-y-3">
-                {eventOverview && (
-                  <div className="rounded-xl bg-white/5 border border-white/10 px-4 py-4 space-y-2 light:bg-muted light:border-border">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm text-white/70 light:text-muted-foreground">Sales for selected period</p>
-                      <span className="text-[11px] px-2 py-1 rounded-full bg-white/5 border border-white/10 text-white/60 light:bg-muted light:border-border light:text-muted-foreground">Quick stats</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="flex items-center justify-between text-white/70 light:text-muted-foreground"><span>Net ticket sales</span><span className="font-semibold text-white light:text-foreground">{formatNumber(eventOverview.overview?.revenue ?? eventOverview.revenue ?? eventOverview.total)}</span></div>
-                      <div className="flex items-center justify-between text-white/70 light:text-muted-foreground"><span>Bookings</span><span className="font-semibold text-white light:text-foreground">{formatNumber(eventOverview.overview?.bookings ?? eventOverview.bookings ?? 0, "0")}</span></div>
-                      <div className="flex items-center justify-between text-white/70 light:text-muted-foreground"><span>Tickets</span><span className="font-semibold text-white light:text-foreground">{formatNumber(eventOverview.overview?.ticketsSold ?? eventOverview.ticketsSold ?? eventOverview.sold ?? 0, "0")}</span></div>
-                      <div className="flex items-center justify-between text-white/70 light:text-muted-foreground"><span>Avg booking</span><span className="font-semibold text-white light:text-foreground">₹{formatNumber((eventOverview.overview?.revenue ?? eventOverview.revenue ?? eventOverview.total ?? 0) / Math.max(eventOverview.overview?.bookings ?? eventOverview.bookings ?? 1, 1), "0")}</span></div>
-                    </div>
-                    <div className="text-sm">Gross ticket sales: ₹{formatNumber(eventOverview.grossTicketSales)} · Ticket refunds: ₹{formatNumber(eventOverview.processedTicketRefunds)}</div>
-                    {eventOverview.unresolvedRefunds > 0 && <p role="alert">Net sales unavailable: a refund needs review.</p>}
+
+              {eventOverview && (
                     <EventSettlementSummary event={{ id: selectedEvent, organizerId: eventOptions.find(item => item.id === selectedEvent)?.event?.organizer?.id }} />
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Recent Activity */}
         {recentActivity.length > 0 && (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur shadow-lg shadow-black/30 light:bg-muted light:border-border light:shadow-black/5">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-card border border-border/50 rounded-2xl p-5 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
               <h3 className="text-lg font-semibold">Recent Activity</h3>
-              <span className="text-xs text-white/60 light:text-muted-foreground">Live stream · updated now</span>
+              <span className="text-xs text-muted-foreground">Live stream · updated now</span>
             </div>
             <div className="space-y-3">
               {recentActivity.map((activity, idx) => (
                 <div
                   key={activity.id || idx}
-                  className="flex items-start space-x-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors light:bg-muted light:hover:bg-muted light:border-border"
+                  className="flex items-start space-x-3 p-3 rounded-xl bg-muted/40 hover:bg-muted/70 border border-border/50 transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-semibold light:bg-muted">
+                  <div className="w-8 h-8 shrink-0 rounded-full bg-muted/40 flex items-center justify-center text-xs font-semibold">
                     {(activity.actor || "").charAt(0) || "•"}
                   </div>
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold text-white light:text-foreground">{activity.title || activity.action || "Activity"}</p>
-                    {activity.description && <p className="text-xs text-white/70 light:text-muted-foreground">{activity.description}</p>}
-                    <p className="text-[11px] text-white/50 light:text-muted-foreground">{activity.time || activity.createdAt || "Just now"}</p>
+                    <p className="text-sm font-semibold text-foreground">{activity.title || activity.action || "Activity"}</p>
+                    {activity.description && <p className="text-xs text-muted-foreground">{activity.description}</p>}
+                    <p className="text-[11px] text-muted-foreground">{activity.time || activity.createdAt || "Just now"}</p>
                   </div>
                 </div>
               ))}
