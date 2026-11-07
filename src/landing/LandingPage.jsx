@@ -33,7 +33,7 @@ const PICK_YOUR_VIBE_SECTION_CONFIG = [
     eyebrow: "Live",
     description: "Arena tours, stadium shows, acoustic sets, and headliner performances.",
     icon: Music2,
-    image: "/images/ph1.jpg",
+    image: "/images/live.PNG",
     filters: createEventCategoryFilter("Concerts", "Live Concerts"),
   },
   {
@@ -42,7 +42,7 @@ const PICK_YOUR_VIBE_SECTION_CONFIG = [
     eyebrow: "Nightlife",
     description: "Late-night dance floors, resident DJs, guest sets, and high-energy nightlife.",
     icon: Sparkles,
-    image: "/images/ph1.jpg",
+    image: "/images/nightlife.PNG",
     filters: createEventCategoryFilter("Music", "Club Nights"),
   },
   {
@@ -51,7 +51,7 @@ const PICK_YOUR_VIBE_SECTION_CONFIG = [
     eyebrow: "Festivals",
     description: "Multi-stage lineups, outdoor festivals, immersive production, and all-day music.",
     icon: Music2,
-    image: "/images/ph3.jpg",
+    image: "/images/festivals.PNG",
     filters: createEventCategoryFilter("Music", "Music Festivals"),
   },
   {
@@ -60,7 +60,7 @@ const PICK_YOUR_VIBE_SECTION_CONFIG = [
     eyebrow: "Electronic",
     description: "Techno, house, warehouse raves, boiler-room vibes, and electronic showcases.",
     icon: Trophy,
-    image: "/images/ph2.jpg",
+    image: "/images/electronic.PNG",
     filters: createEventCategoryFilter("Sports", "Live Sports"),
     showEventSection: false,
   },
@@ -70,7 +70,7 @@ const PICK_YOUR_VIBE_SECTION_CONFIG = [
     eyebrow: "Underground",
     description: "Jazz lounges, indie acoustic nights, open mics, and intimate secret sessions.",
     icon: Clapperboard,
-    image: eventFallback,
+    image: "/images/acoustic.PNG",
     filters: createEventCategoryFilter("Movies", "Movie Screenings"),
     showEventSection: false,
   },
@@ -1120,32 +1120,25 @@ const LandingPage = () => {
                       style={{ "--landing-delay": `${index * 70}ms` }}
                     >
                       <div className="relative flex h-full min-h-[16.75rem] flex-col overflow-hidden rounded-[1.5rem] border border-border/50 bg-card shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-2 hover:border-border hover:shadow-[var(--shadow-elegant)] light:rounded-xl light:border-border light:shadow-none light:duration-200 light:hover:-translate-y-1 light:hover:shadow-none">
-                        <div className="relative h-[10.25rem] shrink-0 overflow-hidden">
+                        <div className="aspect-[8/5] w-full shrink-0">
                           <img
                             src={section.image}
                             alt=""
                             aria-hidden="true"
-                            className="h-full w-full object-cover opacity-75 transition duration-700 group-hover:scale-110 group-hover:opacity-95 light:opacity-100 light:duration-300 light:group-hover:scale-[1.03] light:group-hover:opacity-100"
+                            className="block h-full w-full object-contain object-center"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-transparent light:hidden" />
-                          <div className="theme-gradient-primary absolute inset-0 opacity-10 light:hidden" />
-                          <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full border border-border/40 bg-card/75 px-3 py-1.5 text-xs font-medium text-foreground shadow-[var(--shadow-card)] backdrop-blur-md light:border-border light:bg-secondary light:shadow-none light:backdrop-blur-none">
-                            <Icon className="h-3.5 w-3.5 text-accent light:text-accent-foreground" />
-                            {section.eyebrow}
-                          </div>
                         </div>
                         <div className="relative flex flex-1 flex-col p-4 pb-[11px]">
+                          <div className="mb-3 inline-flex max-w-full items-center gap-2 self-start rounded-full border border-border/40 bg-card/75 px-3 py-1.5 text-xs font-medium text-foreground shadow-[var(--shadow-card)] light:border-border light:bg-secondary light:shadow-none">
+                            <Icon className="h-3.5 w-3.5 shrink-0 text-accent light:text-accent-foreground" />
+                            {section.eyebrow}
+                          </div>
                           <h3 className="min-h-14 shrink-0 text-xl font-black text-foreground [overflow-wrap:anywhere]">
                             {section.label}
                           </h3>
                           <p className="mt-2 h-[4.5rem] shrink-0 line-clamp-3 text-sm leading-6 text-muted-foreground light:text-foreground/85">
                             {section.description}
                           </p>
-                          <div className="mt-auto flex items-center justify-end gap-3 pt-4 text-sm font-medium text-foreground">
-                            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-muted/50 transition group-hover:bg-primaryCTA group-hover:text-primary-foreground light:bg-muted">
-                              <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-                            </span>
-                          </div>
                         </div>
                       </div>
                     </Link>
