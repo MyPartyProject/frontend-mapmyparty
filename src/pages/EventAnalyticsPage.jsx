@@ -53,11 +53,11 @@ import { useEventAnalytics } from "@/hooks/useEventAnalytics";
 import AnalyticsProgressBar from "@/components/analytics/AnalyticsProgressBar";
 
 const fmt = (n) =>
-  new Intl.NumberFormat("en-IN", {
+  n == null ? "Unavailable" : new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 2,
-  }).format(n || 0);
+  }).format(n);
 
 const PIE_COLORS = [
   "var(--chart-violet)", "#06b6d4", "#f59e0b", "#10b981", "#ef4444",
@@ -387,7 +387,7 @@ const EventAnalyticsPage = () => {
             />
             <MetricCard
               icon={IndianRupee}
-              label="Total Revenue"
+              label="Net ticket sales"
               value={fmt(s.totalRevenue)}
               accent="bg-emerald-500/15 text-emerald-400 light:text-success"
             />
@@ -406,13 +406,13 @@ const EventAnalyticsPage = () => {
             />
             <MetricCard
               icon={Receipt}
-              label="Platform Fees"
+              label="Settlement commission"
               value={fmt(s.totalPlatformFees)}
               accent="bg-sky-500/15 text-sky-400"
             />
             <MetricCard
               icon={BadgePercent}
-              label="GST Collected"
+              label="GST on commission"
               value={fmt(s.totalGST)}
               accent="bg-amber-500/15 text-amber-400 light:text-warning"
             />
@@ -424,7 +424,7 @@ const EventAnalyticsPage = () => {
             />
             <MetricCard
               icon={TrendingUp}
-              label="Avg Order"
+              label="Net tickets per booking"
               value={fmt(s.averageOrderValue)}
               accent="bg-orange-500/15 text-orange-400"
             />
@@ -432,6 +432,12 @@ const EventAnalyticsPage = () => {
         )}
 
         {/* ── Sales Timeline Chart ─────────────────────────────────────── */}
+        {summary.data && <div className="rounded-xl border border-border p-4 text-sm space-y-2">
+          <p>Gross ticket sales: {fmt(s.grossTicketSales)} · Processed ticket refunds: {fmt(s.processedTicketRefunds)} · Net ticket sales: {fmt(s.netTicketSales)}</p>
+          <p>Buyer convenience fees: {fmt(s.buyerConvenienceFees)} · Buyer GST: {fmt(s.buyerGST)} · Buyer collections before refunds: {fmt(s.buyerCollections)}</p>
+          <p>Buyer fees and GST are excluded from ticket revenue. Settlement amounts cover the whole event.</p>
+          {s.unresolvedRefunds > 0 && <p role="alert">Net sales are unavailable while {s.unresolvedRefunds} refund(s) need review.</p>}
+        </div>}
         {salesTimeline.loading ? (
           <ChartSkeleton />
         ) : salesTimeline.error ? (
@@ -477,7 +483,7 @@ const EventAnalyticsPage = () => {
             <div className="rounded-xl bg-white/[0.03] ring-1 ring-white/[0.07] p-4 light:bg-muted light:ring-border">
               <h2 className="text-sm font-semibold mb-4 flex items-center gap-2">
                 <IndianRupee className="w-4 h-4 text-emerald-400 light:text-success" />
-                Revenue by Ticket Type
+                Net ticket sales by ticket type
               </h2>
               <div className="flex items-center gap-4">
                 <ResponsiveContainer width="50%" height={180}>
@@ -511,8 +517,9 @@ const EventAnalyticsPage = () => {
                   ))}
                 </div>
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">Refunds: {fmt(revenue.feeBreakdown?.refunds)} ? Pending refunds: {fmt(revenue.feeBreakdown?.pendingRefunds)} ? Balance deductions: {fmt(revenue.feeBreakdown?.balanceDeductions)}</p>
+              <p className="mt-3 text-xs text-muted-foreground">Settlement refunds: {fmt(revenue.feeBreakdown?.refunds)} · Pending refunds: {fmt(revenue.feeBreakdown?.pendingRefunds)} · Balance deductions: {fmt(revenue.feeBreakdown?.balanceDeductions)} · Manual corrections: {fmt(revenue.feeBreakdown?.manualCorrections)}</p>
               {/* Fee breakdown */}
+              <p className="text-xs text-muted-foreground">Sales reflect later refunds. Settlement figures below cover the whole event and retain recorded payout amounts.</p>
               {revenue.feeBreakdown && (
                 <div className="mt-4 pt-3 border-t border-white/[0.06] grid grid-cols-3 gap-2 text-center text-xs light:border-border">
                   <div>
@@ -521,7 +528,7 @@ const EventAnalyticsPage = () => {
                   </div>
                   <div>
                     <p className="text-white/30 light:text-muted-foreground">Fees + GST</p>
-                    <p className="text-red-400 font-medium light:text-destructive">-{fmt(revenue.feeBreakdown.platformFees + revenue.feeBreakdown.gst)}</p>
+                    <p className="text-red-400 font-medium light:text-destructive">-{fmt(revenue.feeBreakdown.platformFees == null || revenue.feeBreakdown.gst == null ? null : revenue.feeBreakdown.platformFees + revenue.feeBreakdown.gst)}</p>
                   </div>
                   <div>
                     <p className="text-white/30 light:text-muted-foreground">{s.settlement?.isEstimate ? "Estimated payout" : "Payout"}</p>
@@ -596,7 +603,7 @@ const EventAnalyticsPage = () => {
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-white/[0.06] light:border-border">
-                      {["Ticket", "Type", "Price", "Sold / Total", "Sell-through", "Revenue", "GST", "Platform Fee", "Net Payout"].map((h) => (
+                      {["Ticket", "Type", "Price", "Sold / Total", "Sell-through", "Net ticket sales", "Settlement GST", "Settlement fee", "Before adjustments"].map((h) => (
                         <th key={h} className="px-4 py-2.5 text-left font-medium text-white/40 uppercase tracking-widest whitespace-nowrap light:text-muted-foreground">{h}</th>
                       ))}
                     </tr>
@@ -640,7 +647,7 @@ const EventAnalyticsPage = () => {
                         <td className="px-4 py-3 font-semibold text-emerald-400 light:text-success">{fmt(s.totalRevenue)}</td>
                         <td className="px-4 py-3 font-semibold text-amber-400 light:text-warning">{fmt(s.totalGST)}</td>
                         <td className="px-4 py-3 font-semibold text-sky-400">{fmt(s.totalPlatformFees)}</td>
-                        <td className="px-4 py-3 font-semibold text-white light:text-foreground">{fmt(s.netPayout)}</td>
+                        <td className="px-4 py-3 font-semibold text-white light:text-foreground">{fmt(tickets.some(row => row.netPayout == null) ? null : tickets.reduce((sum, row) => sum + row.netPayout, 0))}</td>
                       </tr>
                     </tfoot>
                   )}
@@ -673,14 +680,14 @@ const EventAnalyticsPage = () => {
                       <Icon className={`w-4 h-4 mx-auto mb-1 ${colorClass.split(" ")[0]}`} />
                       <p className="text-lg font-semibold text-white light:text-foreground">{data.count}</p>
                       <p className="text-[10px] uppercase tracking-widest text-white/40 light:text-muted-foreground">{status}</p>
-                      <p className="text-[10px] text-white/30 mt-0.5 light:text-muted-foreground">{fmt(data.revenue)}</p>
+                      <p className="text-[10px] text-white/30 mt-0.5 light:text-muted-foreground">Order value incl. buyer fees/GST: {fmt(data.orderValue)}</p>
                     </div>
                   );
                 })}
               </div>
               {bookings.refunds?.count > 0 && (
                 <div className="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs light:border-border">
-                  <span className="text-white/40 light:text-muted-foreground">Refunds processed</span>
+                  <span className="text-white/40 light:text-muted-foreground">Refund requests (all statuses)</span>
                   <span className="text-red-400 light:text-destructive">{bookings.refunds.count} ({fmt(bookings.refunds.totalAmount)})</span>
                 </div>
               )}

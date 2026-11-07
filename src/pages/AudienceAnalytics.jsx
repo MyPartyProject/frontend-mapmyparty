@@ -1,3 +1,4 @@
+import EventSettlementSummary from '@/components/organizer/EventSettlementSummary';
 import { nonNegativeNumber, progressPercent } from '@/lib/progress';
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -58,7 +59,7 @@ const normalizeTrend = (arr = []) =>
   Array.isArray(arr)
     ? arr.map((item, idx) => ({
         label: item.label || item.date || item.day || `Point ${idx + 1}`,
-        value: item.amount ?? item.revenue ?? item.count ?? item.bookings ?? item.value ?? 0,
+        value: 'amount' in item ? item.amount : 'revenue' in item ? item.revenue : item.count ?? item.bookings ?? item.value ?? 0,
       }))
     : [];
 
@@ -105,7 +106,7 @@ const normalizeEventRecord = (raw = {}) => {
     category: source?.category || raw?.category || "",
     city: source?.city || raw?.city || raw?.location || "",
     startDate: source?.startDate || raw?.startDate || "",
-    revenue: Number(raw?.revenue ?? raw?.net ?? raw?.total ?? raw?.amount ?? 0) || 0,
+    revenue: 'revenue' in raw ? raw.revenue : null,
     ticketsSold: Number(raw?.ticketsSold ?? raw?.sold ?? 0) || 0,
     bookings: Number(raw?.bookings ?? 0) || 0,
     event: source,
@@ -129,7 +130,8 @@ const mergeEventCollections = (...collections) => {
       merged.set(item.id, {
         ...existing,
         ...item,
-        revenue: item.revenue || existing.revenue || 0,
+        event: { ...existing.event, ...item.event, organizer: item.event?.organizer || existing.event?.organizer },
+        revenue: item.revenue,
         ticketsSold: item.ticketsSold || existing.ticketsSold || 0,
         bookings: item.bookings || existing.bookings || 0,
       });
@@ -338,7 +340,7 @@ const AudienceAnalytics = () => {
       setEventLoading(true);
       setEventError("");
       const mainPeriod = computedPeriod;
-      const safePeriod = mainPeriod === "all" ? "year" : mainPeriod;
+      const safePeriod = mainPeriod;
       const common = { period: safePeriod, startDate, endDate };
       try {
         const [ticketsRes, timelineRes] = await Promise.all([
@@ -356,30 +358,22 @@ const AudienceAnalytics = () => {
 
         // Derive overview from timeline totals and ticket data (no separate overview endpoint)
         const totals = timelineData?.totals || {};
-        const totalRevenue = totals.revenue ?? tickets.reduce((s, t) => s + (t.revenue || 0), 0);
+        const totalRevenue = totals.netTicketSales;
         const totalSold = totals.ticketsSold ?? tickets.reduce((s, t) => s + (t.soldQuantity || 0), 0);
         const totalRefunds = totals.refunds ?? 0;
-        const totalPlatformFees = tickets.reduce((s, t) => s + (t.platformFee || 0), 0);
-        const totalGst = tickets.reduce((s, t) => s + (t.gst || 0), 0);
         const timelineBookings = timeline.reduce(
           (sum, row) => sum + Number(row.bookings ?? row.bookingCount ?? 0),
           0
         );
         const totalBookings = totals.bookings ?? (timelineBookings || eventMeta?.bookings || 0);
-        const netPayout = Math.max(totalRevenue - totalPlatformFees - totalGst - totalRefunds, 0);
         setEventOverview({
           revenue: totalRevenue,
           ticketsSold: totalSold,
           bookings: totalBookings,
-          payoutSummary: totalRevenue > 0 || totalRefunds > 0 || totalPlatformFees > 0 || totalGst > 0
-            ? {
-                organizerPayout: netPayout,
-                platformFees: totalPlatformFees,
-                gstCollected: totalGst,
-                refundsProcessed: totalRefunds,
-                netPayout,
-              }
-            : null,
+          grossTicketSales: totals.grossTicketSales,
+          processedTicketRefunds: totalRefunds,
+          buyerCollections: totals.buyerCollections,
+          unresolvedRefunds: totals.unresolvedRefunds,
         });
       } catch (err) {
         console.error("Failed to load event analytics", err);
@@ -985,24 +979,18 @@ const AudienceAnalytics = () => {
                 {eventOverview && (
                   <div className="rounded-xl bg-white/5 border border-white/10 px-4 py-4 space-y-2 light:bg-muted light:border-border">
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm text-white/70 light:text-muted-foreground">Event overview</p>
+                      <p className="text-sm text-white/70 light:text-muted-foreground">Sales for selected period</p>
                       <span className="text-[11px] px-2 py-1 rounded-full bg-white/5 border border-white/10 text-white/60 light:bg-muted light:border-border light:text-muted-foreground">Quick stats</span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="flex items-center justify-between text-white/70 light:text-muted-foreground"><span>Revenue</span><span className="font-semibold text-white light:text-foreground">{formatNumber(eventOverview.overview?.revenue ?? eventOverview.revenue ?? eventOverview.total)}</span></div>
+                      <div className="flex items-center justify-between text-white/70 light:text-muted-foreground"><span>Net ticket sales</span><span className="font-semibold text-white light:text-foreground">{formatNumber(eventOverview.overview?.revenue ?? eventOverview.revenue ?? eventOverview.total)}</span></div>
                       <div className="flex items-center justify-between text-white/70 light:text-muted-foreground"><span>Bookings</span><span className="font-semibold text-white light:text-foreground">{formatNumber(eventOverview.overview?.bookings ?? eventOverview.bookings ?? 0, "0")}</span></div>
                       <div className="flex items-center justify-between text-white/70 light:text-muted-foreground"><span>Tickets</span><span className="font-semibold text-white light:text-foreground">{formatNumber(eventOverview.overview?.ticketsSold ?? eventOverview.ticketsSold ?? eventOverview.sold ?? 0, "0")}</span></div>
                       <div className="flex items-center justify-between text-white/70 light:text-muted-foreground"><span>Avg booking</span><span className="font-semibold text-white light:text-foreground">₹{formatNumber((eventOverview.overview?.revenue ?? eventOverview.revenue ?? eventOverview.total ?? 0) / Math.max(eventOverview.overview?.bookings ?? eventOverview.bookings ?? 1, 1), "0")}</span></div>
                     </div>
-                    {eventOverview.payoutSummary && (
-                      <div className="pt-2 border-t border-white/10 space-y-1 text-xs text-white/70 light:border-border light:text-muted-foreground">
-                        <div className="flex justify-between"><span>Organizer payout</span><span className="text-emerald-200 font-semibold light:text-success">₹{formatNumber(eventOverview.payoutSummary.organizerPayout, "—")}</span></div>
-                        <div className="flex justify-between"><span>Platform fees</span><span className="text-white light:text-foreground">₹{formatNumber(eventOverview.payoutSummary.platformFees, "—")}</span></div>
-                        <div className="flex justify-between"><span>GST collected</span><span className="text-white light:text-foreground">₹{formatNumber(eventOverview.payoutSummary.gstCollected, "—")}</span></div>
-                        <div className="flex justify-between"><span>Refunds</span><span className="text-white light:text-foreground">₹{formatNumber(eventOverview.payoutSummary.refundsProcessed, "—")}</span></div>
-                        <div className="flex justify-between font-semibold text-white pt-1 light:text-foreground"><span>Net payout</span><span>₹{formatNumber(eventOverview.payoutSummary.netPayout, "—")}</span></div>
-                      </div>
-                    )}
+                    <div className="text-sm">Gross ticket sales: ₹{formatNumber(eventOverview.grossTicketSales)} · Ticket refunds: ₹{formatNumber(eventOverview.processedTicketRefunds)}</div>
+                    {eventOverview.unresolvedRefunds > 0 && <p role="alert">Net sales unavailable: a refund needs review.</p>}
+                    <EventSettlementSummary event={{ id: selectedEvent, organizerId: eventOptions.find(item => item.id === selectedEvent)?.event?.organizer?.id }} />
                   </div>
                 )}
               </div>

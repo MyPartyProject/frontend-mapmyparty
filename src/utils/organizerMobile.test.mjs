@@ -37,12 +37,14 @@ test("summaries preserve zero and never fall back to top events or unrelated tot
   assert.deepEqual(organizerMobileTotals({
     breakdown: { byStatus: {}, byTicketType: {} },
     trends: { revenue: [] },
+    sales: { netTicketSales: 0 },
     topEvents: [{ revenue: 999 }],
   }), { events: 0, tickets: 0, revenue: 0 });
   assert.deepEqual(organizerMobileTotals(null), { events: null, tickets: null, revenue: null });
   assert.deepEqual(organizerMobileTotals({
     breakdown: { byStatus: { PUBLISHED: 21, DRAFT: 4 }, byTicketType: { VIP: { ticketsSold: 30 }, GENERAL: { ticketsSold: 100 } } },
     trends: { revenue: [{ amount: 150.5 }, { amount: 0 }, { amount: 25 }] },
+    sales: { netTicketSales: 175.5 },
   }), { events: 25, tickets: 130, revenue: 175.5 });
 });
 
@@ -51,4 +53,5 @@ test("incomplete or invalid metric data is unavailable rather than fabricated ze
     breakdown: { byStatus: { DRAFT: null }, byTicketType: { VIP: {} } },
     trends: { revenue: [{ amount: "invalid" }] },
   }), { events: null, tickets: null, revenue: null });
+  assert.equal(organizerMobileTotals({ sales: { netTicketSales: null, unresolvedRefunds: 1 }, trends: { revenue: [{ amount: 110000 }] } }).revenue, null);
 });

@@ -87,15 +87,15 @@ const PromoterDashboard = () => {
         icon: Users
       },
       {
-        title: "Gross Revenue",
+        title: "Total collected from buyers",
         value: dashboard.moneySubunits ? formatPaise(dashboard.moneySubunits.grossRevenue) : formatCurrency(dashboard.grossRevenue),
         delta: growth(dashboard.comparison?.grossRevenueGrowth),
         icon: Wallet2
       },
       {
-        title: "Platform Earnings",
+        title: "Platform earnings before expenses",
         value: dashboard.moneySubunits ? formatPaise(dashboard.moneySubunits.platformEarnings) : formatCurrency(dashboard.platformEarnings),
-        delta: growth(dashboard.comparison?.platformEarningsGrowth) + " | " + (dashboard.comparison?.platformSharePercentage == null ? "N/A" : dashboard.comparison.platformSharePercentage.toFixed(2) + "%") + " of GMV",
+        delta: growth(dashboard.comparison?.platformEarningsGrowth) + " | " + (dashboard.comparison?.platformSharePercentage == null ? "N/A" : dashboard.comparison.platformSharePercentage.toFixed(2) + "%") + " of total collected",
         icon: BarChart3
       },
       {

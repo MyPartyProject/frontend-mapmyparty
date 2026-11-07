@@ -9,7 +9,7 @@ export default function UpcomingSettlements({ admin = false }) {
   const { user } = useAuth();
   const [page, setPage] = useState(1);
   const { data, error, isFetching, refetch } = useQuery({
-    queryKey: ['upcoming-settlements', user?.id, admin, page],
+    queryKey: ['upcoming-settlements-sales-v2', user?.id, admin, page],
     queryFn: async () => {
       const result = await apiFetch(`${admin ? 'admin' : 'organizer/me'}/settlements?page=${page}&limit=20`);
       if (!result.success) throw new Error(result.message || 'Unable to load settlements');
@@ -28,7 +28,7 @@ export default function UpcomingSettlements({ admin = false }) {
         <div className="flex flex-wrap justify-between gap-2"><h3 className="text-sm font-medium break-words">{item.event.title}</h3><span className="text-sm">{item.status.replaceAll('_', ' ')}</span></div>
         {admin && <p className="text-sm text-muted-foreground">Organizer: {item.event.organizer?.name || item.event.organizer?.id || 'Unavailable'}</p>}
         <p className="font-semibold">{item.isEstimate ? 'Estimated payout' : 'Payout'}: {item.totals ? money(item.totals.netPayoutAmount) : 'Unavailable'}</p>
-        {item.totals && <dl className="grid grid-cols-2 gap-2 text-sm">{[['Ticket sales', item.totals.grossTicketSales], ['Refunds', item.totals.refundAmount], ['Pending refunds', item.totals.refundReserveAmount], ['Platform fee', item.totals.platformFeeAmount], ['GST on fee', item.totals.gstTotal], ['Balance deductions', item.totals.organizerBalanceAdjustmentAmount]].map(([label, value]) => <div key={label}><dt className="text-muted-foreground">{label}</dt><dd>{money(value || 0)}</dd></div>)}</dl>}
+        {item.totals && <dl className="grid grid-cols-2 gap-2 text-sm">{[['Ticket sales', item.totals.grossTicketSales], ['Refunds', item.totals.refundAmount], ['Pending refunds', item.totals.refundReserveAmount], ['Platform fee', item.totals.platformFeeAmount], ['GST on fee', item.totals.gstTotal], ['Balance deductions', item.totals.organizerBalanceAdjustmentAmount], ['Manual corrections', (item.totals.manualAdjustmentCents || 0) / 100]].map(([label, value]) => <div key={label}><dt className="text-muted-foreground">{label}</dt><dd>{money(value || 0)}</dd></div>)}</dl>}
         <p className="text-sm">Eligible from: {item.eligibleAt ? new Date(item.eligibleAt).toLocaleString('en-IN') : 'Unavailable'} · Bank: {item.bankAccountMasked || 'Not ready'}</p>
         {item.blockers.map((blocker, index) => <p key={`${blocker.code}-${index}`} className="text-sm text-muted-foreground">{blocker.message}</p>)}
       </article>)}

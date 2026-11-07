@@ -47,6 +47,6 @@ export function organizerMobileTotals(analytics) {
   return {
     events: sum(analytics?.breakdown?.byStatus && Object.values(analytics.breakdown.byStatus)),
     tickets: sum(analytics?.breakdown?.byTicketType && Object.values(analytics.breakdown.byTicketType).map((item) => item?.ticketsSold)),
-    revenue: sum(analytics?.trends?.revenue?.map((item) => item?.amount)),
+    revenue: analytics?.sales?.netTicketSales ?? null,
   };
 }

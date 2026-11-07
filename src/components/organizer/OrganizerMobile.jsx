@@ -41,7 +41,7 @@ function Overview() {
         {[
           ["Events", number(totals.events), "All time"],
           ["Tickets sold", number(totals.tickets), "All time"],
-          ["Revenue", money(totals.revenue), period ? `${date(period.start)} – ${date(period.end)}` : "Period unavailable"],
+          ["Net ticket sales", money(totals.revenue), period ? `${date(period.start)} – ${date(period.end)}` : "Period unavailable"],
         ].map(([title, value, hint], index) => <div key={title} className={`${card} ${index === 2 ? "min-[360px]:col-span-2" : ""}`}>
           <p className="text-sm text-muted-foreground">{title}</p>
           <p className="my-2 break-words text-xl font-semibold tabular-nums">{value}</p>

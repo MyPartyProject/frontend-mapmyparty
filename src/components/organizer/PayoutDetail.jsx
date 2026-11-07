@@ -275,6 +275,10 @@ const PayoutDetail = ({ payoutId, onBack }) => {
               </p>
             </div>
           )}
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4 light:bg-card light:border-border">
+            <p className="text-xs text-white/40 light:text-muted-foreground">Approved manual corrections</p>
+            <p className="mt-1 font-semibold">Rs. {formatAmount(summary.manualAdjustmentAmount || 0)}</p>
+          </div>
         </div>
       )}
 

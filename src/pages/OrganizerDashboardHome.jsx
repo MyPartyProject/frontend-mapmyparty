@@ -21,10 +21,6 @@ const OrganizerDashboardHome = ({ user, handleLogout, setActiveTab, activeTab })
     const byStatus = analytics?.breakdown?.byStatus || {};
     const byTicketType = analytics?.breakdown?.byTicketType || {};
     const byBookingStatus = analytics?.breakdown?.byBookingStatus || {};
-    const revenueTrend = analytics?.trends?.revenue || [];
-    const topEvents = analytics?.topEvents || [];
-    const tours = analytics?.tours || {};
-
     const ticketsSold = Object.values(byTicketType).reduce(
       (sum, item) => sum + (Number(item?.ticketsSold) || 0),
       0
@@ -35,20 +31,6 @@ const OrganizerDashboardHome = ({ user, handleLogout, setActiveTab, activeTab })
       0
     );
 
-    const revenueFromTrend = revenueTrend.reduce(
-      (sum, item) => sum + (Number(item?.amount) || 0),
-      0
-    );
-
-    const revenueFromTopEvents = topEvents.reduce(
-      (sum, item) => sum + (Number(item?.revenue) || 0),
-      0
-    );
-
-    const revenueFromTours =
-      (Number(tours?.tourVsStandalone?.tourRevenue) || Number(tours?.revenue) || 0) +
-      (Number(tours?.tourVsStandalone?.standaloneRevenue) || Number(tours?.standaloneRevenue) || 0);
-
     return {
       liveEvents:
         (Number(byStatus.PUBLISHED) || 0) +
@@ -57,14 +39,14 @@ const OrganizerDashboardHome = ({ user, handleLogout, setActiveTab, activeTab })
       draftEvents: Number(byStatus.DRAFT) || 0,
       attendees: ticketsSold || bookingsCount || 0,
       ticketsSold,
-      revenue: revenueFromTrend || revenueFromTopEvents || revenueFromTours || 0,
+      revenue: analytics?.sales?.netTicketSales ?? null,
     };
   }, [analytics]);
 
   const totals = useMemo(
     () => ({
       totalAttendees: analyticsTotals.attendees || statistics.totalAttendees || 0,
-      totalRevenue: analyticsTotals.revenue || statistics.totalRevenue || 0,
+      totalRevenue: analyticsTotals.revenue,
       totalTickets: analyticsTotals.ticketsSold || statistics.totalTicketsSold || 0,
       published: analyticsTotals.liveEvents || statistics.publishedEvents || 0,
       drafts: analyticsTotals.draftEvents || statistics.draftEvents || 0,
@@ -73,12 +55,14 @@ const OrganizerDashboardHome = ({ user, handleLogout, setActiveTab, activeTab })
   );
 
   const formatNumber = (n) => new Intl.NumberFormat("en-IN").format(n || 0);
-  const formatCurrency = (n) => `INR ${new Intl.NumberFormat("en-IN").format(n || 0)}`;
+  const formatCurrency = (n) => n == null ? "Unavailable" : `INR ${new Intl.NumberFormat("en-IN").format(n || 0)}`;
 
   const kpis = [
     { label: "Live Events", value: formatNumber(totals.published), hint: `${totals.drafts} drafts`, icon: Sparkles },
     { label: "Attendees", value: formatNumber(totals.totalAttendees), hint: "Total attendees", icon: Users },
-    { label: "Revenue", value: formatCurrency(totals.totalRevenue), hint: "Total revenue", icon: IndianRupee },
+    { label: "Net ticket sales", value: formatCurrency(totals.totalRevenue), hint: "This month · India time · after ticket refunds", icon: IndianRupee },
+    { label: "Gross ticket sales", value: formatCurrency(analytics?.sales?.grossTicketSales), hint: "This month, before refunds", icon: IndianRupee },
+    { label: "Ticket refunds", value: formatCurrency(analytics?.sales?.processedTicketRefunds), hint: "Refunds of this month’s sales", icon: IndianRupee },
     { label: "Tickets Sold", value: formatNumber(totals.totalTickets), hint: "All time", icon: Ticket },
   ];
 

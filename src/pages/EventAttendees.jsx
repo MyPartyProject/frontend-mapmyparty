@@ -130,10 +130,10 @@ const EventAttendees = () => {
           </div>
           <div className="bg-white/5 border border-white/10 rounded-xl p-4 light:bg-muted light:border-border">
             <div className="flex items-center gap-2 text-white/50 text-xs mb-1 light:text-muted-foreground">
-              <IndianRupee className="w-3.5 h-3.5" /> Revenue
+              <IndianRupee className="w-3.5 h-3.5" /> Net ticket sales
             </div>
             <p className="text-xl font-bold text-white light:text-foreground">
-              Rs. {stats.totalRevenue?.toLocaleString("en-IN")}
+              {stats.totalRevenue == null ? "Unavailable" : `Rs. ${stats.totalRevenue.toLocaleString("en-IN")}`}
             </p>
           </div>
           <div className="bg-white/5 border border-white/10 rounded-xl p-4 light:bg-muted light:border-border">
@@ -150,6 +150,12 @@ const EventAttendees = () => {
           </div>
         </div>
       )}
+
+      {stats && <div className="text-sm text-muted-foreground space-y-1">
+        <p>Gross ticket sales: Rs. {stats.grossTicketSales?.toLocaleString('en-IN')} · Processed ticket refunds: Rs. {stats.processedTicketRefunds?.toLocaleString('en-IN')}</p>
+        <p>Buyer fees and GST are excluded from revenue. Buyer collections before refunds: Rs. {stats.buyerCollections?.toLocaleString('en-IN')}</p>
+        {stats.unresolvedRefunds > 0 && <p role="alert">Net sales are unavailable while refunds need review.</p>}
+      </div>}
 
       {/* Table */}
       <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden light:bg-muted light:border-border">
@@ -170,7 +176,7 @@ const EventAttendees = () => {
                   <th className="px-6 py-4">Attendee</th>
                   <th className="px-6 py-4">Contact</th>
                   <th className="px-6 py-4">Tickets</th>
-                  <th className="px-6 py-4">Amount</th>
+                  <th className="px-6 py-4">Buyer payment</th>
                   <th className="px-6 py-4">Payment</th>
                   <th className="px-6 py-4">Check-in</th>
                 </tr>

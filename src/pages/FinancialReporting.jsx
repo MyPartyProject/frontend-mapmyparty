@@ -26,7 +26,7 @@ import { useNavigate } from "react-router-dom";
 import { apiFetch } from "@/config/api";
 import AnalyticsProgressBar from "@/components/analytics/AnalyticsProgressBar";
 
-const formatINR = (value) => `₹${(value ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+const formatINR = (value) => value == null ? 'Unavailable' : `₹${value.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 const formatNumber = (value, fallback = "0") => {
   if (value === null || value === undefined || Number.isNaN(Number(value))) return fallback;
   return Number(value).toLocaleString("en-IN", { maximumFractionDigits: 0 });
@@ -82,7 +82,7 @@ const normalizeTrend = (raw) => {
   if (Array.isArray(list)) {
     return list.map((row, idx) => ({
       label: row.label || row.date || `Day ${idx + 1}`,
-      revenue: row.amount ?? row.revenue ?? row.total ?? 0,
+      revenue: 'amount' in row ? row.amount : row.revenue ?? null,
       bookings: row.count ?? row.bookings ?? 0,
     }));
   }
@@ -90,7 +90,7 @@ const normalizeTrend = (raw) => {
   const bookings = list.bookings || [];
   return revenue.map((row, idx) => ({
     label: row.date || row.label || `Day ${idx + 1}`,
-    revenue: row.amount ?? row.revenue ?? row.total ?? 0,
+    revenue: 'amount' in row ? row.amount : row.revenue ?? null,
     bookings: bookings[idx]?.count ?? bookings[idx]?.bookings ?? 0,
   }));
 };
@@ -266,22 +266,11 @@ const FinancialReporting = () => {
 
       const normalizedTop = top.items || top.events || top.topEvents || top || [];
 
-      const revenue =
-        stats?.data?.revenue?.overall ??
-        stats.grossSales ??
-        stats.totalRevenue ??
-        analyticsRes.grossSales ??
-        analyticsRes.totalRevenue ??
-        analyticsRes.revenue;
-      const platformFees =
-        stats?.data?.platformFees?.overall ??
-        stats.platformFees ??
-        analyticsRes.platformFees ??
-        analyticsRes.feeTotal ??
-        analyticsRes.platformFeeTotal;
-      const gstCollected =
-        stats?.data?.gstCollected?.overall ?? stats.gstCollected ?? stats.gstTotal ?? analyticsRes.gstCollected ?? analyticsRes.gstTotal;
-      const refundsVal = stats?.data?.refunds?.overall ?? stats.refunds ?? analyticsRes.refunds ?? analyticsRes.refundTotal;
+      const sales = stats.sales || analyticsRes.sales || {};
+      const revenue = sales.grossTicketSales;
+      const platformFees = sales.buyerConvenienceFees;
+      const gstCollected = sales.buyerGST;
+      const refundsVal = sales.processedTicketRefunds;
       const ticketsSold = stats?.data?.ticketSales?.overall ?? stats.ticketsSold ?? analyticsRes.ticketsSold;
       const avgTicketPrice = analyticsRes.averageTicketPrice ?? analyticsRes.avgTicketPrice ?? stats.avgTicketPrice;
       const successRate = stats.successRate ?? analyticsRes.successRate;
@@ -290,7 +279,9 @@ const FinancialReporting = () => {
       const refundsNumeric = typeof refundsVal === "number" ? refundsVal : Object.values(analyticsRes.refunds || {}).reduce((acc, val) => acc + (val.amountCents ?? val.amount ?? 0), 0) / 100;
 
       setSummary({
-        grossSales: Number(revenue) || 0,
+        grossSales: revenue ?? null,
+        netTicketSales: sales.netTicketSales ?? null,
+        unresolvedRefunds: sales.unresolvedRefunds || 0,
         platformFees: Number(platformFees) || 0,
         gstCollected: Number(gstCollected) || 0,
         refunds: refundsNumeric || 0,
@@ -313,7 +304,7 @@ const FinancialReporting = () => {
       setTopEvents(
         normalizedTop.map((evt, idx) => ({
           event: evt.event || evt,
-          revenue: evt.revenue ?? evt.net ?? evt.total ?? evt.amount ?? 0,
+          revenue: evt.revenue,
           bookings: evt.bookings ?? evt.count ?? 0,
           ticketsSold: evt.ticketsSold ?? evt.sold ?? 0,
           id: evt.eventId || evt.id || evt.event?.id || idx,
@@ -374,11 +365,11 @@ const FinancialReporting = () => {
   }, [loadFinancials]);
 
   const netRevenue = useMemo(
-    () => Math.max(0, (summary.grossSales || 0) - (summary.platformFees || 0) - (summary.refunds || 0)),
+    () => summary.netTicketSales,
     [summary]
   );
   const profitMargin = useMemo(
-    () => (summary.grossSales ? ((netRevenue / summary.grossSales) * 100).toFixed(1) : "0.0"),
+    () => (netRevenue == null ? "Unavailable" : summary.grossSales ? `${((netRevenue / summary.grossSales) * 100).toFixed(1)}%` : "0.0%"),
     [netRevenue, summary]
   );
 
@@ -386,7 +377,7 @@ const FinancialReporting = () => {
     () =>
       (Array.isArray(revenueTrend) ? revenueTrend : []).map((row, idx) => ({
         label: row.label || row.date || `Period ${idx + 1}`,
-        gross: row.revenue ?? row.amount ?? row.gross ?? row.total ?? 0,
+        gross: row.revenue,
         payouts: row.payouts ?? row.paid ?? row.settled ?? 0,
         refunds: row.refunds ?? row.refund ?? 0,
         bookings: row.bookings ?? row.count ?? 0,
@@ -484,12 +475,13 @@ const FinancialReporting = () => {
           </div>
         )}
 
+        {summary.unresolvedRefunds > 0 && <p role="alert" className="text-sm text-amber-500">Net ticket sales are unavailable while refunds need review.</p>}
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <div className={`${glassCard} p-5`}>
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-white/60 light:text-muted-foreground">Gross sales (bookings.totalAmount)</p>
+                <p className="text-sm text-white/60 light:text-muted-foreground">Gross ticket sales</p>
                 <p className="text-3xl font-extrabold mt-2">{formatINR(summary.grossSales)}</p>
               </div>
               <IndianRupee className="w-10 h-10 text-emerald-200/70 light:text-success" />
@@ -503,35 +495,35 @@ const FinancialReporting = () => {
           <div className={`${glassCard} p-5`}>
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-white/60 light:text-muted-foreground">Net revenue after fees & refunds</p>
+                <p className="text-sm text-white/60 light:text-muted-foreground">Net ticket sales after ticket refunds</p>
                 <p className="text-3xl font-extrabold mt-2">{formatINR(netRevenue)}</p>
               </div>
               <Wallet className="w-10 h-10 text-indigo-200/80" />
             </div>
             <div className="mt-3 flex items-center gap-2 text-indigo-200 text-sm">
               <PieChartIcon className="w-4 h-4" />
-              <span>{profitMargin}% margin</span>
+              <span>{profitMargin} of gross ticket sales retained</span>
             </div>
           </div>
 
           <div className={`${glassCard} p-5`}>
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-white/60 light:text-muted-foreground">GST collected (bookings.gstTotal)</p>
+                <p className="text-sm text-white/60 light:text-muted-foreground">Buyer GST collected</p>
                 <p className="text-3xl font-extrabold mt-2">{formatINR(summary.gstCollected)}</p>
               </div>
               <Receipt className="w-10 h-10 text-sky-200/80" />
             </div>
             <div className="mt-3 flex items-center gap-2 text-sky-200 text-sm">
               <Clock className="w-4 h-4" />
-              <span>Filed monthly</span>
+              <span>Excluded from organizer revenue</span>
             </div>
           </div>
 
           <div className={`${glassCard} p-5`}>
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-white/60 light:text-muted-foreground">Platform fees (booking_items.platformFee)</p>
+                <p className="text-sm text-white/60 light:text-muted-foreground">Buyer convenience fees</p>
                 <p className="text-3xl font-extrabold mt-2">{formatINR(summary.platformFees)}</p>
               </div>
               <Banknote className="w-10 h-10 text-amber-200/80 light:text-warning" />
@@ -579,7 +571,7 @@ const FinancialReporting = () => {
             <div className="flex gap-4 mt-6 text-sm text-white/70 light:text-muted-foreground">
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded bg-red-400" />
-                Gross (bookings.totalAmount)
+                Net ticket sales
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded bg-emerald-400" />
@@ -702,7 +694,7 @@ const FinancialReporting = () => {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold">{formatINR(evt.net ?? evt.revenue ?? evt.total ?? 0)}</p>
+                    <p className="text-sm font-semibold">{formatINR(evt.revenue)}</p>
                     <p className="text-xs text-white/60 light:text-muted-foreground">{evt.sold ?? evt.ticketsSold ?? 0} tickets</p>
                   </div>
                 </div>
