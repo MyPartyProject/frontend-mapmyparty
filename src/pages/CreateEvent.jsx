@@ -29,6 +29,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   ArrowLeft,
   ArrowRight,
+  AlertTriangle,
   AtSign,
   Camera,
   Check,
@@ -4295,6 +4296,7 @@ const CreateEvent = () => {
                         <div className={`relative rounded-xl border border-dashed border-border/50 bg-background/40 p-6 text-center transition-all duration-200 ${!basicDetailsFilled ? "opacity-70" : "hover:border-ring/60"}`}>
                         <input
                           id="cover-image" 
+                          aria-describedby="cover-image-policy"
                           type="file" 
                           accept="image/*" 
                           onChange={handleCoverImageChange}
@@ -4309,6 +4311,10 @@ const CreateEvent = () => {
                             <p className="text-xs text-muted-foreground/80">
                               Required size: {FLYER_STANDARD_WIDTH}x{FLYER_STANDARD_HEIGHT}
                             </p>
+                            <div id="cover-image-policy" className="mt-2 flex w-full min-w-0 items-start gap-2 rounded-lg border border-warning/25 bg-warning/10 px-3 py-2 text-left text-xs leading-relaxed text-amber-300 light:text-warning motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200 motion-safe:ease-out motion-reduce:animate-none">
+                              <AlertTriangle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
+                              <p className="min-w-0 break-words">Event flyers must not have the logos of other ticketing platforms. A fine of 15% per ticket is applicable.</p>
+                            </div>
                           </div>
                         </div>
                         {!basicDetailsFilled && (
@@ -4362,6 +4368,7 @@ const CreateEvent = () => {
                         <div className={`relative rounded-xl border border-dashed border-border/50 bg-background/40 p-6 text-center transition-all duration-200 ${!basicDetailsFilled ? "opacity-70" : "hover:border-ring/60"}`}>
                         <input 
                           id="gallery" 
+                          aria-describedby="gallery-image-policy"
                           type="file" 
                           accept="image/*" 
                           multiple 
@@ -4374,6 +4381,10 @@ const CreateEvent = () => {
                             <p className="text-sm text-foreground">Drag and drop gallery images</p>
                             <p className="text-sm text-muted-foreground">or click to upload</p>
                             <p className="text-xs text-muted-foreground/80">Supported formats: JPG, PNG, WebP. Up to 10 images.</p>
+                            <div id="gallery-image-policy" className="mt-2 flex w-full min-w-0 items-start gap-2 rounded-lg border border-warning/25 bg-warning/10 px-3 py-2 text-left text-xs leading-relaxed text-amber-300 light:text-warning motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200 motion-safe:ease-out motion-reduce:animate-none">
+                              <AlertTriangle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
+                              <p className="min-w-0 break-words">Event flyers must not have the logos of other ticketing platforms. A fine of 15% per ticket is applicable.</p>
+                            </div>
                           </div>
                         </div>
                         <p className="text-xs text-muted-foreground">
