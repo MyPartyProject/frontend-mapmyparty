@@ -1,5 +1,10 @@
 import { apiFetch, downloadFile } from "@/config/api";
 
+export const setAdminEventSuspension = async (id, payload) => (await apiFetch(`admin/moderation/events/${id}/suspension`, {
+  method: 'PATCH', body: JSON.stringify(payload),
+})).data;
+export const permanentlyDeleteAdminEvent = async id => (await apiFetch(`admin/moderation/events/${id}`, { method: 'DELETE' })).data;
+
 export const downloadAdminPayoutInvoice = id => downloadFile(`admin/payouts/${id}/invoice`, `payout-${id}.pdf`);
 export const fetchPayoutDocumentEmail = async id => (await apiFetch(`admin/payouts/${id}/invoice/email`)).data;
 export const sendPayoutDocumentEmail = async (id, payload) => (await apiFetch(`admin/payouts/${id}/invoice/email`, {

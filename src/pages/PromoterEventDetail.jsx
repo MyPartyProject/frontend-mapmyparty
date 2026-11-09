@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { fetchModerationEventDetail, reviewModerationEvent } from "@/services/adminService";
 import { toast } from "sonner";
+import EventLifecycleActions from '@/components/promoter/EventLifecycleActions';
 
 const publishBadgeVariant = {
   PUBLISHED: "success",
@@ -223,6 +224,7 @@ const PromoterEventDetail = () => {
       {event && (
         <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
           <div className="min-w-0 space-y-4">
+            <EventLifecycleActions event={event} disabled={isSubmitting} onUpdated={() => { taskSummary.refresh(); return loadEvent(); }} />
             <Card className="bg-card/70 border-border/60">
               <CardHeader className="p-4 pb-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
