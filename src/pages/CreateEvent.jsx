@@ -65,8 +65,6 @@ import { useEvents } from "@/hooks/useEvents";
 import eventMusic from "@/assets/event-music.jpg";
 import TicketTypeModal from "@/components/TicketTypeModal";
 import FlyerCropDialog from "@/components/events/FlyerCropDialog";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
 import { updateEventStep1, updateEventStep2, uploadFlyerImage, deleteFlyerImage, uploadGalleryImages, deleteGalleryImage, generateEventId, createTicket, updateTicket, deleteTicket, createVenue, updateVenue, updateEventStep6, uploadArtistImage, uploadSponsorLogo, deleteArtist, createEventStep1, persistFlyerUrl, uploadDraftImage, persistGalleryUrls, deleteDraftStorageObject } from "@/services/eventService";
 import { eventDraftFetch as apiFetch, rememberEventRevision, requestEventPublication } from "@/services/eventService";
 import { TEMPLATE_CONFIGS, DETAIL_TEMPLATE_CONFIGS, getTemplateConfig, mapTemplateId, mapTemplateNameToId } from "@/config/templates";
@@ -274,7 +272,6 @@ const CreateEvent = () => {
   }, [pendingCoverPreview]);
 
   const normalizeAdditionalFromState = () => ({
-    tc: (termsAndConditions || "").trim(),
     advisory: { ...advisory },
     customAdvisories: [...customAdvisories],
     questions: [...customQuestions],
@@ -681,7 +678,6 @@ const CreateEvent = () => {
   const [artistDialogOpen, setArtistDialogOpen] = useState(false);
   const [activeArtistIndex, setActiveArtistIndex] = useState(null);
   const [deletingArtistId, setDeletingArtistId] = useState(null);
-  const [termsAndConditions, setTermsAndConditions] = useState("");
   const [customQuestions, setCustomQuestions] = useState([]);
   const [newQuestion, setNewQuestion] = useState("");
   const [newAnswer, setNewAnswer] = useState("");
@@ -871,10 +867,6 @@ const CreateEvent = () => {
     };
 
     const normalizeAdditional = (data) => {
-      const tcData = data?.TC || data?.tc;
-      const tcContent =
-        typeof tcData === "string" ? tcData : tcData?.content ? tcData.content : "";
-
       const advisoryData = data?.advisory || {};
       const normalizedAdvisory = { ...initialAdvisoryState };
       Object.keys(normalizedAdvisory).forEach((key) => {
@@ -886,7 +878,6 @@ const CreateEvent = () => {
       const note = data?.organizerNote || "";
 
       return {
-        tc: tcContent || "",
         advisory: normalizedAdvisory,
         customAdvisories: customList,
         questions: questionsData,
@@ -895,17 +886,6 @@ const CreateEvent = () => {
     };
 
     const setAdditionalFromEvent = (data) => {
-      const tcData = data?.TC || data?.tc;
-      if (tcData) {
-        if (typeof tcData === "string") {
-          setTermsAndConditions(tcData);
-        } else if (tcData?.content) {
-          setTermsAndConditions(tcData.content);
-        }
-      } else {
-        setTermsAndConditions("");
-      }
-
       const advisoryData = data?.advisory || {};
       const normalizedAdvisory = { ...initialAdvisoryState };
       Object.keys(normalizedAdvisory).forEach((key) => {
@@ -1091,15 +1071,6 @@ const CreateEvent = () => {
         if (locationParts.length > 0) setVenueName(locationParts[0]);
         if (locationParts.length > 1) setCity(locationParts[1]);
         if (locationParts.length > 2) setState(locationParts[2]);
-      }
-
-      const tcData = eventToEdit.TC || eventToEdit.tc;
-      if (tcData) {
-        if (typeof tcData === "string") {
-          setTermsAndConditions(tcData);
-        } else if (tcData?.content) {
-          setTermsAndConditions(tcData.content);
-        }
       }
 
       const advisoryData = eventToEdit.advisory || {};
@@ -2458,13 +2429,6 @@ const CreateEvent = () => {
           return;
         }
 
-        const tcData = termsAndConditions
-          ? {
-              content: termsAndConditions,
-              lastUpdated: new Date().toISOString(),
-            }
-          : null;
-
         const advisoryData = {};
         Object.keys(advisory).forEach((key) => {
           if (advisory[key] && key !== "other") {
@@ -2479,7 +2443,6 @@ const CreateEvent = () => {
         const questionsJson = customQuestions.length > 0 ? customQuestions : null;
 
         const updateData = {
-          TC: tcData,
           advisory: advisoryJson,
           questions: questionsJson,
           organizerNote: organizerNote,
@@ -3487,12 +3450,6 @@ const CreateEvent = () => {
         return;
       }
       
-      // Prepare Terms & Conditions as JSON
-      const tcData = termsAndConditions ? {
-        content: termsAndConditions,
-        lastUpdated: new Date().toISOString()
-      } : null;
-      
       // Prepare Advisory as JSON (only include selected items)
       const advisoryData = {};
       Object.keys(advisory).forEach(key => {
@@ -3510,7 +3467,6 @@ const CreateEvent = () => {
       const questionsJson = customQuestions.length > 0 ? customQuestions : null;
       
       const updateData = {
-        TC: tcData,
         advisory: advisoryJson,
         questions: questionsJson,
         organizerNote: organizerNote,
@@ -3642,8 +3598,7 @@ const CreateEvent = () => {
       {
         label: "Attendee Info",
         complete: Boolean(
-          termsAndConditions?.trim() ||
-            advisoryEntries.length > 0 ||
+          advisoryEntries.length > 0 ||
             questionsEntries.length > 0 ||
             organizerNote?.trim()
         ),
@@ -3947,22 +3902,10 @@ const CreateEvent = () => {
         <ReviewSection
           icon={FileText}
           title="Attendee Information"
-          description="Policies, advisories, and attendee questions."
-          complete={Boolean(termsAndConditions?.trim() || advisoryEntries.length > 0 || questionsEntries.length > 0)}
+          description="Advisories and attendee questions."
+          complete={Boolean(advisoryEntries.length > 0 || questionsEntries.length > 0)}
         >
           <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
-            <div className={nestedPanel}>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Terms</p>
-              {termsAndConditions?.trim() ? (
-                <div
-                  className="prose prose-invert prose-sm max-w-none text-sm text-foreground"
-                  dangerouslySetInnerHTML={{ __html: termsAndConditions }}
-                />
-              ) : (
-                <p className="text-sm text-muted-foreground">No terms provided.</p>
-              )}
-            </div>
-
             <div className={nestedPanel}>
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Advisories</p>
               {advisoryEntries.length ? (
@@ -5465,42 +5408,9 @@ const CreateEvent = () => {
                       <CardHeader className="pb-2">
                         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Step 7</p>
                         <CardTitle className="text-xl text-foreground">Additional Info</CardTitle>
-                        <p className="text-sm text-muted-foreground">Set policies, advisories, and helpful notes for attendees.</p>
+                        <p className="text-sm text-muted-foreground">Set advisories and helpful notes for attendees.</p>
                       </CardHeader>
                       <CardContent className="space-y-6">
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-1">
-                              <Label htmlFor="terms" className="text-foreground">Terms & Conditions</Label>
-                              <p className="text-xs text-muted-foreground">Describe entry rules, refunds, or other policies.</p>
-                            </div>
-                          </div>
-                          <div className="rounded-2xl border border-border/50 bg-background/40 p-3">
-                            <ReactQuill
-                              theme="snow"
-                              value={termsAndConditions}
-                              onChange={setTermsAndConditions}
-                              placeholder="Enter any terms and conditions..."
-                              style={{
-                                background: "rgba(255,255,255,0.03)",
-                                borderRadius: "12px",
-                                border: "1px solid rgba(255,255,255,0.14)",
-                                color: "#e5e7eb",
-                              }}
-                              className="text-foreground"
-                              modules={{
-                                toolbar: [
-                                  ['bold', 'italic', 'underline'],
-                                  [{ list: 'ordered' }, { list: 'bullet' }],
-                                  [{ color: [] }, { background: [] }],
-                                  [{ size: ['small', false, 'large', 'huge'] }],
-                                  ['clean'],
-                                ],
-                              }}
-                            />
-                          </div>
-                        </div>
-
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <div className="space-y-1">

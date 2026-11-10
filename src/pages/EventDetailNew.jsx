@@ -5,6 +5,7 @@ import {
   Link,
 } from "react-router-dom";
 import { useState, useEffect, useMemo, useRef } from "react";
+import DefaultEventTerms from "@/components/event-detail/DefaultEventTerms";
 import MobileGalleryViewer from '@/components/event-detail/MobileGalleryViewer';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -277,40 +278,6 @@ const EventDetailNew = () => {
     return [];
   }, [event?.faqs, event?.questions]);
 
-  const normalizedTerms = useMemo(() => {
-    if (
-      Array.isArray(event?.termsAndConditions) &&
-      event.termsAndConditions.length > 0
-    ) {
-      return event.termsAndConditions;
-    }
-    if (event?.TC?.content || event?.TC?.terms) {
-      return [event.TC];
-    }
-    return [];
-  }, [event?.termsAndConditions, event?.TC]);
-
-  const getTermHtml = (term) => {
-    if (!term) return "";
-    const decodedContent = decodeHtmlEntities(term.content || "");
-    if (
-      decodedContent &&
-      (hasHtmlTag(decodedContent) || hasEscapedHtmlTag(term.content))
-    ) {
-      return decodedContent;
-    }
-    const decodedTerms = decodeHtmlEntities(term.terms || "");
-    if (hasHtmlTag(decodedTerms) || hasEscapedHtmlTag(term.terms))
-      return decodedTerms;
-    return "";
-  };
-
-  const showFaqTc = useMemo(() => {
-    const hasFaq = normalizedFaqs.length > 0;
-    const hasTerms = normalizedTerms.length > 0;
-    return hasFaq || hasTerms;
-  }, [normalizedFaqs, normalizedTerms]);
-
   const artistsCount = Array.isArray(event?.artists) ? event.artists.length : 0;
   const showArtistsTab = artistsCount > 1;
 
@@ -478,50 +445,6 @@ const EventDetailNew = () => {
     requestAnimationFrame(measure);
   }, [event?.about, aboutExpanded, activeTab]);
 
-  const renderTermsContent = () => {
-    const decodedTermsHtml = decodeHtmlEntities(event?.termsHtml || "");
-    if (
-      decodedTermsHtml &&
-      (hasHtmlTag(decodedTermsHtml) || hasEscapedHtmlTag(event?.termsHtml))
-    ) {
-      return (
-        <div
-          className="prose prose-invert max-w-none text-[10px] leading-3 text-gray-400 prose-p:my-0.5 prose-p:text-[10px] prose-p:leading-3 prose-li:my-0 prose-li:text-[10px] prose-li:leading-3 prose-ol:list-decimal prose-ul:list-disc prose-headings:text-xs prose-headings:text-white light:text-muted-foreground light:prose-headings:text-foreground"
-          dangerouslySetInnerHTML={{ __html: decodedTermsHtml }}
-        />
-      );
-    }
-
-    const decodedTerms = decodeHtmlEntities(event?.terms || "");
-    if (hasHtmlTag(decodedTerms) || hasEscapedHtmlTag(event?.terms)) {
-      return (
-        <div
-          className="prose prose-invert max-w-none text-[10px] leading-3 text-gray-400 prose-p:my-0.5 prose-p:text-[10px] prose-p:leading-3 prose-li:my-0 prose-li:text-[10px] prose-li:leading-3 prose-ol:list-decimal prose-ul:list-disc prose-headings:text-xs prose-headings:text-white light:text-muted-foreground light:prose-headings:text-foreground"
-          dangerouslySetInnerHTML={{ __html: decodedTerms }}
-        />
-      );
-    }
-
-    const termsLines = event?.terms
-      ?.split(/\n+/)
-      .map((line) => line.trim())
-      .filter(Boolean);
-
-    if (termsLines?.length) {
-      return (
-        <ul className="space-y-0.5 pl-4 list-disc text-[10px] leading-3 text-gray-400 light:text-muted-foreground">
-          {termsLines.map((line, idx) => (
-            <li key={`term-line-${idx}`}>{line}</li>
-          ))}
-        </ul>
-      );
-    }
-
-    return (
-      <p className="text-[10px] leading-3 text-gray-500 light:text-muted-foreground">No terms provided.</p>
-    );
-  };
-
   const renderFaqTc = () => (
     <div className="space-y-4">
       {normalizedFaqs.length > 0 && (
@@ -535,7 +458,7 @@ const EventDetailNew = () => {
               Frequently Asked Questions
             </span>
             <ChevronDown
-              className={`h-5 w-5 text-gray-400 transition-transform  light:text-muted-foreground ${faqOpen ? "rotate-180" : ""}`}
+              className={`h-5 w-5 text-white transition-transform  light:text-foreground ${faqOpen ? "rotate-180" : ""}`}
             />
           </button>
           {faqOpen && (
@@ -549,11 +472,11 @@ const EventDetailNew = () => {
                     {qa.question}
                   </p>
                   {qa.answer ? (
-                    <p className="text-gray-300 text-sm leading-relaxed light:text-muted-foreground">
+                    <p className="text-white text-sm leading-relaxed light:text-foreground">
                       {qa.answer}
                     </p>
                   ) : (
-                    <p className="text-gray-500 text-xs light:text-muted-foreground">No answer provided.</p>
+                    <p className="text-white text-xs light:text-foreground">No answer provided.</p>
                   )}
                 </section>
               ))}
@@ -572,31 +495,12 @@ const EventDetailNew = () => {
             Terms & Conditions
           </span>
           <ChevronDown
-            className={`h-5 w-5 text-gray-400 transition-transform  light:text-muted-foreground ${tcOpen ? "rotate-180" : ""}`}
+            className={`h-5 w-5 text-white transition-transform  light:text-foreground ${tcOpen ? "rotate-180" : ""}`}
           />
         </button>
         {tcOpen && (
           <div className="border-t border-gray-800 px-5 py-4 bg-gray-800">
-            {normalizedTerms.length > 0
-              ? normalizedTerms.map((t, idx) => (
-                  <div key={`term-${idx}`} className="mb-3 last:mb-0">
-                    {getTermHtml(t) ? (
-                      <div
-                        className="space-y-1 text-[10px] leading-3 text-gray-300 [&_*]:text-[10px] [&_*]:leading-3 light:text-muted-foreground"
-                        dangerouslySetInnerHTML={{ __html: getTermHtml(t) }}
-                      />
-                    ) : (
-                      renderTermsContent()
-                    )}
-                    {t.lastUpdated && (
-                      <p className="mt-2 text-[10px] leading-3 text-gray-500 light:text-muted-foreground">
-                        Last updated:{" "}
-                        {new Date(t.lastUpdated).toLocaleDateString()}
-                      </p>
-                    )}
-                  </div>
-                ))
-              : renderTermsContent()}
+            <DefaultEventTerms />
           </div>
         )}
       </div>
@@ -605,15 +509,7 @@ const EventDetailNew = () => {
 
   const renderFaqTcBlock = () => (
     <div className="mt-4 space-y-4" style={tabAnimationStyle}>
-      {showFaqTc ? (
-        renderFaqTc()
-      ) : (
-        <div className="bg-gray-900 rounded-xl border border-gray-800 p-5 light:bg-surface light:border-border">
-          <p className="text-sm text-gray-500 light:text-muted-foreground">
-            No FAQs or terms provided for this event.
-          </p>
-        </div>
-      )}
+      {renderFaqTc()}
     </div>
   );
 
@@ -1197,7 +1093,7 @@ const EventDetailNew = () => {
             </span>
           </Link>
 
-          <nav className="flex items-center gap-6 text-sm font-medium text-white/75 light:text-muted-foreground">
+          <nav className="flex items-center gap-6 text-sm font-medium text-white light:text-foreground">
             <Link to="/" className="transition hover:text-white light:hover:text-foreground">
               Home
             </Link>
@@ -1215,7 +1111,7 @@ const EventDetailNew = () => {
             <button
               type="button"
               onClick={() => navigate("/organizer/myevents")}
-              className="inline-flex w-fit items-center rounded-md border border-white/15 px-2.5 py-1 text-[11px] text-white/85 transition hover:border-white/30 hover:text-white light:border-border light:text-muted-foreground light:hover:border-border light:hover:text-foreground"
+              className="inline-flex w-fit items-center rounded-md border border-white/15 px-2.5 py-1 text-[11px] text-white transition hover:border-white/30 hover:text-white light:border-border light:text-foreground light:hover:border-border light:hover:text-foreground"
             >
               Back to My Events
             </button>
@@ -1257,7 +1153,7 @@ const EventDetailNew = () => {
                       alt={primarySponsor.name}
                       className="h-10 w-10 rounded-full bg-muted/50 object-contain p-1"
                     />
-                    <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground">Powered by</span>
+                    <span className="text-[11px] uppercase tracking-[0.15em] text-white light:text-foreground">Powered by</span>
                   </div>
                 </div>
               )}
@@ -1268,8 +1164,8 @@ const EventDetailNew = () => {
               <div className="relative z-10 flex flex-1 flex-col gap-4">
                 {/* Event Title and Category */}
                 <div className="space-y-2">
-                  <h2 className="text-2xl font-semibold leading-[1.12] text-foreground sm:text-3xl lg:text-[2rem]">{event.title}</h2>
-                  <div className="event-type-label flex w-fit max-w-full flex-wrap items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground [overflow-wrap:anywhere]">
+                  <h2 className="text-2xl font-semibold leading-[1.12] text-white light:text-foreground sm:text-3xl lg:text-[2rem]">{event.title}</h2>
+                  <div className="event-type-label flex w-fit max-w-full flex-wrap items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white light:text-foreground [overflow-wrap:anywhere]">
                     {event.category && <span>{event.category}</span>}
                     {event.category && event.subCategory && <span>•</span>}
                     {event.subCategory && <span>{event.subCategory}</span>}
@@ -1283,13 +1179,13 @@ const EventDetailNew = () => {
                       <Calendar className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Date & Time</p>
-                      <p className="text-[13px] font-semibold leading-snug text-foreground">Starts: {formatDate(event.startDate)}</p>
-                      <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{formatTime(event.startDate)}</p>
+                      <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white light:text-foreground">Date & Time</p>
+                      <p className="text-[13px] font-semibold leading-snug text-white light:text-foreground">Starts: {formatDate(event.startDate)}</p>
+                      <p className="mt-0.5 text-[11px] leading-snug text-white light:text-foreground">{formatTime(event.startDate)}</p>
                       {event.endDate && (
                         <>
-                          <p className="mt-2 text-[13px] font-semibold leading-snug text-foreground">Ends: {formatDate(event.endDate)}</p>
-                          <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{formatTime(event.endDate)}</p>
+                          <p className="mt-2 text-[13px] font-semibold leading-snug text-white light:text-foreground">Ends: {formatDate(event.endDate)}</p>
+                          <p className="mt-0.5 text-[11px] leading-snug text-white light:text-foreground">{formatTime(event.endDate)}</p>
                         </>
                       )}
                     </div>
@@ -1301,9 +1197,9 @@ const EventDetailNew = () => {
                       <MapPin className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Venue</p>
-                      <p className="text-[13px] font-semibold leading-snug text-foreground">{event.venue}</p>
-                      <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted-foreground">{event.address}</p>
+                      <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white light:text-foreground">Venue</p>
+                      <p className="text-[13px] font-semibold leading-snug text-white light:text-foreground">{event.venue}</p>
+                      <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-white light:text-foreground">{event.address}</p>
                     </div>
                   </div>
                 </div>
@@ -1329,10 +1225,10 @@ const EventDetailNew = () => {
           <div className="relative z-10 flex flex-col">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1 space-y-1.5">
-                <h1 className="text-2xl font-semibold leading-tight text-foreground max-md:[overflow-wrap:anywhere] md:text-xl">
+                <h1 className="text-2xl font-semibold leading-tight text-white light:text-foreground max-md:[overflow-wrap:anywhere] md:text-xl">
                   {event.title}
                 </h1>
-                <div className="event-type-label flex w-fit max-w-full flex-wrap items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-foreground [overflow-wrap:anywhere]">
+                <div className="event-type-label flex w-fit max-w-full flex-wrap items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-white light:text-foreground [overflow-wrap:anywhere]">
                   {event.category && <span>{event.category}</span>}
                   {event.category && event.subCategory && <span>&middot;</span>}
                   {event.subCategory && <span>{event.subCategory}</span>}
@@ -1354,21 +1250,21 @@ const EventDetailNew = () => {
                   <Calendar className="h-3.5 w-3.5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-white light:text-foreground">
                     Date & Time
                   </p>
-                  <p className="text-xs font-semibold leading-snug text-foreground">
+                  <p className="text-xs font-semibold leading-snug text-white light:text-foreground">
                     Starts: {formatDate(event.startDate)}
                   </p>
-                  <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                  <p className="mt-0.5 text-[11px] leading-snug text-white light:text-foreground">
                     {formatTime(event.startDate)}
                   </p>
                   {event.endDate && (
                     <>
-                      <p className="mt-2 text-xs font-semibold leading-snug text-foreground">
+                      <p className="mt-2 text-xs font-semibold leading-snug text-white light:text-foreground">
                         Ends: {formatDate(event.endDate)}
                       </p>
-                      <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                      <p className="mt-0.5 text-[11px] leading-snug text-white light:text-foreground">
                         {formatTime(event.endDate)}
                       </p>
                     </>
@@ -1381,13 +1277,13 @@ const EventDetailNew = () => {
                   <MapPin className="h-3.5 w-3.5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-white light:text-foreground">
                     Venue
                   </p>
-                  <p className="text-xs font-semibold leading-snug text-foreground">
+                  <p className="text-xs font-semibold leading-snug text-white light:text-foreground">
                     {event.venue}
                   </p>
-                  <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                  <p className="mt-0.5 text-[11px] leading-snug text-white light:text-foreground">
                     {event.address}
                   </p>
                 </div>
@@ -1476,7 +1372,7 @@ const EventDetailNew = () => {
 
                         {/* Sponsor Info */}
                         <div className="flex flex-col">
-                          <span className="whitespace-nowrap text-sm font-semibold text-gray-300 transition-colors duration-300 group-hover:text-white light:text-muted-foreground light:group-hover:text-foreground">
+                          <span className="whitespace-nowrap text-sm font-semibold text-white transition-colors duration-300 group-hover:text-white light:text-foreground light:group-hover:text-foreground">
                             {s.name || "Sponsor"}
                           </span>
                           {s.isPrimary && (
@@ -1508,7 +1404,7 @@ const EventDetailNew = () => {
                 </h2>
                 <div
                   ref={aboutRef}
-                  className="text-gray-300 text-sm leading-relaxed whitespace-pre-line transition-all duration-300 light:text-muted-foreground"
+                  className="text-white text-sm leading-relaxed whitespace-pre-line transition-all duration-300 light:text-foreground"
                   style={
                     aboutExpanded
                       ? {}
@@ -1753,13 +1649,13 @@ const EventDetailNew = () => {
                         <span className="text-lg flex-shrink-0">
                           {getIcon(item)}
                         </span>
-                        <span className="text-sm text-gray-300 light:text-muted-foreground">{item}</span>
+                        <span className="text-sm text-white light:text-foreground">{item}</span>
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500 light:text-muted-foreground">No advisories provided.</p>
+                <p className="text-sm text-white light:text-foreground">No advisories provided.</p>
               )}
             </div>
 
@@ -1829,7 +1725,7 @@ const EventDetailNew = () => {
                       size="icon"
                       onClick={() => slideGallery(-1)}
                       disabled={!galleryScrollState.canScrollLeft}
-                      className="h-8 w-8 rounded-full text-gray-300 hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-35 light:text-muted-foreground light:hover:bg-muted light:hover:text-foreground"
+                      className="h-8 w-8 rounded-full text-white hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-35 light:text-foreground light:hover:bg-muted light:hover:text-foreground"
                       aria-label="Scroll gallery left"
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -1840,7 +1736,7 @@ const EventDetailNew = () => {
                       size="icon"
                       onClick={() => slideGallery(1)}
                       disabled={!galleryScrollState.canScrollRight}
-                      className="h-8 w-8 rounded-full text-gray-300 hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-35 light:text-muted-foreground light:hover:bg-muted light:hover:text-foreground"
+                      className="h-8 w-8 rounded-full text-white hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-35 light:text-foreground light:hover:bg-muted light:hover:text-foreground"
                       aria-label="Scroll gallery right"
                     >
                       <ChevronRight className="h-4 w-4" />
@@ -1947,7 +1843,7 @@ const EventDetailNew = () => {
                   <p className="text-white font-semibold text-base lg:text-lg light:text-foreground">
                     {event.venue}
                   </p>
-                  <p className="text-gray-400 text-sm mt-0.5 light:text-muted-foreground">
+                  <p className="text-white text-sm mt-0.5 light:text-foreground">
                     {event.address}
                   </p>
                 </div>
@@ -2005,12 +1901,12 @@ const EventDetailNew = () => {
                       </Badge>
                     )}
                   </div>
-                  <p className="text-gray-400 text-sm mb-3 light:text-muted-foreground">{event.organizer.bio}</p>
+                  <p className="text-white text-sm mb-3 light:text-foreground">{event.organizer.bio}</p>
                   <div className="flex gap-4 text-sm">
-                    <span className="text-gray-500 light:text-muted-foreground">
+                    <span className="text-white light:text-foreground">
                       <strong className="text-white light:text-foreground">{event.organizer.eventsOrganized}</strong> Events
                     </span>
-                    <span className="text-gray-500 light:text-muted-foreground">
+                    <span className="text-white light:text-foreground">
                       <strong className="text-white light:text-foreground">{event.organizer.followers.toLocaleString()}</strong> Followers
                     </span>
                   </div>
@@ -2019,15 +1915,15 @@ const EventDetailNew = () => {
 
               <div className="space-y-3 mb-6">
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-800 border border-gray-700 light:bg-surface light:border-border">
-                  <Mail className="h-5 w-5 text-gray-400 light:text-muted-foreground" />
+                  <Mail className="h-5 w-5 text-white light:text-foreground" />
                   <span className="text-white light:text-foreground">{event.organizer.email}</span>
                 </div>
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-800 border border-gray-700 light:bg-surface light:border-border">
-                  <Phone className="h-5 w-5 text-gray-400 light:text-muted-foreground" />
+                  <Phone className="h-5 w-5 text-white light:text-foreground" />
                   <span className="text-white light:text-foreground">{event.organizer.phone}</span>
                 </div>
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-800 border border-gray-700 light:bg-surface light:border-border">
-                  <Globe className="h-5 w-5 text-gray-400 light:text-muted-foreground" />
+                  <Globe className="h-5 w-5 text-white light:text-foreground" />
                   <a href={event.organizer.website} target="_blank" rel="noopener noreferrer" className="text-red-600 hover:text-red-500">
                     {event.organizer.website}
                   </a>
@@ -2062,7 +1958,7 @@ const EventDetailNew = () => {
                         Organizer Note
                       </h2>
                       <div
-                        className="text-sm text-gray-300 leading-relaxed whitespace-pre-line transition-all duration-300 light:text-muted-foreground"
+                        className="text-sm text-white leading-relaxed whitespace-pre-line transition-all duration-300 light:text-foreground"
                         style={
                           organizerNoteExpanded
                             ? {}
@@ -2107,7 +2003,7 @@ const EventDetailNew = () => {
                       Frequently Asked Questions
                     </span>
                     <ChevronDown
-                      className={`h-5 w-5 text-gray-400 transition-transform  light:text-muted-foreground ${faqOpen ? "rotate-180" : ""}`}
+                      className={`h-5 w-5 text-white transition-transform  light:text-foreground ${faqOpen ? "rotate-180" : ""}`}
                     />
                   </button>
                   {faqOpen && (
@@ -2121,11 +2017,11 @@ const EventDetailNew = () => {
                             {qa.question}
                           </p>
                           {qa.answer ? (
-                            <p className="text-gray-400 text-sm leading-relaxed light:text-muted-foreground">
+                            <p className="text-white text-sm leading-relaxed light:text-foreground">
                               {qa.answer}
                             </p>
                           ) : (
-                            <p className="text-gray-500 text-xs light:text-muted-foreground">
+                            <p className="text-white text-xs light:text-foreground">
                               No answer provided.
                             </p>
                           )}
@@ -2148,33 +2044,12 @@ const EventDetailNew = () => {
                     Terms & Conditions
                   </span>
                   <ChevronDown
-                    className={`h-5 w-5 text-gray-400 transition-transform  light:text-muted-foreground ${tcOpen ? "rotate-180" : ""}`}
+                    className={`h-5 w-5 text-white transition-transform  light:text-foreground ${tcOpen ? "rotate-180" : ""}`}
                   />
                 </button>
                 {tcOpen && (
                   <div className="border-t border-gray-800 px-5 py-4 bg-transparent">
-                    {normalizedTerms.length > 0
-                      ? normalizedTerms.map((t, idx) => (
-                          <div key={`term-${idx}`} className="mb-2 last:mb-0">
-                            {getTermHtml(t) ? (
-                              <div
-                                className="space-y-1 text-[10px] leading-3 text-gray-400 [&_*]:text-[10px] [&_*]:leading-3 light:text-muted-foreground"
-                                dangerouslySetInnerHTML={{
-                                  __html: getTermHtml(t),
-                                }}
-                              />
-                            ) : (
-                              renderTermsContent()
-                            )}
-                            {t.lastUpdated && (
-                              <p className="mt-2 text-[10px] leading-3 text-gray-500 light:text-muted-foreground">
-                                Last updated:{" "}
-                                {new Date(t.lastUpdated).toLocaleDateString()}
-                              </p>
-                            )}
-                          </div>
-                        ))
-                      : renderTermsContent()}
+                    <DefaultEventTerms />
                   </div>
                 )}
               </div>
@@ -2190,7 +2065,7 @@ const EventDetailNew = () => {
                   <DialogTitle className="text-xl font-bold">
                     Event Guide
                   </DialogTitle>
-                  <DialogDescription className="text-gray-400 text-sm light:text-muted-foreground">
+                  <DialogDescription className="text-white text-sm light:text-foreground">
                     All advisories and notes for this event
                   </DialogDescription>
                 </DialogHeader>
@@ -2402,7 +2277,7 @@ const EventDetailNew = () => {
                       );
                     })
                   ) : (
-                    <p className="text-sm text-gray-500 text-center py-8 light:text-muted-foreground">
+                    <p className="text-sm text-white text-center py-8 light:text-foreground">
                       No advisories provided.
                     </p>
                   )}
@@ -2444,11 +2319,11 @@ const EventDetailNew = () => {
                                 Coming Soon
                               </span>
                             ) : isPurchaseClosed ? (
-                              <span className="rounded-full border border-gray-600 bg-gray-800/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-400 light:border-border light:bg-surface light:text-muted-foreground">
+                              <span className="rounded-full border border-gray-600 bg-gray-800/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white light:border-border light:bg-surface light:text-foreground">
                                 Sales Closed
                               </span>
                             ) : isTicketSoldOut ? (
-                              <span className="rounded-full border border-gray-600 bg-gray-800/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-400 light:border-border light:bg-surface light:text-muted-foreground">
+                              <span className="rounded-full border border-gray-600 bg-gray-800/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white light:border-border light:bg-surface light:text-foreground">
                                 Sold Out
                               </span>
                             ) : null}
@@ -2457,12 +2332,12 @@ const EventDetailNew = () => {
                             </span>
                           </div>
                         </div>
-                        <p className="text-[11px] text-gray-500 mb-3 light:text-muted-foreground">
+                        <p className="text-[11px] text-white mb-3 light:text-foreground">
                           {ticket.description}
                         </p>
 
                         <div className="flex items-center justify-between">
-                          <div className="text-[10px] text-gray-500 light:text-muted-foreground">
+                          <div className="text-[10px] text-white light:text-foreground">
                             {isComingSoon ? (
                               <p className="text-yellow-300 light:text-warning">Coming soon</p>
                             ) : isPurchaseClosed ? (
@@ -2471,7 +2346,7 @@ const EventDetailNew = () => {
                               <p>{ticket.available} available</p>
                             )}
                             {selectable && Number.isFinite(cap) && cap < Infinity && (
-                              <p className="text-gray-600 mt-0.5">
+                              <p className="text-white mt-0.5">
                                 Max {cap} per user
                               </p>
                             )}
@@ -2514,17 +2389,17 @@ const EventDetailNew = () => {
                             Coming soon
                           </p>
                         ) : isPurchaseClosed ? (
-                          <p className="text-gray-500 text-xs mt-2 light:text-muted-foreground">
+                          <p className="text-white text-xs mt-2 light:text-foreground">
                             Sales closed
                           </p>
                         ) : isTicketSoldOut ? (
-                          <p className="text-gray-500 text-xs mt-2 light:text-muted-foreground">Sold out</p>
+                          <p className="text-white text-xs mt-2 light:text-foreground">Sold out</p>
                         ) : null}
                         {selectable &&
                           Number.isFinite(cap) &&
                           cap < Infinity &&
                           qty >= cap && (
-                            <p className="text-gray-500 text-xs mt-2 light:text-muted-foreground">
+                            <p className="text-white text-xs mt-2 light:text-foreground">
                               Max per user limit reached
                             </p>
                           )}
@@ -2534,7 +2409,7 @@ const EventDetailNew = () => {
                 </div>
 
                 <div className="pt-3 border-t border-gray-800 flex justify-between items-center text-sm light:border-border">
-                  <span className="text-gray-400 light:text-muted-foreground">Tickets</span>
+                  <span className="text-white light:text-foreground">Tickets</span>
                   <span className="font-semibold text-white text-base light:text-foreground">
                     {totalTickets}
                   </span>
@@ -2552,7 +2427,7 @@ const EventDetailNew = () => {
                   {bookingDisabledReason || "Book Now"}
                 </Button>
 
-                <p className="text-[11px] text-center text-gray-500 light:text-muted-foreground">
+                <p className="text-[11px] text-center text-white light:text-foreground">
                   {bookingDisabledReason
                     ? "Booking unavailable"
                     : "Secure payment • Instant confirmation"}
@@ -2645,7 +2520,7 @@ const EventDetailNew = () => {
           />
           {galleryImages.length > 1 && selectedImageIndex !== -1 && (
             <div
-              className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-4 py-2 text-sm text-white/80"
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-4 py-2 text-sm text-white"
               onClick={(e) => e.stopPropagation()}
             >
               {selectedImageIndex + 1} / {galleryImages.length}
@@ -2663,7 +2538,7 @@ const EventDetailNew = () => {
               <ShieldCheck className="h-5 w-5 text-green-600" />
               Sign in to book instantly
             </DialogTitle>
-            <DialogDescription className="text-gray-400 light:text-muted-foreground">
+            <DialogDescription className="text-white light:text-foreground">
               Secure checkout with email or Google. We'll auto-apply your
               details to the ticket.
             </DialogDescription>
@@ -2729,7 +2604,7 @@ const EventDetailNew = () => {
                   <span className="w-full border-t border-gray-700 light:border-border" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-gray-900 px-2 text-gray-500 light:bg-surface light:text-muted-foreground">
+                  <span className="bg-gray-900 px-2 text-white light:bg-surface light:text-foreground">
                     or continue with
                   </span>
                 </div>

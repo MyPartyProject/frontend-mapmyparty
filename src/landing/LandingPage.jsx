@@ -58,7 +58,7 @@ const PICK_YOUR_VIBE_SECTION_CONFIG = [
     key: "sports",
     label: "Electronic/Rave",
     eyebrow: "Electronic",
-    description: "Techno, house, warehouse raves, boiler-room vibes, and electronic showcases.",
+    description: <>Techno, house, warehouse raves, boiler-room <span className="landing-hero-vibe">vibes</span>, and electronic showcases.</>,
     icon: Trophy,
     image: "/images/electronic.PNG",
     filters: createEventCategoryFilter("Sports", "Live Sports"),
@@ -191,7 +191,7 @@ const EVENT_DATA_SECTION_CONFIG = EVENT_SECTION_CONFIG.filter(
 const steps = [
   {
     title: "Discover",
-    desc: "Spot curated events that match your vibe instantly.",
+    desc: <>Spot curated events that match your <span className="landing-hero-vibe">vibe</span> instantly.</>,
     icon: Sparkles,
   },
   {
@@ -208,9 +208,6 @@ const steps = [
 
 const heroSlides = [
   { id: "party-video", type: "video", src: "/videos/party2.mp4" },
-  { id: "party-image-1", type: "image", src: "/images/ph1.jpg" },
-  { id: "party-image-2", type: "image", src: "/images/ph2.jpg" },
-  { id: "party-image-3", type: "image", src: "/images/ph3.jpg" },
 ];
 
 const getHeroSlide = (index) =>
@@ -359,22 +356,24 @@ const heroCarouselStyles = `
   }
 
   .landing-hero-cta {
-    background-color: hsl(var(--primary)) !important;
-    box-shadow: var(--shadow-accent);
+    background-color: #EC4899 !important;
+    box-shadow: 0 8px 24px rgba(236, 72, 153, 0.35);
   }
 
   @media (hover: hover) and (pointer: fine) {
     .landing-hero-cta:hover {
-      background-color: hsl(var(--primary-cta-hover)) !important;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(236, 72, 153, 0.45);
     }
   }
 
   .landing-hero-cta:active {
-    background-color: hsl(var(--primary-cta-active)) !important;
+    transform: translateY(0);
+    box-shadow: 0 4px 14px rgba(236, 72, 153, 0.3);
   }
 
   .landing-hero-vibe {
-    color: hsl(var(--primary));
+    color: #EC4899;
   }
 
   .landing-event-card {
@@ -398,6 +397,13 @@ const heroCarouselStyles = `
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .landing-hero-cta,
+    .landing-hero-cta:hover,
+    .landing-hero-cta:active {
+      transform: none;
+      transition: none;
+    }
+
     .landing-reveal,
     .landing-glow,
     .landing-flow-line > span,
@@ -928,7 +934,7 @@ const LandingPage = () => {
   }, []);
 
   const handleHeroVideoEnded = () => {
-    setActiveHeroSlide(1);
+    setActiveHeroSlide((prev) => (prev + 1) % heroSlides.length);
   };
 
   const goToPreviousHeroSlide = () => {
@@ -1006,8 +1012,9 @@ const LandingPage = () => {
                 >
                   <HeroMediaFill
                     slide={slide}
-                    videoRef={index === 0 ? heroVideoRef : null}
+                    videoRef={isActive && slide.type === "video" ? heroVideoRef : null}
                     autoPlay={isActive && slide.type === "video"}
+                    loop={heroSlides.length === 1}
                     onEnded={handleHeroVideoEnded}
                     className="h-full w-full object-cover object-center"
                   />
@@ -1025,7 +1032,7 @@ const LandingPage = () => {
               <span className="text-[clamp(2.75rem,6.2vw,6.25rem)] font-black uppercase tracking-[0.02em] text-white block">
                 FIND YOUR
               </span>
-              <span className="text-[clamp(2.75rem,6.2vw,6.25rem)] font-black text-[#a855f7] block -mt-1">
+              <span className="landing-hero-vibe text-[clamp(2.75rem,6.2vw,6.25rem)] font-black block -mt-1">
                 vibe.
               </span>
             </h1>
@@ -1041,7 +1048,7 @@ const LandingPage = () => {
               <Link to="/browse-events">
                 <Button
                   size="lg"
-                  className="h-auto rounded-xl bg-[#4c2367] px-8 py-3.5 text-base font-bold text-white shadow-lg transition-all duration-200 hover:bg-[#5f2882] hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2.5 border-0 uppercase tracking-wider"
+                  className="landing-hero-cta h-auto rounded-xl px-8 py-3.5 text-base font-bold text-white transition-all duration-200 flex items-center gap-2.5 border-0 uppercase tracking-wider"
                 >
                   Map The Party
                   <ArrowRight className="h-4 w-4 stroke-[2.5]" />
@@ -1090,7 +1097,7 @@ const LandingPage = () => {
                     Discover
                   </p>
                   <h2 className="mt-3 text-3xl font-black text-foreground sm:text-4xl">
-                    Pick your vibe
+                    Pick your <span className="landing-hero-vibe">vibe</span>
                   </h2>
                   <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground light:text-foreground/80">
                     Switch between real event moods and jump straight into a
@@ -1325,7 +1332,7 @@ const LandingPage = () => {
               <div className="relative space-y-6">
                 <h2 className="text-3xl font-black text-foreground md:text-5xl">
                   Find your{" "}
-                  <span className="theme-gradient-primary bg-clip-text text-transparent">
+                  <span className="landing-hero-vibe">
                     vibe.
                   </span>
                 </h2>

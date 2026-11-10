@@ -44,7 +44,7 @@ export default function MobileGalleryViewer({ images, selectedImage, onSelect })
       {images.length > 1 && <>
         <CarouselPrevious aria-label="Previous image" className="left-0 z-10 h-11 w-11 border-white/30 bg-black/60 text-white hover:bg-black/80 hover:text-white" />
         <CarouselNext aria-label="Next image" className="right-0 z-10 h-11 w-11 border-white/30 bg-black/60 text-white hover:bg-black/80 hover:text-white" />
-        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1.5 text-xs tabular-nums text-white/80" aria-live="polite">
+        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1.5 text-xs tabular-nums text-white" aria-live="polite">
           {index + 1} / {images.length}
         </div>
       </>}
