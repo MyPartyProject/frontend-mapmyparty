@@ -357,7 +357,7 @@ const EventAnalyticsPage = () => {
             <button
               onClick={handleDownloadCSV}
               disabled={downloading}
-              className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-lg bg-primaryCTA hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-primary-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-lg cta-primary bg-primaryCTA hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-primary-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {downloading ? (
                 <Loader className="w-3.5 h-3.5 animate-spin" />
@@ -760,7 +760,7 @@ const EventAnalyticsPage = () => {
             </h2>
             <button
               onClick={openAddModal}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-primaryCTA hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-primary-foreground transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg cta-primary bg-primaryCTA hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-primary-foreground transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               Add Record
@@ -952,7 +952,7 @@ const EventAnalyticsPage = () => {
               <button
                 onClick={handleModalSave}
                 disabled={saving || !modalForm.recipientName.trim() || !modalForm.ticketLabel.trim()}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-primaryCTA hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-primary-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg cta-primary bg-primaryCTA hover:bg-primaryCTA-hover active:bg-primaryCTA-active text-primary-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving && <Loader className="w-3.5 h-3.5 animate-spin" />}
                 {editingRecord ? "Save Changes" : "Add Record"}

@@ -897,7 +897,7 @@ export default function BrowseEvents({ showPublicHeader = false }) {
 
                           <div className={`mt-3 ${isSideCard ? "hidden" : ""}`}>
                             <Button asChild variant="accent"
-                              className="h-9 w-fit rounded-[10px] px-4 text-[13px] font-semibold shadow-[var(--shadow-accent)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-elegant)] active:scale-[0.97] sm:h-10 sm:rounded-full sm:px-5 sm:text-sm light:group-hover:bg-[#C99774] light:group-hover:text-foreground light:group-hover:shadow-none light:focus-visible:ring-[#C99774]"
+                              className="h-9 w-fit rounded-[10px] px-4 text-[13px] font-semibold shadow-[var(--shadow-accent)] transition-all duration-200 hover:shadow-[var(--shadow-elegant)] sm:h-10 sm:rounded-full sm:px-5 sm:text-sm light:group-hover:bg-[#C99774] light:group-hover:text-foreground light:group-hover:shadow-none light:focus-visible:ring-[#C99774]"
                             >
                               <span>
                                 View Details

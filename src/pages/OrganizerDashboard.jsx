@@ -689,7 +689,7 @@ const OrganizerProfileContent = ({ user }) => {
           <button
             onClick={handleOpenBankPanel}
             disabled={isBankLoading}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed light:bg-primaryCTA light:hover:bg-primaryCTA-hover"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl cta-primary bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed light:bg-primaryCTA light:hover:bg-primaryCTA-hover"
           >
             <CreditCard className="w-4 h-4" />
             {isBankLoading ? "Loading..." : "Bank Details"}
@@ -799,7 +799,7 @@ const OrganizerProfileContent = ({ user }) => {
               <button
                 onClick={handleSaveOwner}
                 disabled={isOwnerSaving}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-semibold shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed light:bg-primaryCTA light:hover:bg-primaryCTA-hover"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl cta-primary bg-primary text-primary-foreground font-semibold shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed light:bg-primaryCTA light:hover:bg-primaryCTA-hover"
               >
                 {isOwnerSaving ? (
                   <span className="h-4 w-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin light:border-border" />
@@ -902,7 +902,7 @@ const OrganizerProfileContent = ({ user }) => {
                       <button
                         type="button"
                         onClick={() => handleOwnerAvatarApply(ownerCapturedPhoto || ownerPendingAvatar)}
-                        className="px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition light:bg-primaryCTA light:hover:bg-primaryCTA-hover"
+                        className="px-3 py-2 rounded-lg cta-primary bg-primary text-primary-foreground hover:bg-primary/90 transition light:bg-primaryCTA light:hover:bg-primaryCTA-hover"
                       >
                         Use this avatar
                       </button>
@@ -946,7 +946,7 @@ const OrganizerProfileContent = ({ user }) => {
                     <button
                       type="button"
                       onClick={captureOwnerPhoto}
-                      className="px-4 py-2 rounded-lg bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active transition"
+                      className="px-4 py-2 rounded-lg cta-primary bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active transition"
                     >
                       Capture
                     </button>
@@ -969,7 +969,7 @@ const OrganizerProfileContent = ({ user }) => {
                         handleOwnerAvatarApply(ownerCapturedPhoto);
                         closeOwnerCamera();
                       }}
-                      className="px-4 py-2 rounded-lg bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active transition"
+                      className="px-4 py-2 rounded-lg cta-primary bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active transition"
                     >
                       Save photo
                     </button>
@@ -1318,7 +1318,7 @@ const OrganizerProfileContent = ({ user }) => {
                 <button
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed light:bg-primaryCTA light:hover:bg-primaryCTA-hover"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl cta-primary bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed light:bg-primaryCTA light:hover:bg-primaryCTA-hover"
                 >
                   <Save className="w-4 h-4" />
                   {isSaving ? (logoFile ? "Saving Logo..." : "Saving...") : "Save Changes"}
@@ -1515,7 +1515,7 @@ const OrganizerProfileContent = ({ user }) => {
                   <button
                     onClick={handleSaveBank}
                     disabled={isBankSaving}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed light:bg-primaryCTA light:hover:bg-primaryCTA-hover"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl cta-primary bg-primary text-primary-foreground shadow-[var(--shadow-card)] hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed light:bg-primaryCTA light:hover:bg-primaryCTA-hover"
                   >
                     <Save className="w-4 h-4" />
                     {isBankSaving ? "Saving…" : bankExists ? "Save Bank Details" : "Add Bank Details"}

@@ -1249,7 +1249,7 @@ const EventDetailNew = () => {
                 <Button
                   onClick={scrollToTicketSection}
                   disabled={isBookingUnavailable}
-                  className="mt-auto h-10 w-full rounded-lg bg-primaryCTA text-sm font-semibold text-primary-foreground shadow-[0_16px_38px_-24px_hsl(var(--primary)/0.86)] transition-all hover:-translate-y-0.5 hover:bg-primaryCTA-hover hover:shadow-[0_20px_46px_-26px_hsl(var(--primary)/0.9)] active:translate-y-0 active:bg-primaryCTA-active"
+                  className="mt-auto h-10 w-full rounded-lg bg-primaryCTA text-sm font-semibold text-primary-foreground shadow-[0_16px_38px_-24px_hsl(var(--primary)/0.86)] transition-all hover:bg-primaryCTA-hover hover:shadow-[0_20px_46px_-26px_hsl(var(--primary)/0.9)] active:bg-primaryCTA-active"
                   size="lg"
                 >
                   {bookingDisabledReason || 'Book Now'}

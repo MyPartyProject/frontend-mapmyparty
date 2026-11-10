@@ -355,23 +355,6 @@ const heroCarouselStyles = `
     box-shadow: 0 0 14px rgba(124, 58, 237, 0.18);
   }
 
-  .landing-hero-cta {
-    background-color: #EC4899 !important;
-    box-shadow: 0 8px 24px rgba(236, 72, 153, 0.35);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .landing-hero-cta:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 30px rgba(236, 72, 153, 0.45);
-    }
-  }
-
-  .landing-hero-cta:active {
-    transform: translateY(0);
-    box-shadow: 0 4px 14px rgba(236, 72, 153, 0.3);
-  }
-
   .landing-hero-vibe {
     color: #EC4899;
   }
@@ -397,13 +380,6 @@ const heroCarouselStyles = `
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .landing-hero-cta,
-    .landing-hero-cta:hover,
-    .landing-hero-cta:active {
-      transform: none;
-      transition: none;
-    }
-
     .landing-reveal,
     .landing-glow,
     .landing-flow-line > span,
@@ -1048,7 +1024,7 @@ const LandingPage = () => {
               <Link to="/browse-events">
                 <Button
                   size="lg"
-                  className="landing-hero-cta h-auto rounded-xl px-8 py-3.5 text-base font-bold text-white transition-all duration-200 flex items-center gap-2.5 border-0 uppercase tracking-wider"
+                  className="cta-primary h-auto rounded-xl px-8 py-3.5 text-base font-bold text-white transition-all duration-200 flex items-center gap-2.5 border-0 uppercase tracking-wider"
                 >
                   Map The Party
                   <ArrowRight className="h-4 w-4 stroke-[2.5]" />

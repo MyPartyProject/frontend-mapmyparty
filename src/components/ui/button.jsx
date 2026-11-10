@@ -10,9 +10,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primaryCTA text-primary-foreground shadow-[var(--shadow-accent)] hover:bg-primaryCTA-hover active:bg-primaryCTA-active",
+          "cta-primary bg-primaryCTA text-primary-foreground shadow-[var(--shadow-accent)] hover:bg-primaryCTA-hover active:bg-primaryCTA-active",
         primaryCTA:
-          "bg-primaryCTA text-primary-foreground shadow-[var(--shadow-accent)] hover:bg-primaryCTA-hover active:bg-primaryCTA-active",
+          "cta-primary bg-primaryCTA text-primary-foreground shadow-[var(--shadow-accent)] hover:bg-primaryCTA-hover active:bg-primaryCTA-active",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
@@ -23,7 +23,7 @@ const buttonVariants = cva(
         link: "text-primaryCTA underline-offset-4 hover:underline",
         hero: "bg-primary-foreground text-primaryCTA hover:bg-primary-foreground/90 font-semibold shadow-lg hover:shadow-xl hover:scale-105",
         accent:
-          "bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active shadow-md font-semibold",
+          "cta-primary bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active shadow-md font-semibold",
       },
       size: {
         default: "h-10 px-4 py-2",

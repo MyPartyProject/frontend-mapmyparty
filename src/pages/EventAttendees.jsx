@@ -107,7 +107,7 @@ const EventAttendees = () => {
           <button
             onClick={handleDownloadCSV}
             disabled={downloading}
-            className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition disabled:opacity-50 light:bg-primaryCTA light:hover:bg-primaryCTA-hover light:text-inverse"
+            className="flex items-center gap-2 px-4 py-2 cta-primary bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition disabled:opacity-50 light:bg-primaryCTA light:hover:bg-primaryCTA-hover light:text-inverse"
           >
             {downloading ? (
               <Loader className="w-4 h-4 animate-spin" />

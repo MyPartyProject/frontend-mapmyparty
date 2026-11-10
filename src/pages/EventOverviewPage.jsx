@@ -153,7 +153,7 @@ const EventOverviewPage = () => {
             {error || "This event could not be found."}
           </p>
           <Button
-            className="mt-5 rounded-full bg-transparent px-5 font-semibold text-[#ff6a63] ring-1 ring-[#ff6a63] hover:bg-[#ff6a63] hover:text-white light:text-accent-foreground light:ring-primary light:hover:bg-primaryCTA light:hover:text-inverse"
+            className="cta-preserve mt-5 rounded-full bg-transparent px-5 font-semibold text-[#ff6a63] ring-1 ring-[#ff6a63] hover:bg-[#ff6a63] hover:text-white light:text-accent-foreground light:ring-primary light:hover:bg-primaryCTA light:hover:text-inverse"
             onClick={() => navigate("/browse-events")}
           >
             Browse Events
@@ -199,7 +199,7 @@ const EventOverviewPage = () => {
 
           <div className="flex items-center gap-3">
             <Button
-              className="hidden rounded-full bg-transparent px-5 font-semibold text-[#ff6a63] ring-1 ring-[#ff6a63] hover:bg-[#ff6a63] hover:text-white md:inline-flex light:text-accent-foreground light:ring-primary light:hover:bg-primaryCTA light:hover:text-inverse"
+              className="cta-preserve hidden rounded-full bg-transparent px-5 font-semibold text-[#ff6a63] ring-1 ring-[#ff6a63] hover:bg-[#ff6a63] hover:text-white md:inline-flex light:text-accent-foreground light:ring-primary light:hover:bg-primaryCTA light:hover:text-inverse"
               onClick={() => navigate(detailPath)}
             >
               Event Page
@@ -228,7 +228,7 @@ const EventOverviewPage = () => {
             <div className="flex flex-wrap items-center gap-5">
               <Button
                 size="lg"
-                className="group rounded-full border-2 border-[#ff6a63] bg-transparent px-7 text-lg font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#ff6a63] light:border-primary light:text-accent-foreground light:hover:bg-primaryCTA light:hover:text-inverse"
+                className="cta-preserve group rounded-full border-2 border-[#ff6a63] bg-transparent px-7 text-lg font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#ff6a63] light:border-primary light:text-accent-foreground light:hover:bg-primaryCTA light:hover:text-inverse"
                 onClick={() => navigate(`${detailPath}#ticket-section`)}
               >
                 {priceLabel || "View Tickets"}

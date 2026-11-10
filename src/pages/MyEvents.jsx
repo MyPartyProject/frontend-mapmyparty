@@ -261,7 +261,7 @@ const MyEvents = () => {
           </div>
           <button
             onClick={() => navigate("/organizer/select-event-type")}
-            className="inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-primaryCTA px-3.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-primaryCTA-hover hover:shadow-[var(--shadow-elegant)] active:translate-y-0 active:bg-primaryCTA-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-xl cta-primary bg-primaryCTA px-3.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-card)] transition-all duration-200 hover:bg-primaryCTA-hover hover:shadow-[var(--shadow-elegant)] active:bg-primaryCTA-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
           >
             <Plus className="w-4 h-4" />
             New Event
@@ -399,7 +399,7 @@ const MyEvents = () => {
                     <div className="flex items-center gap-1.5 pt-3 border-t border-border/50">
                       <button
                         onClick={() => openPrimaryEventAction(primaryAction.path)}
-                        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-primaryCTA px-2.5 text-[11px] font-semibold text-primary-foreground transition-all duration-200 hover:bg-primaryCTA-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg cta-primary bg-primaryCTA px-2.5 text-[11px] font-semibold text-primary-foreground transition-all duration-200 hover:bg-primaryCTA-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                         title={primaryAction.title}
                       >
                         <Eye className="w-3.5 h-3.5" />
@@ -491,7 +491,7 @@ const MyEvents = () => {
               <p className="text-xs text-muted-foreground/80 mt-0.5 mb-4">Create your first event to get started</p>
               <button
                 onClick={() => navigate("/organizer/select-event-type")}
-                className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-primaryCTA px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primaryCTA-hover"
+                className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg cta-primary bg-primaryCTA px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primaryCTA-hover"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Create Event

@@ -28,8 +28,16 @@ The app supports Light and Dark themes. Dark is the default, regardless of OS pr
 | Input boundary | #6B7280 | border-input |
 | Success / warning / error / info | #166534 / #92400E / #B91C1C / #1E40AF | Semantic status utilities |
 
-Use the deeper CTA color for normal-size white button labels. The footer uses the reference inverse palette; media overlays and QR surfaces retain their required contrast.
+Filled CTA buttons use the dedicated hot-pink treatment below. The legacy violet tokens remain available for brand accents, selection controls, and charts. The footer uses the reference inverse palette; media overlays and QR surfaces retain their required contrast.
 Light cards use a slightly stronger shadow to stay distinct from white surfaces.
+
+## Filled CTA Buttons
+
+- Shared Button variants `default`, `primaryCTA`, and `accent` include `cta-primary`: solid `#EC4899`, white labels/icons, and a pink shadow in both themes, including the entry-agent light palette.
+- Add `cta-primary` to custom filled violet action buttons or CTA links. Keep global brand tokens unchanged; they are also used by non-button UI.
+- Hover-capable devices get a 2px lift and stronger shadow. Pressing returns the CTA to its resting position. Disabled/aria-disabled actions do not lift, and reduced-motion preferences disable movement.
+- Keep outline, ghost, neutral, and destructive treatments. Use `cta-preserve` when an existing default Button is a selection control or intentionally styled as an outline action. Explicit `bg-destructive` overrides remain destructive, including confirmation dialogs.
+- Keep existing focus indicators, dimensions, links, handlers, and disabled states. The homepage hero uses this same shared treatment.
 
 ## Applying Colors
 

@@ -949,7 +949,7 @@ const Header = ({
                   setSearchOpen(true);
                 }
               }}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primaryCTA text-primary-foreground transition hover:bg-primaryCTA-hover"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full cta-primary bg-primaryCTA text-primary-foreground transition hover:bg-primaryCTA-hover"
               aria-label="Show search results"
             >
               <Search className="h-4 w-4" />

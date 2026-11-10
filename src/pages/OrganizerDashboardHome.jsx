@@ -94,7 +94,7 @@ const OrganizerDashboardHome = ({ user, handleLogout, setActiveTab, activeTab })
           <div className="flex items-center gap-3 flex-wrap">
             <Link
               to="/organizer/select-event-type"
-              className="px-4 py-2 rounded-lg bg-primaryCTA text-primary-foreground text-sm font-semibold hover:bg-primaryCTA-hover active:bg-primaryCTA-active transition"
+              className="px-4 py-2 rounded-lg cta-primary bg-primaryCTA text-primary-foreground text-sm font-semibold hover:bg-primaryCTA-hover active:bg-primaryCTA-active transition"
             >
               + Create Event
             </Link>

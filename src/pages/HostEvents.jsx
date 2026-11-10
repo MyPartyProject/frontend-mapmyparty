@@ -183,7 +183,7 @@ const HostEvents = () => {
 
               <div className="flex flex-wrap gap-3 pt-2">
                 <Link to="/auth">
-                  <Button className="h-11 rounded-full px-6 shadow-[var(--shadow-accent)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_36px_-16px_rgba(168,85,247,0.75)]">
+                  <Button className="h-11 rounded-full px-6 shadow-[var(--shadow-accent)] transition-all duration-300 hover:shadow-[0_16px_36px_-16px_rgba(168,85,247,0.75)]">
                     Start Hosting
                   </Button>
                 </Link>
@@ -357,7 +357,7 @@ const HostEvents = () => {
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link to="/auth">
-                <Button className="h-11 rounded-full px-6 shadow-[var(--shadow-accent)] transition-all duration-300 hover:-translate-y-0.5">
+                <Button className="h-11 rounded-full px-6 shadow-[var(--shadow-accent)] transition-all duration-300">
                   Get Started for Free
                 </Button>
               </Link>

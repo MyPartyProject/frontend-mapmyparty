@@ -1245,3 +1245,35 @@ button.profile-initials-trigger:focus-visible { width: 88px; }
 @media (prefers-reduced-motion: reduce) {
   button.profile-initials-trigger, .profile-trigger-initials, .profile-trigger-label { transition: none; }
 }
+
+/* CTA-only treatment: brand tokens also serve charts and selection controls. */
+html .cta-primary:not(.cta-preserve):not(.bg-destructive) {
+  background-color: #EC4899 !important;
+  background-image: none !important;
+  border-color: #EC4899 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 8px 24px rgba(236, 72, 153, 0.35) !important;
+  transition-property: translate, box-shadow, opacity;
+  transition-duration: 200ms;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html .cta-primary:not(.cta-preserve):not(.bg-destructive):not(:disabled):not([aria-disabled="true"]):hover {
+    translate: 0 -2px;
+    box-shadow: 0 12px 30px rgba(236, 72, 153, 0.45) !important;
+  }
+}
+
+html .cta-primary:not(.cta-preserve):not(.bg-destructive):not(:disabled):not([aria-disabled="true"]):active {
+  translate: 0 0;
+  box-shadow: 0 4px 14px rgba(236, 72, 153, 0.3) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html .cta-primary:not(.cta-preserve):not(.bg-destructive),
+  html .cta-primary:not(.cta-preserve):not(.bg-destructive):hover,
+  html .cta-primary:not(.cta-preserve):not(.bg-destructive):active {
+    translate: none !important;
+    transition: none;
+  }
+}

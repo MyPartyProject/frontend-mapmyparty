@@ -37,7 +37,7 @@ function AgentForm({ agent, onSaved, onCancel, showTitle = false }) {
     </div>
     <label className="block">General guidelines<textarea className={field} name="guidelines" rows={2} maxLength={5000} defaultValue={agent?.guidelines || ''} /></label>
     {error && <p role="alert" className="text-destructive">{error}</p>}
-    <div className="flex gap-2"><button disabled={busy} className={`${button} bg-primary text-primary-foreground`}>{busy ? 'Saving…' : 'Save agent'}</button><button type="button" className={button} disabled={busy} onClick={onCancel}>Cancel</button></div>
+    <div className="flex gap-2"><button disabled={busy} className={`${button} cta-primary bg-primary text-primary-foreground`}>{busy ? 'Saving…' : 'Save agent'}</button><button type="button" className={button} disabled={busy} onClick={onCancel}>Cancel</button></div>
   </form>;
 }
 
@@ -105,7 +105,7 @@ function AssignmentEditor({ eventId, onClose }) {
       </label>)}</div>
       <button className={button} onClick={() => setCreating(v => !v)}>Create a new agent</button>
       <label className="block">Instructions for everyone assigned to this event<textarea className={field} value={instructions} onChange={e => setInstructions(e.target.value)} rows={2} maxLength={5000} /></label>
-      <div className="flex gap-2"><button className={`${button} bg-primary text-primary-foreground`} disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save assignments'}</button><button className={button} disabled={busy} onClick={onClose}>Cancel</button></div>
+      <div className="flex gap-2"><button className={`${button} cta-primary bg-primary text-primary-foreground`} disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save assignments'}</button><button className={button} disabled={busy} onClick={onClose}>Cancel</button></div>
       {message && <p role="status" className="text-success">{message}</p>}
       <details className="border-t border-border pt-3"><summary className="cursor-pointer font-medium">Admission activity</summary><div className="space-y-3 pt-3"><h3 className="font-semibold">Admission totals by agent</h3>
       <p className="text-xs text-muted-foreground">Refreshes every 15 seconds. Historical admissions remain after an assignment is removed.</p>
@@ -166,7 +166,7 @@ export default function EntryAgentManagement() {
             </div>
           </PopoverContent>
         </Popover>
-        <button className={button + ' bg-primary text-primary-foreground'} onClick={() => setEditing({})}><Plus size={14} />Create agent</button>
+        <button className={button + ' cta-primary bg-primary text-primary-foreground'} onClick={() => setEditing({})}><Plus size={14} />Create agent</button>
       </div>
     </div>
     {error && !resetting && <p role="alert" className="text-destructive">{error} <button className={button} onClick={refresh}>Retry</button></p>}
@@ -184,7 +184,7 @@ export default function EntryAgentManagement() {
       {editing && <AgentForm key={editing.id || 'new'} agent={editing.id ? editing : null} onCancel={() => setEditing(null)} onSaved={agent => { setEditing(null); setMessage('Saved ' + agent.agentId + '. Share credentials personally.'); refresh(); }} />}
     </AgentDialog>
     <AgentDialog open={!!resetting} onClose={() => { if (!busy) setResetting(null); }} width={400} title={'Reset password for ' + (resetting?.agentId || '')}>
-      {resetting && <form onSubmit={reset} className="space-y-3"><p className="text-muted-foreground">This signs the agent out of all devices.</p><label className="block">New password<EntryAgentPassword className={field} name="password" autoComplete="new-password" required minLength={8} maxLength={72} /></label><p className="text-xs text-muted-foreground">Include uppercase, lowercase, a number, and a special character (@$!%*?&).</p>{error && <p role="alert" className="text-destructive">{error}</p>}<div className="flex gap-2"><button disabled={busy} className={button + ' bg-primary text-primary-foreground'}>Reset password</button><button type="button" disabled={busy} className={button} onClick={() => setResetting(null)}>Cancel</button></div></form>}
+      {resetting && <form onSubmit={reset} className="space-y-3"><p className="text-muted-foreground">This signs the agent out of all devices.</p><label className="block">New password<EntryAgentPassword className={field} name="password" autoComplete="new-password" required minLength={8} maxLength={72} /></label><p className="text-xs text-muted-foreground">Include uppercase, lowercase, a number, and a special character (@$!%*?&).</p>{error && <p role="alert" className="text-destructive">{error}</p>}<div className="flex gap-2"><button disabled={busy} className={button + ' cta-primary bg-primary text-primary-foreground'}>Reset password</button><button type="button" disabled={busy} className={button} onClick={() => setResetting(null)}>Cancel</button></div></form>}
     </AgentDialog>
     <AgentDialog open={!!eventId} onClose={() => selectEvent('')} title="Event entry agents">
       {eventId && <AssignmentEditor key={eventId} eventId={eventId} onClose={() => selectEvent('')} />}

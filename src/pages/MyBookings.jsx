@@ -436,7 +436,7 @@ const MyBookings = ({
             <Button
               key={status}
               onClick={() => setFilterStatus(status)}
-              className={`text-xs h-10 px-4 ${
+              className={`cta-preserve text-xs h-10 px-4 ${
                 filterStatus === status
                   ? "bg-[#D60024] text-white hover:bg-[#b8001f] light:bg-primaryCTA light:text-inverse light:hover:bg-primaryCTA"
                   : "bg-white/[0.05] text-white/60 hover:bg-white/[0.08] border border-white/[0.06] light:bg-muted light:text-muted-foreground light:hover:bg-muted light:border-border"
