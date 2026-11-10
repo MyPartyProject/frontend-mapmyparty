@@ -1,6 +1,6 @@
 export default function DefaultEventTerms() {
   return (
-    <div className="space-y-3 text-[11px] leading-relaxed text-white [&_*]:text-[11px] [&_h5]:font-semibold [&_h5]:leading-relaxed [&_h5]:text-white [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-5">
+    <div className="space-y-3 text-[11px] leading-relaxed text-white light:text-foreground [&_*]:text-[11px] [&_h5]:font-semibold [&_h5]:leading-relaxed [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-5">
       <h5>1. Our role</h5>
       <p>MapMyParty is a ticketing platform. We sell tickets and help manage entry on behalf of the Organiser. We do not plan, host or run any event.</p>
       <p>The Organiser and venue are fully responsible for running the event, including safety, security, medical support, licences and legal compliance.</p>

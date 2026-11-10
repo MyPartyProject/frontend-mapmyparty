@@ -32,7 +32,9 @@ export default function MobileGalleryViewer({ images, selectedImage, onSelect })
 
   return (
     <Carousel opts={options} setApi={setApi} aria-label="Event gallery"
-      className="w-full min-w-0" onClick={event => event.stopPropagation()}>
+      className="w-full min-w-0" onClick={event => {
+        if (event.target.closest('img, button')) event.stopPropagation();
+      }}>
       <CarouselContent className="ml-0 [touch-action:pan-y_pinch-zoom]">
         {images.map((image, position) => (
           <CarouselItem key={`${image}-${position}`} className="flex h-[calc(100dvh-8rem)] items-center justify-center pl-0" aria-label={`Image ${position + 1} of ${images.length}`}>

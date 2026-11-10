@@ -208,6 +208,47 @@ const EventDetailNew = () => {
     eventId || null,
   );
   const [selectedImage, setSelectedImage] = useState(null);
+  const galleryTouchRef = useRef(null);
+
+  const handleGalleryTouchStart = (event) => {
+    if (event.touches.length !== 1) {
+      galleryTouchRef.current = { cancelled: true, moved: true };
+      return;
+    }
+    const touch = event.touches[0];
+    galleryTouchRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      moved: false,
+      cancelled: Boolean(event.target.closest('button')),
+    };
+  };
+
+  const handleGalleryTouchMove = (event) => {
+    const gesture = galleryTouchRef.current;
+    if (!gesture || gesture.cancelled) return;
+    if (event.touches.length !== 1) {
+      gesture.cancelled = true;
+      gesture.moved = true;
+      return;
+    }
+    const dx = Math.abs(event.touches[0].clientX - gesture.x);
+    const dy = Math.abs(event.touches[0].clientY - gesture.y);
+    if (Math.max(dx, dy) > 10) gesture.moved = true;
+    // A horizontal gallery drag must never turn into a dismiss gesture.
+    if (dx > 10 && dx >= dy) gesture.cancelled = true;
+  };
+
+  const handleGalleryTouchEnd = (event) => {
+    const gesture = galleryTouchRef.current;
+    if (!gesture || gesture.cancelled || event.touches.length || !event.changedTouches.length) return;
+    const dx = Math.abs(event.changedTouches[0].clientX - gesture.x);
+    const dy = event.changedTouches[0].clientY - gesture.y;
+    if (dy >= 80 && dy > dx * 1.5) {
+      gesture.moved = true;
+      setSelectedImage(null);
+    }
+  };
   const [isPhoneViewport, setIsPhoneViewport] = useState(() => window.matchMedia('(max-width: 767px)').matches);
   useEffect(() => {
     const media = window.matchMedia('(max-width: 767px)');
@@ -499,7 +540,7 @@ const EventDetailNew = () => {
           />
         </button>
         {tcOpen && (
-          <div className="border-t border-gray-800 px-5 py-4 bg-gray-800">
+          <div className="border-t border-gray-800 px-5 py-4 bg-gray-800 light:border-border light:bg-surface">
             <DefaultEventTerms />
           </div>
         )}
@@ -2342,11 +2383,9 @@ const EventDetailNew = () => {
                               <p className="text-yellow-300 light:text-warning">Coming soon</p>
                             ) : isPurchaseClosed ? (
                               <p>Sales closed</p>
-                            ) : (
-                              <p>{ticket.available} available</p>
-                            )}
+                            ) : null}
                             {selectable && Number.isFinite(cap) && cap < Infinity && (
-                              <p className="text-white mt-0.5">
+                              <p className="text-[9px] leading-relaxed mt-0.5">
                                 Max {cap} per user
                               </p>
                             )}
@@ -2399,7 +2438,7 @@ const EventDetailNew = () => {
                           Number.isFinite(cap) &&
                           cap < Infinity &&
                           qty >= cap && (
-                            <p className="text-white text-xs mt-2 light:text-foreground">
+                            <p className="text-white text-[10px] mt-2 light:text-foreground">
                               Max per user limit reached
                             </p>
                           )}
@@ -2472,13 +2511,20 @@ const EventDetailNew = () => {
       {/* Image Lightbox */}
       {selectedImage && (
         <div
-          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
-          onClick={() => setSelectedImage(null)}
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 [touch-action:pinch-zoom]"
+          onTouchStartCapture={handleGalleryTouchStart}
+          onTouchMoveCapture={handleGalleryTouchMove}
+          onTouchEndCapture={handleGalleryTouchEnd}
+          onTouchCancel={() => { galleryTouchRef.current = { cancelled: true, moved: true }; }}
+          onClick={() => {
+            if (!galleryTouchRef.current?.moved) setSelectedImage(null);
+          }}
         >
           <Button
             variant="ghost"
             onClick={() => setSelectedImage(null)}
             size="icon"
+            aria-label="Close gallery"
             className="modal-close-button absolute top-4 right-4 text-white hover:bg-white/10 light:text-foreground light:hover:bg-muted"
           >
             <X className="h-6 w-6" />
