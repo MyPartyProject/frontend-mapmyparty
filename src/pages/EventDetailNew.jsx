@@ -5,6 +5,7 @@ import {
   Link,
 } from "react-router-dom";
 import { useState, useEffect, useMemo, useRef } from "react";
+import MobileGalleryViewer from '@/components/event-detail/MobileGalleryViewer';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -206,6 +207,13 @@ const EventDetailNew = () => {
     eventId || null,
   );
   const [selectedImage, setSelectedImage] = useState(null);
+  const [isPhoneViewport, setIsPhoneViewport] = useState(() => window.matchMedia('(max-width: 767px)').matches);
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsPhoneViewport(media.matches);
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
   const [activeTab, setActiveTab] = useState("about");
   const [autoRotatePausedUntil, setAutoRotatePausedUntil] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
@@ -1321,7 +1329,7 @@ const EventDetailNew = () => {
           <div className="relative z-10 flex flex-col">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1 space-y-1.5">
-                <h1 className="text-xl font-semibold leading-tight text-foreground">
+                <h1 className="text-2xl font-semibold leading-tight text-foreground max-md:[overflow-wrap:anywhere] md:text-xl">
                   {event.title}
                 </h1>
                 <div className="event-type-label flex w-fit max-w-full flex-wrap items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-foreground [overflow-wrap:anywhere]">
@@ -2600,6 +2608,9 @@ const EventDetailNew = () => {
           >
             <X className="h-6 w-6" />
           </Button>
+          {isPhoneViewport && selectedImageIndex !== -1 ? (
+            <MobileGalleryViewer images={galleryImages} selectedImage={selectedImage} onSelect={setSelectedImage} />
+          ) : <>
           {galleryImages.length > 1 && (
             <>
               <Button
@@ -2640,6 +2651,7 @@ const EventDetailNew = () => {
               {selectedImageIndex + 1} / {galleryImages.length}
             </div>
           )}
+          </>}
         </div>
       )}
 
