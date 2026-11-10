@@ -453,10 +453,9 @@ const EventDetailNew = () => {
       }
 
       .event-type-label {
-        background: hsl(var(--background) / 0.72);
-        border: 1px solid hsl(var(--foreground) / 0.12);
+        background: #EC4899;
+        border: 1px solid #EC4899;
         box-shadow: 0 2px 8px rgb(0 0 0 / 0.22);
-        text-shadow: 0 1px 3px hsl(var(--background) / 0.9);
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -1206,7 +1205,7 @@ const EventDetailNew = () => {
                 {/* Event Title and Category */}
                 <div className="space-y-2">
                   <h2 className="text-2xl font-semibold leading-[1.12] text-white light:text-foreground sm:text-3xl lg:text-[2rem]">{event.title}</h2>
-                  <div className="event-type-label flex w-fit max-w-full flex-wrap items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white light:text-foreground [overflow-wrap:anywhere]">
+                  <div className="event-type-label flex w-fit max-w-full flex-wrap items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white [overflow-wrap:anywhere]">
                     {event.category && <span>{event.category}</span>}
                     {event.category && event.subCategory && <span>•</span>}
                     {event.subCategory && <span>{event.subCategory}</span>}
@@ -1220,7 +1219,7 @@ const EventDetailNew = () => {
                       <Calendar className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white light:text-foreground">Date & Time</p>
+                      <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#EC4899]">Date & Time</p>
                       <p className="text-[13px] font-semibold leading-snug text-white light:text-foreground">Starts: {formatDate(event.startDate)}</p>
                       <p className="mt-0.5 text-[11px] leading-snug text-white light:text-foreground">{formatTime(event.startDate)}</p>
                       {event.endDate && (
@@ -1238,7 +1237,7 @@ const EventDetailNew = () => {
                       <MapPin className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white light:text-foreground">Venue</p>
+                      <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#EC4899]">Venue</p>
                       <p className="text-[13px] font-semibold leading-snug text-white light:text-foreground">{event.venue}</p>
                       <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-white light:text-foreground">{event.address}</p>
                     </div>
@@ -1269,7 +1268,7 @@ const EventDetailNew = () => {
                 <h1 className="text-2xl font-semibold leading-tight text-white light:text-foreground max-md:[overflow-wrap:anywhere] md:text-xl">
                   {event.title}
                 </h1>
-                <div className="event-type-label flex w-fit max-w-full flex-wrap items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-white light:text-foreground [overflow-wrap:anywhere]">
+                <div className="event-type-label flex w-fit max-w-full flex-wrap items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-white [overflow-wrap:anywhere]">
                   {event.category && <span>{event.category}</span>}
                   {event.category && event.subCategory && <span>&middot;</span>}
                   {event.subCategory && <span>{event.subCategory}</span>}
@@ -1291,7 +1290,7 @@ const EventDetailNew = () => {
                   <Calendar className="h-3.5 w-3.5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-white light:text-foreground">
+                  <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#EC4899]">
                     Date & Time
                   </p>
                   <p className="text-xs font-semibold leading-snug text-white light:text-foreground">
@@ -1318,7 +1317,7 @@ const EventDetailNew = () => {
                   <MapPin className="h-3.5 w-3.5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-white light:text-foreground">
+                  <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#EC4899]">
                     Venue
                   </p>
                   <p className="text-xs font-semibold leading-snug text-white light:text-foreground">
