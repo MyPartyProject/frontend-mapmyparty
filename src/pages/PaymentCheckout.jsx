@@ -32,6 +32,11 @@ const PaymentCheckout = () => {
   const { organizerSlug, eventSlug } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const resumeBookingId = new URLSearchParams(location.search).get('bookingId');
+  const [restoreError, setRestoreError] = useState('');
+  const [now, setNow] = useState(Date.now());
+  const [clockOffset, setClockOffset] = useState(0);
+  useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(timer); }, []);
   const [storedCheckout, setStoredCheckout] = useState(null);
   const [checkoutReady, setCheckoutReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -44,6 +49,27 @@ const PaymentCheckout = () => {
   const paymentAttemptStorageKey = (bookingId) => `pendingPaymentAttempt:${bookingId}`;
 
   useEffect(() => {
+    if (resumeBookingId) {
+      const controller = new AbortController();
+      setCheckoutReady(false);
+      setStoredCheckout(null);
+      setPendingCheckoutAttempt(null);
+      setRestoreError('');
+      apiFetch('/api/booking/' + encodeURIComponent(resumeBookingId) + '/checkout', { signal: controller.signal, cache: 'no-store' })
+        .then(response => {
+          if (controller.signal.aborted) return;
+          if (!response?.success) throw new Error(response?.message || 'Unable to restore checkout');
+          if (response.data.confirmed) {
+            navigate('/booking-success?bookingId=' + encodeURIComponent(resumeBookingId), { replace: true });
+            return;
+          }
+          setClockOffset(new Date(response.data.serverTime).getTime() - Date.now());
+          setStoredCheckout(response.data);
+          setCheckoutReady(true);
+        })
+        .catch(error => { if (!controller.signal.aborted) setRestoreError(error.message || 'Unable to restore checkout'); });
+      return () => controller.abort();
+    }
     const routeState = location.state;
     if (routeState?.eventSummary && routeState?.tickets?.length && routeState?.bookingData) {
       setStoredCheckout(routeState);
@@ -68,9 +94,11 @@ const PaymentCheckout = () => {
     } finally {
       setCheckoutReady(true);
     }
-  }, [location.state]);
+  }, [location.state, resumeBookingId, navigate]);
 
   useEffect(() => {
+    // Resume checks persisted provider state on Pay; stale browser attempts must not block it.
+    if (resumeBookingId) return;
     const bookingId = storedCheckout?.bookingData?.bookingId;
     if (!bookingId) return;
     const scopedKey = paymentAttemptStorageKey(bookingId);
@@ -91,11 +119,12 @@ const PaymentCheckout = () => {
     } catch (error) {
       console.warn("Failed to restore pending payment attempt", error);
     }
-  }, [storedCheckout?.bookingData?.bookingId]);
+  }, [storedCheckout?.bookingData?.bookingId, resumeBookingId]);
 
   const summary = storedCheckout?.eventSummary;
   const tickets = storedCheckout?.tickets || [];
   const bookingData = storedCheckout?.bookingData;
+  const holdExpired = Boolean(bookingData?.expiresAt) && new Date(bookingData.expiresAt).getTime() <= now + clockOffset;
 
   useEffect(() => {
     if (checkoutReady && (!summary || !tickets.length || !bookingData)) {
@@ -214,6 +243,12 @@ const PaymentCheckout = () => {
     const verification = verifyResponse?.data || {};
     const status = String(verification.status || verification.paymentStatus || "").toUpperCase();
 
+    if (status === "RECOVERY_REQUIRED") {
+      markPaymentPending(checkout, verification.message);
+      toast.error(verification.message || "Payment needs recovery. Please do not make another payment.");
+      return "recovery";
+    }
+
     if (status === "SUCCESS" || verification.paymentStatus === "SUCCESS") {
       toast.success("Payment successful!");
       clearPendingPaymentAttempt();
@@ -239,12 +274,6 @@ const PaymentCheckout = () => {
       toast.error(verification.message || "Payment failed or the booking expired.");
       navigate(`/events/${organizerSlug}/${eventSlug}`);
       return "failed";
-    }
-
-    if (status === "RECOVERY_REQUIRED") {
-      markPaymentPending(checkout, verification.message);
-      toast.error(verification.message || "Payment needs recovery. Please do not make another payment.");
-      return "recovery";
     }
 
     throw new Error(verifyResponse?.message || "Payment verification returned an unknown status");
@@ -337,6 +366,7 @@ const PaymentCheckout = () => {
       return;
     }
 
+    if (holdExpired) { toast.error("The booking hold has expired."); return; }
     if (isProcessing) {
       return;
     }
@@ -358,6 +388,14 @@ const PaymentCheckout = () => {
       });
 
       const checkout = initResponse?.data;
+      if (['SUCCESS', 'RECOVERY_REQUIRED'].includes(checkout?.status)) {
+        handleVerificationResponse({ verifyResponse: initResponse, checkout });
+        return;
+      }
+      if (checkout?.status === 'VERIFYING') {
+        markPaymentPending(checkout, 'Payment confirmation is pending. Please do not make another payment.');
+        return;
+      }
       if (initResponse?.success && checkout?.paymentRequired === false) {
         sessionStorage.removeItem("pendingCheckout");
         toast.success("Booking confirmed successfully!");
@@ -420,6 +458,7 @@ const PaymentCheckout = () => {
     } catch (error) {
       console.error("Payment error:", error);
       toast.error(error?.message || "Payment failed. Please try again.");
+    } finally {
       setIsProcessing(false);
     }
   };
@@ -457,6 +496,9 @@ const PaymentCheckout = () => {
       setIsRetryingVerification(false);
     }
   };
+
+  if (restoreError) return <div className="p-6 space-y-4" role="alert"><p>{restoreError}</p><Button onClick={() => navigate('/dashboard/bookings')}>Return to My Bookings</Button></div>;
+  if (!checkoutReady) return <div className="p-6" role="status">Loading checkout...</div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0b1220] via-[#0c1120] to-[#05070f] text-white light:from-background light:via-surface light:to-surface light:text-foreground">
@@ -592,7 +634,7 @@ const PaymentCheckout = () => {
 
               <Button
                 onClick={handlePayment}
-                disabled={isProcessing || Boolean(pendingCheckoutAttempt)}
+                disabled={isProcessing || holdExpired || Boolean(pendingCheckoutAttempt)}
                 className="w-full bg-primaryCTA text-primary-foreground hover:bg-primaryCTA-hover active:bg-primaryCTA-active font-semibold py-5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (
@@ -652,6 +694,7 @@ const PaymentCheckout = () => {
                     ? "Your booking will be confirmed without payment."
                     : "Your booking is confirmed only after secure server-side payment verification."}
               </p>
+              {holdExpired && <p role="status" className="text-sm">Your booking hold has expired. {pendingCheckoutAttempt ? 'We will continue checking your payment.' : 'Return to My Bookings to view your bookings.'}</p>}
               {!isFreeCheckout && pendingCheckoutAttempt && getCashfreeMode(pendingCheckoutAttempt) === "sandbox" && (
                 <p className="text-xs text-center text-amber-300/80 bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 mt-2 light:text-warning">
                   Cashfree sandbox mode is active. Use test payment methods only.

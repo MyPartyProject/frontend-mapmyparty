@@ -14,19 +14,25 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import VintageTicket from "@/components/VintageTicket";
 import { apiFetch, downloadFile } from "@/config/api";
 import { toast } from "sonner";
 import StarRating from "@/components/StarRating";
 import { resolveEventBannerImage } from "@/utils/eventBannerImage";
 import { formatIndianRupee } from "@/utils/priceFormatter";
-import { getUpcomingBookings, loadAllBookings } from "@/utils/userBookings";
+import { getUpcomingBookings, loadAllBookings, isBookingVisible } from "@/utils/userBookings";
 
 const MyBookings = ({
   browseEventsPath = "/dashboard/browse-events",
   showSummarySections = true,
 }) => {
+  const navigate = useNavigate();
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
   const feedbackSuggestions = [
     "Loved every minute of the performances!",
     "Great crowd energy and smooth entry experience.",
@@ -84,6 +90,13 @@ const MyBookings = ({
         };
         return {
           id: item.id,
+          expiresAt: item.expiresAt,
+          deadline: Date.now() + (new Date(item.expiresAt).getTime() - new Date(item.serverTime).getTime()),
+          canResume: item.canResume,
+          resumeReason: item.resumeReason,
+          paymentRecoveryRequired: item.paymentRecoveryRequired,
+          eventSlug: evt.slug,
+          organizerSlug: evt.organizer?.slug,
           publicId: item.publicId || item.id,
           paymentTransactionId: item.payment?.transactionId || null,
           bookingDate: item.createdAt || evt.createdAt,
@@ -277,6 +290,16 @@ const MyBookings = ({
     }
   }, [canDownloadInvoice]);
 
+  useEffect(() => {
+    const refresh = () => { if (document.visibilityState === 'visible') refreshBookings(); };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [refreshBookings]);
+
   const filteredBookings = useMemo(() => {
     return bookings.filter(booking => {
       const query = searchQuery.toLowerCase();
@@ -285,9 +308,9 @@ const MyBookings = ({
         (booking.publicId || "").toLowerCase().includes(query) ||
         (booking.paymentTransactionId || "").toLowerCase().includes(query);
       const matchesFilter = filterStatus === 'all' || booking.status === filterStatus;
-      return matchesSearch && matchesFilter;
+      return matchesSearch && matchesFilter && isBookingVisible(booking, now);
     });
-  }, [bookings, searchQuery, filterStatus]);
+  }, [bookings, searchQuery, filterStatus, now]);
 
   const isEventPast = (booking) => {
     const endDate = booking?.eventEndDate || booking?.eventDate;
@@ -340,7 +363,7 @@ const MyBookings = ({
     } finally { setIsSubmittingReview(false); }
   };
 
-  const hasBookings = bookings.length > 0;
+  const hasBookings = bookings.some(booking => isBookingVisible(booking, now));
   const hasFilteredBookings = filteredBookings.length > 0;
   const showEmptyState = !loading && !error && !hasBookings;
   const upcomingBookings = useMemo(() => {
@@ -560,9 +583,25 @@ const MyBookings = ({
 
                     {/* Actions */}
                     <div className="grid grid-cols-1 min-[400px]:grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-col gap-2 lg:w-36 shrink-0">
-                      <Button size="sm" className="col-span-full w-full min-h-11 h-auto gap-2 text-xs font-medium px-3 py-2" onClick={() => fetchBookingTickets(booking)}>
-                        <Eye className="h-3 w-3" /> View Tickets
-                      </Button>
+                      {['pending', 'pending_payment'].includes(booking.status) ? (
+                        <div className="col-span-full space-y-1">
+                          <Button size="sm" className="w-full min-h-11 h-auto text-xs"
+                            disabled={!booking.canResume || !(booking.deadline > now)}
+                            onClick={() => navigate('/events/' + encodeURIComponent(booking.organizerSlug || 'booking') + '/' + encodeURIComponent(booking.eventSlug || booking.eventId) + '/checkout?bookingId=' + encodeURIComponent(booking.id))}>
+                            Continue Booking
+                          </Button>
+                          <p className="text-xs text-muted-foreground" role="status">
+                            {booking.canResume && booking.deadline > now
+                              ? Math.floor((booking.deadline - now) / 60000) + ':' + String(Math.floor((booking.deadline - now) / 1000) % 60).padStart(2, '0') + ' remaining'
+                              : booking.resumeReason || 'Payment verification required'}
+                          </p>
+                        </div>
+                      ) : booking.status === 'confirmed' && (
+                        <Button size="sm" className="col-span-full w-full min-h-11 h-auto gap-2 text-xs font-medium px-3 py-2" onClick={() => fetchBookingTickets(booking)}>
+                          <Eye className="h-3 w-3" /> View Tickets
+                        </Button>
+                      )}
+                      {!['pending', 'pending_payment'].includes(booking.status) && (
                       <Button
                         size="sm"
                         variant="outline"
@@ -577,6 +616,7 @@ const MyBookings = ({
                         )}
                         Invoice
                       </Button>
+                      )}
                       {isEventPast(booking) && (
                         <Button size="sm" variant="ghost" className="w-full min-h-11 h-auto gap-2 py-2 text-white/40 hover:text-white hover:bg-white/[0.06] text-xs px-3 border border-dashed border-white/[0.08] light:text-muted-foreground light:hover:text-foreground light:hover:bg-muted light:border-border" onClick={() => handleOpenReview(booking)}>
                           <Star className="h-3 w-3" />

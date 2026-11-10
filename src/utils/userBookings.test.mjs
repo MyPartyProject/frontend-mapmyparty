@@ -1,6 +1,21 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { getUpcomingBookings, loadAllBookings } from "./userBookings.js";
+import { getUpcomingBookings, loadAllBookings, isBookingVisible } from "./userBookings.js";
+
+test("unpaid pending cards disappear at the original deadline", () => {
+  for (const status of ['pending', 'pending_payment']) {
+    assert.equal(isBookingVisible({ status, deadline: 1001 }, 1000), true);
+    assert.equal(isBookingVisible({ status, deadline: 1000 }, 1000), false);
+    assert.equal(isBookingVisible({ status, deadline: 999 }, 1000), false);
+  }
+});
+
+test("expiry keeps payment recovery and paid booking history visible", () => {
+  assert.equal(isBookingVisible({ status: 'pending_payment', deadline: 999, paymentRecoveryRequired: true }, 1000), true);
+  for (const status of ['confirmed', 'refunded', 'cancelled']) {
+    assert.equal(isBookingVisible({ status, deadline: 999 }, 1000), true);
+  }
+});
 
 test("fetches each required page once and includes upcoming bookings beyond page one", async () => {
   const calls = [];

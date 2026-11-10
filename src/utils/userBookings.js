@@ -23,3 +23,8 @@ export function getUpcomingBookings(bookings, now = Date.now()) {
     .filter((booking) => booking.status === "confirmed" && booking.eventDate && new Date(booking.eventDate).getTime() > now)
     .sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
 }
+
+export function isBookingVisible(booking, now = Date.now()) {
+  return !['pending', 'pending_payment'].includes(booking.status)
+    || booking.deadline > now || Boolean(booking.paymentRecoveryRequired);
+}
