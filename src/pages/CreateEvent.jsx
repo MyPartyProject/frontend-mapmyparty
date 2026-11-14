@@ -252,7 +252,19 @@ const CreateEvent = () => {
   const [originalIsSponsored, setOriginalIsSponsored] = useState(false);
   const [publishState, setPublishState] = useState("DRAFT");
   const [publication, setPublication] = useState(null);
-  const publicationLocked = publication?.status === 'PENDING' || (publication?.status === 'REJECTED' && publication.isInitial);
+  const directUpdates = publication?.approvalRequired === false;
+  const applySavedChanges = directUpdates && publication?.requiresApplySavedChanges;
+  const publicationLocked = (publication?.status === 'PENDING' && !applySavedChanges) || (publication?.status === 'REJECTED' && publication.isInitial);
+  const saveSuccessMessage = directUpdates
+    ? applySavedChanges ? 'Changes saved. Select Apply saved changes when ready.' : 'Changes are live.'
+    : 'Changes saved as draft. Submit changes for approval when ready.';
+  useEffect(() => {
+    const onSaved = ({ detail }) => {
+      if (detail.eventId === backendEventId) setPublication(detail.publication);
+    };
+    window.addEventListener('event-publication-saved', onSaved);
+    return () => window.removeEventListener('event-publication-saved', onSaved);
+  }, [backendEventId]);
   const [isPublished, setIsPublished] = useState(false);
   const eventCacheRef = useRef(null);
   const editHydratedRef = useRef(null);
@@ -1693,7 +1705,7 @@ const CreateEvent = () => {
 
             response = await updateEventStep1(backendEventId, eventData);
             
-            toast.success("Changes saved as draft. Submit changes for approval when ready.");
+            toast.success(saveSuccessMessage);
             
             // Reset change flags after successful update
             setTextFieldsChanged(false);
@@ -1719,7 +1731,7 @@ const CreateEvent = () => {
 
           response = await createEventStep1(eventData);
           
-          toast.success("Changes saved as draft. Submit changes for approval when ready.");
+          toast.success(saveSuccessMessage);
           
           // Store the backend event ID for future updates
           let backendId = response.data?.id || response.data?._id || response.id || response._id;
@@ -1943,7 +1955,7 @@ const CreateEvent = () => {
 
         const response = await updateEventStep2(backendEventId, updateData);
         
-        toast.success("Changes saved as draft. Submit changes for approval when ready.");
+        toast.success(saveSuccessMessage);
         console.log("Step 3 API Response:", response);
         eventCacheRef.current = { ...eventCacheRef.current, ...response.data, startDate: startDateTime, endDate: endDateTime };
         setOriginalDateTime({ start: startDateTime, end: endDateTime });
@@ -2103,7 +2115,7 @@ const CreateEvent = () => {
             localStorage.setItem(`event_${backendEventId}_venueData`, JSON.stringify(updatedVenueData));
             
             console.log('💾 Saved updated venue data:', { id: updatedVenueId });
-            toast.success("Changes saved as draft. Submit changes for approval when ready.");
+            toast.success(saveSuccessMessage);
 
             // Update originalVenueData to prevent unnecessary API calls on next visit
             setOriginalVenueData(venueData);
@@ -2162,7 +2174,7 @@ const CreateEvent = () => {
             localStorage.setItem(`event_${backendEventId}_venueData`, JSON.stringify(updatedVenueData));
             
             console.log('✅ Created new venue with ID:', newVenueId);
-            toast.success("Changes saved as draft. Submit changes for approval when ready.");
+            toast.success(saveSuccessMessage);
 
             // Update originalVenueData to prevent unnecessary API calls on next visit
             setOriginalVenueData(venueData);
@@ -2232,7 +2244,7 @@ const CreateEvent = () => {
           setOriginalSponsors([]);
           setOriginalIsSponsored(false);
           setSponsors([emptySponsor]);
-          toast.success("Changes saved as draft. Submit changes for approval when ready.");
+          toast.success(saveSuccessMessage);
           moveToNextStep();
         } catch (error) {
           console.error("Error saving sponsors:", error);
@@ -2285,7 +2297,7 @@ const CreateEvent = () => {
         console.log("Step 5 (Sponsor) API Response:", response);
         setOriginalSponsors(cleanedSponsors);
         setOriginalIsSponsored(true);
-        toast.success("Changes saved as draft. Submit changes for approval when ready.");
+        toast.success(saveSuccessMessage);
         moveToNextStep();
       } catch (error) {
         console.error("Error saving sponsors:", error);
@@ -2382,7 +2394,7 @@ const CreateEvent = () => {
         }
         artistsLoadedRef.current = true;
         if (!advance) {
-          toast.success("Changes saved as draft. Submit changes for approval when ready.");
+          toast.success(saveSuccessMessage);
         }
         
         // Move to next step after successful API call
@@ -2453,7 +2465,7 @@ const CreateEvent = () => {
         // Refresh original snapshot to avoid re-saving unchanged data on subsequent clicks
         originalAdditionalRef.current = normalizeAdditionalFromState();
         currentAdditionalRef.current = originalAdditionalRef.current;
-        toast.success("Changes saved as draft. Submit changes for approval when ready.");
+        toast.success(saveSuccessMessage);
         moveToNextStep();
       } catch (error) {
         console.error("Error saving additional info:", error);
@@ -3348,7 +3360,7 @@ const CreateEvent = () => {
         localStorage.setItem(`event_${backendEventId}_tickets`, JSON.stringify(updatedTickets));
         setEditingTicketIndex(null);
 
-        toast.success("Changes saved as draft. Submit changes for approval when ready.");
+        toast.success(saveSuccessMessage);
         return;
       }
       
@@ -3376,7 +3388,7 @@ const CreateEvent = () => {
       // Save to localStorage
       localStorage.setItem(`event_${backendEventId}_tickets`, JSON.stringify(updatedTickets));
       
-      toast.success("Changes saved as draft. Submit changes for approval when ready.");
+      toast.success(saveSuccessMessage);
     } catch (error) {
       console.error("Error saving ticket:", error);
       toast.error(error.message || "Failed to save ticket. Please try again.");
@@ -3439,7 +3451,7 @@ const CreateEvent = () => {
     // Call API for Step 7 - Update Additional Information
     try {
       setIsSubmitting(true);
-      setLoadingMessage(isDraft ? "Saving draft..." : "Submitting for approval...");
+      setLoadingMessage(directUpdates ? "Saving changes..." : isDraft ? "Saving draft..." : "Submitting for approval...");
       setShowLoading(true);
       
       // Check if we have backend event ID
@@ -3475,7 +3487,7 @@ const CreateEvent = () => {
 
       const response = await updateEventStep6(backendEventId, updateData);
       if (response?.data?.publication) setPublication(response.data.publication);
-      if (!isDraft) {
+      if (!isDraft && (!directUpdates || applySavedChanges)) {
         const submitted = await requestEventPublication(backendEventId);
         if (submitted?.data?.publication) setPublication(submitted.data.publication);
       }
@@ -3483,7 +3495,7 @@ const CreateEvent = () => {
       console.log("Step 7 API Response:", response);
       
       // Success handling (no explicit status payloads)
-      toast.success(isDraft ? "Changes saved as draft. Submit changes for approval when ready." : "Publication requested. Awaiting promoter approval.");
+      toast.success(directUpdates ? (isDraft && applySavedChanges ? saveSuccessMessage : "Changes are live.") : isDraft ? saveSuccessMessage : "Publication requested. Awaiting promoter approval.");
       
       // Navigate to dashboard after successful submission
       navigate("/organizer/dashboard-v2");
@@ -3613,7 +3625,7 @@ const CreateEvent = () => {
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Final Checkpoint</p>
               <h2 className="mt-2 text-2xl font-bold text-foreground">Review before submitting</h2>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                Scan each grouped section, confirm missing items, then use the single action area below to save a draft or request publication.
+                {directUpdates ? "Review your event, then save and finish using the action below." : "Scan each grouped section, confirm missing items, then use the single action area below to save a draft or request publication."}
               </p>
             </div>
             <div className="rounded-lg border border-border/50 bg-card px-4 py-3">
@@ -4033,9 +4045,9 @@ const CreateEvent = () => {
           </div>
 
           {publication && <div role="status" className="rounded-xl border border-border bg-card p-4 space-y-2">
-            <p className="font-semibold">{publication.status === 'DRAFT' && !publication.isInitial ? 'Unsubmitted changes' : publication.status.replaceAll('_', ' ')}</p>
-            {['DRAFT', 'CHANGES_REQUIRED'].includes(publication.status) && <p className="text-sm">{publication.status === 'CHANGES_REQUIRED' ? 'Save your corrections, then resubmit for approval.' : 'Saved edits are not sent to the promoter yet.'} Complete the final review step to request approval.</p>}
-            {publishState === 'PUBLISHED' && <p className="text-sm">Your current event remains live. These changes require approval.</p>}
+            <p className="font-semibold">{applySavedChanges ? 'Saved changes awaiting application' : publication.status === 'APPLIED' ? 'Changes are live' : publication.status === 'DRAFT' && !publication.isInitial ? 'Unsubmitted changes' : publication.status.replaceAll('_', ' ')}</p>
+            {!directUpdates && ['DRAFT', 'CHANGES_REQUIRED'].includes(publication.status) && <p className="text-sm">{publication.status === 'CHANGES_REQUIRED' ? 'Save your corrections, then resubmit for approval.' : 'Saved edits are not sent to the promoter yet.'} Complete the final review step to request approval.</p>}
+            {publishState === 'PUBLISHED' && <p className="text-sm">{directUpdates ? applySavedChanges ? 'Your published event remains live. Review and correct the saved draft, then select Apply saved changes on the final step. Later saves will go live immediately.' : 'Each successful save updates your public event immediately. Leaving the editor does not undo saved changes.' : 'Your current event remains live. These changes require approval.'}</p>}
             {publicationLocked && <p className="text-sm">{publication.status === 'PENDING' ? 'This submission is locked while the promoter reviews it.' : 'This event was rejected and cannot be published.'}</p>}
             {publication.notes && <p className="whitespace-pre-wrap break-words text-sm">{publication.notes}</p>}
           </div>}
@@ -4065,7 +4077,7 @@ const CreateEvent = () => {
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Complete each section, review the event, then request publication when everything is ready.
+                    {directUpdates ? "Save each section to update your event. Review the save status above before continuing." : "Complete each section, review the event, then request publication when everything is ready."}
                   </p>
                 </div>
                 <div className="w-full rounded-lg border border-border/50 bg-background/40 p-3 lg:w-[280px]">
@@ -5734,7 +5746,7 @@ const CreateEvent = () => {
                       disabled={isSectionBusy}
                       className="h-11 rounded-[10px] border-border bg-background px-5 text-foreground hover:bg-muted hover:text-foreground"
                     >
-                      {isSectionBusy ? "Saving..." : "Save Section as Draft"}
+                      {isSectionBusy ? "Saving..." : directUpdates && !applySavedChanges ? "Save changes" : "Save Section as Draft"}
                     </Button>
                   )}
 
@@ -5749,21 +5761,21 @@ const CreateEvent = () => {
                     </Button>
                   ) : (
                     <>
-                      <Button
+                      {(!directUpdates || applySavedChanges) && <Button
                         variant="outline"
                         onClick={() => handleSubmit("DRAFT")}
                         disabled={isSectionBusy}
                         className="h-11 rounded-[10px] border-border bg-background px-5 text-foreground hover:bg-muted hover:text-foreground"
                       >
                         {isSectionBusy ? "Saving..." : isEditMode ? "Update Draft" : "Save Draft"}
-                      </Button>
+                      </Button>}
                       <Button
                         variant="accent"
                         onClick={() => handleSubmit("PUBLISHED")}
                         disabled={isSectionBusy}
                         className="h-11 rounded-[10px] px-5 font-semibold"
                       >
-                        {isSectionBusy ? "Submitting..." : publishState === "PUBLISHED" ? "Submit changes for approval" : "Request publication"}
+                        {isSectionBusy ? "Saving..." : directUpdates ? applySavedChanges ? "Apply saved changes" : "Save and finish" : publishState === "PUBLISHED" ? "Submit changes for approval" : "Request publication"}
                       </Button>
                     </>
                   )}

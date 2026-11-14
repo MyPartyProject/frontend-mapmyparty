@@ -385,7 +385,7 @@ const PromoterEventDetail = () => {
                     maxLength={1000}
                   />
                 </div>
-                <p className="text-xs leading-relaxed text-muted-foreground">{event.publication?.status === "PENDING" ? "A note is required when requesting changes or rejecting an event." : "Review actions are available only for pending submissions."}</p>
+                <p className="text-xs leading-relaxed text-muted-foreground">{event.publication?.status === "PENDING" && event.publication?.approvalRequired !== false ? "A note is required when requesting changes or rejecting an event." : "Review actions are available only for pending submissions."}</p>
                 <div className="space-y-2">
                   {moderationActions.map((action) => (
                     <AlertDialog
@@ -398,7 +398,7 @@ const PromoterEventDetail = () => {
                           type="button"
                           variant={action.buttonVariant}
                           className="h-11 w-full justify-center text-sm md:h-9 [@media(pointer:coarse)]:h-11"
-                          disabled={isSubmitting || event.publication?.status !== 'PENDING' || (action.key !== 'APPROVE' && !moderationNotes.trim())}
+                          disabled={isSubmitting || (event.publication?.status !== 'PENDING' || event.publication?.approvalRequired === false) || (action.key !== 'APPROVE' && !moderationNotes.trim())}
                         >
                           {action.label}
                         </Button>
@@ -409,10 +409,10 @@ const PromoterEventDetail = () => {
                           <AlertDialogDescription>{action.description}</AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter className="gap-2 sm:space-x-0 [&_button]:m-0 [&_button]:h-11 [&_button]:text-sm md:[&_button]:h-9 [@media(pointer:coarse)]:[&_button]:h-11">
-                          <AlertDialogCancel disabled={isSubmitting || event.publication?.status !== 'PENDING'}>Cancel</AlertDialogCancel>
+                          <AlertDialogCancel disabled={isSubmitting || (event.publication?.status !== 'PENDING' || event.publication?.approvalRequired === false)}>Cancel</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={() => { if (action.key !== 'APPROVE' && !moderationNotes.trim()) { toast.error('A review note is required.'); return; } handleModeration(action.key); }}
-                            disabled={isSubmitting || event.publication?.status !== 'PENDING'}
+                            disabled={isSubmitting || (event.publication?.status !== 'PENDING' || event.publication?.approvalRequired === false)}
                             className={
                               action.buttonVariant === "destructive"
                                 ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"

@@ -67,7 +67,7 @@ const PromoterEvents = () => {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold">{reviewStatus === 'PENDING' ? 'Pending event reviews' : 'Events'}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{reviewStatus === 'PENDING' ? 'Submitted events and updates awaiting approval. Published events can have pending changes.' : 'All events across organizers with live status and revenue.'}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{reviewStatus === 'PENDING' ? 'Event submissions requiring promoter approval.' : 'All events across organizers with live status and revenue.'}</p>
         </div>
         <Badge variant="outline" className="shrink-0 border-border/70 px-2 py-1 text-xs">
           {pagination.total} Events

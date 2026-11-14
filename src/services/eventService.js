@@ -2,10 +2,12 @@ import { buildUrl, apiFetch as request } from "@/config/api";
 import { invalidateOrganizerEventsCache } from "@/hooks/useOrganizerEvents";
 
 const publicationVersions = new Map();
+const publications = new Map();
 const itemEvents = new Map();
 export const rememberEventRevision = event => {
   if (!event?.id) return;
   publicationVersions.set(event.id, event.publication?.version || 0);
+  publications.set(event.id, event.publication);
   for (const kind of ['tickets', 'venues', 'artists', 'images']) for (const row of event[kind] || []) itemEvents.set(row.id, event.id);
 };
 
@@ -15,13 +17,24 @@ export async function eventDraftFetch(url, options = {}) {
   const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
   const eventId = body?.eventId || parts.find(id => publicationVersions.has(id)) || itemEvents.get(parts.at(-1));
   const writing = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(options.method);
-  const response = await request(url, { ...options, headers: { ...options.headers,
-    ...(writing && eventId ? { 'x-event-revision': String(publicationVersions.get(eventId) || 0) } : {}),
-  } });
+  let response;
+  try {
+    response = await request(url, { ...options, headers: { ...options.headers,
+      ...(writing && eventId ? { 'x-event-revision': String(publicationVersions.get(eventId) || 0) } : {}),
+    } });
+  } catch (error) {
+    const publication = publications.get(eventId);
+    if (writing && publication?.approvalRequired === false && !publication.requiresApplySavedChanges) {
+      error.message += ' Earlier successful saves remain live. Reload to check the latest event before retrying.';
+    }
+    throw error;
+  }
   const data = response?.data;
   if (data?.publication) {
     const id = eventId || data.eventId || data.id;
     publicationVersions.set(id, data.publication.version);
+    publications.set(id, data.publication);
+    window.dispatchEvent(new CustomEvent('event-publication-saved', { detail: { eventId: id, publication: data.publication } }));
     if (data.id && data.id !== id) itemEvents.set(data.id, id);
     if (data.tickets) rememberEventRevision({ ...data, id });
   } else if (path.includes('/create-event') && data?.id) rememberEventRevision(data);
