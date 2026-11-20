@@ -4,6 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "test:venues:browser": "node scripts/venue-browser-smoke.mjs",
+    "test:venues:source": "node scripts/venue-source-check.mjs",
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",

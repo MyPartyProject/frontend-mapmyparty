@@ -66,6 +66,7 @@ import eventMusic from "@/assets/event-music.jpg";
 import TicketTypeModal from "@/components/TicketTypeModal";
 import FlyerCropDialog from "@/components/events/FlyerCropDialog";
 import { updateEventStep1, updateEventStep2, uploadFlyerImage, deleteFlyerImage, uploadGalleryImages, deleteGalleryImage, generateEventId, createTicket, updateTicket, deleteTicket, createVenue, updateVenue, updateEventStep6, uploadArtistImage, uploadSponsorLogo, deleteArtist, createEventStep1, persistFlyerUrl, uploadDraftImage, persistGalleryUrls, deleteDraftStorageObject } from "@/services/eventService";
+import VenuePicker from '@/components/venues/VenuePicker';
 import { eventDraftFetch as apiFetch, rememberEventRevision, requestEventPublication } from "@/services/eventService";
 import { TEMPLATE_CONFIGS, DETAIL_TEMPLATE_CONFIGS, getTemplateConfig, mapTemplateId, mapTemplateNameToId } from "@/config/templates";
 import { Calendar } from "@/components/ui/calendar";
@@ -223,6 +224,7 @@ const CreateEvent = () => {
   const [eventId, setEventId] = useState(null);
   const [backendEventId, setBackendEventId] = useState(null); // Store backend's event ID
   const [venueId, setVenueId] = useState(null); // Store venue ID if it exists
+  const [catalogueVenueId, setCatalogueVenueId] = useState(null);
   const [venueCreated, setVenueCreated] = useState(false); // Track if venue was created
   const [originalVenueData, setOriginalVenueData] = useState(null); // Store original venue data for change detection
   const [, setCreatedArtistIndices] = useState([]); // Track saved artist identities for edit hydration
@@ -828,6 +830,7 @@ const CreateEvent = () => {
             
             // Parse and set the venue data
             const venueData = JSON.parse(savedVenueData);
+            setCatalogueVenueId(venueData.catalogueVenueId || null);
             setVenueName(venueData.name || '');
             setCity(venueData.city || '');
             setState(venueData.state || '');
@@ -1058,6 +1061,7 @@ const CreateEvent = () => {
         ? eventToEdit.venues[0]
         : null;
       if (firstVenue) {
+        setCatalogueVenueId(firstVenue.catalogueVenueId || null);
         setVenueId(firstVenue.id || firstVenue._id || venueId);
         setVenueName(pickVenueName(firstVenue));
         setCity(firstVenue.city || "");
@@ -1067,6 +1071,7 @@ const CreateEvent = () => {
         setVenueEmail(firstVenue.email || eventToEdit.venueEmail || "");
         setFullAddress(firstVenue.fullAddress || firstVenue.address || "");
         setOriginalVenueData({
+          catalogueVenueId: firstVenue.catalogueVenueId || null,
           name: pickVenueName(firstVenue),
           contact: firstVenue.contact || eventToEdit.venueContact || "",
           email: firstVenue.email || eventToEdit.venueEmail || "",
@@ -2041,6 +2046,7 @@ const CreateEvent = () => {
       // Prepare venue data
       const fallbackAddressParts = [venueName, city, state, postalCode, "India"].filter(Boolean);
       const venueData = {
+        catalogueVenueId,
         name: venueName,
         contact: venueContactDigits,
         email: venueEmail,
@@ -2048,8 +2054,8 @@ const CreateEvent = () => {
         city: city,
         state: state,
         postalCode: postalCode,
-        latitude: null,
-        longitude: null,
+        latitude: catalogueVenueId ? originalVenueData?.latitude ?? null : null,
+        longitude: catalogueVenueId ? originalVenueData?.longitude ?? null : null,
         googlePlaceId: "", // Optional - not used in manual mode
         eventId: backendEventId, // Use backend event ID
         isPrimary: true,
@@ -2057,6 +2063,7 @@ const CreateEvent = () => {
 
       // Check if venue data has changed
       const hasVenueChanged = !originalVenueData || 
+        catalogueVenueId !== (originalVenueData.catalogueVenueId || null) ||
         venueData.name !== originalVenueData.name ||
         venueData.contact !== originalVenueData.contact ||
         venueData.email !== originalVenueData.email ||
@@ -2186,7 +2193,22 @@ const CreateEvent = () => {
             throw new Error(createError.message || 'Failed to create venue');
           }
         }
-        
+
+        // The catalogue snapshot is resolved on the server, including changes since search.
+        const savedCatalogueVenue = response?.data || response;
+        if (catalogueVenueId && savedCatalogueVenue?.name) {
+          setVenueName(savedCatalogueVenue.name);
+          setCity(savedCatalogueVenue.city || '');
+          setState(savedCatalogueVenue.state || '');
+          setPostalCode(savedCatalogueVenue.postalCode || '');
+          setVenueContact(savedCatalogueVenue.contact || '');
+          setVenueEmail(savedCatalogueVenue.email || '');
+          setFullAddress(savedCatalogueVenue.fullAddress || '');
+          const snapshot = { ...venueData, ...savedCatalogueVenue };
+          setOriginalVenueData(snapshot);
+          localStorage.setItem(`event_${backendEventId}_venueData`, JSON.stringify(snapshot));
+        }
+
         // Move to next step after successful API call
         moveToNextStep();
       } catch (error) {
@@ -5025,6 +5047,13 @@ const CreateEvent = () => {
               {/* Step 4: Venue & Location */}
               {currentStep === 4 && (
                 <div className="space-y-6">
+                  <VenuePicker value={catalogueVenueId} name={venueName} onSelect={venue => {
+                    setCatalogueVenueId(venue?.id || null);
+                    if (venue) {
+                      setVenueName(venue.name); setCity(venue.city); setState(venue.state); setPostalCode(venue.postalCode);
+                      setVenueContact(venue.contact); setVenueEmail(venue.email); setFullAddress(venue.fullAddress);
+                    }
+                  }} />
                   <div className="rounded-2xl border border-border/50 bg-background/60 p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
@@ -5044,7 +5073,7 @@ const CreateEvent = () => {
                           id="venueName"
                           placeholder="e.g., Red Fort Delhi"
                           value={venueName}
-                          onChange={(e) => setVenueName(e.target.value)}
+                          onChange={(e) => { setCatalogueVenueId(null); setVenueName(e.target.value); }}
                           className={fieldClass}
                         />
                       </div>
@@ -5053,6 +5082,7 @@ const CreateEvent = () => {
                     <div className="grid md:grid-cols-2 gap-4">
                       <IndiaLocationFields idPrefix="venue" state={state} city={city} required
                         onChange={(location) => {
+                          setCatalogueVenueId(null);
                           if (location.state !== undefined) setState(location.state);
                           if (location.city !== undefined) setCity(location.city);
                         }} className={fieldClass} menuClassName={selectMenuClass} />
@@ -5065,7 +5095,7 @@ const CreateEvent = () => {
                           id="postalCode"
                           placeholder="e.g., 110025"
                           value={postalCode}
-                          onChange={(e) => setPostalCode(e.target.value)}
+                          onChange={(e) => { setCatalogueVenueId(null); setPostalCode(e.target.value); }}
                           className={fieldClass}
                         />
                       </div>
@@ -5076,7 +5106,7 @@ const CreateEvent = () => {
                           {...PHONE_INPUT_PROPS}
                           placeholder="10 digit contact number"
                           value={venueContact}
-                          onChange={(e) => setVenueContact(sanitizeTenDigitPhoneInput(e.target.value))}
+                          onChange={(e) => { setCatalogueVenueId(null); setVenueContact(sanitizeTenDigitPhoneInput(e.target.value)); }}
                           className={fieldClass}
                         />
                       </div>
@@ -5090,7 +5120,7 @@ const CreateEvent = () => {
                           type="email"
                           placeholder="Enter email"
                           value={venueEmail}
-                          onChange={(e) => setVenueEmail(e.target.value)}
+                          onChange={(e) => { setCatalogueVenueId(null); setVenueEmail(e.target.value); }}
                           className={fieldClass}
                         />
                       </div>
@@ -5100,7 +5130,7 @@ const CreateEvent = () => {
                           id="address" 
                           placeholder="Building / street / landmark"
                           value={fullAddress}
-                          onChange={(e) => setFullAddress(e.target.value)}
+                          onChange={(e) => { setCatalogueVenueId(null); setFullAddress(e.target.value); }}
                           rows={3}
                           className={`${fieldClass} min-h-[120px] py-3`}
                         />

@@ -952,6 +952,7 @@ export async function createVenue(venueData) {
   // Prepare the request body according to API spec
   const payload = {
     name: venueData.name.trim(),
+    catalogueVenueId: venueData.catalogueVenueId || null,
     contact: venueData.contact || "",
     email: venueData.email || "",
     fullAddress: venueData.fullAddress || "",

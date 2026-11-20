@@ -1,0 +1,175 @@
+
+    /* ==========================================================================
+       MAPMYPARTY COLOR THEME TOKENS (Strict implementation of COLOR_THEME.md)
+       ========================================================================== */
+    .venue-page,
+    html.light .venue-page {
+      /* Light Palette */
+      --background: 0 0% 100%;          /* #FFFFFF */
+      --foreground: 221 39% 11%;        /* #111827 */
+      --card: 0 0% 100%;                /* #FFFFFF */
+      --card-foreground: 221 39% 11%;   /* #111827 */
+      --popover: 0 0% 100%;             /* #FFFFFF */
+      --popover-foreground: 221 39% 11%;
+      --surface: 220 33% 97%;           /* #F4F6FA */
+      --muted: 220 23% 95%;             /* #F1F3F7 */
+      --muted-foreground: 215 14% 34%;  /* #4B5563 */
+      --subtle: 215 19% 35%;            /* #475569 */
+      --primary: 279 51% 57%;           /* #A259C9 */
+      --primary-foreground: 0 0% 100%;
+      --primary-cta: 278 52% 45%;       /* #8438B0 */
+      --primary-cta-hover: 278 53% 40%; /* #732F9B */
+      --primary-cta-active: 278 54% 33%;/* #622783 */
+      --secondary: 270 100% 95%;        /* #F3E8FF */
+      --secondary-foreground: 278 52% 35%;
+      --accent: 25 44% 52%;             /* Refined Antique Gold for light contrast */
+      --accent-foreground: 0 0% 100%;
+      --border: 213 27% 84%;            /* #CBD5E1 */
+      --input: 220 9% 46%;              /* #6B7280 */
+      --ring: 279 51% 57%;              /* #A259C9 */
+      --destructive: 0 72% 42%;         /* #B91C1C */
+      --success: 142 64% 24%;           /* #166534 */
+      --gradient-primary: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    }
+
+    html.dark .venue-page {
+      /* Dark Core Palette (Default) */
+      --background: 275 31% 6%;         /* #0F0A13 - Midnight Plum */
+      --foreground: 274 26% 95%;        /* #F2EEF5 - Main readable text */
+      --card: 274 31% 10%;              /* #1B1222 - Dark plum card surface */
+      --card-foreground: 274 26% 95%;   /* #F2EEF5 */
+      --popover: 274 31% 10%;           /* #1B1222 */
+      --popover-foreground: 274 26% 95%;
+      --surface: 274 28% 12%;           /* Subtle elevated plum */
+      --muted: 275 20% 18%;             /* #2F2537 - Muted surface */
+      --muted-foreground: 270 16% 73%;  /* #B9AEC4 - Helper text, metadata */
+      --subtle: 270 14% 62%;
+      --primary: 276 40% 26%;           /* #48285D - Midnight Plum Primary */
+      --primary-foreground: 274 26% 95%;
+      --primary-cta: 276 40% 26%;       /* #48285D */
+      --primary-cta-hover: 276 40% 32%; /* #583172 */
+      --primary-cta-active: 276 40% 21%;/* #3A204B */
+      --secondary: 323 56% 30%;         /* #772256 - Royal Mulberry */
+      --secondary-foreground: 274 26% 95%;
+      --accent: 25 44% 62%;             /* #C99774 - Antique Gold */
+      --accent-foreground: 275 31% 6%;
+      --border: 276 40% 26%;            /* #48285D - Lines, dividers, borders */
+      --input: 276 40% 26%;             /* #48285D */
+      --ring: 25 44% 62%;               /* #C99774 - Antique Gold ring */
+      --destructive: 0 100% 60%;        /* #FF3333 */
+      --success: 155 100% 60%;          /* #33FFAA */
+      --gradient-primary: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    }
+
+    .venue-page {
+      background-color: hsl(var(--background));
+      color: hsl(var(--foreground));
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* Ambient luxury atmospheric glow in Dark Mode */
+    html.dark .venue-page::before {
+      content: "";
+      position: fixed;
+      top: -20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1100px;
+      height: 550px;
+      background: radial-gradient(ellipse at center, rgba(119, 34, 86, 0.11) 0%, rgba(72, 40, 93, 0.06) 45%, transparent 75%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Filled CTA Button Spec from COLOR_THEME.md:
+       Solid #EC4899, white labels/icons, pink shadow, 2px hover lift, returns on active */
+    .venue-page .cta-primary {
+      background-color: #EC4899;
+      color: #FFFFFF;
+      box-shadow: 0 8px 24px -6px rgba(236, 72, 153, 0.48), inset 0 1px 0 0 rgba(255, 255, 255, 0.22);
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+    }
+
+    @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+      .venue-page .cta-primary:hover:not(:disabled):not([aria-disabled="true"]) {
+        transform: translateY(-2px);
+        background-color: #F43F9E;
+        box-shadow: 0 12px 28px -5px rgba(236, 72, 153, 0.62), inset 0 1px 0 0 rgba(255, 255, 255, 0.28);
+      }
+      .venue-page .cta-primary:active:not(:disabled):not([aria-disabled="true"]) {
+        transform: translateY(0);
+        background-color: #DB2777;
+      }
+    }
+
+    /* Alternative Brand Token CTA mode (when toggled in design bar) */
+    .venue-page[data-cta-mode="plum"] .venue-page .cta-primary {
+      background-color: hsl(var(--primary-cta));
+      color: #FFFFFF;
+      box-shadow: 0 8px 24px -6px rgba(72, 40, 93, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
+    }
+    @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+      .venue-page[data-cta-mode="plum"] .venue-page .cta-primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        background-color: hsl(var(--primary-cta-hover));
+        box-shadow: 0 12px 28px -5px rgba(88, 49, 114, 0.68), inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+      }
+      .venue-page[data-cta-mode="plum"] .venue-page .cta-primary:active:not(:disabled) {
+        transform: translateY(0);
+        background-color: hsl(var(--primary-cta-active));
+      }
+    }
+
+    /* Theme Card Utility */
+    .venue-page .theme-card {
+      background-color: hsl(var(--card));
+      border: 1px solid hsl(var(--border) / 0.5);
+    }
+    html.dark .venue-page .theme-card {
+      box-shadow: 0 18px 40px -15px rgba(5, 2, 8, 0.7), inset 0 1px 0 0 rgba(242, 238, 245, 0.05);
+    }
+    html.light .venue-page .theme-card {
+      box-shadow: 0 10px 30px -10px rgba(17, 24, 39, 0.06), 0 2px 6px -1px rgba(17, 24, 39, 0.03);
+    }
+
+    /* Subtle noise texture for architectural depth */
+    .venue-page .luxury-grain {
+      background-image: radial-gradient(rgba(201, 151, 116, 0.06) 1px, transparent 0);
+      background-size: 24px 24px;
+    }
+
+    /* Custom Scrollbar */
+    .venue-page ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    .venue-page ::-webkit-scrollbar-track {
+      background: hsl(var(--background));
+    }
+    .venue-page ::-webkit-scrollbar-thumb {
+      background: hsl(var(--border) / 0.6);
+      border-radius: 9999px;
+    }
+    .venue-page ::-webkit-scrollbar-thumb:hover {
+      background: hsl(var(--accent) / 0.8);
+    }
+
+    /* Native date input icon coloring */
+    html.dark .venue-page input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.85) sepia(0.2) saturate(0.8) hue-rotate(230deg);
+      cursor: pointer;
+      opacity: 0.75;
+    }
+    html.light .venue-page input[type="date"]::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      opacity: 0.65;
+    }
+  
+.venue-page { font-family: "Plus Jakarta Sans", sans-serif; }
+.venue-page .font-display { font-family: "Cormorant Garamond", Georgia, serif; }
+.venue-page .font-mono { font-family: "JetBrains Mono", monospace; }
+.venue-page .text-gold { color: hsl(var(--accent)); }
+
+.venue-menu-reader > .modal-close-button { top: 1rem; right: 1.25rem; padding: .5rem; border-radius: 9999px; border: 1px solid hsl(var(--border) / .4); background: hsl(var(--muted) / .6); }

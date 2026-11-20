@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 import { useState, useEffect, useMemo, useRef } from "react";
 import DefaultEventTerms from "@/components/event-detail/DefaultEventTerms";
+import EventVenueLink from '@/components/venues/EventVenueLink';
 import MobileGalleryViewer from '@/components/event-detail/MobileGalleryViewer';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -1326,6 +1327,7 @@ const EventDetailNew = () => {
                   <p className="mt-0.5 text-[11px] leading-snug text-white light:text-foreground">
                     {event.address}
                   </p>
+                  <EventVenueLink venueId={event.catalogueVenueId} />
                 </div>
               </div>
             </div>

@@ -1,4 +1,7 @@
 import OrganizerPayouts from '@/pages/OrganizerPayouts';
+import OrganizerVenues from '@/components/venues/OrganizerVenues';
+import OrganizerVenueReservations from '@/components/venues/OrganizerVenueReservations';
+import { useVenuesEnabled } from '@/hooks/useVenuesEnabled';
 import PayoutDetail from './PayoutDetail';
 import { useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
@@ -121,13 +124,15 @@ function Profile({ user }) {
 }
 
 export default function OrganizerMobile({ setupRequired = false }) {
+  const venuesEnabled = useVenuesEnabled();
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [signingOut, setSigningOut] = useState(false);
   const [logoutError, setLogoutError] = useState(false);
-  const page = organizerMobilePage(pathname);
-  const title = setupRequired ? "Organizer setup" : { overview: "Overview", events: "Your events", eventDetail: "Event details", profile: "Your profile", payouts: "Payouts", payoutDetail: "Payout details", desktop: "Desktop workspace" }[page];
+  const venuePage = venuesEnabled && ['/organizer/venues', '/organizer/venue-reservations'].includes(pathname);
+  const page = venuePage ? pathname.split('/').at(-1) : organizerMobilePage(pathname);
+  const title = setupRequired ? "Organizer setup" : { venues: 'My venues', 'venue-reservations': 'Venue reservations', overview: "Overview", events: "Your events", eventDetail: "Event details", profile: "Your profile", payouts: "Payouts", payoutDetail: "Payout details", desktop: "Desktop workspace" }[page];
   const signOut = async () => {
     setSigningOut(true);
     setLogoutError(false);
@@ -141,6 +146,7 @@ export default function OrganizerMobile({ setupRequired = false }) {
     </header>
     <main className="mx-auto max-w-2xl space-y-3 px-4 pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
       <h1 className="text-xl font-bold">{title}</h1>
+      {venuesEnabled && !setupRequired && <nav aria-label="Venue management" className="flex flex-wrap gap-2"><Link className={control} to="/organizer/venues">My venues</Link><Link className={control} to="/organizer/venue-reservations">Venue reservations</Link></nav>}
       {(user?.roles || []).includes('SOCIAL_MEDIA_AGENT') && <Link className={control} to="/team/events">Marketing events</Link>}
       {setupRequired || page === "desktop" ? <section className={`${card} space-y-3`}>
         <Monitor className="h-9 w-9 text-primary" aria-hidden="true" />
@@ -148,13 +154,15 @@ export default function OrganizerMobile({ setupRequired = false }) {
         <p className="text-sm leading-relaxed text-muted-foreground">{setupRequired ? "Finish your organizer profile and bank setup on a larger screen to access your organizer summary." : `Use a laptop or PC for ${organizerDesktopTask(pathname).toLowerCase()}. Open this page there to continue.`}</p>
         <div className="flex flex-wrap gap-3">{setupRequired ? <Link className={control} to="/">Go home</Link> : <><Link className={control} to="/organizer/dashboard">Overview</Link><Link className={control} to="/organizer/profile">Profile</Link></>}</div>
       </section> : <>
-        <aside aria-labelledby="mobile-view-note" className="flex items-start gap-3 rounded-xl border border-primary/30 border-l-4 border-l-primary bg-primary/10 p-4">
+        {!venuePage && <aside aria-labelledby="mobile-view-note" className="flex items-start gap-3 rounded-xl border border-primary/30 border-l-4 border-l-primary bg-primary/10 p-4">
           <Info size={20} className="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
           <div className="min-w-0 space-y-1">
             <h2 id="mobile-view-note" className="text-sm font-semibold text-foreground">NOTE — Mobile is view-only</h2>
             <p className="text-sm leading-relaxed text-foreground">You can browse your data and event details here. To make changes or manage any operations, please use a <strong className="font-semibold">laptop or PC</strong>.</p>
           </div>
-        </aside>
+        </aside>}
+        {page === 'venues' && <OrganizerVenues />}
+        {page === 'venue-reservations' && <OrganizerVenueReservations />}
         {page === "overview" && <Overview />}
         {page === "payouts" && <OrganizerPayouts />}
         {page === "payoutDetail" && <PayoutDetail payoutId={pathname.split("/").filter(Boolean).at(-1)} onBack={() => navigate("/organizer/payouts")} />}

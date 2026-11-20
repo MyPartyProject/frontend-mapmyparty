@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import {
-  FLYER_ASPECT_RATIO,
   FLYER_STANDARD_HEIGHT,
   FLYER_STANDARD_WIDTH,
 } from "@/utils/flyerImageCrop";
@@ -26,6 +25,9 @@ const FlyerCropDialog = ({
   processing = false,
   onCancel,
   onConfirm,
+  width = FLYER_STANDARD_WIDTH,
+  height = FLYER_STANDARD_HEIGHT,
+  title = 'Crop event flyer',
 }) => {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -64,9 +66,9 @@ const FlyerCropDialog = ({
       <DialogContent className="max-h-[88dvh] w-[calc(100%-2rem)] max-w-2xl gap-3 overflow-y-auto border-border/60 bg-[#101010] p-4 text-foreground sm:rounded-2xl sm:p-5 light:border-border light:bg-background">
         <div className="flex flex-wrap items-start justify-between gap-4 pr-4">
           <DialogHeader className="text-left">
-            <DialogTitle>Crop event flyer</DialogTitle>
+            <DialogTitle>{title}</DialogTitle>
             <DialogDescription className="text-muted-foreground">
-              Output will be saved as {FLYER_STANDARD_WIDTH}x{FLYER_STANDARD_HEIGHT}.
+              Output will be saved as {width}x{height}.
             </DialogDescription>
           </DialogHeader>
           <div className="ml-auto flex flex-wrap justify-end gap-2">
@@ -102,7 +104,7 @@ const FlyerCropDialog = ({
                 image={imageSrc}
                 crop={crop}
                 zoom={zoom}
-                aspect={FLYER_ASPECT_RATIO}
+                aspect={width / height}
                 onCropChange={setCrop}
                 onCropComplete={handleCropComplete}
                 onZoomChange={setZoom}

@@ -20,14 +20,14 @@ const canvasToBlob = (canvas, type, quality) =>
     canvas.toBlob(resolve, type, quality);
   });
 
-const getFlyerFileName = (file) => {
+const getFlyerFileName = (file, width = FLYER_STANDARD_WIDTH, height = FLYER_STANDARD_HEIGHT) => {
   const baseName = (file?.name || "event-flyer")
     .replace(/\.[^/.]+$/, "")
     .replace(/[^\w.-]+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
 
-  return `${baseName || "event-flyer"}-${FLYER_STANDARD_WIDTH}x${FLYER_STANDARD_HEIGHT}.${OUTPUT_EXTENSION}`;
+  return `${baseName || "event-flyer"}-${width}x${height}.${OUTPUT_EXTENSION}`;
 };
 
 export const isStandardFlyerDimensions = ({ width, height } = {}) =>
@@ -52,7 +52,7 @@ export const getImageFileDimensions = async (file) => {
   }
 };
 
-export const createStandardFlyerFile = async (file, croppedAreaPixels) => {
+export const createStandardFlyerFile = async (file, croppedAreaPixels, { width = FLYER_STANDARD_WIDTH, height = FLYER_STANDARD_HEIGHT } = {}) => {
   if (!file) {
     throw new Error("Please select an image file.");
   }
@@ -77,8 +77,8 @@ export const createStandardFlyerFile = async (file, croppedAreaPixels) => {
     const cropWidth = Math.max(1, Math.round(croppedAreaPixels.width));
     const cropHeight = Math.max(1, Math.round(croppedAreaPixels.height));
 
-    canvas.width = FLYER_STANDARD_WIDTH;
-    canvas.height = FLYER_STANDARD_HEIGHT;
+    canvas.width = width;
+    canvas.height = height;
 
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = "high";
@@ -90,8 +90,8 @@ export const createStandardFlyerFile = async (file, croppedAreaPixels) => {
       cropHeight,
       0,
       0,
-      FLYER_STANDARD_WIDTH,
-      FLYER_STANDARD_HEIGHT
+      width,
+      height
     );
 
     let outputBlob = null;
@@ -116,7 +116,7 @@ export const createStandardFlyerFile = async (file, croppedAreaPixels) => {
       throw new Error("Cropped flyer is still larger than 5MB. Please choose a lighter image.");
     }
 
-    return new File([outputBlob], getFlyerFileName(file), {
+    return new File([outputBlob], getFlyerFileName(file, width, height), {
       type: OUTPUT_TYPE,
       lastModified: Date.now(),
     });

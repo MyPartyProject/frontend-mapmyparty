@@ -1,5 +1,6 @@
 import { getInitials } from "@/utils/userInitials";
 import ThemeToggle from "@/components/ThemeToggle";
+import { useVenuesEnabled } from '@/hooks/useVenuesEnabled';
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -137,6 +138,7 @@ const Header = ({
   forceMainHeader = false,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const venuesEnabled = useVenuesEnabled();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileViewport, setMobileViewport] = useState(() =>
     window.matchMedia("(max-width: 767px)").matches,
@@ -612,6 +614,7 @@ const Header = ({
         {/* Desktop Navigation - Show main nav for non-authenticated users or when forced */}
         {(!resolvedIsAuthenticated || forceMainHeader) && (
           <nav className="hidden items-center gap-5 md:flex lg:gap-6">
+            {venuesEnabled && <Link to="/venues" className={navLinkClass}>Venues</Link>}
             <Link
               to="/browse-events"
               className={navLinkClass}
@@ -970,6 +973,7 @@ const Header = ({
                   <div className={mobileSectionClass}>
                     <div className={mobileSectionLabelClass}>Navigation</div>
                     <div className="space-y-1">
+                      {venuesEnabled && <Link to="/venues" className={mobileMenuLinkClass} onClick={() => setMobileMenuOpen(false)}>Venues</Link>}
                       <Link
                         to="/browse-events"
                         className={mobileMenuLinkClass}

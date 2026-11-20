@@ -247,6 +247,7 @@ function mergeVenues(venues) {
 
   return {
     venue: primary.name || "Venue TBA",
+    catalogueVenueId: primary.catalogueVenueId || null,
     address: primary.fullAddress || [primary.city, primary.state, primary.country].filter(Boolean).join(", ") || "Address TBA",
     location: primary.name || cityState || "Location TBA",
     coordinates: primary.latitude && primary.longitude

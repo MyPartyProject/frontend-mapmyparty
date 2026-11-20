@@ -1,0 +1,32 @@
+
+.venue-management { font-size: 13px; }
+.venue-management h1 { font-size: 20px !important; font-weight: 600; letter-spacing: -.025em; }
+.venue-management h2 { font-size: 14px !important; font-weight: 600; letter-spacing: -.01em; }
+.venue-management h6 { font-size: 12px; }
+.venue-management section { border-color: hsl(var(--border) / .6); border-radius: 16px; padding: 20px; box-shadow: 0 2px 10px rgb(0 0 0 / .025); }
+.venue-management label { font-size: 12px; color: hsl(var(--muted-foreground)); }
+.venue-management label > span { display: inline-block; margin-bottom: 4px; font-weight: 500; }
+.venue-management input:not([type=checkbox]):not([type=file]), .venue-management textarea, .venue-management select { border: 1px solid hsl(var(--border) / .7); border-radius: 10px; background: hsl(var(--muted) / .25); color: hsl(var(--foreground)); padding: 10px 12px; font-size: 13px; transition: border-color .15s, box-shadow .15s; }
+.venue-management input:focus-visible, .venue-management textarea:focus-visible, .venue-management select:focus-visible { outline: none; border-color: hsl(var(--primary)); box-shadow: 0 0 0 3px hsl(var(--primary) / .12); }
+.venue-management input[type=time] { color-scheme: dark; }
+.light .venue-management input[type=time] { color-scheme: light; }
+.venue-management input[type=file] { max-width: 100%; font-size: 12px; }
+.venue-management input[type=file]::file-selector-button { border: 0; border-radius: 8px; padding: 9px 14px; margin-right: 12px; background: hsl(var(--primary) / .12); color: hsl(var(--foreground)); cursor: pointer; }
+.venue-management button { font-size: 12px; border-radius: 9px; }
+.venue-management > form > fieldset > section > h2 { padding-bottom: 12px; border-bottom: 1px solid hsl(var(--border) / .5); }
+.venue-date-trigger { display:flex; align-items:center; gap:10px; width:100%; height:40px; border:1px solid hsl(var(--border) / .7); border-radius:10px; padding:0 12px; background:hsl(var(--muted) / .25); color:hsl(var(--foreground)); font-size:13px; }
+.venue-date-trigger svg { color:hsl(var(--muted-foreground)); }
+.venue-calendar-caption { display:flex; align-items:center; justify-content:space-between; padding:4px 4px 12px; }
+.venue-calendar-title { font-size:13px; font-weight:600; }
+.venue-calendar-nav { display:flex; gap:4px; }
+.venue-calendar-nav-button { width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; background:hsl(var(--muted)); }
+.venue-calendar-nav-button svg { width:12px; height:12px; }
+.venue-calendar-table { border-collapse:collapse; }
+.venue-calendar-weekday { font-size:10px; font-weight:500; color:hsl(var(--muted-foreground)); height:28px; }
+.venue-calendar-cell { padding:2px; }
+.venue-calendar-day { width:34px; height:34px; border-radius:8px; font-size:12px; }
+.venue-calendar-day:hover { background:hsl(var(--muted)); }
+.venue-calendar-selected, .venue-calendar-selected:hover { background:hsl(var(--primary)); color:hsl(var(--primary-foreground)); }
+.venue-calendar-today { font-weight:700; box-shadow:inset 0 0 0 1px hsl(var(--primary) / .5); }
+.venue-calendar-outside { opacity:.35; }
+@media(max-width:640px) { .venue-management section { padding:16px; } .venue-management h1 { font-size:18px !important; } }

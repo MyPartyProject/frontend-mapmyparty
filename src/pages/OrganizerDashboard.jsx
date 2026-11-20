@@ -4,6 +4,9 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import EntryAgentManagement from '@/components/EntryAgentManagement';
+import OrganizerVenues from '@/components/venues/OrganizerVenues';
+import OrganizerVenueReservations from '@/components/venues/OrganizerVenueReservations';
+import { useVenuesEnabled } from '@/hooks/useVenuesEnabled';
 import { useBankInput } from "@/hooks/useBankInput";
 import { buildOrganizerProfile as buildInitialData } from '@/utils/organizerProfile';
 import { isValidGstFormat } from '@/utils/gst';
@@ -15,6 +18,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { buildUrl, apiFetch } from "@/config/api";
 import {
   Calendar,
+  NotebookPen,
+  ConciergeBell,
   X,
   MapPin,
   User,
@@ -1553,6 +1558,7 @@ const OrganizerProfileContent = ({ user }) => {
 };
 
 const OrganizerDashboard = () => {
+  const venuesEnabled = useVenuesEnabled();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -1602,9 +1608,10 @@ const OrganizerDashboard = () => {
     { id: "bookings", name: "My Bookings", icon: <IndianRupee className="w-6 h-6 mr-3" /> },
     { id: "analytics", name: "Audience Analytics", icon: <Users className="w-6 h-6 mr-3" /> },
     { id: "live", name: "Live Events", icon: <Radio className="w-6 h-6 mr-3" /> },
-    { id: "reception", name: "Reception", icon: <Shield className="w-6 h-6 mr-3" /> },
+    { id: "reception", name: "Reception", icon: <ConciergeBell className="w-6 h-6 mr-3" /> },
     { id: "entry-agents", name: "Entry Agents", icon: <Shield className="w-6 h-6 mr-3" /> },
     { id: "food-beverages", name: "Food & Beverages", icon: <CupSoda className="w-6 h-6 mr-3" /> },
+    ...(venuesEnabled ? [{ id: 'venues', name: 'My Venues', icon: <MapPin className="w-6 h-6 mr-3" /> }, { id: 'venue-reservations', name: 'Venue Reservations', icon: <NotebookPen className="w-6 h-6 mr-3" /> }] : []),
     { id: "payouts", name: "Payouts", icon: <CreditCard className="w-6 h-6 mr-3" /> },
     { id: "support", name: "Support", icon: <LifeBuoy className="w-6 h-6 mr-3" /> },
     ...((authUser?.roles || []).includes('SOCIAL_MEDIA_AGENT') ? [{ id: 'marketing', name: 'Marketing events', icon: <Calendar className="w-6 h-6 mr-3" /> }] : []),
@@ -1615,6 +1622,8 @@ const OrganizerDashboard = () => {
   useEffect(() => {
     const path = location.pathname || "";
     if (path.startsWith("/organizer/myevents")) setActiveTab("myevents");
+    else if (path.startsWith('/organizer/venue-reservations')) setActiveTab('venue-reservations');
+    else if (path.startsWith('/organizer/venues')) setActiveTab('venues');
     else if (path.startsWith("/organizer/bookings")) setActiveTab("bookings");
     else if (path.startsWith("/organizer/analytics")) setActiveTab("analytics");
     else if (path.startsWith("/organizer/live")) setActiveTab("live");
@@ -1763,6 +1772,8 @@ const OrganizerDashboard = () => {
             )}
 
             {activeTab === "myevents" && <MyEvents />}
+            {activeTab === 'venues' && <OrganizerVenues />}
+            {activeTab === 'venue-reservations' && venuesEnabled && <OrganizerVenueReservations />}
             {activeTab === "bookings" && (
               <MyBookings browseEventsPath="/browse-events" showSummarySections={false} />
             )}

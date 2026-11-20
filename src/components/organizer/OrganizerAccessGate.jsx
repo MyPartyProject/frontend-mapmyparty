@@ -6,8 +6,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { clearOrganizerOnboardingCache } from '@/services/organizerOnboardingService';
 import OrganizerSupport from '@/pages/OrganizerSupport';
 import { Button } from '@/components/ui/button';
+import OrganizerVenueReservations from '@/components/venues/OrganizerVenueReservations';
+import { useVenuesEnabled } from '@/hooks/useVenuesEnabled';
 
 export default function OrganizerAccessGate({ children }) {
+  const venuesEnabled = useVenuesEnabled();
   const { user, logout } = useAuth();
   const { pathname } = useLocation();
   const queryClient = useQueryClient();
@@ -67,6 +70,7 @@ export default function OrganizerAccessGate({ children }) {
     {failed ? 'Unable to verify organizer access. Please refresh to retry.' : 'Checking organizer access…'}
   </div>;
   if (!access.isSuspended) return children;
+  if (venuesEnabled && pathname === '/organizer/venue-reservations') return <main className="mx-auto max-w-6xl p-4 space-y-4"><p className="rounded-lg border p-4">Organization suspended. You can resolve existing venue reservations, but cannot confirm new requests.</p><Link to="/organizer/support" className="underline">Contact support</Link><OrganizerVenueReservations resolutionOnly /></main>;
   if (pathname !== '/organizer/support') return <Navigate to="/organizer/support" replace />;
 
   return <main className="min-h-screen bg-background text-foreground">
@@ -80,7 +84,8 @@ export default function OrganizerAccessGate({ children }) {
             <Button variant="outline" size="sm" onClick={logout}>Sign out</Button>
           </div>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">Only support is available for this organization.</p>
+        <p className="mt-1 text-sm text-muted-foreground">{venuesEnabled ? 'Support and resolution of existing venue reservations remain available.' : 'Only support is available for this organization.'}</p>
+        {venuesEnabled && <Link to="/organizer/venue-reservations" className="inline-block mt-2 text-sm underline">Resolve existing venue reservations</Link>}
         {access.suspensionReason && <p className="mt-2 text-sm">{access.suspensionReason}</p>}
       </div>
     </div>

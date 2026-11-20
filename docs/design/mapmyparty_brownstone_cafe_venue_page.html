@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brownstone Cafe — MapMyParty | Find your vibe</title>
+
+  <!-- Theme Bootstrap: Restores 'mapmyparty-theme' before render, defaults to 'dark' regardless of OS -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('mapmyparty-theme');
+        var theme = (saved === 'light' || saved === 'dark') ? saved : 'dark';
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(theme);
+        document.documentElement.style.colorScheme = theme;
+      } catch (e) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.style.colorScheme = 'dark';
+      }
+    })();
+  </script>
+
+  <!-- Google Fonts: Plus Jakarta Sans (UI), Cormorant Garamond (Luxury Display), JetBrains Mono (Metadata) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Tailwind Configuration mapped strictly to COLOR_THEME.md tokens -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+            display: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            background: 'hsl(var(--background) / <alpha-value>)',
+            foreground: 'hsl(var(--foreground) / <alpha-value>)',
+            card: {
+              DEFAULT: 'hsl(var(--card) / <alpha-value>)',
+              foreground: 'hsl(var(--card-foreground) / <alpha-value>)',
+            },
+            popover: {
+              DEFAULT: 'hsl(var(--popover) / <alpha-value>)',
+              foreground: 'hsl(var(--popover-foreground) / <alpha-value>)',
+            },
+            surface: 'hsl(var(--surface) / <alpha-value>)',
+            primary: {
+              DEFAULT: 'hsl(var(--primary) / <alpha-value>)',
+              foreground: 'hsl(var(--primary-foreground) / <alpha-value>)',
+            },
+            primaryCTA: {
+              DEFAULT: 'hsl(var(--primary-cta) / <alpha-value>)',
+              hover: 'hsl(var(--primary-cta-hover) / <alpha-value>)',
+              active: 'hsl(var(--primary-cta-active) / <alpha-value>)',
+            },
+            secondary: {
+              DEFAULT: 'hsl(var(--secondary) / <alpha-value>)',
+              foreground: 'hsl(var(--secondary-foreground) / <alpha-value>)',
+            },
+            muted: {
+              DEFAULT: 'hsl(var(--muted) / <alpha-value>)',
+              foreground: 'hsl(var(--muted-foreground) / <alpha-value>)',
+            },
+            subtle: 'hsl(var(--subtle) / <alpha-value>)',
+            accent: {
+              DEFAULT: 'hsl(var(--accent) / <alpha-value>)',
+              foreground: 'hsl(var(--accent-foreground) / <alpha-value>)',
+            },
+            border: 'hsl(var(--border) / <alpha-value>)',
+            input: 'hsl(var(--input) / <alpha-value>)',
+            ring: 'hsl(var(--ring) / <alpha-value>)',
+            destructive: 'hsl(var(--destructive) / <alpha-value>)',
+            success: 'hsl(var(--success) / <alpha-value>)',
+            gold: '#C99774',
+            hotpink: '#EC4899',
+          },
+          boxShadow: {
+            'luxury-dark': '0 20px 50px -15px rgba(7, 4, 10, 0.75), inset 0 1px 0 0 rgba(242, 238, 245, 0.06)',
+            'luxury-light': '0 14px 34px -10px rgba(17, 24, 39, 0.07), 0 2px 6px -1px rgba(17, 24, 39, 0.04)',
+            'specular': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.07)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* ==========================================================================
+       MAPMYPARTY COLOR THEME TOKENS (Strict implementation of COLOR_THEME.md)
+       ========================================================================== */
+    :root,
+    html.light {
+      /* Light Palette */
+      --background: 0 0% 100%;          /* #FFFFFF */
+      --foreground: 221 39% 11%;        /* #111827 */
+      --card: 0 0% 100%;                /* #FFFFFF */
+      --card-foreground: 221 39% 11%;   /* #111827 */
+      --popover: 0 0% 100%;             /* #FFFFFF */
+      --popover-foreground: 221 39% 11%;
+      --surface: 220 33% 97%;           /* #F4F6FA */
+      --muted: 220 23% 95%;             /* #F1F3F7 */
+      --muted-foreground: 215 14% 34%;  /* #4B5563 */
+      --subtle: 215 19% 35%;            /* #475569 */
+      --primary: 279 51% 57%;           /* #A259C9 */
+      --primary-foreground: 0 0% 100%;
+      --primary-cta: 278 52% 45%;       /* #8438B0 */
+      --primary-cta-hover: 278 53% 40%; /* #732F9B */
+      --primary-cta-active: 278 54% 33%;/* #622783 */
+      --secondary: 270 100% 95%;        /* #F3E8FF */
+      --secondary-foreground: 278 52% 35%;
+      --accent: 25 44% 52%;             /* Refined Antique Gold for light contrast */
+      --accent-foreground: 0 0% 100%;
+      --border: 213 27% 84%;            /* #CBD5E1 */
+      --input: 220 9% 46%;              /* #6B7280 */
+      --ring: 279 51% 57%;              /* #A259C9 */
+      --destructive: 0 72% 42%;         /* #B91C1C */
+      --success: 142 64% 24%;           /* #166534 */
+      --gradient-primary: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    }
+
+    html.dark {
+      /* Dark Core Palette (Default) */
+      --background: 275 31% 6%;         /* #0F0A13 - Midnight Plum */
+      --foreground: 274 26% 95%;        /* #F2EEF5 - Main readable text */
+      --card: 274 31% 10%;              /* #1B1222 - Dark plum card surface */
+      --card-foreground: 274 26% 95%;   /* #F2EEF5 */
+      --popover: 274 31% 10%;           /* #1B1222 */
+      --popover-foreground: 274 26% 95%;
+      --surface: 274 28% 12%;           /* Subtle elevated plum */
+      --muted: 275 20% 18%;             /* #2F2537 - Muted surface */
+      --muted-foreground: 270 16% 73%;  /* #B9AEC4 - Helper text, metadata */
+      --subtle: 270 14% 62%;
+      --primary: 276 40% 26%;           /* #48285D - Midnight Plum Primary */
+      --primary-foreground: 274 26% 95%;
+      --primary-cta: 276 40% 26%;       /* #48285D */
+      --primary-cta-hover: 276 40% 32%; /* #583172 */
+      --primary-cta-active: 276 40% 21%;/* #3A204B */
+      --secondary: 323 56% 30%;         /* #772256 - Royal Mulberry */
+      --secondary-foreground: 274 26% 95%;
+      --accent: 25 44% 62%;             /* #C99774 - Antique Gold */
+      --accent-foreground: 275 31% 6%;
+      --border: 276 40% 26%;            /* #48285D - Lines, dividers, borders */
+      --input: 276 40% 26%;             /* #48285D */
+      --ring: 25 44% 62%;               /* #C99774 - Antique Gold ring */
+      --destructive: 0 100% 60%;        /* #FF3333 */
+      --success: 155 100% 60%;          /* #33FFAA */
+      --gradient-primary: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    }
+
+    body {
+      background-color: hsl(var(--background));
+      color: hsl(var(--foreground));
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* Ambient luxury atmospheric glow in Dark Mode */
+    html.dark body::before {
+      content: "";
+      position: fixed;
+      top: -20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1100px;
+      height: 550px;
+      background: radial-gradient(ellipse at center, rgba(119, 34, 86, 0.11) 0%, rgba(72, 40, 93, 0.06) 45%, transparent 75%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Filled CTA Button Spec from COLOR_THEME.md:
+       Solid #EC4899, white labels/icons, pink shadow, 2px hover lift, returns on active */
+    .cta-primary {
+      background-color: #EC4899;
+      color: #FFFFFF;
+      box-shadow: 0 8px 24px -6px rgba(236, 72, 153, 0.48), inset 0 1px 0 0 rgba(255, 255, 255, 0.22);
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+    }
+
+    @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+      .cta-primary:hover:not(:disabled):not([aria-disabled="true"]) {
+        transform: translateY(-2px);
+        background-color: #F43F9E;
+        box-shadow: 0 12px 28px -5px rgba(236, 72, 153, 0.62), inset 0 1px 0 0 rgba(255, 255, 255, 0.28);
+      }
+      .cta-primary:active:not(:disabled):not([aria-disabled="true"]) {
+        transform: translateY(0);
+        background-color: #DB2777;
+      }
+    }
+
+    /* Alternative Brand Token CTA mode (when toggled in design bar) */
+    body[data-cta-mode="plum"] .cta-primary {
+      background-color: hsl(var(--primary-cta));
+      color: #FFFFFF;
+      box-shadow: 0 8px 24px -6px rgba(72, 40, 93, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
+    }
+    @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+      body[data-cta-mode="plum"] .cta-primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        background-color: hsl(var(--primary-cta-hover));
+        box-shadow: 0 12px 28px -5px rgba(88, 49, 114, 0.68), inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+      }
+      body[data-cta-mode="plum"] .cta-primary:active:not(:disabled) {
+        transform: translateY(0);
+        background-color: hsl(var(--primary-cta-active));
+      }
+    }
+
+    /* Theme Card Utility */
+    .theme-card {
+      background-color: hsl(var(--card));
+      border: 1px solid hsl(var(--border) / 0.5);
+    }
+    html.dark .theme-card {
+      box-shadow: 0 18px 40px -15px rgba(5, 2, 8, 0.7), inset 0 1px 0 0 rgba(242, 238, 245, 0.05);
+    }
+    html.light .theme-card {
+      box-shadow: 0 10px 30px -10px rgba(17, 24, 39, 0.06), 0 2px 6px -1px rgba(17, 24, 39, 0.03);
+    }
+
+    /* Subtle noise texture for architectural depth */
+    .luxury-grain {
+      background-image: radial-gradient(rgba(201, 151, 116, 0.06) 1px, transparent 0);
+      background-size: 24px 24px;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: hsl(var(--background));
+    }
+    ::-webkit-scrollbar-thumb {
+      background: hsl(var(--border) / 0.6);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: hsl(var(--accent) / 0.8);
+    }
+
+    /* Native date input icon coloring */
+    html.dark input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.85) sepia(0.2) saturate(0.8) hue-rotate(230deg);
+      cursor: pointer;
+      opacity: 0.75;
+    }
+    html.light input[type="date"]::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      opacity: 0.65;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col selection:bg-secondary selection:text-foreground relative" data-cta-mode="pink">
+
+  <!-- ========================================================================
+       SUBTLE STUDIO INSPECTOR RIBBON (Allows instant testing of Spec vs Live & Theme tokens)
+       ======================================================================== -->
+  <div class="relative z-50 bg-card/90 backdrop-blur-md border-b border-border/40 text-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-9 flex items-center justify-between gap-3 overflow-x-auto no-scrollbar">
+      <div class="flex items-center gap-2 shrink-0">
+        <span class="inline-block w-1.5 h-1.5 rounded-full bg-gold"></span>
+        <span class="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">MapMyParty UI System</span>
+        <span class="hidden md:inline-block text-border/60">|</span>
+        <span class="hidden md:inline-block text-[11px] text-muted-foreground">Strict Token Compliance (`#0F0A13` / `#1B1222` / `#C99774` / `#EC4899`)</span>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        <!-- Data Mode Switcher: Spec Brackets vs Editorial Live -->
+        <div class="inline-flex items-center bg-muted/70 p-0.5 rounded-full border border-border/40" role="group" aria-label="Content Mode">
+          <button id="mode-spec-btn" onclick="setContentMode('spec')" class="px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all bg-primaryCTA text-white shadow-sm">
+            PDF `[Bracket]` Spec
+          </button>
+          <button id="mode-live-btn" onclick="setContentMode('live')" class="px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all text-muted-foreground hover:text-foreground">
+            Curated Live Data
+          </button>
+        </div>
+
+        <!-- CTA Token Mode Switcher -->
+        <div class="hidden sm:inline-flex items-center bg-muted/70 p-0.5 rounded-full border border-border/40" role="group" aria-label="CTA Button Token">
+          <button id="cta-pink-btn" onclick="setCtaMode('pink')" class="px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all bg-[#EC4899] text-white">
+            `cta-primary` #EC4899
+          </button>
+          <button id="cta-plum-btn" onclick="setCtaMode('plum')" class="px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all text-muted-foreground hover:text-foreground">
+            `bg-primaryCTA` #48285D
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       STICKY NAVIGATION HEADER
+       ======================================================================== -->
+  <header class="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/40 transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-[72px] flex items-center justify-between gap-4">
+      
+      <!-- Brand Identity: MMP Monogram + MapMyParty + Find your vibe -->
+      <a href="#" class="group flex items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primaryCTA via-secondary to-background border border-border/70 flex items-center justify-center shadow-inner relative overflow-hidden group-hover:border-gold/60 transition-colors">
+          <span class="font-mono text-xs font-bold tracking-tighter text-foreground">MMP</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-gold ml-0.5"></span>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-base sm:text-lg font-bold tracking-tight text-foreground leading-none">MapMyParty</span>
+          <span class="text-[11px] font-medium text-muted-foreground tracking-wide mt-1">Find your vibe</span>
+        </div>
+      </a>
+
+      <!-- Navigation Links & Theme Toggle -->
+      <nav class="flex items-center gap-1 sm:gap-2 lg:gap-6">
+        <a href="#events-section" onclick="scrollToSection(event, 'photos-section')" class="px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
+          Events
+        </a>
+        <a href="#venue-top" class="relative px-3 py-2 rounded-lg text-sm font-semibold text-foreground transition-colors flex items-center gap-1.5">
+          <span>Venues</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-gold"></span>
+        </a>
+        <a href="#partner-callout" class="hidden md:inline-flex px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">
+          List your venue
+        </a>
+
+        <div class="h-4 w-[1px] bg-border/40 hidden sm:block mx-1"></div>
+
+        <!-- Shared ThemeToggle (Persists to localStorage 'mapmyparty-theme') -->
+        <button
+          type="button"
+          onclick="toggleTheme()"
+          aria-label="Toggle color theme"
+          title="Switch between Midnight Plum Dark and Crisp Light theme"
+          class="p-2.5 rounded-full border border-border/50 bg-card/70 text-muted-foreground hover:text-foreground hover:border-gold/50 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <!-- Sun icon (shown in dark mode) -->
+          <svg class="w-4 h-4 hidden dark:block text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+          </svg>
+          <!-- Moon icon (shown in light mode) -->
+          <svg class="w-4 h-4 block dark:hidden text-primaryCTA" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+          </svg>
+        </button>
+
+        <!-- Sign in Button (Outline Pill) -->
+        <button
+          type="button"
+          onclick="openSignInModal()"
+          class="px-4 py-2 rounded-full text-xs sm:text-sm font-medium border border-border/70 bg-card/60 hover:bg-secondary/30 hover:border-gold/50 text-foreground transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          Sign in
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       MAIN PAGE CONTAINER
+       ======================================================================== -->
+  <main id="venue-top" class="flex-1 relative z-10 pb-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 sm:pt-7">
+
+      <!-- ====================================================================
+           HERO COVER SECTION (1920 × 720 Architectural Proportions)
+           ==================================================================== -->
+      <section aria-label="Venue Cover" class="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-border/60 shadow-luxury-dark bg-card group">
+        
+        <!-- 1920 x 720 Aspect Container on Desktop (aspect-[16/6]), tall comfortable height on Mobile -->
+        <div class="relative w-full h-[360px] sm:h-[420px] lg:h-auto lg:aspect-[16/6] overflow-hidden">
+          
+          <!-- Architectural Luxury Cafe Cover Image -->
+          <img
+            id="hero-cover-img"
+            src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1920&q=85"
+            alt="Brownstone Cafe architectural interior and warm ambient lighting"
+            onerror="this.onerror=null;this.src='https://placehold.co/1920x720/1B1222/C99774?text=VENUE+COVER+PHOTO+1920x720';"
+            class="w-full h-full object-cover object-center transform group-hover:scale-[1.015] transition-transform duration-1000 ease-out brightness-95"
+          />
+
+          <!-- Multi-Layered Midnight Plum Luxury Gradient Scrim -->
+          <div class="absolute inset-0 bg-gradient-to-t from-[#0F0A13] via-[#0F0A13]/65 to-[#0F0A13]/20"></div>
+          <div class="absolute inset-0 bg-gradient-to-r from-[#0F0A13]/85 via-[#0F0A13]/30 to-transparent"></div>
+
+          <!-- Top-Right Specification Watermark Badge: VENUE COVER PHOTO 1920 × 720 -->
+          <div class="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-2">
+            <span class="px-3 py-1 rounded-full text-[11px] font-mono uppercase tracking-widest bg-[#0F0A13]/75 text-[#B9AEC4] border border-[#48285D]/60 backdrop-blur-md">
+              VENUE COVER PHOTO 1920 × 720
+            </span>
+          </div>
+
+          <!-- Bottom Hero Overlay Bar: Left Venue Identity / Right Instant CTA -->
+          <div class="absolute inset-x-0 bottom-0 p-5 sm:p-8 lg:p-10 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+            
+            <!-- Left Stack: Badges + Venue Title + [Area], [City] -->
+            <div class="space-y-3 max-w-2xl">
+              <!-- Badges Row -->
+              <div class="flex flex-wrap items-center gap-2.5">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[#1B1222]/85 text-[#F2EEF5] border border-[#48285D]/80 backdrop-blur-md">
+                  <svg class="w-3.5 h-3.5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zm4-7v3m4-3v3m4-3v3" />
+                  </svg>
+                  Cafe
+                </span>
+
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[#C99774]/15 text-[#E8C5AC] border border-[#C99774]/40 backdrop-blur-md">
+                  <span class="w-1.5 h-1.5 rounded-full bg-gold animate-pulse"></span>
+                  ₹0 booking fee
+                </span>
+              </div>
+
+              <!-- Venue Title -->
+              <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-[#F2EEF5] leading-[1.05]">
+                Brownstone Cafe
+              </h1>
+
+              <!-- Area & City Subtitle -->
+              <div class="flex items-center gap-2 text-sm sm:text-base text-[#B9AEC4]">
+                <svg class="w-4 h-4 text-gold shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                </svg>
+                <span data-field="areaCity" class="font-medium tracking-wide">[Area], [City]</span>
+              </div>
+            </div>
+
+            <!-- Right Stack: Hero CTA Button -> Scrolls & focuses Booking Widget -->
+            <div class="shrink-0">
+              <button
+                type="button"
+                onclick="focusBookingWidget()"
+                class="cta-primary w-full sm:w-auto inline-flex items-center justify-center gap-3 px-6 py-3.5 rounded-full text-sm font-semibold tracking-wide focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <span>Book a place</span>
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono uppercase tracking-wider bg-black/25 text-white border border-white/20">
+                  Free
+                </span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           4-COLUMN ARCHITECTURAL METADATA BENTO STRIP
+           (ADDRESS | OPENING HOURS | COST FOR TWO | CONTACT)
+           ==================================================================== -->
+      <section aria-label="Venue Key Information" class="mt-4 sm:mt-5 theme-card rounded-2xl backdrop-blur-xl overflow-hidden">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border/40">
+          
+          <!-- 1. ADDRESS -->
+          <div class="p-5 sm:p-6 flex flex-col justify-between gap-2 hover:bg-muted/20 transition-colors">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">ADDRESS</span>
+                <svg class="w-4 h-4 text-gold/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                </svg>
+              </div>
+              <p data-field="fullAddress" class="text-sm font-medium text-foreground leading-relaxed">
+                [Full street address]
+              </p>
+            </div>
+            <div class="pt-1">
+              <button
+                type="button"
+                onclick="openDirectionsModal()"
+                class="inline-flex items-center gap-1.5 text-xs font-semibold text-gold hover:underline underline-offset-4 group"
+              >
+                <span>Get directions</span>
+                <svg class="w-3.5 h-3.5 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. OPENING HOURS -->
+          <div class="p-5 sm:p-6 flex flex-col justify-between gap-2 hover:bg-muted/20 transition-colors">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">OPENING HOURS</span>
+                <svg class="w-4 h-4 text-gold/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p data-field="openingHours" class="text-sm font-medium text-foreground leading-relaxed">
+                [Mon-Sun, 9:00 AM - 11:00 PM]
+              </p>
+            </div>
+            <div class="pt-1 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-success"></span>
+              <span class="text-xs text-muted-foreground">Open today · Table reservations active</span>
+            </div>
+          </div>
+
+          <!-- 3. COST FOR TWO -->
+          <div class="p-5 sm:p-6 flex flex-col justify-between gap-2 hover:bg-muted/20 transition-colors">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">COST FOR TWO</span>
+                <span class="font-mono text-xs font-semibold text-gold">₹</span>
+              </div>
+              <p class="text-sm font-semibold text-foreground">
+                ₹<span data-field="costAmount">[AMOUNT]</span> approx.
+              </p>
+            </div>
+            <p data-field="cuisines" class="text-xs text-muted-foreground leading-relaxed pt-1">
+              [Cuisines, e.g. Coffee, Continental]
+            </p>
+          </div>
+
+          <!-- 4. CONTACT -->
+          <div class="p-5 sm:p-6 flex flex-col justify-between gap-2 hover:bg-muted/20 transition-colors">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">CONTACT</span>
+                <svg class="w-4 h-4 text-gold/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+                </svg>
+              </div>
+              <button
+                type="button"
+                onclick="copyPhoneNumber()"
+                title="Click to copy phone number"
+                class="text-sm font-mono font-medium text-foreground hover:text-gold transition-colors text-left flex items-center gap-1.5 group"
+              >
+                <span data-field="phone">[+91 XXXXX XXXXX]</span>
+                <svg class="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+                </svg>
+              </button>
+            </div>
+            <div class="pt-1">
+              <a
+                href="#instagram"
+                onclick="showToast('Opening Instagram profile ' + document.querySelector('[data-field=instagram]').textContent); return false;"
+                class="inline-flex items-center gap-1.5 text-xs font-medium text-gold hover:underline underline-offset-4"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                  <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"></path>
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                </svg>
+                <span data-field="instagram">@[instagram]</span>
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           TWO-COLUMN ASYMMETRIC ARCHITECTURAL BODY
+           Left 8 Cols: Amenities, About, Photos (6), Menu (4), Reviews
+           Right 4 Cols: Sticky 'Book a place' Reservation Card
+           ==================================================================== -->
+      <div class="mt-8 sm:mt-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+        
+        <!-- ==================================================================
+             LEFT COLUMN (8 COLUMNS ON DESKTOP)
+             ================================================================== -->
+        <div class="lg:col-span-8 space-y-10 sm:space-y-12">
+
+          <!-- 1. AMENITIES / FEATURES STRIP -->
+          <section aria-label="Venue Amenities">
+            <div class="flex flex-wrap items-center gap-2.5">
+              <!-- [Wi-Fi] -->
+              <div class="inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-medium bg-card border border-border/50 text-foreground hover:border-gold/50 transition-colors shadow-specular">
+                <svg class="w-3.5 h-3.5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 017.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 011.06 0z" />
+                </svg>
+                <span data-field="amenity1">[Wi-Fi]</span>
+              </div>
+
+              <!-- [Outdoor seating] -->
+              <div class="inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-medium bg-card border border-border/50 text-foreground hover:border-gold/50 transition-colors shadow-specular">
+                <svg class="w-3.5 h-3.5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636" />
+                </svg>
+                <span data-field="amenity2">[Outdoor seating]</span>
+              </div>
+
+              <!-- [Pet friendly] -->
+              <div class="inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-medium bg-card border border-border/50 text-foreground hover:border-gold/50 transition-colors shadow-specular">
+                <svg class="w-3.5 h-3.5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                </svg>
+                <span data-field="amenity3">[Pet friendly]</span>
+              </div>
+
+              <!-- [Live music] -->
+              <div class="inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-medium bg-card border border-border/50 text-foreground hover:border-gold/50 transition-colors shadow-specular">
+                <svg class="w-3.5 h-3.5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z" />
+                </svg>
+                <span data-field="amenity4">[Live music]</span>
+              </div>
+
+              <!-- [Parking] -->
+              <div class="inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-medium bg-card border border-border/50 text-foreground hover:border-gold/50 transition-colors shadow-specular">
+                <svg class="w-3.5 h-3.5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                </svg>
+                <span data-field="amenity5">[Parking]</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- 2. ABOUT SECTION -->
+          <section aria-labelledby="about-heading" class="theme-card rounded-2xl p-6 sm:p-8 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-gold via-secondary to-transparent opacity-80"></div>
+            <div class="flex items-center justify-between mb-3">
+              <h2 id="about-heading" class="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                About
+              </h2>
+              <span class="font-mono text-[11px] uppercase tracking-widest text-gold/80">The Space & Vibe</span>
+            </div>
+            <p data-field="aboutText" class="text-sm sm:text-base text-muted-foreground leading-relaxed">
+              [Two or three lines from Brownstone Cafe about their space, signature coffee and food, and the vibe e.g. weekend brunches, evening gigs.]
+            </p>
+          </section>
+
+          <!-- 3. PHOTOS SECTION (6 Architectural Cards: Interior photo, Coffee bar, Seating, Food, Outdoor, Events / nights) -->
+          <section id="photos-section" aria-labelledby="photos-heading" class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <h2 id="photos-heading" class="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                  Photos
+                </h2>
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-muted text-muted-foreground border border-border/40">
+                  6 curated views
+                </span>
+              </div>
+              <button
+                type="button"
+                onclick="openPhotoLightbox(0)"
+                class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group"
+              >
+                <span>View all</span>
+                <svg class="w-4 h-4 text-gold transform group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- 6-Card Grid (3 columns on desktop, 2 on tablet, 1-2 on mobile) -->
+            <div id="photos-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3.5 sm:gap-4">
+              <!-- Populated dynamically via JS for clean Lightbox synchronization -->
+            </div>
+          </section>
+
+          <!-- 4. MENU SECTION (4 Portrait Cards: Coffee & beverages, All-day breakfast, Mains, Desserts) -->
+          <section id="menu-section" aria-labelledby="menu-heading" class="space-y-4">
+            <div class="flex items-center justify-between">
+              <h2 id="menu-heading" class="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Menu
+              </h2>
+              <span class="px-3 py-1 rounded-full text-xs font-mono text-muted-foreground bg-card border border-border/50">
+                4 pages
+              </span>
+            </div>
+
+            <div id="menu-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <!-- Populated dynamically via JS with interactive Menu Reader Lightbox -->
+            </div>
+          </section>
+
+          <!-- 5. REVIEWS SECTION -->
+          <section id="reviews-section" aria-labelledby="reviews-heading" class="space-y-4 pt-2">
+            <div class="flex items-center justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <h2 id="reviews-heading" class="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                  Reviews
+                </h2>
+                <span id="review-count-badge" class="hidden px-2.5 py-0.5 rounded-full text-xs font-mono bg-secondary/40 text-foreground border border-border/50">
+                  0
+                </span>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button
+                  id="reset-reviews-btn"
+                  type="button"
+                  onclick="resetReviewsToEmpty()"
+                  class="hidden px-3 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground border border-border/40 bg-muted/30 transition-colors"
+                >
+                  Reset to empty spec
+                </button>
+                <button
+                  type="button"
+                  onclick="openReviewModal()"
+                  class="px-4 py-2 rounded-full text-xs sm:text-sm font-medium border border-border bg-card hover:bg-secondary/30 hover:border-gold/50 text-foreground transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  Write a review
+                </button>
+              </div>
+            </div>
+
+            <!-- Reviews Container (Defaults strictly to the PDF's empty state) -->
+            <div id="reviews-container">
+              <div class="theme-card rounded-2xl p-8 sm:p-10 text-center luxury-grain">
+                <p class="text-sm sm:text-base text-muted-foreground">
+                  No reviews yet. Be the first to review Brownstone Cafe.
+                </p>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- ==================================================================
+             RIGHT COLUMN: STICKY BOOKING WIDGET (4 COLUMNS ON DESKTOP)
+             ================================================================== -->
+        <aside id="booking-widget-aside" aria-label="Table Reservation" class="lg:col-span-4 lg:sticky lg:top-24">
+          <div id="booking-card" class="theme-card rounded-2xl sm:rounded-3xl p-6 sm:p-7 backdrop-blur-xl relative overflow-hidden transition-all duration-300">
+            
+            <!-- Subtle Top Specular Accent Bar -->
+            <div class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-gold/70 to-transparent"></div>
+
+            <!-- Booking Form View -->
+            <div id="booking-form-view">
+              <div class="flex items-start justify-between gap-3 mb-5">
+                <div>
+                  <h2 class="text-xl font-semibold tracking-tight text-foreground">
+                    Book a place
+                  </h2>
+                  <p class="text-xs sm:text-sm text-muted-foreground mt-1">
+                    Reserve a table instantly. No booking fee.
+                  </p>
+                </div>
+                <span class="w-8 h-8 rounded-full bg-secondary/30 border border-border/60 flex items-center justify-center text-gold shrink-0">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                  </svg>
+                </span>
+              </div>
+
+              <form id="reservation-form" onsubmit="handleBookingSubmit(event)" class="space-y-4">
+                
+                <!-- Row 1: Date & Time (2 columns) -->
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label for="booking-date" class="block text-xs font-medium text-muted-foreground mb-1.5">
+                      Date
+                    </label>
+                    <input
+                      id="booking-date"
+                      type="date"
+                      required
+                      class="w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-mono bg-background/90 border border-input/70 text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label for="booking-time" class="block text-xs font-medium text-muted-foreground mb-1.5">
+                      Time
+                    </label>
+                    <div class="relative">
+                      <select
+                        id="booking-time"
+                        class="w-full appearance-none px-3.5 py-2.5 pr-8 rounded-xl text-xs sm:text-sm font-mono bg-background/90 border border-input/70 text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                      >
+                        <option value="09:30 AM">09:30 AM</option>
+                        <option value="11:00 AM">11:00 AM</option>
+                        <option value="12:00 PM" selected>12:00 PM</option>
+                        <option value="01:30 PM">01:30 PM</option>
+                        <option value="04:00 PM">04:00 PM</option>
+                        <option value="06:30 PM">06:30 PM</option>
+                        <option value="08:00 PM">08:00 PM</option>
+                        <option value="09:30 PM">09:30 PM</option>
+                      </select>
+                      <svg class="w-4 h-4 text-muted-foreground pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Row 2: Guests -->
+                <div>
+                  <label for="booking-guests" class="block text-xs font-medium text-muted-foreground mb-1.5">
+                    Guests
+                  </label>
+                  <div class="relative">
+                    <select
+                      id="booking-guests"
+                      class="w-full appearance-none px-3.5 py-2.5 pr-9 rounded-xl text-sm bg-background/90 border border-input/70 text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                    >
+                      <option value="1 guest">1 guest</option>
+                      <option value="2 guests" selected>2 guests</option>
+                      <option value="3 guests">3 guests</option>
+                      <option value="4 guests">4 guests</option>
+                      <option value="5 guests">5 guests</option>
+                      <option value="6 guests">6 guests</option>
+                      <option value="8+ guests (Private Table)">8+ guests (Private Table)</option>
+                    </select>
+                    <svg class="w-4 h-4 text-muted-foreground pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                    </svg>
+                  </div>
+                </div>
+
+                <!-- Row 3: Name -->
+                <div>
+                  <label for="booking-name" class="block text-xs font-medium text-muted-foreground mb-1.5">
+                    Name
+                  </label>
+                  <input
+                    id="booking-name"
+                    type="text"
+                    required
+                    placeholder="Your name"
+                    class="w-full px-3.5 py-2.5 rounded-xl text-sm bg-background/90 border border-input/70 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                  />
+                </div>
+
+                <!-- Row 4: Phone -->
+                <div>
+                  <label for="booking-phone" class="block text-xs font-medium text-muted-foreground mb-1.5">
+                    Phone
+                  </label>
+                  <div class="flex rounded-xl overflow-hidden border border-input/70 bg-background/90 focus-within:ring-2 focus-within:ring-ring focus-within:border-transparent transition-all">
+                    <span class="px-3.5 py-2.5 bg-muted/60 border-r border-border/50 text-xs sm:text-sm font-mono text-muted-foreground flex items-center select-none">
+                      +91
+                    </span>
+                    <input
+                      id="booking-phone"
+                      type="tel"
+                      required
+                      pattern="[0-9\s\-]{8,15}"
+                      placeholder="98450 00000"
+                      class="w-full px-3.5 py-2.5 text-sm font-mono bg-transparent text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <!-- Fee Breakdown Summary Card -->
+                <div class="rounded-xl bg-muted/45 border border-border/40 p-4 space-y-2.5 mt-2">
+                  <div class="flex items-center justify-between text-xs sm:text-sm">
+                    <span class="text-muted-foreground">Booking fee</span>
+                    <span class="font-mono font-medium text-gold flex items-center gap-1.5">
+                      <span>₹0</span>
+                      <span class="px-1.5 py-0.5 rounded text-[10px] bg-gold/15 text-gold border border-gold/30">Free listing</span>
+                    </span>
+                  </div>
+                  <div class="border-t border-border/30 pt-2.5 flex items-center justify-between">
+                    <span class="text-xs sm:text-sm font-semibold text-foreground">You pay now</span>
+                    <span class="font-mono text-base font-bold text-foreground">₹0</span>
+                  </div>
+                </div>
+
+                <!-- Primary Submit CTA Button -->
+                <button
+                  type="submit"
+                  class="cta-primary w-full py-3.5 px-5 rounded-xl text-sm font-semibold tracking-wide flex items-center justify-center gap-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring mt-2"
+                >
+                  <span>Book a place</span>
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-mono bg-black/25 text-white border border-white/20">
+                    Zero fee
+                  </span>
+                </button>
+
+                <!-- Footnote -->
+                <p class="text-center text-xs text-muted-foreground pt-1">
+                  Pay for what you order at the cafe.
+                </p>
+              </form>
+            </div>
+
+            <!-- Instant Booking Confirmation State (Hidden until form submitted) -->
+            <div id="booking-confirmed-view" class="hidden space-y-5 py-2">
+              <div class="flex items-center justify-between">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono bg-success/15 text-success border border-success/30">
+                  <span class="w-1.5 h-1.5 rounded-full bg-success animate-ping"></span>
+                  Table Reserved
+                </span>
+                <span id="confirmed-ref" class="font-mono text-xs text-muted-foreground">#MMP-8492</span>
+              </div>
+
+              <div>
+                <h3 class="font-display text-2xl font-semibold text-foreground">Brownstone Cafe</h3>
+                <p data-field="areaCity" class="text-xs text-muted-foreground mt-0.5">[Area], [City]</p>
+              </div>
+
+              <div class="rounded-xl bg-muted/50 border border-border/50 p-4 space-y-2.5 text-xs font-mono">
+                <div class="flex justify-between">
+                  <span class="text-muted-foreground">GUEST</span>
+                  <span id="confirmed-name" class="text-foreground font-medium">—</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-muted-foreground">DATE & TIME</span>
+                  <span id="confirmed-datetime" class="text-foreground font-medium">—</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-muted-foreground">PARTY SIZE</span>
+                  <span id="confirmed-guests" class="text-gold font-medium">—</span>
+                </div>
+                <div class="flex justify-between pt-2 border-t border-border/30">
+                  <span class="text-muted-foreground">PREPAID AMOUNT</span>
+                  <span class="text-success font-semibold">₹0 (Pay at venue)</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onclick="resetBookingForm()"
+                class="w-full py-2.5 px-4 rounded-xl text-xs font-medium border border-border bg-card hover:bg-muted/50 text-foreground transition-colors"
+              >
+                Modify or make another booking
+              </button>
+            </div>
+
+          </div>
+        </aside>
+
+      </div>
+
+      <!-- ====================================================================
+           PARTNER CALLOUT BANNER ("Own a club, restaurant or cafe?")
+           ==================================================================== -->
+      <section id="partner-callout" aria-label="List your venue" class="mt-16 sm:mt-20">
+        <div class="theme-card rounded-2xl sm:rounded-3xl p-6 sm:p-9 relative overflow-hidden">
+          <!-- Subtle decorative radial highlight -->
+          <div class="absolute -right-20 -bottom-20 w-72 h-72 rounded-full bg-secondary/25 blur-3xl pointer-events-none"></div>
+
+          <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div class="space-y-1.5 max-w-xl">
+              <div class="inline-flex items-center gap-2 text-[11px] font-mono uppercase tracking-widest text-gold">
+                <span>MapMyParty For Partners</span>
+              </div>
+              <h2 class="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                Own a club, restaurant or cafe?
+              </h2>
+              <p class="text-sm text-muted-foreground leading-relaxed">
+                List your venue on MapMyParty for free and take bookings with zero fees.
+              </p>
+            </div>
+
+            <div class="shrink-0">
+              <button
+                type="button"
+                onclick="openPartnerModal()"
+                class="cta-primary inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-xs sm:text-sm font-semibold tracking-wide focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <span>Get a free listing</span>
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       FOOTER
+       ======================================================================== -->
+  <footer class="border-t border-border/40 bg-card/50 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+      
+      <!-- Left: Brand + Tagline -->
+      <div class="flex items-center gap-3">
+        <div class="w-7 h-7 rounded-lg bg-primaryCTA/80 border border-border flex items-center justify-center">
+          <span class="font-mono text-[10px] font-bold text-white">MMP</span>
+        </div>
+        <span class="text-sm font-bold text-foreground">MapMyParty</span>
+        <span class="text-xs text-muted-foreground">Find your vibe</span>
+      </div>
+
+      <!-- Right: Links & Public Footer Theme Control -->
+      <div class="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-muted-foreground">
+        <a href="https://www.mapmyparty.com" target="_blank" rel="noopener noreferrer" class="hover:text-foreground transition-colors">
+          www.mapmyparty.com
+        </a>
+        <a href="mailto:support@mapmyparty.com" class="hover:text-foreground transition-colors">
+          support@mapmyparty.com
+        </a>
+        <a href="#mapmyparty-ig" onclick="showToast('Following @mapmyparty'); return false;" class="hover:text-gold transition-colors font-mono">
+          @mapmyparty
+        </a>
+
+        <!-- Public Footer ThemeToggle (Required by COLOR_THEME.md) -->
+        <button
+          type="button"
+          onclick="toggleTheme()"
+          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border/50 bg-background/70 text-foreground hover:border-gold/50 transition-colors"
+        >
+          <span class="w-2 h-2 rounded-full bg-gold"></span>
+          <span id="footer-theme-label" class="font-mono text-[11px]">Theme: Dark</span>
+        </button>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- ========================================================================
+       INTERACTIVE LIGHTBOX MODAL (Photos & Menu Reader)
+       ======================================================================== -->
+  <div id="lightbox-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-[#0F0A13]/90 backdrop-blur-xl p-4 sm:p-6">
+    <div class="relative w-full max-w-4xl theme-card rounded-2xl sm:rounded-3xl overflow-hidden border border-border/70 shadow-2xl">
+      
+      <!-- Modal Top Bar -->
+      <div class="flex items-center justify-between px-5 py-4 border-b border-border/40 bg-card/90">
+        <div class="flex items-center gap-2.5">
+          <span id="lightbox-tag" class="px-2.5 py-0.5 rounded-full text-[11px] font-mono uppercase tracking-wider bg-secondary/40 text-gold border border-gold/30">
+            Photos
+          </span>
+          <h3 id="lightbox-title" class="text-sm sm:text-base font-semibold text-foreground">
+            Interior photo
+          </h3>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="lightbox-counter" class="font-mono text-xs text-muted-foreground mr-2">1 / 6</span>
+          <button
+            type="button"
+            onclick="closeLightbox()"
+            aria-label="Close modal"
+            class="p-2 rounded-full bg-muted/60 text-muted-foreground hover:text-foreground border border-border/40 transition-colors"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Content Body -->
+      <div id="lightbox-body" class="relative bg-background/95 min-h-[340px] sm:min-h-[460px] flex items-center justify-center">
+        <!-- Dynamically populated with Photo or Typeset Luxury Menu Page -->
+      </div>
+
+      <!-- Modal Bottom Controls -->
+      <div class="flex items-center justify-between px-5 py-3.5 border-t border-border/40 bg-card/90">
+        <button
+          type="button"
+          onclick="stepLightbox(-1)"
+          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border border-border/50 bg-muted/40 hover:bg-muted text-foreground transition-colors"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+          <span>Previous</span>
+        </button>
+
+        <span id="lightbox-caption" class="text-xs text-muted-foreground hidden sm:inline">
+          Brownstone Cafe — Curated Venue Visuals
+        </span>
+
+        <button
+          type="button"
+          onclick="stepLightbox(1)"
+          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border border-border/50 bg-muted/40 hover:bg-muted text-foreground transition-colors"
+        >
+          <span>Next</span>
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       WRITE A REVIEW MODAL
+       ======================================================================== -->
+  <div id="review-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-[#0F0A13]/85 backdrop-blur-md p-4">
+    <div class="w-full max-w-md theme-card rounded-2xl p-6 border border-border/70 space-y-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-lg font-semibold text-foreground">Write a review</h3>
+          <p class="text-xs text-muted-foreground mt-0.5">Share your experience at Brownstone Cafe</p>
+        </div>
+        <button type="button" onclick="closeReviewModal()" class="p-1.5 rounded-full text-muted-foreground hover:text-foreground">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <form onsubmit="submitReview(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-muted-foreground mb-1.5">Rating</label>
+          <div id="star-selector" class="flex items-center gap-1.5">
+            <button type="button" onclick="setRating(1)" class="star-btn text-xl text-gold">★</button>
+            <button type="button" onclick="setRating(2)" class="star-btn text-xl text-gold">★</button>
+            <button type="button" onclick="setRating(3)" class="star-btn text-xl text-gold">★</button>
+            <button type="button" onclick="setRating(4)" class="star-btn text-xl text-gold">★</button>
+            <button type="button" onclick="setRating(5)" class="star-btn text-xl text-gold">★</button>
+            <span id="rating-label" class="ml-2 font-mono text-xs text-muted-foreground">5.0 / 5.0</span>
+          </div>
+        </div>
+
+        <div>
+          <label for="reviewer-name" class="block text-xs font-medium text-muted-foreground mb-1.5">Your name</label>
+          <input id="reviewer-name" type="text" required placeholder="e.g. Aarav Mehta" class="w-full px-3.5 py-2 rounded-xl text-sm bg-background border border-input/70 text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+        </div>
+
+        <div>
+          <label for="reviewer-comment" class="block text-xs font-medium text-muted-foreground mb-1.5">Your review</label>
+          <textarea id="reviewer-comment" rows="3" required placeholder="Tell others about the specialty pour-over, weekend brunch, or acoustic nights..." class="w-full px-3.5 py-2 rounded-xl text-sm bg-background border border-input/70 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closeReviewModal()" class="px-4 py-2 rounded-full text-xs font-medium border border-border text-muted-foreground hover:text-foreground">
+            Cancel
+          </button>
+          <button type="submit" class="cta-primary px-5 py-2 rounded-full text-xs font-semibold">
+            Publish review
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       DIRECTIONS / SIGN-IN / PARTNER GENERIC LUXURY MODAL
+       ======================================================================== -->
+  <div id="info-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-[#0F0A13]/85 backdrop-blur-md p-4">
+    <div class="w-full max-w-md theme-card rounded-2xl p-6 border border-border/70 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 id="info-modal-title" class="text-lg font-semibold text-foreground">Modal Title</h3>
+        <button type="button" onclick="closeInfoModal()" class="p-1.5 rounded-full text-muted-foreground hover:text-foreground">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div id="info-modal-content" class="text-sm text-muted-foreground space-y-3"></div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       NON-INTRUSIVE TOAST NOTIFICATION
+       ======================================================================== -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 pointer-events-none flex flex-col gap-2"></div>
+
+  <!-- ========================================================================
+       APPLICATION LOGIC & INTERACTIVE CONTROLLERS
+       ======================================================================== -->
+  <script>
+    /* ------------------------------------------------------------------------
+       1. DATA DICTIONARIES: PDF [BRACKET] SPEC vs. LIVE CURATED EDITORIAL
+       ------------------------------------------------------------------------ */
+    const CONTENT_MODES = {
+      spec: {
+        areaCity: '[Area], [City]',
+        fullAddress: '[Full street address]',
+        openingHours: '[Mon-Sun, 9:00 AM - 11:00 PM]',
+        costAmount: '[AMOUNT]',
+        cuisines: '[Cuisines, e.g. Coffee, Continental]',
+        phone: '[+91 XXXXX XXXXX]',
+        instagram: '@[instagram]',
+        amenity1: '[Wi-Fi]',
+        amenity2: '[Outdoor seating]',
+        amenity3: '[Pet friendly]',
+        amenity4: '[Live music]',
+        amenity5: '[Parking]',
+        aboutText: '[Two or three lines from Brownstone Cafe about their space, signature coffee and food, and the vibe e.g. weekend brunches, evening gigs.]',
+      },
+      live: {
+        areaCity: 'Indiranagar, Bengaluru',
+        fullAddress: '428, 12th Main Rd, HAL 2nd Stage, Indiranagar, Bengaluru 560038',
+        openingHours: 'Mon–Sun, 9:00 AM – 11:00 PM',
+        costAmount: '1,400',
+        cuisines: 'Specialty Coffee, Artisanal Bakehouse, Continental',
+        phone: '+91 98450 72910',
+        instagram: '@brownstone.blr',
+        amenity1: 'High-Speed Wi-Fi',
+        amenity2: 'Outdoor Courtyard',
+        amenity3: 'Pet Friendly',
+        amenity4: 'Acoustic Evenings',
+        amenity5: 'Valet Parking',
+        aboutText: 'Tucked beneath a canopy of rain trees in Indiranagar, Brownstone Cafe pairs single-estate Chikmagalur pour-overs with slow-fermented sourdough plates and warm architectural minimalism. By day, a sunlit sanctuary for founders and creatives; by dusk, an intimate listening room for vinyl sets and weekend acoustic sessions.',
+      }
+    };
+
+    /* 6 Curated Photos matching exact PDF labels */
+    const PHOTO_ITEMS = [
+      {
+        label: 'Interior photo',
+        subtitle: 'Warm architectural concrete, walnut joinery, and diffused brass lighting',
+        img: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=900&q=80'
+      },
+      {
+        label: 'Coffee bar',
+        subtitle: 'Custom Slayer espresso bar & single-origin pour-over station',
+        img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=80'
+      },
+      {
+        label: 'Seating',
+        subtitle: 'Plush cognac leather banquettes and intimate two-top tables',
+        img: 'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=900&q=80'
+      },
+      {
+        label: 'Food',
+        subtitle: 'Artisanal sourdough tartines, truffle scrambled eggs & house viennoiserie',
+        img: 'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=900&q=80'
+      },
+      {
+        label: 'Outdoor',
+        subtitle: 'Dappled courtyard terrace surrounded by tropical foliage',
+        img: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80'
+      },
+      {
+        label: 'Events / nights',
+        subtitle: 'Thursday vinyl listening sessions & intimate weekend acoustic gigs',
+        img: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=900&q=80'
+      }
+    ];
+
+    /* 4 Menu Pages matching exact PDF labels */
+    const MENU_ITEMS = [
+      {
+        pageLabel: 'Menu page',
+        pageNum: '01 / 04',
+        category: 'Coffee & beverages',
+        highlights: [
+          { name: 'Ratnagiri Estate Barrel-Aged Pour Over', price: '₹340', desc: 'Notes of dark cherry, cacao nibs & toasted hazelnut' },
+          { name: 'Smoked Maple & Sea Salt Cortado', price: '₹290', desc: 'Doubleristretto, organic maple reduction, Maldon sea salt' },
+          { name: 'Kyoto Uji Matcha Cloud Cold Foam', price: '₹360', desc: 'Ceremonial first-harvest matcha over Madagascar vanilla cream' },
+          { name: 'Cascara & Hibiscus Botanical Spritz', price: '₹310', desc: 'Sun-dried coffee cherry infusion, sparkling tonic, dehydrated blood orange' }
+        ]
+      },
+      {
+        pageLabel: 'Menu page',
+        pageNum: '02 / 04',
+        category: 'All-day breakfast',
+        highlights: [
+          { name: 'Black Truffle & Brioche Soft Scramble', price: '₹520', desc: 'Free-range organic eggs, shaved Parmigiano, chives, house brioche' },
+          { name: 'Whipped Ricotta & Charred Fig Tartine', price: '₹480', desc: '48-hour country sourdough, wildflower honey, crushed pistachios' },
+          { name: 'Shakshuka Verde with Burrata', price: '₹560', desc: 'Charred tomatillo & spinach ragout, poached eggs, Za’atar flatbread' },
+          { name: 'Brownstone Buckwheat Crêpe Galette', price: '₹490', desc: 'Gruyère, smoked mushroom duxelles, sunny-side farm egg' }
+        ]
+      },
+      {
+        pageLabel: 'Menu page',
+        pageNum: '03 / 04',
+        category: 'Mains',
+        highlights: [
+          { name: 'Handmade Sage Butter Tagliolini', price: '₹680', desc: '24-month aged Parmigiano Reggiano, toasted pine nuts, lemon zest' },
+          { name: 'Pan-Seared Norwegian Salmon & Quinoa', price: '₹890', desc: 'Charred broccolini, miso beurre blanc, crispy capers' },
+          { name: 'Harissa Roasted Cauliflower Steak', price: '₹620', desc: 'Tahini labneh, pomegranate molasses, dukkah spice crunch' },
+          { name: 'Artisanal Burrata & Heirloom Tomato Flatbread', price: '₹640', desc: '72-hour fermented dough, cold-pressed basil oil, balsamic pearls' }
+        ]
+      },
+      {
+        pageLabel: 'Menu page',
+        pageNum: '04 / 04',
+        category: 'Desserts',
+        highlights: [
+          { name: '70% Valrhona Dark Chocolate Basque Cheesecake', price: '₹440', desc: 'Burnt caramelized crust, espresso mascarpone cream' },
+          { name: 'Warm Cardamom & Pistachio Kouign-Amann', price: '₹380', desc: 'Laminated Breton pastry, Iranian pistachio praline, vanilla bean gelato' },
+          { name: 'Single-Origin Espresso Tiramisu', price: '₹420', desc: 'Savoiardi soaked in house espresso & Kahlúa, cocoa dusting' },
+          { name: 'Salted Tahini & Dark Chocolate Chunk Cookie', price: '₹240', desc: 'Baked fresh every hour, topped with flaky sea salt' }
+        ]
+      }
+    ];
+
+    let currentContentMode = 'spec';
+    let lightboxContext = 'photos'; // 'photos' or 'menu'
+    let lightboxIndex = 0;
+    let selectedRating = 5;
+    let reviewsList = [];
+
+    /* ------------------------------------------------------------------------
+       2. INITIALIZATION
+       ------------------------------------------------------------------------ */
+    document.addEventListener('DOMContentLoaded', () => {
+      // Set default date in booking widget to today
+      const dateInput = document.getElementById('booking-date');
+      if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+        dateInput.min = today;
+      }
+
+      renderPhotosGrid();
+      renderMenuGrid();
+      syncThemeUI();
+
+      // Keyboard navigation for modals
+      window.addEventListener('keydown', (e) => {
+        const lb = document.getElementById('lightbox-modal');
+        if (lb && !lb.classList.contains('hidden')) {
+          if (e.key === 'Escape') closeLightbox();
+          if (e.key === 'ArrowRight') stepLightbox(1);
+          if (e.key === 'ArrowLeft') stepLightbox(-1);
+        }
+      });
+
+      // Listen for storage changes across tabs (per COLOR_THEME.md)
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'mapmyparty-theme') {
+          const newTheme = (e.newValue === 'light' || e.newValue === 'dark') ? e.newValue : 'dark';
+          applyTheme(newTheme, false);
+        }
+      });
+    });
+
+    /* ------------------------------------------------------------------------
+       3. THEME SWITCHER (Persisted in localStorage 'mapmyparty-theme')
+       ------------------------------------------------------------------------ */
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const nextTheme = isDark ? 'light' : 'dark';
+      applyTheme(nextTheme, true);
+      showToast(`Switched to ${nextTheme === 'dark' ? 'Midnight Plum Dark' : 'Crisp Light'} theme`);
+    }
+
+    function applyTheme(theme, saveToStorage = true) {
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(theme);
+      document.documentElement.style.colorScheme = theme;
+      if (saveToStorage) {
+        try {
+          localStorage.setItem('mapmyparty-theme', theme);
+        } catch (err) {
+          // Storage blocked; session still works per COLOR_THEME.md
+        }
+      }
+      syncThemeUI();
+    }
+
+    function syncThemeUI() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const footerLabel = document.getElementById('footer-theme-label');
+      if (footerLabel) {
+        footerLabel.textContent = isDark ? 'Theme: Dark' : 'Theme: Light';
+      }
+    }
+
+    /* ------------------------------------------------------------------------
+       4. CONTENT MODE & CTA TOKEN SWITCHERS
+       ------------------------------------------------------------------------ */
+    function setContentMode(mode) {
+      currentContentMode = mode;
+      const data = CONTENT_MODES[mode];
+      document.querySelectorAll('[data-field]').forEach((el) => {
+        const key = el.getAttribute('data-field');
+        if (data[key] !== undefined) {
+          el.textContent = data[key];
+        }
+      });
+
+      const specBtn = document.getElementById('mode-spec-btn');
+      const liveBtn = document.getElementById('mode-live-btn');
+      if (mode === 'spec') {
+        specBtn.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all bg-primaryCTA text-white shadow-sm';
+        liveBtn.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all text-muted-foreground hover:text-foreground';
+      } else {
+        liveBtn.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all bg-primaryCTA text-white shadow-sm';
+        specBtn.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all text-muted-foreground hover:text-foreground';
+      }
+    }
+
+    function setCtaMode(mode) {
+      document.body.setAttribute('data-cta-mode', mode);
+      const pinkBtn = document.getElementById('cta-pink-btn');
+      const plumBtn = document.getElementById('cta-plum-btn');
+      if (mode === 'pink') {
+        pinkBtn.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all bg-[#EC4899] text-white';
+        plumBtn.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all text-muted-foreground hover:text-foreground';
+      } else {
+        plumBtn.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all bg-primaryCTA text-white';
+        pinkBtn.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all text-muted-foreground hover:text-foreground';
+      }
+    }
+
+    /* ------------------------------------------------------------------------
+       5. RENDER PHOTOS & MENU GRIDS
+       ------------------------------------------------------------------------ */
+    function renderPhotosGrid() {
+      const grid = document.getElementById('photos-grid');
+      if (!grid) return;
+
+      grid.innerHTML = PHOTO_ITEMS.map((item, idx) => `
+        <button
+          type="button"
+          onclick="openPhotoLightbox(${idx})"
+          class="group relative aspect-[16/10] rounded-2xl overflow-hidden theme-card text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <img
+            src="${item.img}"
+            alt="${item.label}"
+            onerror="this.onerror=null;this.src='https://placehold.co/600x400/1B1222/C99774?text=${encodeURIComponent(item.label)}';"
+            class="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700 ease-out"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-[#0F0A13]/90 via-[#0F0A13]/25 to-transparent"></div>
+          <div class="absolute inset-x-0 bottom-0 p-3.5 sm:p-4 flex items-center justify-between">
+            <span class="text-xs sm:text-sm font-medium text-[#F2EEF5] tracking-tight">${item.label}</span>
+            <span class="w-6 h-6 rounded-full bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+              </svg>
+            </span>
+          </div>
+        </button>
+      `).join('');
+    }
+
+    function renderMenuGrid() {
+      const grid = document.getElementById('menu-grid');
+      if (!grid) return;
+
+      grid.innerHTML = MENU_ITEMS.map((item, idx) => `
+        <div class="space-y-2.5 group">
+          <button
+            type="button"
+            onclick="openMenuLightbox(${idx})"
+            class="w-full aspect-[3/4] rounded-2xl theme-card p-4 sm:p-5 flex flex-col justify-between text-left relative overflow-hidden hover:border-gold/60 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring luxury-grain"
+          >
+            <!-- Top Subtle Arch Header -->
+            <div class="w-full flex items-center justify-between border-b border-border/40 pb-2.5">
+              <span class="font-mono text-[10px] uppercase tracking-widest text-gold">${item.pageNum}</span>
+              <span class="font-display italic text-xs text-muted-foreground">Brownstone</span>
+            </div>
+
+            <!-- Center Label ("Menu page" as in PDF) + Decorative Menu Lines -->
+            <div class="my-auto py-3 space-y-3 w-full">
+              <p class="text-xs sm:text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors text-center">
+                ${item.pageLabel}
+              </p>
+              <div class="space-y-1.5 px-2 opacity-45 group-hover:opacity-75 transition-opacity">
+                <div class="h-1 w-3/4 mx-auto rounded-full bg-border"></div>
+                <div class="h-1 w-1/2 mx-auto rounded-full bg-border"></div>
+                <div class="h-1 w-2/3 mx-auto rounded-full bg-border"></div>
+              </div>
+            </div>
+
+            <!-- Bottom Inspect Prompt -->
+            <div class="w-full pt-2.5 border-t border-border/30 flex items-center justify-between text-[11px] font-mono text-muted-foreground group-hover:text-gold transition-colors">
+              <span>Inspect page</span>
+              <span>↗</span>
+            </div>
+          </button>
+
+          <!-- Category Caption Below Card (Strictly matching PDF Page 2 top row) -->
+          <p class="text-xs sm:text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors px-1">
+            ${item.category}
+          </p>
+        </div>
+      `).join('');
+    }
+
+    /* ------------------------------------------------------------------------
+       6. LIGHTBOX CONTROLLERS (Photos & Menu Pages)
+       ------------------------------------------------------------------------ */
+    function openPhotoLightbox(index) {
+      lightboxContext = 'photos';
+      lightboxIndex = index;
+      updateLightboxView();
+      const modal = document.getElementById('lightbox-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function openMenuLightbox(index) {
+      lightboxContext = 'menu';
+      lightboxIndex = index;
+      updateLightboxView();
+      const modal = document.getElementById('lightbox-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeLightbox() {
+      const modal = document.getElementById('lightbox-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function stepLightbox(delta) {
+      const total = lightboxContext === 'photos' ? PHOTO_ITEMS.length : MENU_ITEMS.length;
+      lightboxIndex = (lightboxIndex + delta + total) % total;
+      updateLightboxView();
+    }
+
+    function updateLightboxView() {
+      const tagEl = document.getElementById('lightbox-tag');
+      const titleEl = document.getElementById('lightbox-title');
+      const counterEl = document.getElementById('lightbox-counter');
+      const bodyEl = document.getElementById('lightbox-body');
+      const captionEl = document.getElementById('lightbox-caption');
+
+      if (lightboxContext === 'photos') {
+        const item = PHOTO_ITEMS[lightboxIndex];
+        tagEl.textContent = 'Venue Photography';
+        titleEl.textContent = item.label;
+        counterEl.textContent = `${lightboxIndex + 1} / ${PHOTO_ITEMS.length}`;
+        captionEl.textContent = item.subtitle;
+        bodyEl.innerHTML = `
+          <img
+            src="${item.img}"
+            alt="${item.label}"
+            class="max-h-[70vh] w-full object-cover"
+          />
+        `;
+      } else {
+        const menu = MENU_ITEMS[lightboxIndex];
+        tagEl.textContent = `Menu · ${menu.pageNum}`;
+        titleEl.textContent = `${menu.category}`;
+        counterEl.textContent = `${lightboxIndex + 1} / ${MENU_ITEMS.length}`;
+        captionEl.textContent = 'Pay for what you order at the cafe · Zero booking fee';
+        bodyEl.innerHTML = `
+          <div class="w-full max-w-2xl mx-auto p-6 sm:p-10 space-y-6">
+            <div class="text-center border-b border-border/50 pb-5">
+              <span class="font-mono text-[11px] uppercase tracking-[0.2em] text-gold">Brownstone Cafe — Curated Menu</span>
+              <h4 class="font-display text-3xl sm:text-4xl font-semibold text-foreground mt-1">${menu.category}</h4>
+            </div>
+            <div class="space-y-5">
+              ${menu.highlights.map(dish => `
+                <div class="flex items-baseline justify-between gap-4 border-b border-border/25 pb-3.5">
+                  <div>
+                    <h5 class="text-sm sm:text-base font-semibold text-foreground">${dish.name}</h5>
+                    <p class="text-xs text-muted-foreground mt-0.5">${dish.desc}</p>
+                  </div>
+                  <span class="font-mono text-sm font-semibold text-gold shrink-0">${dish.price}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    /* ------------------------------------------------------------------------
+       7. BOOKING WIDGET INTERACTION
+       ------------------------------------------------------------------------ */
+    function focusBookingWidget() {
+      const card = document.getElementById('booking-card');
+      const nameInput = document.getElementById('booking-name');
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.classList.add('ring-2', 'ring-gold');
+        setTimeout(() => card.classList.remove('ring-2', 'ring-gold'), 1800);
+      }
+      setTimeout(() => {
+        if (nameInput) nameInput.focus();
+      }, 450);
+    }
+
+    function handleBookingSubmit(e) {
+      e.preventDefault();
+      const date = document.getElementById('booking-date').value;
+      const time = document.getElementById('booking-time').value;
+      const guests = document.getElementById('booking-guests').value;
+      const name = document.getElementById('booking-name').value.trim() || 'Guest';
+
+      document.getElementById('confirmed-name').textContent = name;
+      document.getElementById('confirmed-datetime').textContent = `${date} · ${time}`;
+      document.getElementById('confirmed-guests').textContent = guests;
+      document.getElementById('confirmed-ref').textContent = `#MMP-${Math.floor(1000 + Math.random() * 9000)}`;
+
+      document.getElementById('booking-form-view').classList.add('hidden');
+      document.getElementById('booking-confirmed-view').classList.remove('hidden');
+      showToast(`Table reserved for ${guests} at ${time} — ₹0 booking fee`);
+    }
+
+    function resetBookingForm() {
+      document.getElementById('booking-confirmed-view').classList.add('hidden');
+      document.getElementById('booking-form-view').classList.remove('hidden');
+    }
+
+    /* ------------------------------------------------------------------------
+       8. REVIEWS INTERACTION (Supports Adding & Resetting to PDF Empty State)
+       ------------------------------------------------------------------------ */
+    function openReviewModal() {
+      const modal = document.getElementById('review-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setRating(5);
+    }
+
+    function closeReviewModal() {
+      const modal = document.getElementById('review-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function setRating(stars) {
+      selectedRating = stars;
+      document.querySelectorAll('#star-selector .star-btn').forEach((btn, idx) => {
+        btn.classList.toggle('text-gold', idx < stars);
+        btn.classList.toggle('text-muted-foreground/30', idx >= stars);
+      });
+      document.getElementById('rating-label').textContent = `${stars}.0 / 5.0`;
+    }
+
+    function submitReview(e) {
+      e.preventDefault();
+      const name = document.getElementById('reviewer-name').value.trim();
+      const comment = document.getElementById('reviewer-comment').value.trim();
+      if (!name || !comment) return;
+
+      reviewsList.unshift({
+        name,
+        comment,
+        rating: selectedRating,
+        date: 'Just now'
+      });
+
+      document.getElementById('reviewer-name').value = '';
+      document.getElementById('reviewer-comment').value = '';
+      closeReviewModal();
+      renderReviews();
+      showToast('Thank you! Your review of Brownstone Cafe is live.');
+    }
+
+    function resetReviewsToEmpty() {
+      reviewsList = [];
+      renderReviews();
+      showToast('Restored default empty state specification');
+    }
+
+    function renderReviews() {
+      const container = document.getElementById('reviews-container');
+      const countBadge = document.getElementById('review-count-badge');
+      const resetBtn = document.getElementById('reset-reviews-btn');
+
+      if (reviewsList.length === 0) {
+        countBadge.classList.add('hidden');
+        resetBtn.classList.add('hidden');
+        container.innerHTML = `
+          <div class="theme-card rounded-2xl p-8 sm:p-10 text-center luxury-grain">
+            <p class="text-sm sm:text-base text-muted-foreground">
+              No reviews yet. Be the first to review Brownstone Cafe.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      countBadge.textContent = reviewsList.length;
+      countBadge.classList.remove('hidden');
+      resetBtn.classList.remove('hidden');
+
+      container.innerHTML = `
+        <div class="space-y-3.5">
+          ${reviewsList.map(r => `
+            <div class="theme-card rounded-2xl p-5 sm:p-6 space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-full bg-secondary/40 border border-border flex items-center justify-center font-mono text-xs font-bold text-foreground">
+                    ${r.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h4 class="text-sm font-semibold text-foreground">${r.name}</h4>
+                    <span class="text-[11px] text-muted-foreground">${r.date}</span>
+                  </div>
+                </div>
+                <div class="font-mono text-xs text-gold">
+                  ${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}
+                </div>
+              </div>
+              <p class="text-sm text-muted-foreground leading-relaxed pt-1">${r.comment}</p>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    /* ------------------------------------------------------------------------
+       9. AUXILIARY MODALS & CLIPBOARD HELPERS
+       ------------------------------------------------------------------------ */
+    function copyPhoneNumber() {
+      const text = document.querySelector('[data-field="phone"]').textContent;
+      const temp = document.createElement('textarea');
+      temp.value = text;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+      showToast(`Copied ${text} to clipboard`);
+    }
+
+    function openDirectionsModal() {
+      const address = document.querySelector('[data-field="fullAddress"]').textContent;
+      const area = document.querySelector('[data-field="areaCity"]').textContent;
+      openInfoModal('Directions to Brownstone Cafe', `
+        <div class="rounded-xl bg-muted/50 border border-border/50 p-4 space-y-2">
+          <p class="text-xs font-mono uppercase tracking-wider text-gold">Venue Address</p>
+          <p class="text-sm font-medium text-foreground">${address}</p>
+          <p class="text-xs text-muted-foreground">${area}</p>
+        </div>
+        <p class="text-xs text-muted-foreground">Valet parking and dedicated two-wheeler bays are available right outside the main courtyard gate.</p>
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="closeInfoModal()" class="px-4 py-2 rounded-full text-xs font-medium border border-border text-foreground">Close</button>
+          <a href="https://maps.google.com/?q=${encodeURIComponent('Brownstone Cafe ' + address)}" target="_blank" rel="noopener noreferrer" class="cta-primary px-4 py-2 rounded-full text-xs font-semibold">Open in Google Maps ↗</a>
+        </div>
+      `);
+    }
+
+    function openSignInModal() {
+      openInfoModal('Sign in to MapMyParty', `
+        <p class="text-xs text-muted-foreground">Sign in with your mobile number or email to manage table bookings, VIP guestlists, and event passes.</p>
+        <form onsubmit="event.preventDefault(); closeInfoModal(); showToast('Signed in to MapMyParty');" class="space-y-3 pt-1">
+          <input type="email" required placeholder="you@domain.com" class="w-full px-3.5 py-2.5 rounded-xl text-sm bg-background border border-input/70 text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+          <button type="submit" class="cta-primary w-full py-2.5 rounded-xl text-xs font-semibold">Continue with Email</button>
+        </form>
+      `);
+    }
+
+    function openPartnerModal() {
+      openInfoModal('List Your Venue for Free', `
+        <p class="text-xs text-muted-foreground">Join MapMyParty with zero commission and zero booking fees. Accept instant table reservations directly to your host desk.</p>
+        <form onsubmit="event.preventDefault(); closeInfoModal(); showToast('Partner onboarding request received!');" class="space-y-3 pt-1">
+          <input type="text" required placeholder="Venue name (e.g. Brownstone Cafe)" class="w-full px-3.5 py-2.5 rounded-xl text-sm bg-background border border-input/70 text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+          <input type="tel" required placeholder="Owner / Manager phone (+91)" class="w-full px-3.5 py-2.5 rounded-xl text-sm bg-background border border-input/70 text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+          <button type="submit" class="cta-primary w-full py-2.5 rounded-xl text-xs font-semibold">Request Free Listing</button>
+        </form>
+      `);
+    }
+
+    function openInfoModal(title, htmlContent) {
+      document.getElementById('info-modal-title').textContent = title;
+      document.getElementById('info-modal-content').innerHTML = htmlContent;
+      const modal = document.getElementById('info-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeInfoModal() {
+      const modal = document.getElementById('info-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function scrollToSection(e, id) {
+      e.preventDefault();
+      const target = document.getElementById(id);
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'pointer-events-auto px-4 py-2.5 rounded-full theme-card border border-gold/40 text-xs font-medium text-foreground shadow-lg flex items-center gap-2 transition-all duration-300';
+      toast.innerHTML = `<span class="w-2 h-2 rounded-full bg-gold"></span><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

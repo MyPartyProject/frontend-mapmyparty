@@ -10,6 +10,9 @@ import EventDetail from "./pages/EventDetailNew";
 import PaymentCheckout from "./pages/PaymentCheckout";
 import BookingSuccess from "./pages/BookingSuccess";
 import Auth from "./pages/Auth";
+import Venues from './pages/Venues';
+import VenuePage from './pages/VenuePage';
+import { GuestVenueReservation } from './components/venues/VenueBooking';
 import GoogleCallback from "./pages/GoogleCallback";
 import ResetPassword from "./pages/ResetPassword";
 import UserDashboard from "./pages/NewUserDashboard";
@@ -134,6 +137,11 @@ const App = () => {
             <AuthProvider>
               <ScrollToTop />
               <Routes>
+              <Route path="/venues" element={<Venues />} />
+              <Route path="/venues/:organizerSlug/:venueSlug" element={<VenuePage />} />
+              <Route path="/venue-reservations/:reference" element={<GuestVenueReservation />} />
+              <Route path="/organizer/venues" element={<ProtectedRoute requiredRole="organizer"><OrganizerDashboard /></ProtectedRoute>} />
+              <Route path="/organizer/venue-reservations" element={<ProtectedRoute requiredRole="organizer"><OrganizerDashboard /></ProtectedRoute>} />
               <Route path="/entry-agent/login" element={<EntryAgentLogin />} />
               <Route path="/entry-agent" element={<Navigate to="/entry-agent/events" replace />} />
               <Route path="/entry-agent/events" element={<EntryAgent />} />
