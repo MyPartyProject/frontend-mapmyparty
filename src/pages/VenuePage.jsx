@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import VenueBooking from "@/components/venues/VenueBooking";
+import VenuePhotoViewer from "@/components/venues/VenuePhotoViewer";
 import logo from "@/assets/MMP logo.svg";
 import "@/styles/venue-page.css";
 
@@ -30,30 +31,32 @@ export function VenueHeader() {
   const { isAuthenticated } = useAuth();
   return (
     <header className="border-b border-border/50 bg-background/90 backdrop-blur-xl relative z-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-[72px] flex items-center justify-between gap-4">
-        <Link to="/" aria-label="MapMyParty home">
-          <img src={logo} alt="MapMyParty" className="w-14 h-14" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-[72px] flex items-center gap-3 sm:gap-8">
+        <Link to="/" aria-label="MapMyParty home" className="shrink-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <img src={logo} alt="MapMyParty" className="w-14 h-14 object-contain" />
         </Link>
-        <nav className="flex items-center gap-2 sm:gap-5 text-sm">
-          <Link to="/browse-events" className="hidden sm:block">
+        <nav aria-label="Venue navigation" className="ml-auto flex items-center gap-4 sm:gap-6 text-sm font-medium whitespace-nowrap">
+          <Link to="/browse-events" className="hidden sm:inline-flex min-h-11 items-center text-muted-foreground transition-colors hover:text-foreground">
             Events
           </Link>
-          <Link to="/venues" className="font-semibold">
+          <Link to="/venues" className="inline-flex min-h-11 items-center font-semibold text-foreground underline decoration-[#EC4899] decoration-2 underline-offset-8">
             Venues
           </Link>
-          <Link to="/organizer/venues" className="hidden md:block">
+          <Link to="/organizer/venues" className="hidden md:inline-flex min-h-11 items-center text-muted-foreground transition-colors hover:text-foreground">
             List your venue
           </Link>
-          <ThemeToggle presentation="navbar" />
+        </nav>
+        <div className="flex shrink-0 items-center gap-1 sm:gap-3">
+          <ThemeToggle presentation="navbar" className="h-11 w-11 border-0 bg-transparent shadow-none hover:bg-transparent hover:text-[#EC4899] [&_svg]:size-5" />
           {!isAuthenticated && (
             <Link
               to="/auth"
-              className="rounded-full border border-border px-4 py-2"
+              className="inline-flex min-h-10 items-center justify-center rounded-full border border-border px-4 sm:px-5 text-sm font-semibold whitespace-nowrap transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               Sign in
             </Link>
           )}
-        </nav>
+        </div>
       </div>
     </header>
   );
@@ -282,7 +285,7 @@ export function VenueSurface({ venue, preview = false }) {
       <main className="relative z-[1] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-12">
         <section
           id="venue-top"
-          className="rounded-2xl sm:rounded-3xl overflow-hidden border border-border/50 shadow-xl"
+          className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-border/50 shadow-xl"
         >
           <div className="relative w-full h-[360px] sm:h-[420px] lg:h-auto lg:aspect-[16/6] overflow-hidden bg-[#1B1222]">
             {covers.DESKTOP && (
@@ -300,22 +303,23 @@ export function VenueSurface({ venue, preview = false }) {
                 />
               </picture>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0F0A13] via-[#0F0A13]/35 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8 lg:p-10 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+            <div className="hidden sm:block absolute inset-0 bg-gradient-to-t from-[#0F0A13] via-[#0F0A13]/35 to-transparent" />
+          </div>
+            <div className="bg-card sm:bg-transparent sm:absolute inset-x-0 bottom-0 p-6 sm:p-8 lg:p-10 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
               <div className="space-y-3 min-w-0">
                 <div className="flex flex-wrap gap-2">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs bg-[#1B1222]/85 text-[#F2EEF5] border border-[#48285D]/80">
                     <Coffee size={14} />
                     {venue.type}
                   </span>
-                  <span className="px-3 py-1 rounded-full text-xs bg-[#C99774]/15 text-[#E8C5AC] border border-[#C99774]/40">
+                  <span className="px-3 py-1 rounded-full text-xs bg-[#C99774]/15 text-[hsl(var(--accent))] sm:text-[#E8C5AC] border border-[#C99774]/40">
                     ₹0 booking fee
                   </span>
                 </div>
-                <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-[#F2EEF5] leading-[1.05] break-words">
+                <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-foreground sm:text-[#F2EEF5] leading-[1.05] break-words">
                   {venue.name}
                 </h1>
-                <p className="flex items-center gap-2 text-sm sm:text-base text-[#B9AEC4]">
+                <p className="flex items-center gap-2 text-sm sm:text-base text-muted-foreground sm:text-[#B9AEC4]">
                   <MapPin size={16} className="text-[#C99774] shrink-0" />
                   {[venue.area, venue.city].filter(Boolean).join(", ")}
                 </p>
@@ -331,7 +335,6 @@ export function VenueSurface({ venue, preview = false }) {
                 </span>
               </button>
             </div>
-          </div>
         </section>
         <section
           aria-label="Venue Key Information"
@@ -470,20 +473,13 @@ export function VenueSurface({ venue, preview = false }) {
                     {photos.length} curated views
                   </span>
                 </h2>
-                {photos.length > 0 && (
-                  <button
-                    className="text-sm"
-                    onClick={() => setViewer({ kind: "photo", index: 0 })}
-                  >
-                    View all →
-                  </button>
-                )}
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 sm:gap-4">
-                {photos.slice(0, 6).map((photo, index) => (
+              <div className="venue-photo-mosaic" data-count={Math.min(photos.length, 5)}>
+                {photos.slice(0, 5).map((photo, index) => (
                   <button
                     key={photo.id}
-                    className="group relative aspect-[16/10] rounded-2xl overflow-hidden theme-card text-left"
+                    className="group relative min-w-0 overflow-hidden bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                    aria-label={`Open ${venue.name} photo ${index + 1}`}
                     onClick={() => setViewer({ kind: "photo", index })}
                   >
                     <img
@@ -491,15 +487,19 @@ export function VenueSurface({ venue, preview = false }) {
                       alt={
                         `${venue.name} photo ${index + 1}`
                       }
-                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      className="w-full h-full object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out motion-safe:group-hover:scale-[1.03]"
                       loading="lazy"
                     />
-                    <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent pt-8 p-3 text-xs text-white">
-                      {`Photo ${index + 1}`}
-                    </span>
                   </button>
                 ))}
               </div>
+              {photos.length > 5 && (
+                <div className="flex justify-end">
+                  <Button variant="outline" className="rounded-full px-5 gap-2" onClick={() => setViewer({ kind: "photo", index: 0 })}>
+                    View all {photos.length} photos <ArrowUpRight size={16} aria-hidden="true" />
+                  </Button>
+                </div>
+              )}
               {!photos.length && (
                 <p className="text-sm text-muted-foreground">
                   Photos have not been added yet.
@@ -564,8 +564,9 @@ export function VenueSurface({ venue, preview = false }) {
         <a href="mailto:support@mapmyparty.com">Contact support</a> ·{" "}
         <Link to="/privacy-policy">Privacy</Link>
       </footer>
+      {viewer?.kind === "photo" && <VenuePhotoViewer photos={photos} venueName={venue.name} startIndex={viewer.index} onClose={() => setViewer(null)} />}
       <Dialog
-        open={!!viewer}
+        open={viewer?.kind === "menu"}
         onOpenChange={(open) => {
           if (!open) setViewer(null);
         }}
