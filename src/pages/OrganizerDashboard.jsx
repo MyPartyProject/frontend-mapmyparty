@@ -1,6 +1,7 @@
 import { getInitials } from "@/utils/userInitials";
 import { bankVerificationMessage } from "@/utils/bankInput";
 import ThemeToggle from "@/components/ThemeToggle";
+import "@/components/organizer/organizer-dashboard.css";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import EntryAgentManagement from '@/components/EntryAgentManagement';
@@ -1653,40 +1654,46 @@ const OrganizerDashboard = () => {
   };
 
   return (
-    <div className="organizer-dashboard-theme dashboard-theme flex h-screen bg-background text-foreground">
+    <div className="organizer-dashboard-theme organizer-workspace dashboard-theme flex h-[100dvh] bg-background text-foreground">
       {/* Sidebar */}
       <aside
-        className={`${sidebarOpen ? "w-64" : "w-24"} bg-sidebar border-r border-sidebar-border/60 flex flex-col transition-all duration-300`}
+        aria-label="Organizer sidebar"
+        className={`organizer-sidebar ${sidebarOpen ? "w-[240px]" : "w-[76px]"} shrink-0 bg-sidebar border-r border-sidebar-border/60 flex flex-col transition-[width] duration-200 motion-reduce:transition-none`}
       >
-        <div className="p-4 border-b border-white/10 flex items-center justify-between light:border-border">
+        <div className="h-16 shrink-0 px-3 flex items-center justify-between gap-1">
           <button
             onClick={() => navigate("/")}
-            className={`${sidebarOpen ? "block" : "hidden"} hover:opacity-80 transition flex items-center gap-3`}
+            className={`${sidebarOpen ? "flex" : "hidden"} min-w-0 hover:opacity-80 transition items-center gap-2`}
           >
-            <img src={Logo} alt="MapMyParty" className="h-10 w-auto" />
-            <span className="font-sans text-xl font-bold text-white tracking-[0.02em] leading-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent light:text-foreground light:bg-none">MapMyParty</span>
+            <img src={Logo} alt="" className="h-8 w-8 object-contain" />
+            <span className="text-[15px] font-bold tracking-tight text-foreground">MapMyParty</span>
           </button>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-lg hover:bg-white/5 text-white/80 light:hover:bg-muted light:text-muted-foreground"
+            aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+            aria-expanded={sidebarOpen}
+            className="p-2 rounded-lg hover:bg-muted text-muted-foreground"
           >
-            {sidebarOpen ? <ChevronLeft className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
         </div>
 
-        <nav className="flex flex-col flex-1 overflow-y-auto py-4">
+        <nav aria-label="Organizer navigation" className="flex min-h-0 flex-col flex-1 overflow-y-auto py-2">
           <div className="px-3 space-y-1">
             {navItems.map((item) => (
               <button
                 key={item.id}
+                aria-label={item.name}
+                title={!sidebarOpen ? item.name : undefined}
+                aria-current={activeTab === item.id ? "page" : undefined}
                 onClick={() => item.id === 'marketing' ? navigate('/team/events') : handleNav(item.id)}
-                className={`flex items-center w-full px-3 py-3 text-sm font-medium rounded-xl transition ${
+                className={`organizer-nav-item flex items-center gap-3 w-full px-3 py-2.5 text-[13px] font-medium rounded-xl border transition-colors ${
                   activeTab === item.id
-                    ? "text-white bg-white/10 border border-white/10 shadow-lg shadow-black/20 light:text-foreground light:bg-muted light:border-border light:shadow-black/5"
-                    : "text-white/70 hover:bg-white/5 light:text-muted-foreground light:hover:bg-muted"
+                    ? "text-foreground bg-muted border-border"
+                    : "text-muted-foreground border-transparent hover:bg-muted hover:text-foreground"
                 }`}
               >
-                <span className="mr-3 text-white/80 light:text-muted-foreground">{item.icon}</span>
+                <span className="shrink-0 [&>svg]:w-[17px] [&>svg]:h-[17px] [&>svg]:mr-0">{item.icon}</span>
                 {sidebarOpen && item.name}
               </button>
             ))}
@@ -1694,14 +1701,15 @@ const OrganizerDashboard = () => {
           <div className="mt-auto px-4 pt-6"><ThemeToggle presentation="switch" compact={!sidebarOpen} className="w-full" /></div>
         </nav>
         {/* Sidebar Footer with profile + logout */}
-        <div className="mt-auto p-4 border-t border-white/10 light:border-border">
+        <div className="mt-auto shrink-0 p-3 border-t border-border">
           <div
             ref={footerMenuRef}
-            className={`relative bg-gradient-to-br from-white/5 via-white/0 to-blue-500/5 border border-white/10 rounded-xl ${sidebarOpen ? "p-3" : "p-2"} shadow-lg shadow-black/20 light:border-border light:shadow-black/5`}
+            className="relative bg-card border border-border rounded-xl p-2"
           >
             <button
               onClick={() => setFooterMenuOpen((v) => !v)}
               aria-label="Organizer profile menu"
+              aria-expanded={footerMenuOpen}
               className={`flex items-center gap-3 w-full text-left hover:bg-white/5 transition rounded-lg py-1 light:hover:bg-muted ${sidebarOpen ? "px-2" : "justify-center"}`}
             >
               <Avatar className="navbar-profile-avatar h-6 w-6 rounded-full border-0 ring-0">
@@ -1725,9 +1733,10 @@ const OrganizerDashboard = () => {
             </button>
 
             {footerMenuOpen && (
-              <div className="absolute bottom-[calc(100%+10px)] left-0 right-0 z-20">
+              <div className="absolute bottom-[calc(100%+10px)] left-0 right-0 min-w-[180px] z-20">
                 <div className="rounded-xl border border-sidebar-border/60 bg-sidebar/95 backdrop-blur-md shadow-[var(--shadow-card)] p-2 space-y-2">
                   <button
+                    aria-label="My Profile"
                     onClick={() => {
                       setFooterMenuOpen(false);
                       handleNav("profile");
@@ -1735,9 +1744,10 @@ const OrganizerDashboard = () => {
                     className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition light:bg-muted light:border-border light:text-foreground light:hover:bg-muted"
                   >
                     <span aria-hidden="true" className="w-4 h-4 inline-flex shrink-0 items-center justify-center text-[10px] font-semibold leading-none profile-initials profile-initials-small">{getInitials(user.name, user.email)}</span>
-                    {sidebarOpen && <span>My Profile</span>}
+                    <span>My Profile</span>
                   </button>
                   <button
+                    aria-label={isLoggingOut ? "Logging out" : "Log out"}
                     onClick={handleLogout}
                     disabled={isLoggingOut}
                     className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-red-500/15 border border-red-500/30 text-red-200 hover:bg-red-500/20 transition disabled:opacity-60 light:text-destructive"
@@ -1747,7 +1757,7 @@ const OrganizerDashboard = () => {
                     ) : (
                       <LogOut className="w-4 h-4" />
                     )}
-                    {sidebarOpen && <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>}
+                    <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
                   </button>
                 </div>
               </div>
@@ -1757,11 +1767,11 @@ const OrganizerDashboard = () => {
       </aside>
 
       {/* Main */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="min-w-0 flex-1 flex overflow-hidden">
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="min-w-0 flex-1 overflow-y-auto">
           {/* Tab Content */}
-          <div className="p-4 lg:p-5 space-y-5">
+          <div className={activeTab === "dashboard" ? "" : "p-4 lg:p-5 space-y-5"}>
             {activeTab === "dashboard" && (
               <OrganizerDashboardHome
                 user={user}

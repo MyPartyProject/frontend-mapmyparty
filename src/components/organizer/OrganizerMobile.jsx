@@ -15,6 +15,8 @@ import OrganizerAnalyticsSnapshot from "./OrganizerAnalyticsSnapshot";
 import { organizerMobilePage, organizerMobileTotals, organizerDesktopTask } from "@/utils/organizerMobile";
 import { buildOrganizerProfile } from "@/utils/organizerProfile";
 import { Skeleton } from "@/components/ui/skeleton";
+import ThemeToggle from "@/components/ThemeToggle";
+import "./organizer-dashboard.css";
 
 
 const card = "rounded-xl border border-border bg-card p-4 shadow-sm";
@@ -38,7 +40,7 @@ function Overview() {
 
   const totals = organizerMobileTotals(analytics);
   const period = analytics?.summary?.period;
-  return <div className="space-y-3">
+  return <div className="organizer-mobile-overview space-y-4">
     <LoadState loading={loading} error={error} retry={refresh}>
       <section aria-label="Organizer summary" className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-3">
         {[
@@ -138,10 +140,10 @@ export default function OrganizerMobile({ setupRequired = false }) {
     setLogoutError(false);
     try { await logout(); navigate("/"); } catch { setLogoutError(true); } finally { setSigningOut(false); }
   };
-  return <div className="organizer-dashboard-theme dashboard-theme min-h-[100dvh] min-w-0 bg-background text-foreground [overflow-wrap:anywhere]">
+  return <div className="organizer-dashboard-theme organizer-workspace organizer-mobile-workspace dashboard-theme min-h-[100dvh] min-w-0 bg-background text-foreground [overflow-wrap:anywhere]">
     <header className="border-b border-border bg-card px-4 pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex min-h-16 max-w-2xl items-center justify-between gap-3">
-        <Link to="/" className="inline-flex min-h-11 items-center text-base font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">MapMyParty</Link><span className="text-xs text-muted-foreground">Organizer</span>
+        <Link to="/" className="inline-flex min-h-11 items-center text-base font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">MapMyParty</Link><div className="flex items-center gap-3"><span className="text-xs text-muted-foreground">Organizer</span><ThemeToggle compact /></div>
       </div>
     </header>
     <main className="mx-auto max-w-2xl space-y-3 px-4 pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">

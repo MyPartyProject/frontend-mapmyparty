@@ -33,7 +33,7 @@ const KeyValueList = ({ data = {}, emptyLabel = "No data available" }) => {
   return (
     <div className="space-y-2">
       {entries.map(([label, value]) => (
-        <div key={label} className="flex items-center justify-between text-xs">
+        <div key={label} className="flex items-center justify-between gap-3 text-xs [overflow-wrap:anywhere]">
           <span className="text-gray-400 light:text-muted-foreground">{toTitleCase(label)}</span>
           <span className="font-medium text-white light:text-foreground">{formatNumber(value)}</span>
         </div>
@@ -52,8 +52,8 @@ const OrganizerAnalyticsSnapshot = ({ analytics, loading, error, compact = false
   const ticketTypeRows = Object.entries(byTicketType || {});
 
   return (
-    <div className={compact ? "organizer-mobile-analytics rounded-xl border border-border bg-card p-4" : "bg-gray-900 border border-gray-800 rounded-xl p-5 light:bg-surface light:border-border"}>
-      <div className="flex items-start justify-between gap-3">
+    <section aria-label="Monthly snapshot analytics" className={`organizer-snapshot ${compact ? "organizer-mobile-analytics p-4" : "p-4 sm:p-5"}`}>
+      <div className="flex items-start justify-between gap-3 pb-4 border-b border-[var(--snapshot-border)]">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-gray-400 light:text-muted-foreground">Analytics</p>
           <h4 className="text-base font-semibold">Monthly Snapshot</h4>
@@ -75,8 +75,9 @@ const OrganizerAnalyticsSnapshot = ({ analytics, loading, error, compact = false
           <p className="text-sm text-white mt-1 light:text-foreground">{error}</p>
         </div>
       ) : (
-        <div className={compact ? "mt-3 space-y-3" : "mt-4 space-y-4 max-h-[34rem] overflow-y-auto pr-1"}>
-          <div className="grid grid-cols-2 gap-3">
+        <div className={`organizer-snapshot-grid mt-4 ${compact ? "is-compact" : ""}`}>
+          <div className="min-w-0 space-y-3">
+          <div className="organizer-snapshot-counts grid grid-cols-2 gap-3">
             <div className="rounded-lg border border-gray-800 bg-gray-950 p-3 light:border-border light:bg-surface">
               <p className="text-[11px] uppercase tracking-wide text-gray-500 light:text-muted-foreground">Event Status Types</p>
               <p className="text-sm font-semibold mt-1">{formatNumber(Object.keys(byStatus).length)}</p>
@@ -87,9 +88,9 @@ const OrganizerAnalyticsSnapshot = ({ analytics, loading, error, compact = false
             </div>
           </div>
 
-          <div className="rounded-lg border border-gray-800 bg-gray-950 p-3 light:border-border light:bg-surface">
+          <div className="organizer-snapshot-breakdown rounded-lg border border-gray-800 bg-gray-950 p-3 light:border-border light:bg-surface">
             <p className="text-xs font-semibold text-white light:text-foreground">Breakdown</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+            <div className="organizer-breakdown-rows mt-3">
               <div>
                 <p className="text-[11px] uppercase tracking-wide text-gray-500 mb-2 light:text-muted-foreground">By Status</p>
                 <KeyValueList data={byStatus} />
@@ -103,7 +104,7 @@ const OrganizerAnalyticsSnapshot = ({ analytics, loading, error, compact = false
                 <KeyValueList data={byBookingStatus} />
               </div>
             </div>
-            <div className="mt-4">
+            <div className="organizer-ticket-breakdown mt-3 pt-3 border-t border-[var(--snapshot-border)]">
               <p className="text-[11px] uppercase tracking-wide text-gray-500 mb-2 light:text-muted-foreground">By Ticket Type</p>
               {!ticketTypeRows.length ? (
                 <p className="text-xs text-gray-500 light:text-muted-foreground">No ticket type data available</p>
@@ -112,7 +113,7 @@ const OrganizerAnalyticsSnapshot = ({ analytics, loading, error, compact = false
                   {ticketTypeRows.map(([ticketType, values]) => (
                     <div
                       key={ticketType}
-                      className="flex items-center justify-between rounded-md border border-gray-800 px-2 py-2 text-xs light:border-border"
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-gray-800 px-2 py-2 text-xs light:border-border [overflow-wrap:anywhere]"
                     >
                       <span className="text-gray-300 light:text-muted-foreground">{toTitleCase(ticketType)}</span>
                       <span className="text-gray-400 light:text-muted-foreground">
@@ -126,7 +127,9 @@ const OrganizerAnalyticsSnapshot = ({ analytics, loading, error, compact = false
             </div>
           </div>
 
-          <div className="rounded-lg border border-gray-800 bg-gray-950 p-3 light:border-border light:bg-surface">
+          </div>
+          <div className="min-w-0 flex flex-col gap-3">
+          <div className="organizer-snapshot-refunds rounded-lg border border-gray-800 bg-gray-950 p-3 light:border-border light:bg-surface">
             <p className="text-xs font-semibold text-white flex items-center gap-1 light:text-foreground">
               <IndianRupee className="w-3.5 h-3.5" /> Refunds
             </p>
@@ -135,7 +138,7 @@ const OrganizerAnalyticsSnapshot = ({ analytics, loading, error, compact = false
             ) : (
               <div className="mt-3 space-y-2">
                 {Object.entries(refunds).map(([status, values]) => (
-                  <div key={status} className="flex items-center justify-between text-xs">
+                  <div key={status} className="flex flex-wrap items-center justify-between gap-2 text-xs [overflow-wrap:anywhere]">
                     <span className="text-gray-400 light:text-muted-foreground">{toTitleCase(status)}</span>
                     <span className="text-white light:text-foreground">
                       Count {formatNumber(values?.count)} | Amount {formatCurrency((values?.amountCents || 0) / 100)}
@@ -146,7 +149,7 @@ const OrganizerAnalyticsSnapshot = ({ analytics, loading, error, compact = false
             )}
           </div>
 
-          <div className="rounded-lg border border-gray-800 bg-gray-950 p-3 light:border-border light:bg-surface">
+          <div className="organizer-snapshot-period -order-1 rounded-lg border border-gray-800 bg-gray-950 p-3 light:border-border light:bg-surface">
             <p className="text-[11px] uppercase tracking-wide text-gray-500 flex items-center gap-1 light:text-muted-foreground">
               <CalendarDays className="w-3.5 h-3.5" /> Period Summary
             </p>
@@ -156,9 +159,10 @@ const OrganizerAnalyticsSnapshot = ({ analytics, loading, error, compact = false
               <p className="text-gray-400 light:text-muted-foreground">End: <span className="text-white light:text-foreground">{formatDateTime(period?.end)}</span></p>
             </div>
           </div>
+          </div>
         </div>
       )}
-    </div>
+    </section>
   );
 };
 

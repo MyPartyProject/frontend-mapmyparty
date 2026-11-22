@@ -1,6 +1,6 @@
 import VenueDatePicker from "./VenueDatePicker";
 import "@/styles/venue-management.css";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -137,12 +137,14 @@ function Intervals({ value, onChange }) {
 
 function VenueEditor({ initial, onClose }) {
   const client = useQueryClient();
+  const formRef = useRef(null);
   const [venue, setVenue] = useState(initial || emptyVenue());
   const [busy, setBusy] = useState(false);
   const [crop, setCrop] = useState(null);
   const [preview, setPreview] = useState(false);
   const set = (key, value) => setVenue((v) => ({ ...v, [key]: value }));
   const save = async () => {
+    if (formRef.current && !formRef.current.reportValidity()) throw new Error("Please correct the highlighted venue fields.");
     const body = Object.fromEntries(editable.map((key) => [key, venue[key]]));
     if (venue.id) body.version = venue.version;
     const updated = await venueRequest(
@@ -208,6 +210,7 @@ function VenueEditor({ initial, onClose }) {
         </Button>
       </div>
       <form
+        ref={formRef}
         className="space-y-6"
         onSubmit={(e) => {
           e.preventDefault();
@@ -226,6 +229,7 @@ function VenueEditor({ initial, onClose }) {
                 value={venue.name}
                 onChange={(v) => set("name", v)}
                 required
+                minLength={2}
                 maxLength={150}
               />
               <Field
@@ -234,6 +238,7 @@ function VenueEditor({ initial, onClose }) {
                 onChange={(v) => set("type", v)}
                 required
                 placeholder="Cafe, restaurant, club, event space…"
+                minLength={2}
                 maxLength={60}
               />
               <Field
@@ -242,17 +247,25 @@ function VenueEditor({ initial, onClose }) {
                 onChange={(v) =>
                   set("contact", v.replace(/\D/g, "").slice(0, 10))
                 }
+                type="tel"
+                pattern="[0-9]{10}"
+                maxLength={10}
+                title="Enter a 10-digit phone number"
                 inputMode="tel"
               />
               <Field
                 label="Public email"
                 type="email"
+                maxLength={254}
                 value={venue.email}
                 onChange={(v) => set("email", v)}
               />
               <Field
                 label="Instagram URL"
                 type="url"
+                maxLength={500}
+                pattern="https://(www[.])?instagram[.]com(/.*)?"
+                title="Enter an HTTPS Instagram URL"
                 value={venue.instagram}
                 onChange={(v) => set("instagram", v)}
               />
@@ -261,6 +274,7 @@ function VenueEditor({ initial, onClose }) {
                 type="number"
                 min="0"
                 step="0.01"
+                max="1000000"
                 value={venue.costForTwo == null ? null : venue.costForTwo / 100}
                 onChange={(v) =>
                   set("costForTwo", v == null ? null : Math.round(v * 100))
@@ -282,6 +296,7 @@ function VenueEditor({ initial, onClose }) {
             <h2 className="text-lg font-semibold">Address</h2>
             <Field
               label="Full street address"
+              maxLength={500}
               value={venue.fullAddress}
               onChange={(v) => set("fullAddress", v)}
             />
@@ -296,7 +311,11 @@ function VenueEditor({ initial, onClose }) {
                   key={key}
                   label={label}
                   value={venue[key]}
-                  onChange={(v) => set(key, v)}
+                  maxLength={key === "postalCode" ? 6 : 200}
+                  inputMode={key === "postalCode" ? "numeric" : undefined}
+                  pattern={key === "postalCode" ? "[0-9]{6}" : undefined}
+                  title={key === "postalCode" ? "Enter a six-digit postal code" : undefined}
+                  onChange={(v) => set(key, key === "postalCode" ? v.replace(/\D/g, "").slice(0, 6) : v)}
                 />
               ))}
               <Field
@@ -428,6 +447,7 @@ function VenueEditor({ initial, onClose }) {
               <div key={i} className="border rounded-xl p-4 space-y-3">
                 <Field
                   label="Category"
+                maxLength={100}
                   value={category.name}
                   onChange={(name) =>
                     set(
@@ -459,6 +479,7 @@ function VenueEditor({ initial, onClose }) {
                     >
                       <Field
                         label="Item name"
+                        maxLength={150}
                         value={item.name}
                         onChange={(name) => update({ name })}
                         required
@@ -468,14 +489,16 @@ function VenueEditor({ initial, onClose }) {
                         type="number"
                         min="0"
                         step="0.01"
-                        value={item.price / 100}
+                max="1000000"
+                        value={item.price == null ? null : item.price / 100}
                         onChange={(price) =>
-                          update({ price: Math.round((price || 0) * 100) })
+                          update({ price: price == null ? null : Math.round(price * 100) })
                         }
                         required
                       />
                       <Field
                         label="Description"
+                        maxLength={500}
                         value={item.description}
                         onChange={(description) => update({ description })}
                       />
@@ -572,6 +595,8 @@ function VenueEditor({ initial, onClose }) {
             <div className="grid sm:grid-cols-2 gap-4">
               <Field
                 label="Maximum guests per request"
+                required
+                step="1"
                 type="number"
                 min="1"
                 max="100"
@@ -580,6 +605,8 @@ function VenueEditor({ initial, onClose }) {
               />
               <Field
                 label="Minimum notice (minutes)"
+                required
+                step="1"
                 type="number"
                 min="0"
                 max="10080"
@@ -588,6 +615,8 @@ function VenueEditor({ initial, onClose }) {
               />
               <Field
                 label="Booking window (days)"
+                required
+                step="1"
                 type="number"
                 min="1"
                 max="365"
