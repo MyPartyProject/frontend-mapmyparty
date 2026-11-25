@@ -170,10 +170,15 @@ export default function VenueBooking({ venue, preview = false }) {
   const { data, isFetching, error, refetch } = useQuery({
     queryKey: ["venue-slots", venue.id, form.date],
     queryFn: ({ signal }) => venueRequest(`public/venues/${venue.id}/slots?date=${form.date}`, "GET", undefined, undefined, { signal: AbortSignal.any([signal, AbortSignal.timeout(10000)]) }),
-    staleTime: 30000, retry: false,
+    staleTime: 0, retry: false,
+    refetchInterval: form.date === venueToday() ? 30000 : false,
     enabled: !!form.date && !preview && venue.reservationsEnabled && !reservation,
   });
-  useEffect(() => { if (data && form.time && !data.times.includes(form.time)) setForm((f) => ({ ...f, time: "" })); }, [data, form.time]);
+  useEffect(() => {
+    if (!data || data.times.includes(form.time)) return;
+    const time = data.times[0] || "";
+    if (time !== form.time) setForm((f) => ({ ...f, time }));
+  }, [data, form.time]);
   const [timeOpen, setTimeOpen] = useState(false);
   const change = (key, value) => {
     setForm((f) => ({
