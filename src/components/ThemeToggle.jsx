@@ -1,37 +1,28 @@
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 
 export default function ThemeToggle({ className = "", compact = false, presentation = "button" }) {
   const { theme, setTheme } = useTheme();
   const dark = theme === "dark";
   const navbar = presentation === "navbar";
-  if (presentation === "switch") {
-    return (
-      <label className={`flex items-center gap-3 cursor-pointer text-sm text-foreground ${compact ? "justify-center" : "justify-between"} ${className}`}>
-        <span className={compact ? "sr-only" : "flex items-center gap-3"}>
-          <Moon className="h-4 w-4" aria-hidden="true" />Dark mode
-        </span>
-        <Switch data-theme-toggle aria-label="Dark mode" title="Dark mode"
-          checked={dark} onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")} />
-      </label>
-    );
-  }
-  return (
+  const sidebarSwitch = presentation === "switch";
+  const toggle = (
     <Button
       type="button"
-      variant="outline"
+      variant="ghost"
       size={compact || navbar ? "icon" : "default"}
-      className={`shrink-0 text-foreground ${navbar ? "h-8 w-8 [&_svg]:size-3.5" : ""} ${className}`}
+      className={`shrink-0 bg-transparent text-foreground hover:bg-transparent hover:text-foreground ${navbar ? "h-8 w-8 [&_svg]:size-3.5" : ""} ${sidebarSwitch ? "w-full px-0" : className}`}
       data-theme-toggle
       data-theme-navbar={navbar || undefined}
-      aria-label={`Switch to ${dark ? "light" : "dark"} theme`}
-      title={`Switch to ${dark ? "light" : "dark"} theme`}
+      role={sidebarSwitch ? "switch" : undefined}
+      aria-checked={sidebarSwitch ? dark : undefined}
+      aria-label={sidebarSwitch ? "Dark mode" : `Switch to ${dark ? "light" : "dark"} theme`}
       onClick={() => setTheme(dark ? "light" : "dark")}
     >
       {dark ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}
-      {!compact && !navbar && <span className="ml-2">{dark ? "Light" : "Dark"} theme</span>}
     </Button>
   );
+
+  return sidebarSwitch ? <label className={`flex items-center ${className}`}>{toggle}</label> : toggle;
 }

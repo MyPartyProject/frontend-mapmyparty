@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Search, MapPin, Store, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { venueRequest, venuePath } from "@/services/venueService";
@@ -25,28 +26,33 @@ export default function Venues() {
   return (
     <div className="venue-page min-h-screen bg-background text-foreground">
       <VenueHeader />
-      <main className="max-w-7xl mx-auto p-4 sm:p-8">
-        <h1 className="font-display text-5xl mt-5">
-          Find your next favourite place.
-        </h1>
-        <p className="text-muted-foreground mt-3">
-          Explore local venues. Request a table with no booking fee.
-        </p>
-        <div className="grid sm:grid-cols-3 gap-3 my-8">
+      <main className="relative mx-auto max-w-7xl px-4 pb-10 sm:px-8 lg:px-12">
+        <header className="py-8 sm:py-12 lg:pt-16">
+          <h1 className="max-w-4xl text-balance font-display text-4xl leading-tight sm:text-5xl lg:text-6xl">
+            Find your next favourite place.
+          </h1>
+          <p className="mt-3 max-w-xl text-base leading-relaxed text-muted-foreground">
+            Explore local venues. Request a table with no booking fee.
+          </p>
+        </header>
+        <div className="theme-card mb-7 grid grid-cols-2 gap-3 rounded-2xl p-4 sm:mb-10 sm:grid-cols-[2fr_1fr_1fr] sm:gap-5 sm:p-6">
           {[
-            ["q", "Search venue or area"],
-            ["city", "City"],
-            ["type", "Venue type"],
-          ].map(([key, label]) => (
-            <label key={key} className="text-sm">
+            ["q", "Search venue or area", Search],
+            ["city", "City", MapPin],
+            ["type", "Venue type", Store],
+          ].map(([key, label, Icon]) => (
+            <label key={key} className={`min-w-0 text-sm font-medium ${key === "q" ? "col-span-2 sm:col-span-1" : ""}`}>
               {label}
-              <Input
-                className="mt-1"
-                value={filters[key]}
-                onChange={(e) =>
-                  setFilters((f) => ({ ...f, [key]: e.target.value }))
-                }
-              />
+              <span className="relative mt-2 block">
+                <Icon aria-hidden="true" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  className="h-11 rounded-xl pl-10 text-base"
+                  value={filters[key]}
+                  onChange={(e) =>
+                    setFilters((f) => ({ ...f, [key]: e.target.value }))
+                  }
+                />
+              </span>
             </label>
           ))}
         </div>
@@ -57,21 +63,21 @@ export default function Venues() {
             <Link
               key={venue.id}
               to={venuePath(venue)}
-              className="theme-card rounded-2xl overflow-hidden"
+              className="theme-card group min-w-0 overflow-hidden rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-safe:transition-shadow hover:shadow-lg"
             >
               <img
-                src={venue.media.find((m) => m.kind === "DESKTOP")?.url}
+                src={(venue.media.find((m) => m.kind === "DESKTOP") || venue.media.find((m) => m.kind === "MOBILE" || m.kind === "TABLET"))?.url}
                 alt={venue.name}
                 className="aspect-[16/9] w-full object-cover"
                 loading="lazy"
               />
-              <div className="p-5 space-y-2">
+              <div className="space-y-2 break-words p-5 sm:p-6">
                 <span className="text-xs text-gold">{venue.type}</span>
-                <h2 className="text-xl font-semibold">{venue.name}</h2>
+                <h2 className="font-display text-2xl font-semibold leading-tight">{venue.name}</h2>
                 <p className="text-sm text-muted-foreground">
                   {[venue.area, venue.city].filter(Boolean).join(", ")}
                 </p>
-                <span className="text-xs">₹0 booking fee</span>
+                <div className="!mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-xs">₹0 booking fee <ArrowUpRight size={16} aria-hidden="true" /></div>
               </div>
             </Link>
           ))}
@@ -79,7 +85,7 @@ export default function Venues() {
         {!isFetching && data?.total === 0 && (
           <p>No venues match your search.</p>
         )}
-        <div className="flex items-center gap-3 my-8">
+        <div className="my-8 flex items-center justify-center gap-4">
           <Button
             variant="outline"
             disabled={page === 1}

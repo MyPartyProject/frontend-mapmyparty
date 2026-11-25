@@ -209,6 +209,20 @@ function VenueEditor({ initial, onClose }) {
           Back to venues
         </Button>
       </div>
+      {venue.id && (
+        <div className="inline-grid max-w-full grid-flow-col auto-cols-fr gap-2">
+          <Button disabled={busy} onClick={() => setPreview(true)}>
+            Preview
+          </Button>
+          {venue.status === "PUBLISHED" && (
+            <Button asChild className="venue-action-link">
+              <Link to={venuePath(venue)} target="_blank">
+                View Public Page
+              </Link>
+            </Button>
+          )}
+        </div>
+      )}
       <form
         ref={formRef}
         className="space-y-6"
@@ -758,20 +772,6 @@ function VenueEditor({ initial, onClose }) {
               ? "Save live changes"
               : "Publish venue"}
           </Button>
-          <Button
-            variant="outline"
-            disabled={busy}
-            onClick={() => setPreview(true)}
-          >
-            Preview
-          </Button>
-          {venue.status === "PUBLISHED" && (
-            <Button asChild variant="outline">
-              <Link to={venuePath(venue)} target="_blank">
-                View public page
-              </Link>
-            </Button>
-          )}
           <Button
             variant="outline"
             disabled={busy || venue.status === "ARCHIVED"}

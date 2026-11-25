@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  Expand,
   MapPin,
   Coffee,
   ArrowUpRight,
@@ -27,13 +28,25 @@ import VenuePhotoViewer from "@/components/venues/VenuePhotoViewer";
 import logo from "@/assets/MMP logo.svg";
 import "@/styles/venue-page.css";
 
+// Each area uses CSS grid lines: row start / column start / row end / column end.
+const photoLayouts = [
+  [],
+  ["1/1/7/13"],
+  ["1/1/7/8", "1/8/7/13"],
+  ["1/1/7/8", "1/8/3/13", "3/8/7/13"],
+  ["1/1/4/8", "1/8/3/13", "4/1/7/8", "3/8/7/13"],
+  ["1/1/4/8", "1/8/3/13", "4/1/7/4", "4/4/7/8", "3/8/7/13"],
+  ["1/1/4/8", "1/8/3/13", "4/1/7/4", "4/4/6/8", "3/8/7/13", "6/4/7/8"],
+  ["1/1/4/8", "1/8/3/13", "4/1/7/4", "4/4/6/8", "3/8/6/13", "6/4/7/8", "6/8/7/13"],
+];
+
 export function VenueHeader() {
   const { isAuthenticated } = useAuth();
   return (
     <header className="border-b border-border/50 bg-background/90 backdrop-blur-xl relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-[72px] flex items-center gap-3 sm:gap-8">
-        <Link to="/" aria-label="MapMyParty home" className="shrink-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <img src={logo} alt="MapMyParty" className="w-14 h-14 object-contain" />
+        <Link to="/" aria-label="MapMyParty home" className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <img src={logo} alt="MapMyParty" className="h-8 w-8 object-contain sm:h-14 sm:w-14" />
         </Link>
         <nav aria-label="Venue navigation" className="ml-auto flex items-center gap-4 sm:gap-6 text-sm font-medium whitespace-nowrap">
           <Link to="/browse-events" className="hidden sm:inline-flex min-h-11 items-center text-muted-foreground transition-colors hover:text-foreground">
@@ -242,6 +255,24 @@ export function VenueSurface({ venue, preview = false }) {
   const covers = Object.fromEntries(
     venue.media.filter((m) => m.kind !== "GALLERY").map((m) => [m.kind, m.url]),
   );
+  const mobileCover = covers.MOBILE || covers.TABLET || covers.DESKTOP;
+  const mainRef = useRef(null);
+  const galleryTriggerRef = useRef(null);
+  const coverButtonRef = useRef(null);
+  useEffect(() => {
+    if (!window.IntersectionObserver) return;
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("venue-entered");
+          observer.unobserve(entry.target);
+        }
+      }
+    });
+    const targets = mainRef.current.querySelectorAll("section:not(#venue-top), #booking-widget-aside, .venue-photo-mosaic > button, #menu-section .grid > button");
+    targets.forEach((target) => observer.observe(target));
+    return () => observer.disconnect();
+  }, [venue]);
   const items = viewer?.kind === "menu" ? venue.menu : photos;
   const move = (delta) =>
     setViewer((v) => ({
@@ -282,13 +313,13 @@ export function VenueSurface({ venue, preview = false }) {
           Organizer preview · {venue.status}
         </p>
       )}
-      <main className="relative z-[1] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-12">
+      <main ref={mainRef} className="relative z-[1] max-w-7xl mx-auto sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-12">
         <section
           id="venue-top"
           className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-border/50 shadow-xl"
         >
           <div className="relative w-full h-[360px] sm:h-[420px] lg:h-auto lg:aspect-[16/6] overflow-hidden bg-[#1B1222]">
-            {covers.DESKTOP && (
+            {mobileCover && (
               <picture>
                 <source media="(min-width:1024px)" srcSet={covers.DESKTOP} />
                 <source
@@ -296,12 +327,17 @@ export function VenueSurface({ venue, preview = false }) {
                   srcSet={covers.TABLET || covers.DESKTOP}
                 />
                 <img
-                  src={covers.MOBILE || covers.DESKTOP}
+                  src={mobileCover}
                   alt={`${venue.name} cover`}
                   className="absolute inset-0 w-full h-full object-cover"
                   fetchPriority="high"
                 />
               </picture>
+            )}
+            {mobileCover && (
+              <button ref={coverButtonRef} type="button" aria-label="View full cover image" onClick={() => setViewer({ kind: "cover" })} className="absolute bottom-3 left-3 grid h-11 w-11 place-items-center rounded-full bg-black/60 text-white sm:hidden">
+                <Expand size={19} aria-hidden="true" />
+              </button>
             )}
             <div className="hidden sm:block absolute inset-0 bg-gradient-to-t from-[#0F0A13] via-[#0F0A13]/35 to-transparent" />
           </div>
@@ -474,28 +510,29 @@ export function VenueSurface({ venue, preview = false }) {
                   </span>
                 </h2>
               </div>
-              <div className="venue-photo-mosaic" data-count={Math.min(photos.length, 5)}>
-                {photos.slice(0, 5).map((photo, index) => (
+              <div className="venue-photo-mosaic grid grid-cols-12 auto-rows-[52px] sm:auto-rows-[68px] gap-2 empty:hidden">
+                {photos.slice(0, 7).map((photo, index) => (
                   <button
                     key={photo.id}
-                    className="group relative min-w-0 overflow-hidden bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                    style={{ gridArea: photoLayouts[Math.min(photos.length, 7)][index] }}
+                    className="group relative min-w-0 min-h-0 overflow-hidden rounded-lg border border-white/[0.08] hover:border-white/30 transition-colors duration-500 bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                     aria-label={`Open ${venue.name} photo ${index + 1}`}
-                    onClick={() => setViewer({ kind: "photo", index })}
+                    onClick={(event) => { galleryTriggerRef.current = event.currentTarget; setViewer({ kind: "photo", index }); }}
                   >
                     <img
                       src={photo.url}
                       alt={
                         `${venue.name} photo ${index + 1}`
                       }
-                      className="w-full h-full object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out motion-safe:group-hover:scale-[1.03]"
+                      className="w-full h-full object-cover object-[center_25%] motion-safe:transition-all motion-safe:duration-500 motion-safe:[transition-timing-function:cubic-bezier(0.22,1,0.36,1)] motion-safe:group-hover:scale-[1.035]"
                       loading="lazy"
                     />
                   </button>
                 ))}
               </div>
-              {photos.length > 5 && (
+              {photos.length > 7 && (
                 <div className="flex justify-end">
-                  <Button variant="outline" className="rounded-full px-5 gap-2" onClick={() => setViewer({ kind: "photo", index: 0 })}>
+                  <Button variant="outline" className="rounded-full px-5 gap-2" onClick={(event) => { galleryTriggerRef.current = event.currentTarget; setViewer({ kind: "photo", index: 0 }); }}>
                     View all {photos.length} photos <ArrowUpRight size={16} aria-hidden="true" />
                   </Button>
                 </div>
@@ -564,7 +601,8 @@ export function VenueSurface({ venue, preview = false }) {
         <a href="mailto:support@mapmyparty.com">Contact support</a> ·{" "}
         <Link to="/privacy-policy">Privacy</Link>
       </footer>
-      {viewer?.kind === "photo" && <VenuePhotoViewer photos={photos} venueName={venue.name} startIndex={viewer.index} onClose={() => setViewer(null)} />}
+      {viewer?.kind === "cover" && <VenuePhotoViewer photos={[{ id: "cover", url: mobileCover }]} venueName={venue.name} startIndex={0} returnFocusRef={coverButtonRef} onClose={() => setViewer(null)} />}
+      {viewer?.kind === "photo" && <VenuePhotoViewer gallery returnFocusRef={galleryTriggerRef} photos={photos} venueName={venue.name} startIndex={viewer.index} onClose={() => setViewer(null)} />}
       <Dialog
         open={viewer?.kind === "menu"}
         onOpenChange={(open) => {

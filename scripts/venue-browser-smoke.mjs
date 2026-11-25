@@ -66,7 +66,7 @@ const fixture = {
       ],
     }),
   ),
-  media: ["DESKTOP", "TABLET", "MOBILE", ...Array(6).fill("GALLERY")].map(
+  media: ["DESKTOP", "TABLET", "MOBILE", ...Array(8).fill("GALLERY")].map(
     (kind, index) => ({
       id: `photo-${index}`,
       kind,
@@ -267,8 +267,8 @@ try {
         `Horizontal overflow at ${theme}/${width}: ${measure.scroll}`,
       );
       measurements.push({ theme, ...measure });
-      assert.equal(await evaluate("document.querySelectorAll('.venue-photo-mosaic button').length"), 5);
-      assert.ok(await evaluate("document.querySelector('#photos-section').textContent.includes('View all 6 photos')"));
+      assert.equal(await evaluate("document.querySelectorAll('.venue-photo-mosaic button').length"), 7);
+      assert.ok(await evaluate("document.querySelector('#photos-section').textContent.includes('View all 8 photos')"));
       assert.ok(await evaluate("!Array.from(document.querySelectorAll('.venue-photo-mosaic button')).some(button => button.textContent.trim())"));
       const shot = await send("Page.captureScreenshot", {
         format: "png",
@@ -282,8 +282,8 @@ try {
   await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
   await evaluate("document.querySelectorAll('.venue-photo-mosaic button')[2].click()");
   await until("!!document.querySelector('.venue-photo-viewer img')");
-  await until("document.querySelector('.venue-photo-viewer p[aria-live]')?.textContent === '3 / 6'");
-  assert.ok(await evaluate("Array.from(document.querySelectorAll('.venue-photo-viewer button:not(.modal-close-button)')).every(button => getComputedStyle(button).display === 'none')"));
+  await until("document.querySelector('.venue-photo-viewer p[aria-live]')?.textContent === '03 / 08'");
+  assert.ok(await evaluate("Array.from(document.querySelectorAll('.venue-photo-viewer button:not(.modal-close-button)')).every(button => getComputedStyle(button).display !== 'none')"));
   assert.equal(await evaluate("getComputedStyle(document.querySelector('.venue-photo-viewer')).backgroundColor"), "rgba(0, 0, 0, 0)");
   await send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: 330, y: 420 }] });
   for (const x of [290, 230, 170, 100, 50]) {
@@ -291,7 +291,7 @@ try {
     await pause(30);
   }
   await send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-  await until("document.querySelector('.venue-photo-viewer p[aria-live]')?.textContent === '4 / 6'");
+  await until("document.querySelector('.venue-photo-viewer p[aria-live]')?.textContent === '04 / 08'");
   await evaluate("document.querySelector('.venue-photo-viewer .modal-close-button').click()");
   await until("!document.querySelector('[role=dialog]')");
   await send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
@@ -318,7 +318,7 @@ try {
     code: "ArrowRight",
   });
   await until(
-    "document.querySelector('[role=dialog]')?.textContent.includes('2 / 6')",
+    "document.querySelector('[role=dialog]')?.textContent.includes('02 / 08')",
   );
   await send("Input.dispatchKeyEvent", {
     type: "keyDown",
